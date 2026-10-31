@@ -30,5 +30,8 @@ Thumbs.db
 .idea/
 .vscode/
 
+# Data : stockage brut et sorties locales
+data/var/
+
 # Bac à sable du design system
 dist-playground/

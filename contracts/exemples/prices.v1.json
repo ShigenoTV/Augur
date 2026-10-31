@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "realm": "poe2",
+  "league": "Rise of the Abyssal",
+  "unit": "exalted",
+  "generated_at": "2026-10-31T12:00:00+00:00",
+  "data_as_of": "2026-10-31T11:00:00+00:00",
+  "fresh_until": "2026-10-31T12:05:00+00:00",
+  "frozen": false,
+  "etag": "\"9facde8789698b5575ddd3db3b5bd471\"",
+  "items": [
+    {
+      "id": "currency/annul",
+      "kind": "currency",
+      "name": "Orb of Annulment",
+      "price": 60.0,
+      "low": 60.0,
+      "high": 60.0,
+      "sample_size": 1,
+      "confidence": "low",
+      "method": "triangulated:divine",
+      "source": "currency_exchange",
+      "updated_at": "2026-10-31T11:00:00+00:00"
+    },
+    {
+      "id": "currency/divine",
+      "kind": "currency",
+      "name": "Divine Orb",
+      "price": 300.0,
+      "low": 300.0,
+      "high": 300.0,
+      "sample_size": 1,
+      "confidence": "low",
+      "method": "direct",
+      "source": "currency_exchange",
+      "updated_at": "2026-10-31T11:00:00+00:00"
+    },
+    {
+      "id": "currency/exalted",
+      "kind": "currency",
+      "name": "Exalted Orb",
+      "price": 1.0,
+      "low": 1.0,
+      "high": 1.0,
+      "sample_size": 0,
+      "confidence": "high",
+      "method": "numeraire",
+      "source": "currency_exchange",
+      "updated_at": null
+    },
+    {
+      "id": "fragment/breach-splinter",
+      "kind": "item",
+      "name": "Breach Splinter",
+      "price": 2.6,
+      "low": 2.325,
+      "high": 2.875,
+      "sample_size": 11,
+      "confidence": "high",
+      "method": "trade_median",
+      "source": "trade_sample",
+      "updated_at": "2026-10-31T11:00:00+00:00"
+    }
+  ],
+  "quality": {
+    "currencies": 4,
+    "currencies_triangulated": 1,
+    "currency_observations_excluded": 0,
+    "trade": {
+      "listings": 52,
+      "kept": 44,
+      "excluded_by_reason": {
+        "aberrant_haut": 4,
+        "leurre_bas": 4
+      },
+      "exclusion_rate": 0.1538
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "_comment": "Requêtes curées du sprint 1. Les identifiants de type (\"type\") et de filtres sont ceux du site de trade PoE 2 et doivent être revérifiés à chaque patch. Chaque requête coûte 1 search + ceil(max_results/10) fetch sur le budget du studio : garder la liste courte.",
+  "queries": [
+    {
+      "id": "waystone-t15",
+      "category": "fragment",
+      "name": "Waystone (Tier 15)",
+      "query": { "status": { "option": "online" }, "type": "Waystone (Tier 15)" },
+      "max_results": 20
+    },
+    {
+      "id": "breach-splinter",
+      "category": "fragment",
+      "name": "Breach Splinter",
+      "query": { "status": { "option": "online" }, "type": "Breach Splinter" },
+      "max_results": 20
+    },
+    {
+      "id": "simulacrum-splinter",
+      "category": "fragment",
+      "name": "Simulacrum Splinter",
+      "query": { "status": { "option": "online" }, "type": "Simulacrum Splinter" },
+      "max_results": 20
+    },
+    {
+      "id": "stellar-amulet-ilvl82-normal",
+      "category": "base",
+      "name": "Stellar Amulet (ilvl 82+, normale)",
+      "query": {
+        "status": { "option": "online" },
+        "type": "Stellar Amulet",
+        "filters": {
+          "type_filters": { "filters": { "rarity": { "option": "normal" }, "ilvl": { "min": 82 } } }
+        }
+      },
+      "max_results": 20
+    }
+  ]
+}
