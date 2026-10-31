@@ -96,6 +96,11 @@ pub const ENERGY_SHIELD: &str = "energy_shield";
 pub const ARMOUR: &str = "armour";
 pub const ELEMENTAL_RESISTANCE: &str = "elemental_resistance";
 pub const ALL_MAXIMUM_ELEMENTAL_RESISTANCE: &str = "maximum_elemental_resistance";
+/// Réduction des dégâts physiques additionnelle, en points, ajoutée à celle
+/// de l'armure avant le plafond de 90 %.
+pub const PHYSICAL_DAMAGE_REDUCTION: &str = "physical_damage_reduction";
+/// Dégâts subis (increased / more), tous types confondus.
+pub const DAMAGE_TAKEN: &str = "damage_taken";
 
 /// Liste exhaustive des stats que le moteur sait lire.
 pub fn stats_connues() -> Vec<String> {
@@ -113,6 +118,8 @@ pub fn stats_connues() -> Vec<String> {
         ARMOUR,
         ELEMENTAL_RESISTANCE,
         ALL_MAXIMUM_ELEMENTAL_RESISTANCE,
+        PHYSICAL_DAMAGE_REDUCTION,
+        DAMAGE_TAKEN,
     ]
     .iter()
     .map(|s| s.to_string())

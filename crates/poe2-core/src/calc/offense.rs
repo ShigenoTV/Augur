@@ -26,6 +26,9 @@ use super::{Cible, Competence};
 pub const BONUS_CRITIQUE_BASE: f64 = 100.0;
 
 pub struct Offense {
+    /// Moyenne par type avant mitigation de la cible.
+    pub par_type_brut: Vec<(TypeDegats, f64)>,
+    pub multiplicateur_critique: f64,
     pub dps: Trace,
     pub coup_moyen: Trace,
     pub coup_moyen_brut: Trace,
@@ -97,6 +100,16 @@ fn degats_type(db: &ModDb, comp: &Competence, t: TypeDegats) -> Option<(f64, f64
     Some((min, max, trace))
 }
 
+/// Résistance effective d'une cible : la pénétration ne fait pas descendre
+/// une résistance positive sous 0 et ne réduit pas une résistance négative.
+pub fn resistance_effective_cible(res: f64, penetration: f64) -> f64 {
+    if res > 0.0 {
+        (res - penetration).max(0.0)
+    } else {
+        res
+    }
+}
+
 /// Multiplicateur de dégâts subis par la cible pour un type donné.
 fn mitigation_cible(db: &ModDb, cible: &Cible, t: TypeDegats, moyenne: f64) -> Trace {
     if t == TypeDegats::Physique {
@@ -113,11 +126,7 @@ fn mitigation_cible(db: &ModDb, cible: &Cible, t: TypeDegats, moyenne: f64) -> T
     let res = cible.resistances.get(&t).copied().unwrap_or(0.0);
     let sp = t.stat_penetration();
     let pen = db.somme(TypeModificateur::Added, &[sp.as_str()]);
-    let effective = if res > 0.0 {
-        (res - pen.valeur).max(0.0)
-    } else {
-        res
-    };
+    let effective = resistance_effective_cible(res, pen.valeur);
     let mut t_pen = Trace::feuille("pénétration", pen.valeur);
     t_pen.contributions = pen.contributions;
     Trace::feuille(
@@ -139,6 +148,7 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
     let mut net = 0.0;
     let mut enfants_brut = Vec::new();
     let mut enfants_net = Vec::new();
+    let mut par_type_brut = Vec::new();
     for t in TypeDegats::TOUS {
         let Some((min, max, trace_type)) = degats_type(db, comp, t) else {
             continue;
@@ -147,6 +157,7 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
         let mitig = mitigation_cible(db, cible, t, moyenne);
         let apres = moyenne * mitig.valeur;
         brut += moyenne;
+        par_type_brut.push((t, moyenne));
         net += apres;
         enfants_brut.push(trace_type.clone());
         enfants_net.push(
@@ -218,6 +229,8 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
         .avec_enfants([coup_moyen.clone(), t_crit, incantations_par_seconde.clone()]);
 
     Offense {
+        par_type_brut,
+        multiplicateur_critique: mult_crit,
         dps,
         coup_moyen,
         coup_moyen_brut,

@@ -95,3 +95,36 @@ fn trace_serialisable_et_lisible() {
     assert!(json.contains("\"libelle\""));
     assert!(t.to_string().contains("incantations par seconde"));
 }
+
+mod formules {
+    use poe2_core::calc::formules::{self, Verdict};
+
+    fn un(yaml: &str) -> Verdict {
+        let f = formules::lire(yaml).unwrap();
+        formules::executer(&f.cas[0]).verdict
+    }
+
+    const ARMURE: &str = "cas:\n  - { id: a, type: unitaire, calcul: armure.reduction, entrees: { armure: 1000, degats: 100 }, attendu: { reduction_pct: VAL } }";
+
+    #[test]
+    fn valeur_fausse_en_echec() {
+        assert_eq!(un(&ARMURE.replace("VAL", "50")), Verdict::Reussi);
+        assert_eq!(un(&ARMURE.replace("VAL", "51")), Verdict::Echec);
+    }
+
+    #[test]
+    fn entree_inconnue_en_erreur() {
+        let y = ARMURE
+            .replace("VAL", "50")
+            .replace("degats: 100", "degats: 100, armur: 3");
+        assert_eq!(un(&y), Verdict::Erreur);
+    }
+
+    #[test]
+    fn calcul_absent_du_moteur_en_attente() {
+        let y = "cas:\n  - { id: e, type: unitaire, calcul: evasion.chance, entrees: {}, attendu: { chance_eviter_pct: 0 } }";
+        assert_eq!(un(y), Verdict::EnAttente);
+        let y = "cas:\n  - { id: x, type: unitaire, calcul: inconnu, attendu: { x: 0 } }";
+        assert_eq!(un(y), Verdict::Erreur);
+    }
+}
