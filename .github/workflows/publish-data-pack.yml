@@ -1,0 +1,134 @@
+# Publication d'un paquet de données de jeu (tables extraites d'un patch) sur le CDN.
+#
+# Le pipeline data produit un dossier de tables (JSON…) en artefact GitHub
+# Actions. Ce workflow le transforme en paquet signé (tools/datapack), le
+# vérifie, le dépose sur R2 sous des URL immuables et, si demandé, bascule
+# le canal. Format : docs/devops/paquets-de-donnees.md.
+name: Publier un paquet de données
+
+on:
+  workflow_dispatch:
+    inputs:
+      patch:
+        description: "Numéro de patch PoE 2 (ex. 0.4.1)"
+        required: true
+      artifact_name:
+        description: "Nom de l'artefact contenant les tables extraites"
+        required: true
+      source_run_id:
+        description: "ID du run qui a produit l'artefact (vide = artefact de ce dépôt le plus récent)"
+        required: false
+      channel:
+        description: "Canal à basculer après dépôt"
+        type: choice
+        options: [aucun, beta, stable]
+        default: beta
+      min_app_version:
+        description: "Version minimale de l'application capable de lire ce paquet (optionnel)"
+        required: false
+
+permissions:
+  contents: read
+  actions: read     # lecture d'artefacts d'autres runs
+
+concurrency:
+  group: data-pack
+  cancel-in-progress: false
+
+env:
+  GAME: poe2
+  DATA_BASE_URL: ${{ vars.AUGUR_DATA_BASE_URL }}
+  R2_ENDPOINT: https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+  R2_BUCKET: ${{ vars.R2_DATA_BUCKET }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: auto
+  AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+  AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: data-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r tools/datapack/requirements.txt
+
+      - name: Récupérer les tables extraites
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.event.inputs.artifact_name }}
+          path: src-data
+          run-id: ${{ github.event.inputs.source_run_id || github.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Construire et signer le paquet
+        id: build
+        env:
+          AUGUR_DATA_SIGNING_KEY: ${{ secrets.AUGUR_DATA_SIGNING_KEY }}
+          PATCH: ${{ github.event.inputs.patch }}
+          MIN_APP: ${{ github.event.inputs.min_app_version }}
+        run: |
+          set -euo pipefail
+          args=(build --src src-data --out out --game "$GAME" --patch "$PATCH")
+          [ -n "$MIN_APP" ] && args+=(--min-app-version "$MIN_APP")
+          res=$(python tools/datapack/augur_datapack.py "${args[@]}")
+          echo "$res"
+          echo "manifest=$(echo "$res" | jq -r .manifest)" >> "$GITHUB_OUTPUT"
+
+      - name: Déposer blobs et manifeste (immuables)
+        run: |
+          set -euo pipefail
+          aws s3 cp out/$GAME/blobs/ "s3://$R2_BUCKET/$GAME/blobs/" --recursive \
+            --endpoint-url "$R2_ENDPOINT" --cache-control "public, max-age=31536000, immutable" --only-show-errors
+          aws s3 cp out/$GAME/manifests/ "s3://$R2_BUCKET/$GAME/manifests/" --recursive \
+            --endpoint-url "$R2_ENDPOINT" --cache-control "public, max-age=31536000, immutable" \
+            --content-type application/json --only-show-errors
+
+      - name: Basculer le canal
+        if: github.event.inputs.channel != 'aucun'
+        env:
+          AUGUR_DATA_SIGNING_KEY: ${{ secrets.AUGUR_DATA_SIGNING_KEY }}
+          CHANNEL: ${{ github.event.inputs.channel }}
+          PUBKEYS: ${{ vars.AUGUR_DATA_PUBLIC_KEYS }}
+        run: |
+          set -euo pipefail
+          python tools/datapack/augur_datapack.py channel --out out --game "$GAME" \
+            --channel "$CHANNEL" --manifest "${{ steps.build.outputs.manifest }}"
+          # Vérification complète avant mise en ligne, avec les clés publiques
+          # embarquées dans l'application (et non la clé privée du runner).
+          python tools/datapack/augur_datapack.py verify --root out --game "$GAME" \
+            --channel "$CHANNEL" --pubkey "$PUBKEYS"
+          # Pointeur et signature dans un seul objet : la bascule est atomique.
+          aws s3 cp "out/$GAME/channels/$CHANNEL.json" "s3://$R2_BUCKET/$GAME/channels/$CHANNEL.json" \
+            --endpoint-url "$R2_ENDPOINT" --cache-control "public, max-age=60" \
+            --content-type application/json --only-show-errors
+
+      - name: Purger le cache CDN du canal
+        if: github.event.inputs.channel != 'aucun' && vars.CLOUDFLARE_ZONE_ID != ''
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_PURGE_TOKEN }}
+          ZONE: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          CHANNEL: ${{ github.event.inputs.channel }}
+        run: |
+          set -euo pipefail
+          base="$DATA_BASE_URL/$GAME/channels/$CHANNEL.json"
+          curl -sSf -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE/purge_cache" \
+            -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
+            --data "{\"files\":[\"$base\"]}" | jq -e .success
+
+      - name: Vérifier depuis le CDN public
+        if: github.event.inputs.channel != 'aucun' && vars.AUGUR_DATA_BASE_URL != ''
+        env:
+          CHANNEL: ${{ github.event.inputs.channel }}
+          PUBKEYS: ${{ vars.AUGUR_DATA_PUBLIC_KEYS }}
+        run: |
+          for i in 1 2 3 4 5; do
+            python tools/datapack/augur_datapack.py verify --root "$DATA_BASE_URL" --game "$GAME" \
+              --channel "$CHANNEL" --pubkey "$PUBKEYS" && exit 0
+            echo "Nouvel essai dans $((i * 15)) s (propagation du cache)…"; sleep $((i * 15))
+          done
+          exit 1

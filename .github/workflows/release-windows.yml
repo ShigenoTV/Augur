@@ -1,0 +1,225 @@
+# Release Windows d'Augur : build, signature Authenticode, artefacts de mise à jour.
+#
+# Déclenchement : pousser un tag `vX.Y.Z` (canal stable) ou `vX.Y.Z-beta.N` (canal bêta).
+# Ce workflow NE PUBLIE PAS la mise à jour auprès des joueurs : il dépose une
+# version immuable sur le CDN (releases/X.Y.Z/) et crée une release GitHub en
+# brouillon. La bascule d'un canal se fait ensuite avec « Promouvoir une release »,
+# derrière l'approbation de l'environnement `production`.
+#
+# Configuration : voir docs/devops/release-windows.md.
+name: Release Windows
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag à construire (ex. v0.1.0-beta.1)"
+        required: true
+      allow_unsigned:
+        description: "Autoriser un build NON signé (test du pipeline uniquement, rien n'est envoyé au CDN)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # création de la release GitHub en brouillon
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  APP_DIR: apps/desktop
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+  ALLOW_UNSIGNED: ${{ github.event.inputs.allow_unsigned || 'false' }}
+  AUGUR_SIGNING_MODE: ${{ vars.AUGUR_SIGNING_MODE || 'none' }}
+  UPDATES_BASE_URL: ${{ vars.AUGUR_UPDATES_BASE_URL }}
+  R2_ENDPOINT: https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+  R2_BUCKET: ${{ vars.R2_UPDATES_BUCKET }}
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build et signature
+    runs-on: windows-latest
+    environment: release   # secrets de signature isolés ; règles de protection possibles
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Version et canal
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! [[ "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+(-beta\.[0-9]+)?)$ ]]; then
+            echo "::error::Tag invalide : $TAG (attendu vX.Y.Z ou vX.Y.Z-beta.N)"; exit 1
+          fi
+          version="${BASH_REMATCH[1]}"
+          channel=$([[ "$version" == *-beta.* ]] && echo beta || echo stable)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
+          echo "Version $version, canal $channel"
+
+      - name: Cohérence entre le tag et la version de l'application
+        shell: bash
+        run: |
+          node - "$APP_DIR/src-tauri" "${{ steps.meta.outputs.version }}" <<'EOF'
+          const fs = require("fs"), path = require("path");
+          const [dir, expected] = process.argv.slice(2);
+          const conf = JSON.parse(fs.readFileSync(path.join(dir, "tauri.conf.json"), "utf8"));
+          let v = conf.version;
+          if (v && v.endsWith(".json")) v = JSON.parse(fs.readFileSync(path.join(dir, v), "utf8")).version;
+          if (!v) {
+            const m = fs.readFileSync(path.join(dir, "Cargo.toml"), "utf8").match(/^version\s*=\s*"([^"]+)"/m);
+            v = m && m[1];
+          }
+          if (v !== expected) {
+            console.error(`::error::Version de l'application (${v}) différente du tag (${expected})`);
+            process.exit(1);
+          }
+          console.log(`Version vérifiée : ${v}`);
+          EOF
+
+      - name: Garde-fou de signature
+        shell: bash
+        env:
+          HAS_UPDATER_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
+        run: |
+          set -euo pipefail
+          if [ "$HAS_UPDATER_KEY" != "true" ]; then
+            echo "::error::Secret TAURI_SIGNING_PRIVATE_KEY absent : les mises à jour ne peuvent pas être signées."; exit 1
+          fi
+          if [ "$AUGUR_SIGNING_MODE" = "none" ] && [ "$ALLOW_UNSIGNED" != "true" ]; then
+            echo "::error::Aucune signature Authenticode configurée (variable AUGUR_SIGNING_MODE). Une release publique non signée déclencherait SmartScreen."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: windows-release
+
+      - name: Outil de signature Azure Artifact Signing
+        if: env.AUGUR_SIGNING_MODE == 'azure'
+        run: cargo install --locked trusted-signing-cli
+
+      # Mode signtool : ajouter ici l'installation du KSP du fournisseur de HSM cloud
+      # choisi (DigiCert KeyLocker, SSL.com eSigner…) et l'import du certificat.
+
+      - name: Dépendances JS
+        shell: bash
+        run: |
+          if [ -f pnpm-workspace.yaml ]; then pnpm install --frozen-lockfile
+          else pnpm --dir "$APP_DIR" install --frozen-lockfile; fi
+
+      - name: Build Tauri signé
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_SIGNING_ENDPOINT: ${{ vars.AZURE_SIGNING_ENDPOINT }}
+          AZURE_SIGNING_ACCOUNT: ${{ vars.AZURE_SIGNING_ACCOUNT }}
+          AZURE_SIGNING_PROFILE: ${{ vars.AZURE_SIGNING_PROFILE }}
+          AUGUR_SIGNING_THUMBPRINT: ${{ secrets.AUGUR_SIGNING_THUMBPRINT }}
+        run: |
+          set -euo pipefail
+          script="$(cygpath -w "$GITHUB_WORKSPACE/scripts/release/sign-windows.ps1")"
+          # Surcharge de configuration propre à la CI : artefacts de mise à jour
+          # signés, et signature Authenticode de chaque binaire via notre script.
+          config=$(node -e '
+            const s = process.argv[1];
+            console.log(JSON.stringify({
+              bundle: {
+                createUpdaterArtifacts: true,
+                windows: { signCommand: { cmd: "pwsh", args: ["-NoProfile", "-NonInteractive", "-File", s, "%1"] } }
+              }
+            }));' "$script")
+          pnpm --dir "$APP_DIR" tauri build --ci --bundles nsis,msi --config "$config"
+
+      - name: Rassembler les installeurs
+        id: collect
+        shell: bash
+        run: |
+          set -euo pipefail
+          bundle=""
+          for d in target/release/bundle "$APP_DIR/src-tauri/target/release/bundle"; do
+            [ -d "$d" ] && bundle="$d" && break
+          done
+          [ -n "$bundle" ] || { echo "::error::Dossier bundle introuvable"; exit 1; }
+          echo "bundle=$bundle" >> "$GITHUB_OUTPUT"
+          mkdir -p dist-release
+          cp "$bundle"/nsis/*.exe "$bundle"/nsis/*.exe.sig "$bundle"/msi/*.msi "$bundle"/msi/*.msi.sig dist-release/
+          ls -la dist-release
+
+      - name: Vérifier les signatures Authenticode
+        if: env.AUGUR_SIGNING_MODE != 'none'
+        shell: pwsh
+        run: |
+          $bad = Get-ChildItem dist-release -Include *.exe,*.msi -Recurse |
+            ForEach-Object { Get-AuthenticodeSignature $_.FullName } |
+            Where-Object Status -ne 'Valid'
+          if ($bad) { $bad | Format-Table Path,Status,StatusMessage; exit 1 }
+          Write-Host 'Tous les installeurs portent une signature Authenticode valide.'
+
+      - name: Manifeste de mise à jour et empreintes
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="${UPDATES_BASE_URL:-https://updates.invalid}"
+          node scripts/release/make-update-manifest.mjs \
+            --bundle-dir "${{ steps.collect.outputs.bundle }}" \
+            --version "${{ steps.meta.outputs.version }}" \
+            --base-url "$base/releases/${{ steps.meta.outputs.version }}" \
+            --out dist-release/latest.json
+          (cd dist-release && sha256sum -- *.exe *.msi > SHA256SUMS.txt && cat SHA256SUMS.txt)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: augur-${{ steps.meta.outputs.version }}-windows
+          path: dist-release/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Dépôt immuable sur le CDN (releases/X.Y.Z/)
+        if: env.AUGUR_SIGNING_MODE != 'none' && vars.R2_UPDATES_BUCKET != ''
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+        run: |
+          set -euo pipefail
+          prefix="releases/${{ steps.meta.outputs.version }}"
+          # Une version publiée ne se réécrit jamais : on refuse d'écraser.
+          if aws s3api head-object --endpoint-url "$R2_ENDPOINT" --bucket "$R2_BUCKET" \
+               --key "$prefix/latest.json" >/dev/null 2>&1; then
+            echo "::error::$prefix existe déjà sur le CDN. Incrémentez la version."; exit 1
+          fi
+          aws s3 cp dist-release/ "s3://$R2_BUCKET/$prefix/" --recursive \
+            --endpoint-url "$R2_ENDPOINT" \
+            --cache-control "public, max-age=31536000, immutable" --only-show-errors
+          echo "Déposé sous $prefix (pas encore visible des joueurs : lancer « Promouvoir une release »)."
+
+      - name: Release GitHub en brouillon
+        if: env.AUGUR_SIGNING_MODE != 'none'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          flags=(--draft --title "Augur ${{ steps.meta.outputs.version }}" --generate-notes --verify-tag)
+          [ "${{ steps.meta.outputs.channel }}" = "beta" ] && flags+=(--prerelease)
+          gh release create "$TAG" "${flags[@]}" dist-release/*
