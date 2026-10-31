@@ -147,6 +147,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          # pnpm est activé ensuite par corepack : pas de cache automatique ici.
+          package-manager-cache: false
       - run: corepack enable
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
