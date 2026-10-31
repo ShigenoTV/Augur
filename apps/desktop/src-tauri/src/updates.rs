@@ -17,7 +17,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, Url};
 use tauri_plugin_updater::{Update, UpdaterExt};
 
-use crate::contracts::{AppError, ErrorCode};
+use crate::contracts::{AppError, ErrorCode, app_error};
 use crate::settings::SettingsStore;
 use crate::time::rfc3339_from_unix;
 
@@ -82,7 +82,7 @@ pub struct UpdateProgress {
 pub struct PendingUpdate(Mutex<Option<Update>>);
 
 fn updater_error(err: impl std::fmt::Display) -> AppError {
-    AppError::new(
+    app_error(
         ErrorCode::Network,
         format!("Impossible de vérifier les mises à jour pour le moment ({err})."),
     )
@@ -123,7 +123,7 @@ pub async fn install(app: &AppHandle) -> Result<(), AppError> {
         .lock()
         .unwrap_or_else(|e| e.into_inner())
         .take()
-        .ok_or_else(|| AppError::new(ErrorCode::Internal, "Aucune mise à jour en attente."))?;
+        .ok_or_else(|| app_error(ErrorCode::Internal, "Aucune mise à jour en attente."))?;
 
     let mut downloaded = 0u64;
     let progress_app = app.clone();
@@ -137,7 +137,7 @@ pub async fn install(app: &AppHandle) -> Result<(), AppError> {
         )
         .await
         .map_err(|err| {
-            AppError::new(
+            app_error(
                 ErrorCode::Internal,
                 format!("La mise à jour a échoué ({err})."),
             )

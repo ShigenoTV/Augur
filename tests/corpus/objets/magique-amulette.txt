@@ -1,0 +1,12 @@
+Item Class: Amulets
+Rarity: Magic
+Glowing Amber Amulet of the Wind
+--------
+Requires: Level 24
+--------
+Item Level: 33
+--------
++11 to Strength (implicit)
+--------
++14% to Global Evasion Rating
++15 to Dexterity

@@ -1,0 +1,15 @@
+{
+  "name": "@augur/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Types TypeScript générés depuis crates/augur-contracts (ne pas éditer src/generated à la main)",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "cargo test -p augur-contracts --manifest-path ../../Cargo.toml"
+  }
+}

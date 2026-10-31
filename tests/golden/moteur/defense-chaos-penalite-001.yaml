@@ -1,0 +1,53 @@
+- id: defense-chaos-reserve-001
+  patch: "0.3.0"
+  confiance: supposé
+  description: >
+    Le chaos retire le bouclier d'énergie au double : réserve = vie + ES / 2
+    (fiche 07, inconnue I-01, cas ehp-004 du Theorycrafter).
+  personnage:
+    modificateurs:
+      - { stat: life, type: base, valeur: 3000, source: "Vie de test" }
+      - { stat: energy_shield, type: base, valeur: 2000, source: "ES de test" }
+  attendu:
+    coup_max_chaos: { valeur: 4000, tolerance_abs: 0 }
+    coup_max_feu: { valeur: 5000, tolerance_abs: 0 }
+  preuve: "calcul manuel (fiche 07)"
+
+- id: defense-penalite-campagne-001
+  patch: "0.3.0"
+  confiance: supposé
+  description: >
+    Pénalité de campagne explicite (−60) ajoutée aux résistances élémentaires
+    avant plafonnement, sans effet sur le chaos (inconnue I-02).
+  personnage:
+    penalite_campagne: -60
+    modificateurs:
+      - { stat: fire_resistance, type: added, valeur: 140, source: "Test" }
+      - { stat: cold_resistance, type: added, valeur: 100, source: "Test" }
+      - { stat: chaos_resistance, type: added, valeur: 20, source: "Test" }
+  attendu:
+    resistance_feu: { valeur: 75, tolerance_abs: 0 }     # min(140 − 60, 75)
+    resistance_froid: { valeur: 40, tolerance_abs: 0 }
+    resistance_foudre: { valeur: -60, tolerance_abs: 0 }
+    resistance_chaos: { valeur: 20, tolerance_abs: 0 }
+  preuve: "calcul manuel (cohérence du moteur)"
+
+- id: degats-increased-plancher-001
+  patch: "0.3.0"
+  confiance: supposé
+  description: >
+    Des reduced cumulés sous −100 % ramènent les dégâts à 0, jamais en
+    négatif (cas degats-002 du Theorycrafter).
+  personnage:
+    competence:
+      nom: Sort de test
+      temps_incantation: 1.0
+      critique_base: 0
+      degats: { feu: [10, 10] }
+    modificateurs:
+      - { stat: fire_damage, type: increased, valeur: -80, source: "Test" }
+      - { stat: damage, type: increased, valeur: -50, source: "Test" }
+  attendu:
+    coup_moyen: { valeur: 0, tolerance_abs: 0 }
+    dps: { valeur: 0, tolerance_abs: 0 }
+  preuve: "calcul manuel (cohérence du moteur)"

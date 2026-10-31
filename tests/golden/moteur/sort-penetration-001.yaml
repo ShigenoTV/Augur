@@ -1,0 +1,43 @@
+- id: sort-penetration-001
+  patch: "0.3.0"
+  confiance: supposé
+  description: La pénétration réduit une résistance positive.
+  personnage:
+    competence:
+      nom: Sort de froid de test
+      temps_incantation: 1.0
+      critique_base: 10
+      degats: { froid: [30, 50] }
+    modificateurs:
+      - { stat: cold_penetration, type: added, valeur: 15, source: "Gemme de soutien de test" }
+  conditions:
+    cible: { resistances: { froid: 40 } }
+  attendu:
+    tolerance_pct: 0.01
+    coup_moyen: 30            # 40 × (1 − 25 %)
+    dps: 33
+  preuve: "calcul manuel (cohérence du moteur)"
+
+- id: sort-penetration-plancher-002
+  patch: "0.3.0"
+  confiance: supposé
+  description: >
+    La pénétration ne fait pas descendre une résistance positive sous 0 ;
+    une résistance négative n'est pas réduite davantage. Deux types de dégâts.
+  personnage:
+    competence:
+      nom: Sort hybride de test
+      temps_incantation: 1.0
+      critique_base: 0
+      degats: { foudre: [1, 99], feu: [20, 20] }
+    modificateurs:
+      - { stat: lightning_penetration, type: added, valeur: 50, source: "Test" }
+      - { stat: fire_penetration, type: added, valeur: 10, source: "Test" }
+  conditions:
+    cible: { resistances: { foudre: 20, feu: -20 } }
+  attendu:
+    tolerance_pct: 0.01
+    coup_moyen_brut: 70
+    coup_moyen: 74            # 50 × 1 + 20 × 1,2
+    dps: 74
+  preuve: "calcul manuel (cohérence du moteur)"

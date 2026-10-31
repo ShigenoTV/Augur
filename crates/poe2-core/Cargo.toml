@@ -1,0 +1,17 @@
+[package]
+name = "poe2-core"
+version = "0.1.0"
+description = "Cœur de calcul d'Augur : parseur d'objets et moteur de calcul PoE 2"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml_ng.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
