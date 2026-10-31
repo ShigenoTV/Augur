@@ -1,0 +1,16 @@
+mecanique: vitesse-incantation
+fiche: docs/theorycraft/fiches/03-vitesse-incantation.md
+cas:
+  - { id: vitesse-001, type: unitaire, calcul: vitesse.incantation, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "Temps de base 0,8 s, +25 % de vitesse.",
+      entrees: { temps_base: 0.8, increased: 25 },
+      attendu: { cadence: 1.5625, temps: 0.64 }, tolerance_pct: 0.01,
+      a_verifier_en_jeu: "I-09 : arrondi au tick serveur ?", preuve: null }
+  - { id: vitesse-002, type: unitaire, calcul: vitesse.incantation, nature: interaction, patch: null, confiance: supposé, statut: brouillon,
+      description: "Increased et more combinés.",
+      entrees: { temps_base: 1.0, increased: 50, more: [10] },
+      attendu: { cadence: 1.65, temps: 0.606061 }, tolerance_pct: 0.01, preuve: null }
+  - { id: vitesse-003, type: unitaire, calcul: vitesse.incantation, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "Vitesse réduite de 20 %.",
+      entrees: { temps_base: 1.0, increased: -20 },
+      attendu: { cadence: 0.8, temps: 1.25 }, tolerance_pct: 0.01, preuve: null }

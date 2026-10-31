@@ -1,0 +1,28 @@
+mecanique: armure
+fiche: docs/theorycraft/fiches/05-armure.md
+cas:
+  - { id: armure-001, type: unitaire, calcul: armure.reduction, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "Armure = 10 × coup : 50 % de réduction.",
+      entrees: { armure: 1000, degats: 100 },
+      attendu: { reduction_pct: 50.0, degats_subis: 50.0 }, tolerance_pct: 0.01,
+      a_verifier_en_jeu: "I-05 : avec la constante 5 de PoE 1, on aurait 66,67 %.", preuve: null }
+  - { id: armure-002, type: unitaire, calcul: armure.reduction, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "Sans armure.",
+      entrees: { armure: 0, degats: 100 },
+      attendu: { reduction_pct: 0.0, degats_subis: 100.0 }, tolerance_pct: 0.01, preuve: null }
+  - { id: armure-003, type: unitaire, calcul: armure.reduction, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "Réduction brute de 99 % plafonnée à 90 %.",
+      entrees: { armure: 100000, degats: 100 },
+      attendu: { reduction_pct: 90.0, degats_subis: 10.0 }, tolerance_pct: 0.01, preuve: null }
+  - { id: armure-004, type: unitaire, calcul: armure.reduction, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "Gros coup : l'armure protège peu.",
+      entrees: { armure: 5000, degats: 1000 },
+      attendu: { reduction_pct: 33.3333, degats_subis: 666.6667 }, tolerance_pct: 0.01, preuve: null }
+  - { id: armure-005, type: unitaire, calcul: armure.reduction, nature: interaction, patch: null, confiance: supposé, statut: brouillon,
+      description: "Réduction physique additionnelle de 10 % ajoutée à celle de l'armure.",
+      entrees: { armure: 1000, degats: 100, reduction_additionnelle_pct: 10 },
+      attendu: { reduction_pct: 60.0, degats_subis: 40.0 }, tolerance_pct: 0.01, preuve: null }
+  - { id: armure-006, type: unitaire, calcul: armure.reduction, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "Armure + réduction additionnelle au-delà de 90 % : plafond commun.",
+      entrees: { armure: 10000, degats: 100, reduction_additionnelle_pct: 10 },
+      attendu: { reduction_pct: 90.0, degats_subis: 10.0 }, tolerance_pct: 0.01, preuve: null }
