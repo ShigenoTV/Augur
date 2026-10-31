@@ -55,3 +55,10 @@ cas:
 | `es.maximum` | `objets` (liste de `{base, increased_local, qualite}`), `plat_global`, `increased_global`, `more` | `es_max` |
 | `es.recharge` | `es_max`, `increased_recharge`, `demarrage_plus_rapide` | `delai_s`, `par_seconde` |
 | `ehp.coup_max` | `type`, `vie`, `es`, `resistance`, `armure`, `increased_subi`, `more_subi` | `coup_max` |
+
+## Attention : convention de signe de la pénalité de campagne
+
+- Ici (`resistances.joueur`), `penalite_campagne` est **positive** et se **retranche** : `60` pour −60 %.
+- Dans l'exécuteur de `poe2-core` (`tests/golden/`), `personnage.penalite_campagne` est **négative** et s'**ajoute** : `-60`.
+
+Lors de la saisie d'un cas mesuré dans `tests/golden/archetype/`, utiliser la convention de l'exécuteur.
