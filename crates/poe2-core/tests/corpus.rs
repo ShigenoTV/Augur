@@ -210,3 +210,55 @@ fn fins_de_ligne_windows() {
     assert_eq!(o.base, "Attuned Wand");
     assert_eq!(o.mods[0].modele, "+# to maximum Mana");
 }
+
+/// Objets **réels**, copiés en jeu par Max (client anglais, Ctrl+Alt+C) dans
+/// poe2-craft-assistant. Sur ce client, Ctrl+C et Ctrl+Alt+C donnent le même
+/// texte avec en-têtes de mods.
+#[test]
+fn reels_gants_et_baton() {
+    let o = objet("reel-rare-gants-avance.txt");
+    assert!(o.avance);
+    assert_eq!(o.classe.as_deref(), Some("Gloves"));
+    assert_eq!(o.base, "Ornate Cuffs");
+    assert_eq!(o.niveau_objet, Some(78));
+    assert_eq!(o.qualite, Some(20));
+    assert_eq!(o.exigences.force, Some(39));
+    let ex: Vec<_> = o.mods_de_genre(GenreMod::Explicite).collect();
+    assert_eq!(ex.len(), 6);
+    let e = ex[0].entete.as_ref().unwrap();
+    assert_eq!(
+        (e.affixe, e.nom.as_deref(), e.palier),
+        (Affixe::Prefixe, Some("Athlete's"), Some(1))
+    );
+    assert_eq!(ex[0].plages, vec![Some((120.0, 149.0))]);
+    // « Adds 1 to 4(4-6) » : seule la seconde valeur a une plage.
+    assert_eq!(ex[2].modele, "Adds # to # Lightning damage to Attacks");
+    assert_eq!(ex[2].plages, vec![None, Some((4.0, 6.0))]);
+    assert_eq!(ex[5].entete.as_ref().unwrap().affixe, Affixe::Suffixe);
+
+    let o = objet("reel-rare-baton-avance.txt");
+    assert_eq!(o.base, "Roaring Staff");
+    assert_eq!(o.emplacements.as_deref(), Some("S S"));
+    assert_eq!(o.mods_de_genre(GenreMod::Rune).count(), 2);
+    // « Grants Skill: Level 12 Unleash » compte comme un mod explicite sans
+    // en-tête, comme sur la baguette du corpus.
+    assert_eq!(o.mods_de_genre(GenreMod::Explicite).count(), 7);
+}
+
+#[test]
+fn reel_bottes_corrompues_desacralisees() {
+    let o = objet("reel-rare-bottes-corrompues-avance.txt");
+    assert!(o.corrompu);
+    assert_eq!(o.niveau_objet, Some(74));
+    assert_eq!(o.mods_de_genre(GenreMod::Rune).count(), 1);
+    assert_eq!(o.mods_de_genre(GenreMod::Explicite).count(), 5);
+    let d: Vec<_> = o.mods_de_genre(GenreMod::Desacralise).collect();
+    assert_eq!(d.len(), 1);
+    let e = d[0].entete.as_ref().unwrap();
+    // Sur un vrai objet, le mod désacralisé révélé porte nom et palier.
+    assert_eq!(
+        (e.affixe, e.nom.as_deref(), e.palier),
+        (Affixe::Suffixe, Some("of Magma"), Some(2))
+    );
+    assert_eq!(d[0].modele, "+#% to Fire Resistance");
+}

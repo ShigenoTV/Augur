@@ -161,6 +161,14 @@ const SUFFIXES_GENRE: [(&str, GenreMod); 6] = [
     ("(fractured)", GenreMod::Fracture),
 ];
 
+/// Qualificatifs d'en-tête avancé qui donnent le genre du mod. Seul
+/// « Desecrated » est vérifié sur un vrai objet ; « Fractured » est supposé
+/// sur le même modèle.
+const QUALIFICATIFS_ENTETE: [(&str, GenreMod); 2] = [
+    ("Desecrated", GenreMod::Desacralise),
+    ("Fractured", GenreMod::Fracture),
+];
+
 /// Propriétés connues des blocs de propriétés (armes, armures, gemmes…).
 const PROPRIETES: [&str; 22] = [
     "Quality",
@@ -213,6 +221,7 @@ fn enlever_suffixe<'a>(ligne: &'a str, suffixe: &str) -> Option<&'a str> {
 }
 
 /// `Requires: Level 52, 89 Int` (format PoE 2) ou bloc `Requirements:`.
+/// Les marques `(unmet)` et `(augmented)` sont ignorées.
 fn lire_exigences(lignes: &[&str], ex: &mut Exigences) {
     let mut morceaux: Vec<String> = Vec::new();
     for l in lignes {
@@ -224,8 +233,14 @@ fn lire_exigences(lignes: &[&str], ex: &mut Exigences) {
         }
     }
     for m in morceaux {
-        let m = m.replace("(unmet)", "").replace(':', "");
-        let m = m.trim();
+        // Un vrai objet porte « 39 (augmented) Str » quand l'exigence est
+        // modifiée par ses mods (vu sur des objets copiés en jeu).
+        let m = m
+            .replace("(unmet)", "")
+            .replace("(augmented)", "")
+            .replace(':', "");
+        let m = m.split_whitespace().collect::<Vec<_>>().join(" ");
+        let m = m.as_str();
         let (tete, queue) = m.split_once(' ').unwrap_or((m, ""));
         // « Level 52 » ou « 89 Int ».
         match (tete, queue.trim()) {
@@ -254,9 +269,16 @@ fn lire_entete(ligne: &str) -> Option<EnteteMod> {
         ),
         None => (interieur, Vec::new()),
     };
-    let affixe = if gauche.starts_with("Prefix") {
+    // Qualificatif devant le type d'affixe, vu sur un vrai objet :
+    // `{ Desecrated Suffix Modifier "of Magma" (Tier: 2) — … }`.
+    let qualifie = QUALIFICATIFS_ENTETE
+        .iter()
+        .find_map(|(q, _)| gauche.strip_prefix(q))
+        .map(str::trim_start)
+        .unwrap_or(gauche);
+    let affixe = if qualifie.starts_with("Prefix") {
         Affixe::Prefixe
-    } else if gauche.starts_with("Suffix") {
+    } else if qualifie.starts_with("Suffix") {
         Affixe::Suffixe
     } else if gauche.starts_with("Implicit") {
         Affixe::Implicite
@@ -297,8 +319,17 @@ fn lire_mod(ligne: &str, entete: Option<&EnteteMod>) -> ModObjet {
         // « — Unscalable Value » et autres annotations avancées.
         texte = t.trim_end();
     }
-    if genre == GenreMod::Explicite && entete.is_some_and(|e| e.affixe == Affixe::Implicite) {
-        genre = GenreMod::Implicite;
+    if genre == GenreMod::Explicite {
+        if let Some(e) = entete {
+            if e.affixe == Affixe::Implicite {
+                genre = GenreMod::Implicite;
+            } else if let Some((_, g)) = QUALIFICATIFS_ENTETE
+                .iter()
+                .find(|(q, _)| e.brut.trim_start_matches('{').trim_start().starts_with(q))
+            {
+                genre = *g;
+            }
+        }
     }
     let v = extraire_valeurs(texte);
     ModObjet {
