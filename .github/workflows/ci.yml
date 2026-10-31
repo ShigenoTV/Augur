@@ -34,7 +34,7 @@ jobs:
       python: ${{ steps.d.outputs.python }}
       infra: ${{ steps.d.outputs.infra }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - id: d
         shell: bash
         run: |
@@ -54,7 +54,7 @@ jobs:
     name: Outillage de release et de données
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
@@ -85,7 +85,7 @@ jobs:
     if: needs.detect.outputs.rust == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Dépendances système de Tauri (WebKitGTK)
         if: needs.detect.outputs.desktop == 'true'
         run: |
@@ -115,7 +115,7 @@ jobs:
     if: needs.detect.outputs.desktop == 'true'
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -162,7 +162,7 @@ jobs:
     if: needs.detect.outputs.python == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - name: Lint et tests de chaque projet Python
         shell: bash
@@ -185,7 +185,7 @@ jobs:
     if: needs.detect.outputs.infra == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: opentofu/setup-opentofu@v2
       - name: Format et validation de chaque module
         shell: bash
