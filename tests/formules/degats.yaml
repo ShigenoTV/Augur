@@ -1,0 +1,140 @@
+mecanique: ordre-des-operations-degats
+fiche: docs/theorycraft/fiches/01-ordre-des-operations-degats.md
+cas:
+  - id: degats-001
+    type: unitaire
+    calcul: degats.coup_moyen
+    nature: nominal
+    patch: null
+    confiance: supposé
+    statut: brouillon
+    description: "Base + ajoutés, increased additifs (sort + froid), deux more multiplicatifs."
+    entrees:
+      base: { froid: [10, 20] }
+      ajoutes: { froid: [5, 5] }
+      increased: { sort: 60, froid: 40 }
+      more: [20, -10]
+    attendu: { par_type: { froid: 43.2 }, total: 43.2 }
+    tolerance_pct: 0.01
+    preuve: null
+  - id: degats-002
+    type: unitaire
+    calcul: degats.coup_moyen
+    nature: limite
+    patch: null
+    confiance: supposé
+    statut: brouillon
+    description: "Increased cumulés sous -100 % : plancher supposé à 0."
+    entrees:
+      base: { feu: [100, 100] }
+      increased: { feu: -150 }
+    attendu: { total: 0.0 }
+    tolerance_pct: 0.01
+    a_verifier_en_jeu: "I-15 : le jeu affiche-t-il 0 dégât ?"
+    preuve: null
+  - id: degats-003
+    type: unitaire
+    calcul: degats.coup_moyen
+    nature: discriminant
+    patch: null
+    confiance: supposé
+    statut: brouillon
+    description: "50 % feu converti en foudre : la part convertie ne profite que des increased foudre et élémentaires."
+    entrees:
+      base: { feu: [100, 100] }
+      conversion_secondaire: { feu: { foudre: 50 } }
+      increased: { feu: 50, foudre: 20, elementaire: 10 }
+    attendu: { par_type: { feu: 80.0, foudre: 65.0 }, total: 145.0 }
+    tolerance_pct: 0.01
+    a_verifier_en_jeu: "I-03 : avec l'héritage façon PoE 1, la foudre vaudrait 90 et le total 170."
+    preuve: null
+  - id: degats-004
+    type: unitaire
+    calcul: degats.coup_moyen
+    nature: limite
+    patch: null
+    confiance: supposé
+    statut: brouillon
+    description: "Conversions d'une même étape au-delà de 100 % (60 + 60) ramenées à 50 / 50."
+    entrees:
+      base: { froid: [100, 100] }
+      conversion_secondaire: { froid: { feu: 60, foudre: 60 } }
+      increased: { feu: 100 }
+    attendu: { par_type: { froid: 0.0, feu: 100.0, foudre: 50.0 }, total: 150.0 }
+    tolerance_pct: 0.01
+    preuve: null
+  - id: degats-005
+    type: unitaire
+    calcul: degats.coup_moyen
+    nature: interaction
+    patch: null
+    confiance: supposé
+    statut: brouillon
+    description: "Conversion de compétence (froid → feu 50 %) puis conversion d'équipement (feu → foudre 100 %) : deux étapes successives."
+    entrees:
+      base: { froid: [100, 100] }
+      conversion_competence: { froid: { feu: 50 } }
+      conversion_secondaire: { feu: { foudre: 100 } }
+    attendu: { par_type: { froid: 50.0, feu: 0.0, foudre: 50.0 }, total: 100.0 }
+    tolerance_pct: 0.01
+    preuve: null
+  - id: degats-006
+    type: unitaire
+    calcul: degats.coup_moyen
+    nature: nominal
+    patch: null
+    confiance: supposé
+    statut: brouillon
+    description: "Gain de 25 % du froid en foudre supplémentaire : la foudre gagnée ne profite pas des increased froid."
+    entrees:
+      base: { froid: [100, 100] }
+      gain_secondaire: { froid: { foudre: 25 } }
+      increased: { froid: 50, elementaire: 20 }
+    attendu: { par_type: { froid: 170.0, foudre: 30.0 }, total: 200.0 }
+    tolerance_pct: 0.01
+    preuve: null
+  - id: degats-007
+    type: unitaire
+    calcul: degats.coup_moyen
+    nature: discriminant
+    patch: null
+    confiance: supposé
+    statut: brouillon
+    description: "Gain et conversion dans la même étape : le gain se calcule sur le froid avant conversion."
+    entrees:
+      base: { froid: [100, 100] }
+      conversion_secondaire: { froid: { feu: 40 } }
+      gain_secondaire: { froid: { foudre: 20 } }
+    attendu: { par_type: { froid: 60.0, feu: 40.0, foudre: 20.0 }, total: 120.0 }
+    tolerance_pct: 0.01
+    a_verifier_en_jeu: "I-14 : si le gain se calcule après conversion, la foudre vaut 12 et le total 112."
+    preuve: null
+  - id: degats-008
+    type: unitaire
+    calcul: degats.coup_moyen
+    nature: interaction
+    patch: null
+    confiance: supposé
+    statut: brouillon
+    description: "More +100 % et less -50 % se compensent exactement (multiplicatifs, pas additifs)."
+    entrees:
+      base: { foudre: [1, 99] }
+      more: [100, -50]
+    attendu: { total: 50.0 }
+    tolerance_pct: 0.01
+    preuve: null
+  - id: degats-009
+    type: unitaire
+    calcul: degats.coup_moyen
+    nature: nominal
+    patch: null
+    confiance: supposé
+    statut: brouillon
+    description: "Increased élémentaires appliqués à deux types différents, more global."
+    entrees:
+      base: { feu: [40, 60], froid: [20, 40] }
+      increased: { elementaire: 50, feu: 30, sort: 20 }
+      more: [30]
+    attendu: { par_type: { feu: 130.0, froid: 66.3 }, total: 196.3 }
+    tolerance_pct: 0.01
+    preuve: null

@@ -1,0 +1,36 @@
+mecanique: ehp
+fiche: docs/theorycraft/fiches/08-ehp.md
+cas:
+  - { id: ehp-001, type: unitaire, calcul: ehp.coup_max, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "Feu, 4 000 de vie, 75 % de résistance.",
+      entrees: { type: feu, vie: 4000, resistance: 75 },
+      attendu: { coup_max: 16000.0 }, tolerance_pct: 0.01, preuve: null }
+  - { id: ehp-002, type: unitaire, calcul: ehp.coup_max, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "Feu, 4 000 de vie, 60 % de résistance.",
+      entrees: { type: feu, vie: 4000, resistance: 60 },
+      attendu: { coup_max: 10000.0 }, tolerance_pct: 0.01, preuve: null }
+  - { id: ehp-003, type: unitaire, calcul: ehp.coup_max, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "Froid, vie + ES.",
+      entrees: { type: froid, vie: 3000, es: 2000, resistance: 75 },
+      attendu: { coup_max: 20000.0 }, tolerance_pct: 0.01, preuve: null }
+  - { id: ehp-004, type: unitaire, calcul: ehp.coup_max, nature: discriminant, patch: null, confiance: supposé, statut: brouillon,
+      description: "Chaos : l'ES compte pour moitié (le chaos retire 2× l'ES).",
+      entrees: { type: chaos, vie: 3000, es: 2000, resistance: 0 },
+      attendu: { coup_max: 4000.0 }, tolerance_pct: 0.01,
+      a_verifier_en_jeu: "I-01 : sans la règle ×2, on aurait 5 000.", preuve: null }
+  - { id: ehp-005, type: unitaire, calcul: ehp.coup_max, nature: interaction, patch: null, confiance: supposé, statut: brouillon,
+      description: "Physique avec 10 000 d'armure : la réduction dépend du coup, résolution de l'équation du second degré.",
+      entrees: { type: physique, vie: 4000, armure: 10000 },
+      attendu: { coup_max: 4828.4271 }, tolerance_pct: 0.01, preuve: null }
+  - { id: ehp-006, type: unitaire, calcul: ehp.coup_max, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "Physique, armure énorme : plafond de 90 %.",
+      entrees: { type: physique, vie: 1000, armure: 1000000 },
+      attendu: { coup_max: 10000.0 }, tolerance_pct: 0.01, preuve: null }
+  - { id: ehp-007, type: unitaire, calcul: ehp.coup_max, nature: interaction, patch: null, confiance: supposé, statut: brouillon,
+      description: "Foudre avec 10 % de dégâts subis en moins (less).",
+      entrees: { type: foudre, vie: 4000, resistance: 75, more_subi: [-10] },
+      attendu: { coup_max: 17777.7778 }, tolerance_pct: 0.01, preuve: null }
+  - { id: ehp-008, type: unitaire, calcul: ehp.coup_max, nature: interaction, patch: null, confiance: supposé, statut: brouillon,
+      description: "Physique, armure calculée sur le coup entrant, puis 10 % less damage taken.",
+      entrees: { type: physique, vie: 4000, armure: 10000, more_subi: [-10] },
+      attendu: { coup_max: 5285.3434 }, tolerance_pct: 0.01, preuve: null }
