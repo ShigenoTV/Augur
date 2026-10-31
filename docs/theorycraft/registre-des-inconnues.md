@@ -6,7 +6,6 @@ Personne ne peut fermer une entrée sans preuve (capture ou vidéo référencée
 
 | Id | Prio | Mécanique | Question | Comment la trancher | Bloqué par |
 |---|---|---|---|---|---|
-| I-01 | P0 | ES (fiche 07) | Le chaos retire-t-il toujours 2× l'ES sur le patch courant ? | Personnage avec ES, recevoir un coup de chaos de taille connue, comparer ES perdue et dégâts | Jeu installé |
 | I-02 | P0 | Résistances (fiche 04) | Pénalité de progression : le wiki donne −10/−20/−30 % aux actes 2 à 4, puis −40/−50/−60 % selon le niveau de zone (54, 60, 65+). Reste à confirmer −60 % en endgame sur le patch courant | Objets connus + panneau dans une zone de niveau 65+ (mesure 2) | Mesure de Max |
 | I-03 | P0 | Dégâts (fiche 01) | Les dégâts convertis ou gagnés profitent-ils uniquement des modificateurs du type final ? | Cas `degats-003` : tooltip d'un sort avec conversion, avec et sans un objet « increased <type source> » | Jeu installé |
 | I-04 | P0 | Évasion (fiche 06) | La formule d'évasion (source de septembre 2025) est-elle toujours valable ? | Chance d'éviter du panneau pour 3 valeurs d'évasion, ajustement des constantes 1,25 et 0,3 | Jeu installé |
@@ -21,6 +20,12 @@ Personne ne peut fermer une entrée sans preuve (capture ou vidéo référencée
 | I-10 | P2 | Résistances (fiche 04) | Résistance minimale (−200 % en PoE 1) | Cumul de malus de résistance en jeu | Jeu installé |
 | I-14 | P2 | Dégâts (fiche 01) | Base du gain en dégâts supplémentaires quand une conversion existe dans la même étape | Cas `degats-007` | Jeu installé |
 | I-15 | P2 | Dégâts (fiche 01) | Plancher à 0 quand les increased sont inférieurs à −100 % | Cas `degats-002` | Jeu installé |
+
+## Inconnues fermées
+
+| Id | Mécanique | Réponse | Source |
+| --- | --- | --- | --- |
+| I-01 | ES (fiche 07) | Le chaos retire bien 2× l'ES | Texte du mot-clé du jeu, via [poe2db](https://poe2db.tw/us/Energy_Shield), 31 octobre 2026 |
 
 ## Source de données en attendant notre propre extraction
 

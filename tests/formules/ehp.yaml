@@ -17,7 +17,7 @@ cas:
       description: "Chaos : l'ES compte pour moitié (le chaos retire 2× l'ES).",
       entrees: { type: chaos, vie: 3000, es: 2000, resistance: 0 },
       attendu: { coup_max: 4000.0 }, tolerance_pct: 0.01,
-      a_verifier_en_jeu: "I-01 : sans la règle ×2, on aurait 5 000.", preuve: null }
+      a_verifier_en_jeu: "Règle ×2 confirmée (I-01 fermée, texte du jeu via poe2db) ; sans elle, on aurait 5 000.", preuve: null }
   - { id: ehp-005, type: unitaire, calcul: ehp.coup_max, nature: interaction, patch: null, confiance: supposé, statut: brouillon,
       description: "Physique avec 10 000 d'armure : la réduction dépend du coup, résolution de l'équation du second degré.",
       entrees: { type: physique, vie: 4000, armure: 10000 },

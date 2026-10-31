@@ -25,7 +25,7 @@ vitesse        = 12,5 % × es_max × (1 + increased_recharge/100)         par se
 ## Absorption
 
 - L'ES absorbe les dégâts avant la vie.
-- ⚠️ **Le chaos retire deux fois plus d'ES** : 100 dégâts de chaos retirent 200 ES. Valeur fragile, susceptible d'avoir changé selon les patchs (I-01).
+- **Le chaos retire deux fois plus d'ES** : 100 dégâts de chaos retirent 200 ES. **`confirmé`** : c'est le texte du mot-clé Energy Shield dans le jeu, repris par poe2db (« Chaos damage removes twice as much Energy Shield »).
 - Poison et saignement contournent l'ES.
 
 ## Arrondis
@@ -34,10 +34,10 @@ Hypothèse : l'ES de chaque objet est arrondie à l'entier à l'affichage. Arron
 
 ## Sources
 
+- [S-POE2DB-ES] poe2db.tw, *Energy Shield*, consulté le 31 octobre 2026 : texte du mot-clé du jeu. https://poe2db.tw/us/Energy_Shield
 - [S-ES] mobalytics, *Energy Shield* (PoE 2), date non relevée : délai 4 s, 12,5 %/s, 100 % faster start → 2 s, chaos ×2, sources plates additionnées puis multipliées par les modificateurs globaux. https://mobalytics.gg/poe-2/guides/energy-shield
 - [S-ORDRE] mobalytics, 20 janvier 2026 : chaos ×2 sur l'ES, poison et saignement contournent l'ES.
 
 ## À vérifier en jeu
 
-- Chaos ×2 sur le patch courant (I-01).
 - Rôle de la qualité sur l'ES d'un objet (additive aux increased locaux ou multiplicative ; I-12).
