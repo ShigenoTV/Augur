@@ -1,0 +1,32 @@
+mecanique: evasion-deflexion
+fiche: docs/theorycraft/fiches/06-evasion-deflexion.md
+cas:
+  - { id: evasion-001, type: unitaire, calcul: evasion.chance, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "Sans évasion : chance de toucher 125 %, plancher à 0 % d'évasion.",
+      entrees: { precision: 1000, evasion: 0 },
+      attendu: { chance_eviter_pct: 0.0 }, tolerance_pct: 0.01, preuve: null }
+  - { id: evasion-002, type: unitaire, calcul: evasion.chance, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "1 000 de précision contre 5 000 d'évasion.",
+      entrees: { precision: 1000, evasion: 5000 },
+      attendu: { chance_eviter_pct: 50.0 }, tolerance_pct: 0.01,
+      a_verifier_en_jeu: "I-04 : comparer au panneau du personnage.", preuve: null }
+  - { id: evasion-003, type: unitaire, calcul: evasion.chance, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "Plafond de 95 %.",
+      entrees: { precision: 100, evasion: 100000 },
+      attendu: { chance_eviter_pct: 95.0 }, tolerance_pct: 0.01, preuve: null }
+  - { id: evasion-004, type: unitaire, calcul: evasion.chance, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "Évasion faible face à une forte précision.",
+      entrees: { precision: 2000, evasion: 2000 },
+      attendu: { chance_eviter_pct: 3.8462 }, tolerance_pct: 0.01, preuve: null }
+  - { id: deflexion-001, type: unitaire, calcul: deflexion.chance, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "Sans déflexion.",
+      entrees: { precision: 1000, deflexion: 0 },
+      attendu: { chance_deflexion_pct: 0.0 }, tolerance_pct: 0.01, preuve: null }
+  - { id: deflexion-002, type: unitaire, calcul: deflexion.chance, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "1 000 de précision contre 5 000 de déflexion.",
+      entrees: { precision: 1000, deflexion: 5000 },
+      attendu: { chance_deflexion_pct: 56.25 }, tolerance_pct: 0.01, preuve: null }
+  - { id: deflexion-003, type: unitaire, calcul: deflexion.chance, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "Plafond de 95 %.",
+      entrees: { precision: 100, deflexion: 1000000 },
+      attendu: { chance_deflexion_pct: 95.0 }, tolerance_pct: 0.01, preuve: null }

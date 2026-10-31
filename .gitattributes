@@ -1,1 +1,3 @@
+# Les vecteurs de test sont comparés octet pour octet : jamais de conversion CRLF.
+tools/datapack/testdata/** -text
 tests/corpus/objets/rare-fins-de-ligne-windows.txt -text

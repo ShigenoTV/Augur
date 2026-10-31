@@ -1,0 +1,36 @@
+mecanique: resistances-penetration
+fiche: docs/theorycraft/fiches/04-resistances-penetration.md
+cas:
+  - { id: resistances-001, type: unitaire, calcul: resistances.joueur, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "120 % brut, pénalité de campagne 60 %.",
+      entrees: { type: feu, brute: 120, penalite_campagne: 60 },
+      attendu: { max_effectif: 75, finale: 60, surplus: 0, multiplicateur_subi: 0.4 }, tolerance_pct: 0.01,
+      a_verifier_en_jeu: "I-02 : valeur réelle de la pénalité.", preuve: null }
+  - { id: resistances-002, type: unitaire, calcul: resistances.joueur, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "Surplus au-delà du maximum.",
+      entrees: { type: froid, brute: 150, penalite_campagne: 60 },
+      attendu: { finale: 75, surplus: 15, multiplicateur_subi: 0.25 }, tolerance_pct: 0.01, preuve: null }
+  - { id: resistances-003, type: unitaire, calcul: resistances.joueur, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "+3 % de résistance maximale.",
+      entrees: { type: foudre, brute: 150, penalite_campagne: 60, bonus_max: 3 },
+      attendu: { max_effectif: 78, finale: 78, surplus: 12 }, tolerance_pct: 0.01, preuve: null }
+  - { id: resistances-004, type: unitaire, calcul: resistances.joueur, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "Plafond dur de 90 % du maximum.",
+      entrees: { type: feu, brute: 200, penalite_campagne: 60, bonus_max: 20 },
+      attendu: { max_effectif: 90, finale: 90, surplus: 50, multiplicateur_subi: 0.1 }, tolerance_pct: 0.01, preuve: null }
+  - { id: resistances-005, type: unitaire, calcul: resistances.joueur, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "Résistance négative après pénalité : 60 % de dégâts en plus.",
+      entrees: { type: froid, brute: 0, penalite_campagne: 60 },
+      attendu: { finale: -60, multiplicateur_subi: 1.6 }, tolerance_pct: 0.01, preuve: null }
+  - { id: resistances-006, type: unitaire, calcul: resistances.joueur, nature: interaction, patch: null, confiance: supposé, statut: brouillon,
+      description: "Le chaos ne subit pas la pénalité de campagne.",
+      entrees: { type: chaos, brute: 20, penalite_campagne: 60 },
+      attendu: { finale: 20, multiplicateur_subi: 0.8 }, tolerance_pct: 0.01, preuve: null }
+  - { id: resistances-007, type: unitaire, calcul: resistances.cible, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "La pénétration s'arrête à 0 %.",
+      entrees: { res_cible: 20, penetration: 30 },
+      attendu: { effective: 0, multiplicateur: 1.0 }, tolerance_pct: 0.01, preuve: null }
+  - { id: resistances-008, type: unitaire, calcul: resistances.cible, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "Pénétration sur une cible très résistante.",
+      entrees: { res_cible: 75, penetration: 30 },
+      attendu: { effective: 45, multiplicateur: 0.55 }, tolerance_pct: 0.01, preuve: null }

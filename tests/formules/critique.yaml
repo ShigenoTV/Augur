@@ -1,0 +1,24 @@
+mecanique: coup-critique
+fiche: docs/theorycraft/fiches/02-coup-critique.md
+cas:
+  - { id: critique-001, type: unitaire, calcul: critique.multiplicateur, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "Base 8 %, +100 % increased, bonus par défaut 100 %.",
+      entrees: { crit_base: 8, increased_crit: 100 },
+      attendu: { chance_pct: 16.0, bonus_pct: 100.0, multiplicateur_moyen: 1.16 }, tolerance_pct: 0.01, preuve: null }
+  - { id: critique-002, type: unitaire, calcul: critique.multiplicateur, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "Chance plafonnée à 100 %.",
+      entrees: { crit_base: 20, increased_crit: 500 },
+      attendu: { chance_pct: 100.0, multiplicateur_moyen: 2.0 }, tolerance_pct: 0.01, preuve: null }
+  - { id: critique-003, type: unitaire, calcul: critique.multiplicateur, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "Increased bonus critique : 100 % × 1,5.",
+      entrees: { crit_base: 10, increased_bonus: 50 },
+      attendu: { chance_pct: 10.0, bonus_pct: 150.0, multiplicateur_moyen: 1.15 }, tolerance_pct: 0.01, preuve: null }
+  - { id: critique-004, type: unitaire, calcul: critique.multiplicateur, nature: discriminant, patch: null, confiance: supposé, statut: brouillon,
+      description: "Chance plate ajoutée avant les increased.",
+      entrees: { crit_base: 8, crit_plat: 2, increased_crit: 50 },
+      attendu: { chance_pct: 15.0, multiplicateur_moyen: 1.15 }, tolerance_pct: 0.01,
+      a_verifier_en_jeu: "I-08 : si la chance plate s'ajoutait après les increased, on aurait 14 %.", preuve: null }
+  - { id: critique-005, type: unitaire, calcul: critique.multiplicateur, nature: limite, patch: null, confiance: supposé, statut: brouillon,
+      description: "Chance de base nulle : les increased sont sans effet.",
+      entrees: { crit_base: 0, increased_crit: 300 },
+      attendu: { chance_pct: 0.0, multiplicateur_moyen: 1.0 }, tolerance_pct: 0.01, preuve: null }
