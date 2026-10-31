@@ -56,7 +56,10 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "msi"],
+    "targets": [
+      "nsis",
+      "msi"
+    ],
     "createUpdaterArtifacts": true,
     "category": "Game",
     "shortDescription": "Overlay et planificateur pour Path of Exile 2",
@@ -68,15 +71,23 @@
       "icons/icon.ico"
     ],
     "windows": {
-      "webviewInstallMode": { "type": "downloadBootstrapper" },
-      "nsis": { "installMode": "currentUser" }
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      },
+      "nsis": {
+        "installMode": "currentUser"
+      }
     }
   },
   "plugins": {
     "updater": {
-      "pubkey": "CLE-PUBLIQUE-MINISIGN-A-GENERER-PAR-MAX",
-      "endpoints": ["https://updates.augur.invalid/channels/stable/latest.json"],
-      "windows": { "installMode": "passive" }
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDMzMjcyRjU4RjMwOUREMUMKUldRYzNRbnpXQzhuTXpjNGFuWHFyWlBqUmY5c1lxRGlDN1RaYkxSNVBtSDE2QnE1QlljYUxwRlIK",
+      "endpoints": [
+        "https://github.com/ShigenoTV/Augur/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }

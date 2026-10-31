@@ -15,6 +15,9 @@ import { createRoot } from "react-dom/client";
 import { commands, isAppError, isTauri, on, type Settings } from "../bridge";
 import { useUpdates } from "./useUpdates";
 
+/** Pas de canal bêta tant que les mises à jour passent par GitHub Releases (voir src-tauri/src/updates.rs). */
+const BETA_AVAILABLE = false;
+
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="rounded-panel border border-ink-700 bg-ink-900 p-4">
@@ -150,16 +153,18 @@ function App() {
             {updates.update.phase === "upToDate" && "Augur est à jour."}
             {updates.update.phase === "idle" && "Vérification automatique au démarrage puis toutes les 6 heures."}
           </span>
-          <label className="ml-auto flex items-center gap-2 text-text-muted">
-            <input
-              type="checkbox"
-              checked={settings?.betaChannel ?? false}
-              disabled={!settings}
-              onChange={(e) => void toggleBeta(e.target.checked)}
-              className="accent-[var(--color-accent)]"
-            />
-            Rejoindre la bêta
-          </label>
+          {BETA_AVAILABLE && (
+            <label className="ml-auto flex items-center gap-2 text-text-muted">
+              <input
+                type="checkbox"
+                checked={settings?.betaChannel ?? false}
+                disabled={!settings}
+                onChange={(e) => void toggleBeta(e.target.checked)}
+                className="accent-[var(--color-accent)]"
+              />
+              Rejoindre la bêta
+            </label>
+          )}
         </div>
         <p className="mt-2 text-xs text-text-subtle">
           Les mises à jour sont signées et vérifiées avant installation. Rien ne s'installe sans ton accord.

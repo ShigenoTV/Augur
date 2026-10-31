@@ -70,7 +70,7 @@ Types de `@augur/contracts` (chantier Architecture), recopiés en miroir dans `p
 
 ## 6. Mise à jour de l'application
 
-Bandeau discret dans la fenêtre principale, jamais dans l'overlay ni en modal : version disponible, nouveautés dépliables, « Installer et redémarrer » / « Plus tard », barre de progression. Vérification au démarrage puis toutes les 6 h, et via « Rechercher des mises à jour » (fenêtre et menu de la zone de notification). Option « Rejoindre la bêta ». Rien ne s'installe sans un clic du joueur.
+Bandeau discret dans la fenêtre principale, jamais dans l'overlay ni en modal : version disponible, nouveautés dépliables, « Installer et redémarrer » / « Plus tard », barre de progression. Vérification au démarrage puis toutes les 6 h, et via « Rechercher des mises à jour » (fenêtre et menu de la zone de notification). Option « Rejoindre la bêta » masquée en 0.1 : les mises à jour sont servies par GitHub Releases, qui n'a qu'un canal. Rien ne s'installe sans un clic du joueur.
 
 ![Mise à jour](maquettes/mise-a-jour.png)
 
