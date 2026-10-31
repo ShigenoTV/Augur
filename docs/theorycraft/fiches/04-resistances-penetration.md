@@ -49,6 +49,7 @@ Les résistances sont des entiers dans le panneau. Hypothèse : aucun arrondi su
 
 - [S-WIKI-RES] poe2wiki.net, *Resistance*, section « Elemental resistance penalties », capture transmise par Max le 31 octobre 2026 (patch non indiqué sur la capture). https://www.poe2wiki.net/wiki/Resistance
 - [S-RES] mobalytics, *Resistances* (PoE 2), date non relevée : maximum 75 %, plafond 90 %, −10 % par acte, −60 % au total, chaos non concerné. https://mobalytics.gg/poe-2/guides/resistances
+- [S-WIKI-PEN] poe2wiki.net, captures transmises par Max le 31 octobre 2026 : *Penetration*, « to a minimum of 0% resistance by default », calculée après les autres modificateurs de résistance de la cible, sans effet sur les ailments. https://www.poe2wiki.net/wiki/Penetration
 - [S-PEN] mobalytics, *Penetration* (PoE 2), date non relevée : « Penetration does not work beyond 0% Resistance ». https://mobalytics.gg/poe-2/guides/penetration
 - [S-ORDRE] mobalytics, 20 janvier 2026 : « Penetration cannot bypass 0% Resistance ».
 

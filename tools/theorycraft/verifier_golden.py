@@ -38,21 +38,27 @@ def _produit_more(liste):
 
 
 def _etape_conversion(montants, conversions, gains):
-    """Une étape (compétence ou secondaire) : normalisation à 100 %, pas d'enchaînement,
-    gains calculés sur le montant source avant conversion de l'étape (fiche 01)."""
-    sortie = dict(montants)
+    """Une étape (compétence ou secondaire), d'après poe2wiki « Damage conversion » :
+    1. les gains se calculent sur les montants d'avant l'étape (source `degats` = total
+       de tous les types) et s'ajoutent ;
+    2. les conversions s'appliquent ensuite aux montants obtenus, gains compris
+       (exemple Explosive Grenade + Blueflame Bracers du wiki), normalisées à 100 %
+       par type source, sans enchaînement à l'intérieur de l'étape."""
+    apres_gains = dict(montants)
+    total_avant = sum(montants.values())
+    for source, cibles in (gains or {}).items():
+        depart = total_avant if source == "degats" else montants.get(source, 0.0)
+        for cible, pct in cibles.items():
+            apres_gains[cible] = apres_gains.get(cible, 0.0) + depart * pct / 100
+    sortie = dict(apres_gains)
     for source, cibles in (conversions or {}).items():
         total = sum(cibles.values())
         echelle = 100 / total if total > 100 else 1.0
-        depart = montants.get(source, 0.0)
+        depart = apres_gains.get(source, 0.0)
         for cible, pct in cibles.items():
             transfert = depart * pct * echelle / 100
             sortie[source] = sortie.get(source, 0.0) - transfert
             sortie[cible] = sortie.get(cible, 0.0) + transfert
-    for source, cibles in (gains or {}).items():
-        depart = montants.get(source, 0.0)
-        for cible, pct in cibles.items():
-            sortie[cible] = sortie.get(cible, 0.0) + depart * pct / 100
     return sortie
 
 

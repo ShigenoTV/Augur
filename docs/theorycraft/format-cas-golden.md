@@ -43,7 +43,7 @@ cas:
 
 | `calcul` | Entrées | Sorties attendues |
 |---|---|---|
-| `degats.coup_moyen` | `base`, `ajoutes` (`{type: [min, max]}`), `efficacite_ajoutes`, `conversion_competence`, `gain_competence`, `conversion_secondaire`, `gain_secondaire` (`{source: {cible: pct}}`), `increased` (`{etiquette: pct}`), `more` (liste de pct) | `par_type` (`{type: moyenne}`), `total` |
+| `degats.coup_moyen` | `base`, `ajoutes` (`{type: [min, max]}`), `efficacite_ajoutes`, `conversion_competence`, `gain_competence`, `conversion_secondaire`, `gain_secondaire` (`{source: {cible: pct}}`, source `degats` = total de tous les types), `increased` (`{etiquette: pct}`), `more` (liste de pct) | `par_type` (`{type: moyenne}`), `total` |
 | `critique.multiplicateur` | `crit_base`, `crit_plat`, `increased_crit`, `bonus_plat`, `increased_bonus` | `chance_pct`, `bonus_pct`, `multiplicateur_moyen` |
 | `vitesse.incantation` | `temps_base`, `increased`, `more` | `cadence`, `temps` |
 | `dps.sort` | `coup_moyen_par_type`, `multiplicateur_crit`, `cadence`, `res_cible`, `penetration` | `dps` |
