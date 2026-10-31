@@ -89,11 +89,11 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             // Fermer la fenêtre principale la cache : l'overlay continue de tourner.
-            if window.label() == MAIN_WINDOW {
-                if let WindowEvent::CloseRequested { api, .. } = event {
-                    api.prevent_close();
-                    let _ = window.hide();
-                }
+            if window.label() == MAIN_WINDOW
+                && let WindowEvent::CloseRequested { api, .. } = event
+            {
+                api.prevent_close();
+                let _ = window.hide();
             }
         })
         .run(tauri::generate_context!())

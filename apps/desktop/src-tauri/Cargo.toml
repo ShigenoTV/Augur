@@ -3,7 +3,7 @@ name = "augur-desktop"
 version = "0.1.0"
 description = "Application Windows Augur : overlay en jeu (Upgrade Copilot) et planificateur"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.90"
 publish = false
 
 [lib]
