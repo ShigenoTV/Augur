@@ -4,8 +4,10 @@
 # activés dans Settings > Code security du dépôt.
 version: 2
 updates:
+  # Un seul workspace Cargo (Cargo.toml + Cargo.lock à la racine) : Dependabot
+  # doit viser la racine, jamais un membre comme apps/desktop/src-tauri.
   - package-ecosystem: "cargo"
-    directories: ["/", "/**/*"]
+    directory: "/"
     schedule: { interval: "weekly", day: "monday", time: "06:00", timezone: "Europe/Paris" }
     open-pull-requests-limit: 10
     labels: ["dependencies", "securite"]
