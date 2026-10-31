@@ -29,6 +29,7 @@ Augur est une application **Windows** d'outils tiers pour **Path of Exile 2**. E
 ## Documentation
 
 - [Document fondateur](docs/plan-fondateur.md) : stack, produits, méthode Theorycrafter ↔ devs, premier sprint.
+- [Architecture](docs/architecture/README.md) : API GGG, décisions d'architecture, contrats entre modules.
 
 ---
 

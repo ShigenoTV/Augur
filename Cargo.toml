@@ -1,0 +1,11 @@
+# Workspace Cargo d'Augur.
+# Le thread « moteur de calcul » possède ce fichier ; cette version minimale
+# sert seulement à compiler les crates d'architecture en attendant la fusion.
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+edition = "2024"
+license = "UNLICENSED"
+publish = false

@@ -1,0 +1,19 @@
+[package]
+name = "augur-ratelimit"
+version = "0.1.0"
+description = "Budget manager des rate limits GGG, piloté par les en-têtes X-Rate-Limit-*"
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+default = ["async"]
+# Gestionnaire asynchrone (tokio) au-dessus de la machine à états pure.
+async = ["dep:tokio"]
+
+[dependencies]
+thiserror = "2"
+tokio = { version = "1", features = ["sync", "time"], optional = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["sync", "time", "macros", "rt", "test-util"] }
