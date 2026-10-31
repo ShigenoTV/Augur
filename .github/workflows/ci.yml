@@ -1,0 +1,196 @@
+# Intégration continue d'Augur.
+#
+# Chaque job ne s'exécute que si la partie du dépôt qu'il couvre existe déjà :
+# le dépôt se remplit progressivement pendant le sprint 1 et la CI suit sans
+# modification. Les chemins sont centralisés dans `env` ci-dessous.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  APP_DIR: apps/desktop            # application Tauri (src-tauri dedans)
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+  RUST_BACKTRACE: short
+
+jobs:
+  detect:
+    name: Détection des composants
+    runs-on: ubuntu-latest
+    outputs:
+      rust: ${{ steps.d.outputs.rust }}
+      desktop: ${{ steps.d.outputs.desktop }}
+      python: ${{ steps.d.outputs.python }}
+      infra: ${{ steps.d.outputs.infra }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: d
+        shell: bash
+        run: |
+          has() { [ -e "$1" ] && echo true || echo false; }
+          {
+            echo "rust=$(has Cargo.toml)"
+            echo "desktop=$(has "$APP_DIR/src-tauri/tauri.conf.json")"
+            # Projets Python hors outillage interne (testé par le job « outillage »).
+            if find . -name pyproject.toml -not -path './tools/*' -not -path './node_modules/*' | grep -q .; then
+              echo "python=true"; else echo "python=false"; fi
+            if find infra -name '*.tf' 2>/dev/null | grep -q .; then
+              echo "infra=true"; else echo "infra=false"; fi
+          } >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT"
+
+  outillage:
+    name: Outillage de release et de données
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tests des paquets de données
+        run: |
+          pip install -r tools/datapack/requirements.txt
+          python -m pytest -q tools/datapack/tests
+      - name: Tests du manifeste de mise à jour
+        run: node --test scripts/release/*.test.mjs
+      - name: Analyse du script de signature (PSScriptAnalyzer)
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force
+          $issues = Invoke-ScriptAnalyzer -Path scripts/release -Recurse -Severity Error,Warning `
+            -ExcludeRule PSAvoidUsingWriteHost,PSUseApprovedVerbs,PSUseSingularNouns
+          $issues | Format-Table -AutoSize
+          if ($issues | Where-Object Severity -eq 'Error') { exit 1 }
+
+  rust:
+    name: Rust (fmt, clippy, tests)
+    needs: detect
+    if: needs.detect.outputs.rust == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dépendances système de Tauri (WebKitGTK)
+        if: needs.detect.outputs.desktop == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Front factice pour la compilation de src-tauri
+        if: needs.detect.outputs.desktop == 'true'
+        shell: bash
+        run: |
+          # generate_context!() exige que frontendDist existe ; on évite un build JS ici.
+          dist=$(node -e "const c=require('./$APP_DIR/src-tauri/tauri.conf.json');console.log((c.build&&c.build.frontendDist)||'')")
+          if [ -n "$dist" ] && [[ "$dist" != http* ]]; then
+            mkdir -p "$APP_DIR/src-tauri/$dist" && touch "$APP_DIR/src-tauri/$dist/index.html"
+          fi
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
+
+  desktop-windows:
+    name: Build Windows (non signé)
+    needs: detect
+    if: needs.detect.outputs.desktop == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: pnpm (via corepack, version de packageManager)
+        run: corepack enable
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: windows-desktop
+          workspaces: |
+            . -> target
+            apps/desktop/src-tauri -> target
+      - name: Dépendances JS
+        shell: bash
+        run: |
+          if [ -f pnpm-workspace.yaml ]; then pnpm install --frozen-lockfile
+          else pnpm --dir "$APP_DIR" install --frozen-lockfile; fi
+      - name: Build Tauri (installeur NSIS, sans signature)
+        shell: bash
+        # Pas d'artefacts d'updater en CI : la clé privée n'est disponible
+        # que dans le workflow de release.
+        run: pnpm --dir "$APP_DIR" tauri build --ci --bundles nsis --config '{"bundle":{"createUpdaterArtifacts":false}}'
+      - name: Clippy et tests de l'application (cible Windows)
+        shell: bash
+        run: |
+          manifest="$APP_DIR/src-tauri/Cargo.toml"
+          cargo clippy --manifest-path "$manifest" --all-targets --locked -- -D warnings
+          cargo test --manifest-path "$manifest" --locked
+      - name: Installeur en artefact (14 jours)
+        uses: actions/upload-artifact@v4
+        with:
+          name: augur-windows-${{ github.sha }}
+          path: |
+            target/release/bundle/nsis/*.exe
+            ${{ env.APP_DIR }}/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+          retention-days: 14
+
+  python:
+    name: Python (ruff, pytest)
+    needs: detect
+    if: needs.detect.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Lint et tests de chaque projet Python
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=0
+          while IFS= read -r proj; do
+            dir=$(dirname "$proj")
+            echo "::group::$dir"
+            (cd "$dir" && uv sync --all-extras --dev \
+              && uvx ruff check . \
+              && { uv run --with pytest pytest -q; rc=$?; [ $rc -eq 0 ] || [ $rc -eq 5 ]; }) || status=1
+            echo "::endgroup::"
+          done < <(find . -name pyproject.toml -not -path './tools/*' -not -path '*/node_modules/*' -not -path '*/.venv/*')
+          exit $status
+
+  infra:
+    name: OpenTofu (fmt, validate)
+    needs: detect
+    if: needs.detect.outputs.infra == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: opentofu/setup-opentofu@v1
+      - name: Format et validation de chaque module
+        shell: bash
+        run: |
+          set -euo pipefail
+          tofu fmt -check -recursive infra
+          for dir in $(find infra -name '*.tf' -exec dirname {} \; | sort -u); do
+            echo "::group::$dir"
+            tofu -chdir="$dir" init -backend=false -input=false
+            tofu -chdir="$dir" validate
+            echo "::endgroup::"
+          done
