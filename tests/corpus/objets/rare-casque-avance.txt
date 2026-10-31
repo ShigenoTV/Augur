@@ -1,0 +1,24 @@
+Item Class: Helmets
+Rarity: Rare
+Storm Visage
+Kamasan Tiara
+--------
+Quality: +20% (augmented)
+Energy Shield: 142 (augmented)
+--------
+Requires: Level 65, 121 Int
+--------
+Sockets: S S
+--------
+Item Level: 81
+--------
++12% to Lightning Resistance (rune)
+--------
+{ Prefix Modifier "Shining" (Tier: 3) — Defences, Energy Shield }
++38(35-41) to maximum Energy Shield
+{ Prefix Modifier "Robust" (Tier: 2) — Life }
++89(85-99) to maximum Life
+{ Suffix Modifier "of the Kiln" (Tier: 2) — Elemental, Fire, Resistance }
++38(36-40)% to Fire Resistance
+{ Suffix Modifier "of Haast" (Tier: 4) — Elemental, Cold, Resistance }
+-10(-12--8)% to Cold Resistance

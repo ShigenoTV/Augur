@@ -1,0 +1,23 @@
+Item Class: Quarterstaves
+Rarity: Unique
+Thunderkin
+Crackling Quarterstaff
+--------
+Quarterstaff
+Quality: +20% (augmented)
+Lightning Damage: 4-52 (augmented)
+Critical Hit Chance: 10.00%
+Attacks per Second: 1.40
+--------
+Requires: Level 33, 25 Str, 57 Dex
+--------
+Item Level: 70
+--------
+{ Unique Modifier — Damage, Elemental, Lightning, Attack }
+Adds 1 to 40(30-50) Lightning Damage
+{ Unique Modifier — Attack, Speed }
+10(8-12)% increased Attack Speed
+{ Unique Modifier }
+Lightning Damage from Hits Shocks Enemies — Unscalable Value
+--------
+Mirrored
