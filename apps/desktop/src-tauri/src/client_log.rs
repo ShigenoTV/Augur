@@ -7,15 +7,62 @@
 use std::fs::File;
 use std::io::{self, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
-use std::time::Duration;
+use std::sync::Mutex;
+use std::time::{Duration, Instant};
 
-use tauri::{AppHandle, Emitter};
+use serde::Serialize;
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::contracts::{ZoneChanged, events};
+use crate::log_locator;
+use crate::settings::SettingsStore;
 use crate::time::rfc3339_now;
 
 const POLL: Duration = Duration::from_millis(500);
-const DISCOVERY_RETRY: Duration = Duration::from_secs(30);
+/// Nouvelle recherche toutes les 5 s tant que le fichier est introuvable
+/// (le joueur peut lancer le jeu ou choisir un chemin entre-temps).
+const DISCOVERY_RETRY: Duration = Duration::from_secs(5);
+/// Fréquence de vérification d'un changement de chemin dans les réglages.
+const SETTINGS_CHECK: Duration = Duration::from_secs(2);
+
+/// Événement émis à chaque changement de l'état du suivi.
+pub const EVENT_STATUS: &str = "augur://client-log-status";
+
+/// État du suivi, affiché dans la fenêtre principale.
+#[derive(Debug, Clone, Default, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ClientLogStatus {
+    /// Fichier suivi, s'il a été trouvé.
+    pub path: Option<String>,
+    /// Vrai quand le fichier est trouvé et lu.
+    pub watching: bool,
+    /// Dernier changement de zone lu depuis le lancement d'Augur.
+    pub last_zone: Option<ZoneChanged>,
+    /// Emplacements essayés (diagnostic quand rien n'est trouvé).
+    pub searched: Vec<String>,
+}
+
+#[derive(Default)]
+pub struct ClientLogState(Mutex<ClientLogStatus>);
+
+impl ClientLogState {
+    pub fn get(&self) -> ClientLogStatus {
+        self.0.lock().unwrap_or_else(|e| e.into_inner()).clone()
+    }
+
+    /// Applique un changement et l'émet s'il modifie l'état.
+    fn update(&self, app: &AppHandle, change: impl FnOnce(&mut ClientLogStatus)) {
+        let snapshot = {
+            let mut guard = self.0.lock().unwrap_or_else(|e| e.into_inner());
+            let before = guard.clone();
+            change(&mut guard);
+            (*guard != before).then(|| guard.clone())
+        };
+        if let Some(status) = snapshot {
+            let _ = app.emit(EVENT_STATUS, status);
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LogEvent {
@@ -26,10 +73,17 @@ pub enum LogEvent {
 }
 
 /// Analyse une ligne du journal. Formats observés sur PoE 1 et PoE 2, à
-/// confirmer sur un client PoE 2 à jour (tâche S1 front) :
+/// confirmer sur un client PoE 2 à jour :
 /// `2026/10/31 14:12:34 123 abc [INFO Client 42] [SCENE] Set Source [Clearfell]`
+/// `2026/10/31 14:12:34 123 abc [INFO Client 42] : You have entered Clearfell.`
 /// `2026/10/31 14:12:33 123 abc [DEBUG Client 42] Generating level 12 area "G1_2" with seed 1`
 pub fn parse_line(line: &str) -> Option<LogEvent> {
+    if let Some((_, rest)) = line.split_once("] : You have entered ") {
+        let zone = rest.trim().trim_end_matches('.');
+        if !zone.is_empty() {
+            return Some(LogEvent::ZoneEntered(zone.to_owned()));
+        }
+    }
     if let Some((_, rest)) = line.split_once("[SCENE] Set Source [") {
         let zone = rest.strip_suffix(']').unwrap_or(rest).trim_end_matches(']');
         if zone.is_empty() || zone == "(null)" || zone == "(unknown)" {
@@ -103,37 +157,28 @@ impl Tail {
     }
 }
 
-/// Emplacements connus de `Client.txt`. `AUGUR_CLIENT_LOG` force un chemin
-/// (bibliothèque Steam sur un autre disque) en attendant le réglage dans l'UI.
-pub fn candidate_paths() -> Vec<PathBuf> {
-    let mut paths = Vec::new();
-    if let Ok(custom) = std::env::var("AUGUR_CLIENT_LOG") {
-        paths.push(PathBuf::from(custom));
-    }
-    if cfg!(windows) {
-        for root in [
-            r"C:\Program Files (x86)\Steam\steamapps\common\Path of Exile 2",
-            r"C:\Program Files\Steam\steamapps\common\Path of Exile 2",
-            r"C:\Program Files (x86)\Grinding Gear Games\Path of Exile 2",
-            r"C:\Program Files\Grinding Gear Games\Path of Exile 2",
-        ] {
-            paths.push(Path::new(root).join("logs").join("Client.txt"));
-        }
-    }
-    paths
+fn user_path(app: &AppHandle) -> Option<String> {
+    app.state::<SettingsStore>().get().client_log_path
 }
 
-fn find_log() -> Option<PathBuf> {
-    candidate_paths().into_iter().find(|p| p.is_file())
-}
-
-/// Lance le suivi en tâche de fond et émet `augur://zone-changed`.
+/// Lance le suivi en tâche de fond : recherche du fichier, lecture des
+/// ajouts, émission de `augur://zone-changed` et de l'état du suivi.
 pub fn spawn(app: AppHandle) {
     let spawned = std::thread::Builder::new()
         .name("augur-client-log".into())
         .spawn(move || {
+            let state = app.state::<ClientLogState>();
             loop {
-                let Some(path) = find_log() else {
+                let configured = user_path(&app);
+                let (found, searched) = log_locator::locate(configured.as_deref());
+                let searched: Vec<String> =
+                    searched.iter().map(|p| p.display().to_string()).collect();
+                let Some(path) = found else {
+                    state.update(&app, |s| {
+                        s.path = None;
+                        s.watching = false;
+                        s.searched = searched;
+                    });
                     std::thread::sleep(DISCOVERY_RETRY);
                     continue;
                 };
@@ -142,8 +187,21 @@ pub fn spawn(app: AppHandle) {
                     continue;
                 };
                 log::info!("suivi de {}", tail.path().display());
+                state.update(&app, |s| {
+                    s.path = Some(path.display().to_string());
+                    s.watching = true;
+                    s.searched = searched;
+                });
+
+                let mut last_settings_check = Instant::now();
                 loop {
                     std::thread::sleep(POLL);
+                    if last_settings_check.elapsed() >= SETTINGS_CHECK {
+                        last_settings_check = Instant::now();
+                        if user_path(&app) != configured {
+                            break; // le joueur a choisi un autre chemin
+                        }
+                    }
                     match tail.poll() {
                         Ok(lines) => {
                             for event in lines.iter().filter_map(|l| parse_line(l)) {
@@ -152,12 +210,14 @@ pub fn spawn(app: AppHandle) {
                                         zone,
                                         at: rfc3339_now(),
                                     };
+                                    state.update(&app, |s| s.last_zone = Some(payload.clone()));
                                     let _ = app.emit(events::ZONE_CHANGED, payload);
                                 }
                             }
                         }
                         Err(err) => {
                             log::warn!("Client.txt illisible : {err}");
+                            state.update(&app, |s| s.watching = false);
                             break;
                         }
                     }
@@ -194,6 +254,39 @@ mod tests {
                 level: 65,
                 area_id: "MapCrypt".into()
             })
+        );
+    }
+
+    /// Extrait d'un vrai Client.txt PoE 2 (client 0.5, 2026-10-31).
+    const REAL_LOG: &str = "\
+2026/10/31 21:34:34 2674156 7fbd1225 [INFO Client 13604] [SCENE] Set Source [(unknown)]
+2026/10/31 21:35:29 2729968 7fbd1225 [INFO Client 13604] [SCENE] Set Source [(null)]
+2026/10/31 21:35:30 2730093 2caa229f [DEBUG Client 13604] Generating level 65 area \"HideoutBlankMountain\" with seed 1
+2026/10/31 21:35:30 2730328 7fbd1225 [INFO Client 13604] [SCENE] Set Source [Alpine Plateau Hideout]
+2026/10/31 21:35:32 2732734 3ef23348 [INFO Client 13604] : You have joined trade chat channel 1 Français.
+2026/10/31 21:35:34 2734593 4cba6a94 [INFO Client 13604] [LOADING SCREEN] (Alpine Plateau Hideout) Duration = 4.57065 seconds";
+
+    #[test]
+    fn lit_un_vrai_journal_poe2() {
+        let events: Vec<_> = REAL_LOG.lines().filter_map(parse_line).collect();
+        assert_eq!(
+            events,
+            vec![
+                LogEvent::AreaGenerated {
+                    level: 65,
+                    area_id: "HideoutBlankMountain".into()
+                },
+                LogEvent::ZoneEntered("Alpine Plateau Hideout".into()),
+            ]
+        );
+    }
+
+    #[test]
+    fn lit_le_message_d_entree_en_anglais() {
+        let line = "2026/10/31 14:12:34 1 a [INFO Client 1] : You have entered Clearfell.";
+        assert_eq!(
+            parse_line(line),
+            Some(LogEvent::ZoneEntered("Clearfell".into()))
         );
     }
 

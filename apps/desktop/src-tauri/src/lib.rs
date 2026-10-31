@@ -17,6 +17,7 @@ mod commands;
 pub mod contracts;
 mod game_window;
 pub mod item_text;
+mod log_locator;
 mod overlay;
 pub mod placement;
 mod settings;
@@ -66,6 +67,7 @@ pub fn run() {
         .manage(AppState::default())
         .manage(overlay::OverlayCtl::default())
         .manage(updates::PendingUpdate::default())
+        .manage(client_log::ClientLogState::default())
         .invoke_handler(tauri::generate_handler![
             commands::parse_clipboard_item,
             commands::get_overlay_state,
@@ -76,6 +78,8 @@ pub fn run() {
             commands::install_update,
             commands::get_settings,
             commands::set_update_channel,
+            commands::get_client_log_status,
+            commands::set_client_log_path,
         ])
         .setup(|app| {
             let handle = app.handle();

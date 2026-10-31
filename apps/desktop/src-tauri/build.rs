@@ -12,6 +12,8 @@ fn main() {
             "install_update",
             "get_settings",
             "set_update_channel",
+            "get_client_log_status",
+            "set_client_log_path",
         ]),
     ))
     .expect("échec du build Tauri");
