@@ -1,0 +1,18 @@
+Item Class: Wands
+Rarity: Rare
+Doom Song
+Withered Wand
+--------
+Requires: Level 52, 89 Int
+--------
+Item Level: 79
+--------
+Grants Skill: Level 15 Chaos Bolt
+--------
+Adds 7 to 14 Fire Damage to Spells
++45 to maximum Mana
+62% increased Spell Damage
++3 to Level of all Spell Skills
++18% to Fire Resistance
+--------
+Corrupted

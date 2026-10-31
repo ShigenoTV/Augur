@@ -1,15 +1,24 @@
 # Workspace Cargo d'Augur : crates/* (moteur, contrats, rate limits) et
-# l'application Tauri (apps/desktop/src-tauri), avec un Cargo.lock unique.
+# l'application Tauri (apps/desktop/src-tauri). Un seul Cargo.lock, à la racine.
 [workspace]
 resolver = "3"
 members = ["crates/*", "apps/desktop/src-tauri"]
 
 [workspace.package]
 edition = "2024"
+rust-version = "1.85"
 license = "UNLICENSED"
 publish = false
 
-# Binaire de l'application Windows : petit et optimisé.
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml_ng = "0.10"
+thiserror = "2"
+proptest = "1"
+
+# Profil de release de l'application (Cargo ignore les profils des membres
+# du workspace).
 [profile.release]
 codegen-units = 1
 lto = true

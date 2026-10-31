@@ -1,0 +1,18 @@
+Item Class: Gloves
+Rarity: Unique
+Hand of Ash
+Rope Cuffs
+--------
+Evasion Rating: 58 (augmented)
+--------
+Requires: Level 21, 21 Dex
+--------
+Item Level: 60
+--------
++52 to Evasion Rating
++30 to maximum Life
+25% increased Fire Damage
+Ignites you inflict deal Damage 20% faster
+--------
+The fire in his palm
+never touched his sleeve.

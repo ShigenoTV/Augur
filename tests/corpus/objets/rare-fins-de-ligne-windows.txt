@@ -1,0 +1,8 @@
+Item Class: Wands
+Rarity: Rare
+Crlf Tongue
+Attuned Wand
+--------
+Item Level: 64
+--------
++33 to maximum Mana

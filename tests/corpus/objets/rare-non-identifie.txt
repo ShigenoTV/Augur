@@ -1,0 +1,11 @@
+Item Class: Body Armours
+Rarity: Rare
+Votive Raiment
+--------
+Energy Shield: 98
+--------
+Requires: Level 59, 101 Int
+--------
+Item Level: 82
+--------
+Unidentified

@@ -1,0 +1,20 @@
+id: sort-degats-ajoutes-001
+patch: "0.3.0"
+confiance: supposé
+description: Dégâts ajoutés pondérés par l'efficacité de la gemme (80 %).
+personnage:
+  competence:
+    nom: Sort de feu de test
+    temps_incantation: 0.8
+    critique_base: 8
+    efficacite_degats_ajoutes: 80
+    degats: { feu: [10, 20] }
+  modificateurs:
+    - { stat: added_fire_damage_min, type: added, valeur: 5, source: "Bague : dégâts de feu ajoutés" }
+    - { stat: added_fire_damage_max, type: added, valeur: 15, source: "Bague : dégâts de feu ajoutés" }
+    - { stat: fire_damage, type: increased, valeur: 50, source: "Objet : bâton" }
+attendu:
+  tolerance_pct: 0.01
+  coup_moyen: 34.5          # ((10 + 4) + (20 + 12)) / 2 × 1,5
+  dps: 46.575
+preuve: "calcul manuel (cohérence du moteur)"

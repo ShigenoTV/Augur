@@ -1,0 +1,19 @@
+id: sort-critique-plafond-001
+patch: "0.3.0"
+confiance: supposé
+description: La chance de critique est plafonnée à 100 % ; increased sur le bonus critique.
+personnage:
+  competence:
+    nom: Sort de test
+    temps_incantation: 0.5
+    critique_base: 8
+    degats: { feu: [100, 100] }
+  modificateurs:
+    - { stat: critical_hit_chance, type: increased, valeur: 2000, source: "Test" }
+    - { stat: critical_damage_bonus, type: increased, valeur: 50, source: "Test" }
+attendu:
+  tolerance_pct: 0.01
+  chance_critique: { valeur: 100, tolerance_abs: 0 }
+  bonus_degats_critiques: 150
+  dps: 500                  # 100 × 2,5 × 2
+preuve: "calcul manuel (cohérence du moteur)"
