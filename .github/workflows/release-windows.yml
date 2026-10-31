@@ -246,7 +246,7 @@ jobs:
             --out dist-release/latest.json
           (cd dist-release && sha256sum -- *.exe *.msi > SHA256SUMS.txt && cat SHA256SUMS.txt)
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: augur-${{ steps.meta.outputs.version }}-windows
           path: dist-release/
