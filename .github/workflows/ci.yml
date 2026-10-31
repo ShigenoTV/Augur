@@ -123,6 +123,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: windows-desktop
+          workspaces: |
+            . -> target
+            apps/desktop/src-tauri -> target
       - name: Dépendances JS
         shell: bash
         run: |
@@ -130,7 +133,15 @@ jobs:
           else pnpm --dir "$APP_DIR" install --frozen-lockfile; fi
       - name: Build Tauri (installeur NSIS, sans signature)
         shell: bash
-        run: pnpm --dir "$APP_DIR" tauri build --ci --bundles nsis
+        # Pas d'artefacts d'updater en CI : la clé privée n'est disponible
+        # que dans le workflow de release.
+        run: pnpm --dir "$APP_DIR" tauri build --ci --bundles nsis --config '{"bundle":{"createUpdaterArtifacts":false}}'
+      - name: Clippy et tests de l'application (cible Windows)
+        shell: bash
+        run: |
+          manifest="$APP_DIR/src-tauri/Cargo.toml"
+          cargo clippy --manifest-path "$manifest" --all-targets --locked -- -D warnings
+          cargo test --manifest-path "$manifest" --locked
       - name: Installeur en artefact (14 jours)
         uses: actions/upload-artifact@v4
         with:
