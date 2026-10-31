@@ -68,7 +68,7 @@ jobs:
     environment: release   # secrets de signature isolés ; règles de protection possibles
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.TAG }}
 
