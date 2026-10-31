@@ -7,7 +7,7 @@ Personne ne peut fermer une entrée sans preuve (capture ou vidéo référencée
 | Id | Prio | Mécanique | Question | Comment la trancher | Bloqué par |
 |---|---|---|---|---|---|
 | I-01 | P0 | ES (fiche 07) | Le chaos retire-t-il toujours 2× l'ES sur le patch courant ? | Personnage avec ES, recevoir un coup de chaos de taille connue, comparer ES perdue et dégâts | Jeu installé |
-| I-02 | P0 | Résistances (fiche 04) | Pénalité de campagne réelle : toujours −10 % par acte, −60 % au total ? La campagne a changé entre les patchs | Relever la résistance du panneau avant/après chaque acte, ou objets connus + panneau en fin de campagne | Jeu installé |
+| I-02 | P0 | Résistances (fiche 04) | Pénalité de progression : le wiki donne −10/−20/−30 % aux actes 2 à 4, puis −40/−50/−60 % selon le niveau de zone (54, 60, 65+). Reste à confirmer −60 % en endgame sur le patch courant | Objets connus + panneau dans une zone de niveau 65+ (mesure 2) | Mesure de Max |
 | I-03 | P0 | Dégâts (fiche 01) | Les dégâts convertis ou gagnés profitent-ils uniquement des modificateurs du type final ? | Cas `degats-003` : tooltip d'un sort avec conversion, avec et sans un objet « increased <type source> » | Jeu installé |
 | I-04 | P0 | Évasion (fiche 06) | La formule d'évasion (source de septembre 2025) est-elle toujours valable ? | Chance d'éviter du panneau pour 3 valeurs d'évasion, ajustement des constantes 1,25 et 0,3 | Jeu installé |
 | I-05 | P0 | Armure (fiche 05) | Constante 10 dans A/(A+10D) | Réduction estimée affichée par le panneau, ou coup de taille connue | Jeu installé |
