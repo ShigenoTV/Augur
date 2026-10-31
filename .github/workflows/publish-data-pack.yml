@@ -52,7 +52,7 @@ jobs:
     environment: data-production
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
       - run: pip install -r tools/datapack/requirements.txt
