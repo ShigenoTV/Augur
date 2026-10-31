@@ -13,7 +13,7 @@ Le plan fondateur fait de `poe2-core` le cœur commun des trois modules (Copilot
 ### 1. Arborescence du monorepo
 
 ```
-Cargo.toml               workspace (members = ["crates/*", "apps/desktop/src-tauri"])
+Cargo.toml               workspace (members = ["crates/*"] ; apps/desktop/src-tauri reste autonome)
 crates/
   poe2-core/             moteur : parseur, calcul, modèle de données du jeu (pur)
   augur-contracts/       DTO partagés appli ↔ interface ↔ backend (serde + ts-rs)

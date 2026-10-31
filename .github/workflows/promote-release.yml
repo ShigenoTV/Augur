@@ -1,0 +1,157 @@
+# Promotion d'une version déjà construite vers un canal de mise à jour.
+#
+# C'est la seule étape qui rend une version visible des joueurs.
+# Deux hébergements possibles :
+#   - CDN R2 (variable R2_UPDATES_BUCKET définie) : les applications
+#     interrogent channels/{canal}/latest.json sur updates.<domaine> ;
+#   - GitHub Releases (par défaut, sans domaine) : les applications
+#     interrogent releases/latest/download/latest.json ; promouvoir revient
+#     à publier la release brouillon. Canal stable uniquement.
+# L'environnement `production` doit exiger l'approbation de Max
+# (Settings > Environments > production > Required reviewers).
+name: Promouvoir une release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version déjà déposée (ex. 0.1.0 ou 0.2.0-beta.1)"
+        required: true
+      channel:
+        description: "Canal à mettre à jour"
+        type: choice
+        options: [beta, stable]
+        required: true
+
+permissions:
+  contents: write   # passage de la release GitHub de brouillon à publiée
+
+concurrency:
+  group: promote-${{ github.event.inputs.channel }}
+  cancel-in-progress: false
+
+env:
+  VERSION: ${{ github.event.inputs.version }}
+  CHANNEL: ${{ github.event.inputs.channel }}
+  UPDATES_BASE_URL: ${{ vars.AUGUR_UPDATES_BASE_URL }}
+  R2_ENDPOINT: https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+  R2_BUCKET: ${{ vars.R2_UPDATES_BUCKET }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: auto
+  AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+  AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Contrôles d'entrée
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-beta\.[0-9]+)?$ ]] || { echo "::error::Version invalide"; exit 1; }
+          if [ "$CHANNEL" = "stable" ] && [[ "$VERSION" == *-* ]]; then
+            echo "::error::Une version bêta ne peut pas aller sur le canal stable."; exit 1
+          fi
+          if [ -z "$R2_BUCKET" ] && [ "$CHANNEL" != "stable" ]; then
+            echo "::error::Sans CDN (hébergement GitHub Releases), seul le canal stable est disponible."; exit 1
+          fi
+          if [ -n "$R2_BUCKET" ] && [ -z "$UPDATES_BASE_URL" ]; then
+            echo "::error::R2_UPDATES_BUCKET défini mais AUGUR_UPDATES_BASE_URL absent."; exit 1
+          fi
+
+      - name: Publier la release (hébergement GitHub)
+        if: vars.R2_UPDATES_BUCKET == ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="v$VERSION"
+          info=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft,assets)
+          echo "$info" | jq -e '.assets | map(.name) | index("latest.json")' >/dev/null \
+            || { echo "::error::La release $tag n'a pas de latest.json"; exit 1; }
+          latest=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName 2>/dev/null || true)
+          if [ -n "$latest" ] && [ "$latest" != "$tag" ]; then
+            if [ "$(printf '%s\n%s\n' "${latest#v}" "$VERSION" | sort -V | tail -n1)" != "$VERSION" ]; then
+              echo "::error::La dernière version publiée est $latest : $tag serait un retour en arrière."; exit 1
+            fi
+          fi
+          gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+          # Vérification de ce que verront les applications installées.
+          url="https://github.com/$GITHUB_REPOSITORY/releases/latest/download/latest.json"
+          for i in 1 2 3 4 5; do
+            v=$(curl -sSfL "$url" | jq -r .version || true)
+            [ "$v" = "$VERSION" ] && { echo "OK : $url annonce $v"; exit 0; }
+            sleep $((i * 5))
+          done
+          echo "::error::$url n'annonce pas $VERSION"; exit 1
+
+      - name: Vérifier la version déposée
+        if: vars.R2_UPDATES_BUCKET != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws s3 cp "s3://$R2_BUCKET/releases/$VERSION/latest.json" latest.json --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          jq -e --arg v "$VERSION" '.version == $v' latest.json >/dev/null || { echo "::error::latest.json ne correspond pas à $VERSION"; exit 1; }
+          # Chaque installeur référencé doit être servi par le CDN public.
+          for url in $(jq -r '.platforms[].url' latest.json | sort -u); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' -I "$url")
+            [ "$code" = "200" ] || { echo "::error::$url répond $code"; exit 1; }
+            echo "OK $url"
+          done
+
+      - name: Empêcher un retour en arrière involontaire
+        if: vars.R2_UPDATES_BUCKET != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          current=$(curl -sSf "$UPDATES_BASE_URL/channels/$CHANNEL/latest.json?nocache=$GITHUB_RUN_ID" | jq -r .version || true)
+          if [ -n "$current" ] && [ "$current" != "null" ]; then
+            # Comparaison semver (une pré-version est inférieure à la version finale).
+            if ! node -e '
+              const p = (v) => { const [core, pre] = v.split("-"); return [...core.split(".").map(Number), pre]; };
+              const [a, b] = [p(process.argv[1]), p(process.argv[2])];
+              for (let i = 0; i < 3; i++) if (a[i] !== b[i]) process.exit(a[i] > b[i] ? 0 : 1);
+              if (a[3] === b[3]) process.exit(1);
+              if (!a[3]) process.exit(0); if (!b[3]) process.exit(1);
+              const n = (s) => Number(s.split(".").pop());
+              process.exit(n(a[3]) > n(b[3]) ? 0 : 1);' "$VERSION" "$current"; then
+              echo "::error::Le canal $CHANNEL est déjà en $current : la promotion de $VERSION serait un retour en arrière ou un doublon."; exit 1
+            fi
+          fi
+          echo "Canal $CHANNEL : ${current:-vide} → $VERSION"
+
+      - name: Basculer le canal
+        if: vars.R2_UPDATES_BUCKET != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws s3 cp latest.json "s3://$R2_BUCKET/channels/$CHANNEL/latest.json" \
+            --endpoint-url "$R2_ENDPOINT" --content-type application/json \
+            --cache-control "public, max-age=60" --only-show-errors
+
+      - name: Purger le cache CDN du canal
+        if: vars.R2_UPDATES_BUCKET != '' && vars.CLOUDFLARE_ZONE_ID != ''
+        shell: bash
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_PURGE_TOKEN }}
+          ZONE: ${{ vars.CLOUDFLARE_ZONE_ID }}
+        run: |
+          set -euo pipefail
+          curl -sSf -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE/purge_cache" \
+            -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
+            --data "{\"files\":[\"$UPDATES_BASE_URL/channels/$CHANNEL/latest.json\"]}" | jq -e .success
+
+      - name: Publier la release GitHub
+        if: vars.R2_UPDATES_BUCKET != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=(--draft=false)
+          [ "$CHANNEL" = "stable" ] && flags+=(--latest)
+          gh release edit "v$VERSION" --repo "$GITHUB_REPOSITORY" "${flags[@]}" \
+            || echo "::warning::Release GitHub v$VERSION introuvable ou déjà publiée."

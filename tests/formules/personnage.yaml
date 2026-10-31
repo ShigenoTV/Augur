@@ -1,0 +1,66 @@
+# Gabarits de mesure en jeu (type: personnage). attendu reste null jusqu'à la mesure :
+# l'exécuteur les ignore tant que statut != validé. Protocole : section 3.4 du plan fondateur
+# (personnage de test dédié, aucun buff temporaire, capture référencée dans `preuve`).
+mecanique: personnage-sprint1
+fiche: docs/theorycraft/registre-des-inconnues.md
+cas:
+  - id: perso-001
+    type: personnage
+    nature: discriminant
+    patch: null
+    confiance: supposé
+    statut: à-mesurer
+    description: "Pénalité de résistance de campagne (I-02) : somme brute des résistances feu des objets et valeur du panneau en fin de campagne."
+    personnage: { niveau: null, classe: null, import_code: null }
+    conditions: { zone: "fin de campagne", buffs: [] }
+    a_relever: [ "résistance feu brute (somme des objets et passifs)", "résistance feu affichée", "surplus affiché" ]
+    attendu: null
+    preuve: null
+  - id: perso-002
+    type: personnage
+    nature: discriminant
+    patch: null
+    confiance: supposé
+    statut: à-mesurer
+    description: "Héritage des modificateurs après conversion (I-03) : tooltip du sort avec conversion, avec puis sans un objet « increased <type source> »."
+    personnage: { niveau: null, classe: null, import_code: null }
+    conditions: { cible: null, buffs: [] }
+    a_relever: [ "dégâts min/max du tooltip avec l'objet", "dégâts min/max du tooltip sans l'objet" ]
+    attendu: null
+    preuve: null
+  - id: perso-003
+    type: personnage
+    nature: discriminant
+    patch: null
+    confiance: supposé
+    statut: à-mesurer
+    description: "Formule d'évasion (I-04) : chance d'éviter du panneau pour trois niveaux d'évasion différents (changer un seul objet)."
+    personnage: { niveau: null, classe: null, import_code: null }
+    conditions: { zone: null, buffs: [] }
+    a_relever: [ "évasion totale ×3", "chance d'éviter affichée ×3", "niveau de zone de référence du panneau" ]
+    attendu: null
+    preuve: null
+  - id: perso-004
+    type: personnage
+    nature: discriminant
+    patch: null
+    confiance: supposé
+    statut: à-mesurer
+    description: "Chaos contre ES (I-01) : coup de chaos de taille connue sur un personnage à ES pleine, ES perdue."
+    personnage: { niveau: null, classe: null, import_code: null }
+    conditions: { source_degats: null, buffs: [] }
+    a_relever: [ "ES avant", "ES après", "dégâts de chaos du coup" ]
+    attendu: null
+    preuve: null
+  - id: perso-005
+    type: personnage
+    nature: nominal
+    patch: null
+    confiance: supposé
+    statut: à-mesurer
+    description: "Tooltip de la gemme de l'archétype (I-13, I-07) : dégâts min/max, chance de critique, temps d'incantation, sans aucun modificateur puis avec un équipement connu."
+    personnage: { niveau: null, classe: null, import_code: null }
+    conditions: { buffs: [] }
+    a_relever: [ "niveau de gemme", "dégâts min/max", "chance de critique", "temps d'incantation" ]
+    attendu: null
+    preuve: null

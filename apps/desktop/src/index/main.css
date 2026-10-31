@@ -1,0 +1,6 @@
+/* La fenêtre principale est opaque, contrairement à l'overlay. */
+html,
+body {
+  background: var(--color-ink-950);
+  min-height: 100%;
+}

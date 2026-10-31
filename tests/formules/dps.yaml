@@ -1,0 +1,20 @@
+mecanique: dps-sort
+fiche: docs/theorycraft/archetype-sprint1.md
+cas:
+  - { id: dps-001, type: unitaire, calcul: dps.sort, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "Coup moyen 1000 foudre, crit ×1,16, 1,5625 incantation/s, cible à 0 %.",
+      entrees: { coup_moyen_par_type: { foudre: 1000 }, multiplicateur_crit: 1.16, cadence: 1.5625 },
+      attendu: { dps: 1812.5 }, tolerance_pct: 0.01, preuve: null }
+  - { id: dps-002, type: unitaire, calcul: dps.sort, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
+      description: "Cible à 40 % de foudre, 30 % de pénétration : 10 % effectifs.",
+      entrees: { coup_moyen_par_type: { foudre: 1000 }, multiplicateur_crit: 1.16, cadence: 1.5625, res_cible: { foudre: 40 }, penetration: { foudre: 30 } },
+      attendu: { dps: 1631.25 }, tolerance_pct: 0.01, preuve: null }
+  - { id: dps-003, type: unitaire, calcul: dps.sort, nature: discriminant, patch: null, confiance: supposé, statut: brouillon,
+      description: "Cible à -20 % (exposition) : la pénétration n'a aucun effet.",
+      entrees: { coup_moyen_par_type: { foudre: 1000 }, multiplicateur_crit: 1.16, cadence: 1.5625, res_cible: { foudre: -20 }, penetration: { foudre: 30 } },
+      attendu: { dps: 2175.0 }, tolerance_pct: 0.01,
+      a_verifier_en_jeu: "Si la pénétration agissait sous 0 %, on aurait -50 % effectifs et 2718,75.", preuve: null }
+  - { id: dps-004, type: unitaire, calcul: dps.sort, nature: interaction, patch: null, confiance: supposé, statut: brouillon,
+      description: "Deux types : chaque part est mitigée par sa propre résistance.",
+      entrees: { coup_moyen_par_type: { feu: 500, froid: 500 }, cadence: 1.0, res_cible: { feu: 30, froid: 50 }, penetration: { froid: 20 } },
+      attendu: { dps: 700.0 }, tolerance_pct: 0.01, preuve: null }
