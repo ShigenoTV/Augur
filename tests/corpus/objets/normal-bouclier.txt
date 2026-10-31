@@ -1,0 +1,12 @@
+Item Class: Shields
+Rarity: Normal
+Splintered Tower Shield
+--------
+Block chance: 25%
+Armour: 29
+--------
+Requires: Level 1
+--------
+Item Level: 5
+--------
+Grants Skill: Raise Shield

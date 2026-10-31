@@ -1,0 +1,4 @@
+Classe d'objet: Baguettes
+Rareté: Rare
+Chant funeste
+Baguette flétrie

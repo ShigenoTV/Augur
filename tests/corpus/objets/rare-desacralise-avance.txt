@@ -1,0 +1,20 @@
+Item Class: Boots
+Rarity: Rare
+Grim Stride
+Lattice Sandals
+--------
+Energy Shield: 64 (augmented)
+--------
+Requires: Level 70, 98 Int
+--------
+Item Level: 82
+--------
+{ Prefix Modifier "Hellion's" (Tier: 1) — Speed }
+30% increased Movement Speed
+{ Suffix Modifier "of the Abyss" — Chaos, Resistance }
++17(13-19)% to Chaos Resistance (desecrated)
+{ Suffix Modifier "of Plunder" (Tier: 3) }
+14(12-15)% increased Rarity of Items found
+--------
+Corrupted
+Sanctified

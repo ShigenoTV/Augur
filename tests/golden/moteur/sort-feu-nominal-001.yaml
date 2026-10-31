@@ -1,0 +1,27 @@
+id: sort-feu-nominal-001
+patch: "0.3.0"
+confiance: supposé
+description: >
+  Sort de feu pur, increased additifs entre stats génériques et spécifiques,
+  un more multiplicatif, cible sans résistance.
+personnage:
+  niveau: 80
+  competence:
+    nom: Sort de feu de test
+    type: sort
+    temps_incantation: 0.8
+    critique_base: 8
+    degats: { feu: [10, 20] }
+  modificateurs:
+    - { stat: fire_damage, type: increased, valeur: 50, source: "Objet : bâton, mod 1" }
+    - { stat: spell_damage, type: increased, valeur: 30, source: "Passif : nœud de test" }
+    - { stat: spell_damage, type: more, valeur: 20, source: "Gemme de soutien de test" }
+conditions:
+  cible: { description: "cible sans résistance" }
+attendu:
+  tolerance_pct: 0.01
+  coup_moyen: 32.4          # 15 × (1 + 0,8) × 1,2
+  chance_critique: { valeur: 8, tolerance_abs: 0 }
+  incantations_par_seconde: 1.25
+  dps: 43.74                # 32,4 × 1,08 × 1,25
+preuve: "calcul manuel (cohérence du moteur)"

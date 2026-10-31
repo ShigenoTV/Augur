@@ -1,0 +1,30 @@
+id: defense-resistances-armure-001
+patch: "0.3.0"
+confiance: supposé
+description: >
+  Plafonds de résistance (75 %, bonus de maximum, plafond absolu 90 %),
+  réduction de l'armure et coup maximal encaissable par type.
+personnage:
+  modificateurs:
+    - { stat: life, type: base, valeur: 3000, source: "Vie de test" }
+    - { stat: energy_shield, type: base, valeur: 1500, source: "ES de test" }
+    - { stat: armour, type: base, valeur: 5000, source: "Armure de test" }
+    - { stat: fire_resistance, type: added, valeur: 60, source: "Test" }
+    - { stat: cold_resistance, type: added, valeur: 50, source: "Test" }
+    - { stat: elemental_resistance, type: added, valeur: 30, source: "Test" }
+    - { stat: maximum_cold_resistance, type: added, valeur: 5, source: "Test" }
+    - { stat: maximum_elemental_resistance, type: added, valeur: 20, source: "Test" }
+    - { stat: chaos_resistance, type: added, valeur: -20, source: "Test" }
+conditions:
+  coup_subi: 1000
+attendu:
+  tolerance_pct: 0.01
+  resistance_feu: { valeur: 90, tolerance_abs: 0 }     # 90 brut, max min(90, 75 + 20)
+  resistance_froid: { valeur: 80, tolerance_abs: 0 }   # max 75 + 5 + 20 = 100 → 90 ; 80 brut
+  resistance_foudre: { valeur: 30, tolerance_abs: 0 }
+  resistance_chaos: { valeur: -20, tolerance_abs: 0 }
+  reduction_armure: 33.3333                            # 5000 / (5000 + 10 × 1000)
+  coup_max_feu: 45000                                  # 4500 / (1 − 90 %)
+  coup_max_chaos: 3750                                 # 4500 / 1,2
+  coup_max_physique: 4954.1635
+preuve: "calcul manuel (cohérence du moteur)"

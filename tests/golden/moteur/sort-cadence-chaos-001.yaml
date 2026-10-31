@@ -1,0 +1,24 @@
+id: sort-cadence-chaos-001
+patch: "0.3.0"
+confiance: supposé
+description: >
+  « elemental_damage » ne s'applique pas au chaos ; vitesse d'incantation
+  avec un increased et deux more (dont un less).
+personnage:
+  competence:
+    nom: Sort hybride de test
+    temps_incantation: 1.2
+    critique_base: 5
+    degats: { chaos: [10, 30], foudre: [10, 30] }
+  modificateurs:
+    - { stat: damage, type: increased, valeur: 20, source: "Test" }
+    - { stat: elemental_damage, type: increased, valeur: 30, source: "Test" }
+    - { stat: cast_speed, type: increased, valeur: 25, source: "Test" }
+    - { stat: cast_speed, type: more, valeur: 10, source: "Test" }
+    - { stat: cast_speed, type: more, valeur: -20, source: "Test (less)" }
+attendu:
+  tolerance_pct: 0.01
+  coup_moyen: 54            # 20 × 1,2 + 20 × 1,5
+  incantations_par_seconde: 0.916667
+  dps: 51.975
+preuve: "calcul manuel (cohérence du moteur)"

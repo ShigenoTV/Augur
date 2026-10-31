@@ -1,0 +1,20 @@
+Item Class: Rings
+Rarity: Rare
+Ember Coil
+Ruby Ring
+--------
+Requires: Level 40
+--------
+Item Level: 75
+--------
+{ Implicit Modifier — Elemental, Fire, Resistance }
++25(20-30)% to Fire Resistance (implicit)
+--------
+{ Prefix Modifier "Heated" (Tier: 7) — Damage, Elemental, Fire, Attack }
+Adds 5(4-6) to 9(8-10) Fire Damage to Attacks
+{ Suffix Modifier "of Skill" (Tier: 5) — Attack, Speed }
+7(5-7)% increased Attack Speed
+{ Suffix Modifier "of the Brute" (Tier: 6) — Attribute }
++12(9-12) to Strength
+--------
+Note: ~price 2 exalted

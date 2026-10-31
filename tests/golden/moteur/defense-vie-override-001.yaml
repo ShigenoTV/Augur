@@ -1,0 +1,32 @@
+- id: defense-vie-001
+  patch: "0.3.0"
+  confiance: supposé
+  personnage:
+    modificateurs:
+      - { stat: life, type: base, valeur: 1000, source: "Base de test" }
+      - { stat: life, type: added, valeur: 200, source: "Objet : casque" }
+      - { stat: life, type: increased, valeur: 50, source: "Passifs" }
+  attendu:
+    vie: { valeur: 1800, tolerance_abs: 0 }
+  preuve: "calcul manuel (cohérence du moteur)"
+
+- id: defense-override-001
+  patch: "0.3.0"
+  confiance: supposé
+  description: Un override remplace tout le calcul (type « vie fixée à 1 »).
+  personnage:
+    modificateurs:
+      - { stat: life, type: base, valeur: 1000, source: "Base de test" }
+      - { stat: life, type: override, valeur: 1, source: "Keystone de test" }
+  attendu:
+    vie: { valeur: 1, tolerance_abs: 0 }
+  preuve: "calcul manuel (cohérence du moteur)"
+
+- id: conversion-non-supportee-001
+  patch: "0.3.0"
+  confiance: supposé
+  statut: non_supporte
+  description: Les conversions de dégâts ne sont pas encore implémentées.
+  personnage: {}
+  attendu:
+    dps: 0
