@@ -204,11 +204,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          base="${UPDATES_BASE_URL:-https://updates.invalid}"
+          # Hébergement des mises à jour : CDN R2 si configuré, sinon les
+          # fichiers attachés à la release GitHub (dépôt public, sans domaine).
+          if [ -n "$UPDATES_BASE_URL" ]; then
+            base="$UPDATES_BASE_URL/releases/${{ steps.meta.outputs.version }}"
+          else
+            base="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG"
+          fi
+          echo "Installeurs servis depuis : $base"
           node scripts/release/make-update-manifest.mjs \
             --bundle-dir "${{ steps.collect.outputs.bundle }}" \
             --version "${{ steps.meta.outputs.version }}" \
-            --base-url "$base/releases/${{ steps.meta.outputs.version }}" \
+            --base-url "$base" \
             --out dist-release/latest.json
           (cd dist-release && sha256sum -- *.exe *.msi > SHA256SUMS.txt && cat SHA256SUMS.txt)
 
