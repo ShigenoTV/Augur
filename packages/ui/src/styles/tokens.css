@@ -1,0 +1,84 @@
+/*
+ * Tokens du design system Augur « dark » (Tailwind 4).
+ * Miroir de tokens.ts : toute modification se fait dans les deux fichiers,
+ * le test tokens.test.ts échoue sinon.
+ */
+@theme {
+  /* Surfaces */
+  --color-ink-950: #0b0a09;
+  --color-ink-900: #14120f;
+  --color-ink-850: #1b1814;
+  --color-ink-800: #24201b;
+  --color-ink-700: #332d26;
+  --color-ink-600: #4a4238;
+
+  /* Textes */
+  --color-text-primary: #ece6da;
+  --color-text-muted: #b9b0a1;
+  --color-text-subtle: #958b7c;
+
+  /* Accent de marque */
+  --color-accent: #e0b061;
+  --color-accent-strong: #f0c77e;
+  --color-accent-ink: #1b1406;
+
+  /* Rareté (conventions du jeu) */
+  --color-rarity-normal: #c8c8c8;
+  --color-rarity-magic: #8888ff;
+  --color-rarity-rare: #ffff77;
+  --color-rarity-unique: #af6025;
+  --color-rarity-unique-text: #d07a3a; /* variante lisible pour le texte (AA) */
+  --color-rarity-gem: #1ba29b;
+  --color-rarity-currency: #aa9e82;
+
+  /* Mods (conventions du jeu) */
+  --color-mod-implicit: #8888ff;
+  --color-mod-explicit: #8888ff;
+  --color-mod-rune: #8888ff;
+  --color-mod-enchant: #b8daf2;
+  --color-mod-crafted: #b8daf2;
+  --color-mod-fractured: #a29162;
+  --color-mod-desecrated: #c7a0e8;
+  --color-mod-corrupted: #d20000;
+
+  /* Signal du verdict */
+  --color-signal-gain: #55d68a;
+  --color-signal-loss: #ff7a6b;
+  --color-signal-neutral: #b9b0a1;
+  --color-signal-warn: #f2b84b;
+  --color-signal-info: #7cc4ff;
+
+  /* Typographie : polices système Windows, aucune police embarquée */
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Cascadia Mono", Consolas, ui-monospace, monospace;
+
+  /* Échelle typographique de l'overlay (base 14 px, lisible à 1080p) */
+  --text-2xs: 11px;
+  --text-2xs--line-height: 14px;
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 13px;
+  --text-sm--line-height: 18px;
+  --text-base: 14px;
+  --text-base--line-height: 20px;
+  --text-lg: 16px;
+  --text-lg--line-height: 22px;
+  --text-verdict: 30px;
+  --text-verdict--line-height: 34px;
+
+  /* Formes */
+  --radius-panel: 6px;
+  --radius-chip: 4px;
+  --shadow-overlay: 0 0 0 1px rgb(0 0 0 / 0.6), 0 12px 32px rgb(0 0 0 / 0.65);
+
+  /* Mouvement : court, jamais bloquant */
+  --ease-out-quick: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:root {
+  /* Opacité du fond de l'overlay (voir tokens.ts) */
+  --augur-overlay-opacity: 0.94;
+  /* Échelle globale réglable par l'utilisateur (0.9 à 1.5) */
+  --augur-scale: 1;
+}
