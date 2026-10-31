@@ -1,0 +1,31 @@
+# Rust
+/target/
+**/target/
+
+# Node / front
+node_modules/
+dist/
+.vite/
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Python / data
+__pycache__/
+.venv/
+*.pyc
+.ipynb_checkpoints/
+
+# Secrets et environnement
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
