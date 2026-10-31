@@ -144,7 +144,7 @@ jobs:
           console.log("Clé publique et endpoints de l'updater valides.");
           EOF
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           # pnpm est activé ensuite par corepack : pas de cache automatique ici.
