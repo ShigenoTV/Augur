@@ -1,6 +1,6 @@
 # 03. Vitesse d'incantation
 
-**Confiance :** `supposé` · **Patch de référence :** inconnu · **Cas golden :** `tests/golden/vitesse.yaml`
+**Confiance :** `supposé` · **Patch de référence :** inconnu · **Cas golden :** `tests/formules/vitesse.yaml`
 
 ## Formule
 

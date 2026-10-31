@@ -1,6 +1,6 @@
 # 04. Résistances et pénétration
 
-**Confiance :** `supposé` · **Patch de référence :** inconnu · **Cas golden :** `tests/golden/resistances.yaml`
+**Confiance :** `supposé` · **Patch de référence :** inconnu · **Cas golden :** `tests/formules/resistances.yaml`
 
 ## Résistances du joueur
 

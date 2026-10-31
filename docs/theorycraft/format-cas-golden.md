@@ -4,7 +4,12 @@ Contrat entre le Theorycrafter et l'exécuteur de tests de `poe2-core`. Il repre
 
 ## Organisation
 
-Un fichier par mécanique dans `tests/golden/`, avec une liste `cas:`. Les gabarits à mesurer sur un personnage réel sont dans `tests/golden/personnage.yaml`.
+Deux familles de cas, dans deux dossiers distincts :
+
+- **`tests/formules/`** (ce document) : cas **unitaires** de formule, un fichier par mécanique avec une liste `cas:`. Ils fixent ce que chaque fiche affirme, sans personnage. Les gabarits de mesure en jeu sont dans `tests/formules/personnage.yaml`.
+- **`tests/golden/`** (format de l'exécuteur de `poe2-core`, voir `tests/golden/README.md` et la PR #5) : cas **personnage complet**, exécutés en CI par `cargo test -p poe2-core --test golden`. Les cas mesurés en jeu iront dans `tests/golden/archetype/`, au format de l'exécuteur.
+
+Les deux dossiers sont séparés parce que l'exécuteur lit tous les `.yaml` de `tests/golden/` : y placer des fichiers d'un autre format casserait la CI. Un exécuteur Rust des cas `calcul` reste à écrire (suite logique, à valider).
 
 ```yaml
 mecanique: armure

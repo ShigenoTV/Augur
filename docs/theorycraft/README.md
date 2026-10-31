@@ -10,7 +10,7 @@ Ce dossier contient la « vérité » du moteur `poe2-core`, au sens de la secti
 | [fiches/](fiches/) | Une fiche par mécanique (formule, ordre des opérations, arrondis, cas limites, confiance, sources) |
 | [registre-des-inconnues.md](registre-des-inconnues.md) | Ce qui reste à mesurer en jeu, par priorité |
 | [format-cas-golden.md](format-cas-golden.md) | Le format YAML des cas golden (contrat avec l'exécuteur Rust) |
-| `../../tests/golden/*.yaml` | Les cas golden, un fichier par mécanique |
+| `../../tests/formules/*.yaml` | Les cas golden, un fichier par mécanique |
 | `../../tools/theorycraft/verifier_golden.py` | Vérificateur de cohérence : recalcule chaque cas unitaire avec les formules des fiches |
 
 ## Niveaux de confiance

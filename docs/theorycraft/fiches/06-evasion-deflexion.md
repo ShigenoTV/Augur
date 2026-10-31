@@ -1,6 +1,6 @@
 # 06. Évasion et déflexion
 
-**Confiance :** `supposé` · **Patch de référence :** inconnu · **Cas golden :** `tests/golden/evasion.yaml`
+**Confiance :** `supposé` · **Patch de référence :** inconnu · **Cas golden :** `tests/formules/evasion.yaml`
 
 ## Évasion
 

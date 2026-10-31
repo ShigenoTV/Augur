@@ -1,6 +1,6 @@
 # 07. Energy Shield
 
-**Confiance :** `supposé` · **Patch de référence :** inconnu · **Cas golden :** `tests/golden/energy_shield.yaml`
+**Confiance :** `supposé` · **Patch de référence :** inconnu · **Cas golden :** `tests/formules/energy_shield.yaml`
 
 ## Maximum
 

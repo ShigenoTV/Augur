@@ -1,6 +1,6 @@
 # 01. Ordre des opérations des dégâts (coups)
 
-**Confiance :** `supposé` · **Patch de référence :** inconnu (à relever en jeu) · **Cas golden :** `tests/golden/degats.yaml`
+**Confiance :** `supposé` · **Patch de référence :** inconnu (à relever en jeu) · **Cas golden :** `tests/formules/degats.yaml`
 
 ## Résumé
 

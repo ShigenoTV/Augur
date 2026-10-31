@@ -1,6 +1,6 @@
 # 05. Armure
 
-**Confiance :** `supposé` · **Patch de référence :** inconnu · **Cas golden :** `tests/golden/armure.yaml`
+**Confiance :** `supposé` · **Patch de référence :** inconnu · **Cas golden :** `tests/formules/armure.yaml`
 
 ## Formule
 

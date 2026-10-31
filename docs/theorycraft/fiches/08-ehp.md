@@ -1,6 +1,6 @@
 # 08. EHP (points de vie effectifs)
 
-**Confiance :** convention interne Augur (formules) + `supposé` (mécaniques sous-jacentes) · **Cas golden :** `tests/golden/ehp.yaml`
+**Confiance :** convention interne Augur (formules) + `supposé` (mécaniques sous-jacentes) · **Cas golden :** `tests/formules/ehp.yaml`
 
 L'EHP n'est pas une valeur du jeu : c'est **notre** indicateur produit. Cette fiche fixe sa définition pour que l'overlay et le planificateur affichent la même chose.
 

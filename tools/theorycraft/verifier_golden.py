@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Vérificateur de cohérence des cas golden Augur.
 
-Recalcule chaque cas `type: unitaire` de tests/golden/*.yaml avec les formules
+Recalcule chaque cas `type: unitaire` de tests/formules/*.yaml avec les formules
 de référence des fiches (docs/theorycraft/fiches/) et vérifie le schéma de tous
 les cas. Ce n'est PAS le moteur : c'est un oracle qui garantit que les valeurs
 attendues écrites par le Theorycrafter sont cohérentes avec les fiches.
@@ -244,4 +244,4 @@ def verifier(dossier: Path) -> int:
 
 if __name__ == "__main__":
     racine = Path(__file__).resolve().parents[2]
-    sys.exit(verifier(Path(sys.argv[1]) if len(sys.argv) > 1 else racine / "tests" / "golden"))
+    sys.exit(verifier(Path(sys.argv[1]) if len(sys.argv) > 1 else racine / "tests" / "formules"))

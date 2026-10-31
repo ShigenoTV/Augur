@@ -1,6 +1,6 @@
 # 02. Coup critique
 
-**Confiance :** `supposé` · **Patch de référence :** inconnu · **Cas golden :** `tests/golden/critique.yaml`
+**Confiance :** `supposé` · **Patch de référence :** inconnu · **Cas golden :** `tests/formules/critique.yaml`
 
 ## Formule
 
