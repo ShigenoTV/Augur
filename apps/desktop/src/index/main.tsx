@@ -8,11 +8,12 @@ import {
   UpdateBanner,
   type OverlayState,
   type ParsedItem,
-  type ZoneChanged,
 } from "@augur/ui";
 import { StrictMode, useEffect, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { commands, isAppError, isTauri, on, type Settings } from "../bridge";
+import { commands, isAppError, isTauri, on, type ClientLogStatus, type Settings } from "../bridge";
+import { ClientLogCard } from "./ClientLogCard";
+import { summarizeClientLog } from "./clientLog";
 import { useUpdates } from "./useUpdates";
 
 /** Pas de canal bêta tant que les mises à jour passent par GitHub Releases (voir src-tauri/src/updates.rs). */
@@ -44,7 +45,7 @@ function Status({ ok, label }: { ok: boolean; label: string }) {
  */
 function App() {
   const [state, setState] = useState<OverlayState | null>(null);
-  const [zone, setZone] = useState<ZoneChanged | null>(null);
+  const [clientLog, setClientLog] = useState<ClientLogStatus | null>(null);
   const [text, setText] = useState("");
   const [parsed, setParsed] = useState<ParsedItem | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -69,12 +70,15 @@ function App() {
     const refresh = () => void commands.getOverlayState().then(setState).catch(() => undefined);
     refresh();
     const timer = setInterval(refresh, 2_000);
-    const unlisten = on.zoneChanged(setZone);
+    void commands.getClientLogStatus().then(setClientLog).catch(() => undefined);
+    const unlisten = on.clientLogStatus(setClientLog);
     return () => {
       clearInterval(timer);
       void unlisten.then((f) => f());
     };
   }, []);
+
+  const logSummary = summarizeClientLog(clientLog);
 
   async function tryParse() {
     setError(null);
@@ -105,7 +109,8 @@ function App() {
         <Card title="État">
           <div className="space-y-2">
             <Status ok={Boolean(state?.gameFocused)} label={state?.gameFocused ? "Jeu au premier plan" : "Jeu non détecté"} />
-            <Status ok={Boolean(zone)} label={zone ? `Zone\u00a0: ${zone.zone}` : "Client.txt : en attente"} />
+            <Status ok={logSummary.ok} label={logSummary.label} />
+            {logSummary.hint && <p className="pl-6 text-xs text-text-subtle">{logSummary.hint}</p>}
             <Status ok={Boolean(state?.dataPatch)} label={state?.dataPatch ? `Données ${state.dataPatch}` : "Données de jeu : à venir"} />
           </div>
         </Card>
@@ -137,6 +142,10 @@ function App() {
           </p>
         </Card>
       </div>
+
+      <Card title="Journal du jeu (Client.txt)">
+        <ClientLogCard status={clientLog} settings={settings} onSettings={setSettings} />
+      </Card>
 
       <Card title="Mises à jour">
         <div className="flex flex-wrap items-center gap-4 text-sm">

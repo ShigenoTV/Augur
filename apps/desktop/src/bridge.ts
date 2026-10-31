@@ -26,9 +26,18 @@ export const EVENTS = {
   updateAvailable: "augur://update-available",
   updateProgress: "augur://update-progress",
   updateCheckRequested: "augur://update-check-requested",
+  clientLogStatus: "augur://client-log-status",
 } as const;
 
-export type Settings = { betaChannel: boolean };
+export type Settings = { betaChannel: boolean; clientLogPath: string | null };
+
+/** État du suivi de Client.txt (apps/desktop/src-tauri/src/client_log.rs). */
+export type ClientLogStatus = {
+  path: string | null;
+  watching: boolean;
+  lastZone: ZoneChanged | null;
+  searched: string[];
+};
 
 export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -48,6 +57,8 @@ export const commands = {
   installUpdate: () => invoke<void>("install_update"),
   getSettings: () => invoke<Settings>("get_settings"),
   setUpdateChannel: (beta: boolean) => invoke<Settings>("set_update_channel", { beta }),
+  getClientLogStatus: () => invoke<ClientLogStatus>("get_client_log_status"),
+  setClientLogPath: (path: string | null) => invoke<Settings>("set_client_log_path", { path }),
   // Commandes du chantier Architecture / moteur, branchées dès leur fusion.
   evaluateItem: (item: ParsedItem) => invoke<ItemDelta>("evaluate_item", { item }),
   estimatePrice: (item: ParsedItem) => invoke<PriceEstimate>("estimate_price", { item }),
@@ -65,4 +76,6 @@ export const on = {
   updateProgress: (cb: (p: UpdateProgress) => void): Promise<UnlistenFn> =>
     listen<UpdateProgress>(EVENTS.updateProgress, (e) => cb(e.payload)),
   updateCheckRequested: (cb: () => void): Promise<UnlistenFn> => listen(EVENTS.updateCheckRequested, () => cb()),
+  clientLogStatus: (cb: (p: ClientLogStatus) => void): Promise<UnlistenFn> =>
+    listen<ClientLogStatus>(EVENTS.clientLogStatus, (e) => cb(e.payload)),
 };
