@@ -18,6 +18,8 @@ Ne publiez pas d'issue publique. Utilisez le signalement privé de GitHub : ongl
 
 Une nouvelle CVE peut toucher du code qui n'a pas changé : c'est pourquoi l'audit tourne aussi chaque jour, pas seulement sur les PR.
 
+La CI bloque sur les **vulnérabilités**. Les avertissements RustSec de type « unmaintained » ou « unsound » sur des dépendances transitives (souvent celles de Tauri pour Linux, inutilisées sous Windows) restent visibles dans le journal de l'audit sans bloquer ; la veille hebdomadaire les revoit et propose un remplacement quand une dépendance directe est concernée.
+
 ## Délais de correction
 
 Les délais courent à partir de la publication de la CVE ou de son signalement.

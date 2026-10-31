@@ -31,7 +31,7 @@ jobs:
           set -e
           for lock in $(find . -name Cargo.lock -not -path '*/target/*'); do
             echo "::group::$lock"
-            cargo audit --file "$lock" --deny warnings
+            cargo audit --file "$lock"
             echo "::endgroup::"
           done
       - if: steps.detect.outputs.found == ''
