@@ -1,0 +1,19 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "Fenêtre principale : état de l'application, événements, réglages et mise à jour de l'application (vérification et installation de paquets signés). Aucun accès fichier, shell ni réseau depuis la WebView.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "core:app:allow-version",
+    "allow-get-overlay-state",
+    "allow-parse-clipboard-item",
+    "allow-check-for-update",
+    "allow-install-update",
+    "allow-get-settings",
+    "allow-set-update-channel"
+  ]
+}
