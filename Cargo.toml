@@ -1,0 +1,12 @@
+# Workspace Cargo d'Augur (crates/* : moteur, contrats, rate limits).
+# L'application Tauri (apps/desktop/src-tauri) reste un projet autonome avec
+# son propre Cargo.lock, compilé par le job Windows de la CI.
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+exclude = ["apps/desktop/src-tauri"]
+
+[workspace.package]
+edition = "2024"
+license = "UNLICENSED"
+publish = false

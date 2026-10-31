@@ -1,0 +1,4 @@
+# Les types de crates/augur-contracts sont exportés en TypeScript par ts-rs
+# lors de `cargo test -p augur-contracts`, vers le paquet @augur/contracts.
+[env]
+TS_RS_EXPORT_DIR = { value = "packages/contracts/src/generated", relative = true }
