@@ -29,3 +29,6 @@ __pycache__/
 Thumbs.db
 .idea/
 .vscode/
+
+# Data : stockage brut et sorties locales
+data/var/
