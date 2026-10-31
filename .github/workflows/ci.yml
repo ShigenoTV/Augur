@@ -147,7 +147,7 @@ jobs:
           cargo clippy --manifest-path "$manifest" --all-targets --locked -- -D warnings
           cargo test --manifest-path "$manifest" --locked
       - name: Installeur en artefact (14 jours)
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: augur-windows-${{ github.sha }}
           path: |
