@@ -1,0 +1,71 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+/* Les composants vivent dans ce paquet : Tailwind doit les scanner. */
+@source "../";
+
+@layer base {
+  html,
+  body {
+    background: transparent;
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "tnum" 1;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .augur-panel {
+    background: rgb(11 10 9 / var(--augur-overlay-opacity));
+    border: 1px solid var(--color-ink-600);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-overlay);
+  }
+
+  .augur-divider {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-ink-600) 15%,
+      var(--color-ink-600) 85%,
+      transparent
+    );
+  }
+}
+
+@keyframes augur-shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
+}
+
+@keyframes augur-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

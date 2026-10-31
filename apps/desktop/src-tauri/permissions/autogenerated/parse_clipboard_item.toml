@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-parse-clipboard-item"
+description = "Enables the parse_clipboard_item command without any pre-configured scope."
+commands.allow = ["parse_clipboard_item"]
+
+[[permission]]
+identifier = "deny-parse-clipboard-item"
+description = "Denies the parse_clipboard_item command without any pre-configured scope."
+commands.deny = ["parse_clipboard_item"]
