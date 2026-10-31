@@ -5,7 +5,8 @@
 //! - résistance = min(Σ résistances, résistance maximale) ; maximale = 75 % +
 //!   bonus, plafond absolu 90 % ;
 //! - réduction de l'armure contre un coup physique `D` :
-//!   `A / (A + 10 × D)`, plafonnée à 90 % ;
+//!   `A / (A + 10 × D)` + réduction additionnelle, plafonnée à 90 % (fiche 05) ;
+//! - dégâts subis : × max(0, 1 + Σ increased) × Π more (`damage_taken`) ;
 //! - pénalité de campagne : paramètre explicite du personnage, ajouté aux
 //!   résistances élémentaires avant plafonnement (−60 % en fin de campagne,
 //!   0 pour le chaos ; inconnue I-02 du Theorycrafter) ;
@@ -26,27 +27,48 @@ pub const REDUCTION_ARMURE_MAX: f64 = 0.9;
 
 /// Réduction (0 à 0,9) qu'apporte `armure` contre un coup physique `degats`.
 pub fn reduction_armure(armure: f64, degats: f64) -> f64 {
-    if armure <= 0.0 || degats <= 0.0 {
-        return 0.0;
-    }
-    (armure / (armure + FACTEUR_ARMURE * degats)).min(REDUCTION_ARMURE_MAX)
+    reduction_physique(armure, degats, 0.0)
+}
+
+/// Réduction physique totale (0 à 0,9) : armure + `additionnelle_pct` points.
+pub fn reduction_physique(armure: f64, degats: f64, additionnelle_pct: f64) -> f64 {
+    let base = if armure > 0.0 && degats > 0.0 {
+        armure / (armure + FACTEUR_ARMURE * degats)
+    } else {
+        0.0
+    };
+    (base + additionnelle_pct / 100.0).clamp(0.0, REDUCTION_ARMURE_MAX)
 }
 
 /// Plus gros coup physique encaissable avec `reserve` points et `armure`.
-///
-/// Les dégâts subis `D × (1 − réduction(D))` croissent avec `D` : on résout
-/// `10 D² − 10 R D − R A = 0` hors plafond, sinon `D = R / 0,1`.
 pub fn coup_physique_max(reserve: f64, armure: f64) -> f64 {
+    coup_physique_max_complet(reserve, armure, 0.0, 1.0)
+}
+
+/// Plus gros coup physique encaissable, avec réduction additionnelle `r_pct`
+/// et multiplicateur de dégâts subis `m`.
+///
+/// Les dégâts subis `m × D × (1 − réduction(D))` croissent avec `D`. Hors
+/// plafond, on résout `10m(1−r) D² − (m r A + 10 R) D − R A = 0` ; au plafond,
+/// `D = R / (0,1 m)`.
+pub fn coup_physique_max_complet(reserve: f64, armure: f64, r_pct: f64, m: f64) -> f64 {
     if reserve <= 0.0 {
         return 0.0;
     }
-    let plafonne = reserve / (1.0 - REDUCTION_ARMURE_MAX);
-    if reduction_armure(armure, plafonne) >= REDUCTION_ARMURE_MAX {
+    if m <= 0.0 {
+        return f64::INFINITY;
+    }
+    let plafonne = reserve / ((1.0 - REDUCTION_ARMURE_MAX) * m);
+    if reduction_physique(armure, plafonne, r_pct) >= REDUCTION_ARMURE_MAX {
         return plafonne;
     }
     let a = armure.max(0.0);
+    let r = (r_pct / 100.0).max(0.0);
     let k = FACTEUR_ARMURE;
-    (k * reserve + (k * k * reserve * reserve + 4.0 * k * reserve * a).sqrt()) / (2.0 * k)
+    let qa = k * m * (1.0 - r);
+    let qb = m * r * a + k * reserve;
+    let qc = reserve * a;
+    (qb + (qb * qb + 4.0 * qa * qc).sqrt()) / (2.0 * qa)
 }
 
 pub struct Defense {
@@ -116,27 +138,43 @@ pub fn calculer(db: &ModDb, coup_subi: Option<f64>, penalite_campagne: f64) -> D
         .map(|t| (t, resistance(db, t, penalite_campagne)))
         .collect();
 
+    let add = db.somme(TypeModificateur::Added, &[stats::PHYSICAL_DAMAGE_REDUCTION]);
+    let mut t_add = Trace::feuille("réduction physique additionnelle", add.valeur);
+    t_add.contributions = add.contributions;
+
+    let t_inc_subi = db.trace_increased("increased", &[stats::DAMAGE_TAKEN]);
+    let t_more_subi = db.trace_more("more", &[stats::DAMAGE_TAKEN]);
+    let m = t_inc_subi.valeur * t_more_subi.valeur;
+    let t_subi = Trace::feuille("multiplicateur de dégâts subis", m)
+        .avec_formule(format!(
+            "{} × {}",
+            nombre(t_inc_subi.valeur),
+            nombre(t_more_subi.valeur)
+        ))
+        .avec_enfants([t_inc_subi, t_more_subi]);
+
     let reduction = coup_subi.map(|d| {
-        let r = reduction_armure(armure.valeur, d);
+        let r = reduction_physique(armure.valeur, d, add.valeur);
         Trace::feuille("réduction de l'armure", r * 100.0)
             .avec_formule(format!(
-                "min(90, {} / ({} + {} × {}))",
+                "min(90, {} / ({} + {} × {}) + {}%)",
                 nombre(armure.valeur),
                 nombre(armure.valeur),
                 nombre(FACTEUR_ARMURE),
-                nombre(d)
+                nombre(d),
+                nombre(add.valeur)
             ))
-            .avec_enfant(armure.clone())
+            .avec_enfants([armure.clone(), t_add.clone()])
     });
 
     let mut coups_max = vec![(
         TypeDegats::Physique,
         Trace::feuille(
             "coup physique maximal",
-            coup_physique_max(reserve, armure.valeur),
+            coup_physique_max_complet(reserve, armure.valeur, add.valeur, m),
         )
-        .avec_formule("plus grand D tel que D × (1 − réduction(D)) ≤ réserve")
-        .avec_enfants([t_reserve.clone(), armure.clone()]),
+        .avec_formule("plus grand D tel que m × D × (1 − réduction(D)) ≤ réserve")
+        .avec_enfants([t_reserve.clone(), armure.clone(), t_add, t_subi.clone()]),
     )];
     for (t, res) in &resistances {
         let (reserve, t_reserve) = if *t == TypeDegats::Chaos {
@@ -144,7 +182,7 @@ pub fn calculer(db: &ModDb, coup_subi: Option<f64>, penalite_campagne: f64) -> D
         } else {
             (reserve, &t_reserve)
         };
-        let mult = 1.0 - res.valeur / 100.0;
+        let mult = (1.0 - res.valeur / 100.0) * m;
         let valeur = if mult > 0.0 {
             reserve / mult
         } else {
@@ -154,11 +192,12 @@ pub fn calculer(db: &ModDb, coup_subi: Option<f64>, penalite_campagne: f64) -> D
             *t,
             Trace::feuille(format!("coup {} maximal", t.nom()), valeur)
                 .avec_formule(format!(
-                    "{} / (1 − {}%)",
+                    "{} / ((1 − {}%) × {})",
                     nombre(reserve),
-                    nombre(res.valeur)
+                    nombre(res.valeur),
+                    nombre(m)
                 ))
-                .avec_enfants([t_reserve.clone(), res.clone()]),
+                .avec_enfants([t_reserve.clone(), res.clone(), t_subi.clone()]),
         ));
     }
 
@@ -181,6 +220,22 @@ mod tests {
         assert_eq!(reduction_armure(1e9, 1.0), REDUCTION_ARMURE_MAX);
         assert_eq!(reduction_armure(0.0, 100.0), 0.0);
         assert!((reduction_armure(1000.0, 100.0) - 0.5).abs() < 1e-12);
+    }
+
+    #[test]
+    fn coup_max_complet_coherent() {
+        for (r, a, add, m) in [
+            (4000.0, 10000.0, 0.0, 0.9),
+            (4000.0, 10000.0, 10.0, 1.2),
+            (1000.0, 500.0, 50.0, 1.0),
+        ] {
+            let d = coup_physique_max_complet(r, a, add, m);
+            let subi = m * d * (1.0 - reduction_physique(a, d, add));
+            assert!(
+                (subi - r).abs() < 1e-6 * r,
+                "r={r} a={a} add={add} m={m} d={d} subi={subi}"
+            );
+        }
     }
 
     #[test]

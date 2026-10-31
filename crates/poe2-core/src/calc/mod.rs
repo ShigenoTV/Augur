@@ -12,6 +12,7 @@
 //! un cas golden qui en dépend doit être marqué « non supporté ».
 
 pub mod defense;
+pub mod formules;
 pub mod golden;
 pub mod moddb;
 pub mod modifier;
