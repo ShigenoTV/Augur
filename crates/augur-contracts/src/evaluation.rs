@@ -51,8 +51,15 @@ pub struct MechanicNote {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct ItemDelta {
-    /// Emplacement comparé (ex. « weapon1 », « bodyArmour »).
+    /// Emplacement comparé, en identifiant stable (ex. « weapon1 »,
+    /// « bodyArmour ») ; la traduction en libellé est faite par l'UI.
     pub slot: String,
+    /// Nom de l'objet actuellement équipé dans cet emplacement, s'il y en a un
+    /// (« remplace Gale Song »).
+    pub equipped_name: Option<String>,
+    /// Set d'armes concerné (PoE 2 : 1 ou 2), absent hors armes.
+    #[ts(type = "1 | 2 | null")]
+    pub weapon_set: Option<u8>,
     pub support: SupportLevel,
     pub dps: StatDelta,
     pub ehp: StatDelta,

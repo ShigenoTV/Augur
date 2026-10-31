@@ -9,9 +9,19 @@ import type { SupportLevel } from "./SupportLevel";
  */
 export type ItemDelta = { 
 /**
- * Emplacement comparé (ex. « weapon1 », « bodyArmour »).
+ * Emplacement comparé, en identifiant stable (ex. « weapon1 »,
+ * « bodyArmour ») ; la traduction en libellé est faite par l'UI.
  */
-slot: string, support: SupportLevel, dps: StatDelta, ehp: StatDelta, resistances: Array<ResistanceDelta>, 
+slot: string, 
+/**
+ * Nom de l'objet actuellement équipé dans cet emplacement, s'il y en a un
+ * (« remplace Gale Song »).
+ */
+equippedName: string | null, 
+/**
+ * Set d'armes concerné (PoE 2 : 1 ou 2), absent hors armes.
+ */
+weaponSet: 1 | 2 | null, support: SupportLevel, dps: StatDelta, ehp: StatDelta, resistances: Array<ResistanceDelta>, 
 /**
  * Spirit restant, si l'objet le modifie.
  */
