@@ -8,8 +8,8 @@ dist/
 .vite/
 
 # Tauri
-src-tauri/target/
-src-tauri/gen/
+**/src-tauri/target/
+**/src-tauri/gen/
 
 # Python / data
 __pycache__/
@@ -32,3 +32,6 @@ Thumbs.db
 
 # Data : stockage brut et sorties locales
 data/var/
+
+# Bac à sable du design system
+dist-playground/

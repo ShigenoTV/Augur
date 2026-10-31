@@ -1,0 +1,15 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "overlay",
+  "description": "Overlay en jeu : écoute des événements, lecture de l'objet copié, fermeture et dimensionnement de sa propre fenêtre. Aucun accès fichier, shell ni réseau.",
+  "windows": ["overlay"],
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "allow-parse-clipboard-item",
+    "allow-get-overlay-state",
+    "allow-hide-overlay",
+    "allow-fit-overlay",
+    "allow-open-main-window"
+  ]
+}
