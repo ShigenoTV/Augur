@@ -1,6 +1,8 @@
 # Release Windows d'Augur : build, signature Authenticode, artefacts de mise à jour.
 #
 # Déclenchement : pousser un tag `vX.Y.Z` (canal stable) ou `vX.Y.Z-beta.N` (canal bêta).
+# Signature Authenticode optionnelle (AUGUR_SIGNING_MODE, défaut « none » :
+# décision de Max du 2026-10-31). Les mises à jour sont toujours signées.
 # Ce workflow NE PUBLIE PAS la mise à jour auprès des joueurs : il dépose une
 # version immuable sur le CDN (releases/X.Y.Z/) et crée une release GitHub en
 # brouillon. La bascule d'un canal se fait ensuite avec « Promouvoir une release »,
@@ -17,10 +19,6 @@ on:
       tag:
         description: "Tag à construire (ex. v0.1.0-beta.1)"
         required: true
-      allow_unsigned:
-        description: "Autoriser un build NON signé (test du pipeline uniquement, rien n'est envoyé au CDN)"
-        type: boolean
-        default: false
 
 permissions:
   contents: write   # création de la release GitHub en brouillon
@@ -32,7 +30,6 @@ concurrency:
 env:
   APP_DIR: apps/desktop
   TAG: ${{ github.event.inputs.tag || github.ref_name }}
-  ALLOW_UNSIGNED: ${{ github.event.inputs.allow_unsigned || 'false' }}
   AUGUR_SIGNING_MODE: ${{ vars.AUGUR_SIGNING_MODE || 'none' }}
   UPDATES_BASE_URL: ${{ vars.AUGUR_UPDATES_BASE_URL }}
   R2_ENDPOINT: https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
@@ -84,7 +81,7 @@ jobs:
           console.log(`Version vérifiée : ${v}`);
           EOF
 
-      - name: Garde-fou de signature
+      - name: Contrôle des clés de signature
         shell: bash
         env:
           HAS_UPDATER_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
@@ -93,9 +90,11 @@ jobs:
           if [ "$HAS_UPDATER_KEY" != "true" ]; then
             echo "::error::Secret TAURI_SIGNING_PRIVATE_KEY absent : les mises à jour ne peuvent pas être signées."; exit 1
           fi
-          if [ "$AUGUR_SIGNING_MODE" = "none" ] && [ "$ALLOW_UNSIGNED" != "true" ]; then
-            echo "::error::Aucune signature Authenticode configurée (variable AUGUR_SIGNING_MODE). Une release publique non signée déclencherait SmartScreen."
-            exit 1
+          # Décision de Max (2026-10-31) : pas de certificat Authenticode payant.
+          # Les installeurs ne sont pas signés Authenticode ; les MISES À JOUR
+          # restent signées par notre propre clé (obligatoire, gratuite).
+          if [ "$AUGUR_SIGNING_MODE" = "none" ]; then
+            echo "::warning::Installeurs non signés Authenticode : SmartScreen affichera un avertissement à l'installation."
           fi
 
       - uses: actions/setup-node@v4
@@ -192,7 +191,7 @@ jobs:
           retention-days: 90
 
       - name: Dépôt immuable sur le CDN (releases/X.Y.Z/)
-        if: env.AUGUR_SIGNING_MODE != 'none' && vars.R2_UPDATES_BUCKET != ''
+        if: vars.R2_UPDATES_BUCKET != ''
         shell: bash
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
@@ -214,7 +213,6 @@ jobs:
           echo "Déposé sous $prefix (pas encore visible des joueurs : lancer « Promouvoir une release »)."
 
       - name: Release GitHub en brouillon
-        if: env.AUGUR_SIGNING_MODE != 'none'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}

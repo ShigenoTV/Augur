@@ -2,7 +2,7 @@
 
 Ce document décrit la chaîne qui va du code à l'installation chez un joueur, et ce qu'il
 reste à configurer. Tout est prêt dans le dépôt ; il manque uniquement des comptes et
-des secrets, listés à la fin.
+des secrets, listés plus bas.
 
 ## Vue d'ensemble
 
@@ -12,9 +12,9 @@ PR / main ──► CI ─────────────► build Windows 
 tag vX.Y.Z[-beta.N] ──► Release Windows
                          ├─ vérifie tag = version de l'application
                          ├─ tauri build (NSIS + MSI)
-                         │    ├─ chaque binaire signé Authenticode (sign-windows.ps1)
+                         │    ├─ signature Authenticode optionnelle (désactivée, voir plus bas)
                          │    └─ chaque installeur signé pour l'updater (.sig minisign)
-                         ├─ contrôle des signatures, latest.json, SHA256SUMS
+                         ├─ latest.json, SHA256SUMS
                          ├─ dépôt IMMUABLE sur updates.<domaine>/releases/X.Y.Z/
                          └─ release GitHub en brouillon
 
@@ -64,29 +64,39 @@ Le canal bêta s'obtient en remplaçant l'endpoint au runtime (option « Rejoind
 via le builder du plugin `tauri-plugin-updater`. La CI force `createUpdaterArtifacts` et
 injecte la commande de signature, l'application n'a donc rien d'autre à prévoir.
 
-## Signature Authenticode : quel produit acheter
+## Signature Authenticode : pas de certificat (décision du 2026-10-31)
 
-Depuis juin 2023, les clés des certificats de signature de code doivent être stockées
-sur un HSM : on ne peut plus mettre un fichier `.pfx` dans les secrets de la CI. Et depuis
-2024, Microsoft ne donne plus de réputation SmartScreen immédiate aux certificats EV :
-EV et OV construisent leur réputation de la même façon, par le volume d'installations.
+Max a décidé de **ne pas acheter de certificat de signature de code vérifié**. Le
+pipeline publie donc des installeurs **non signés Authenticode** (mode par défaut
+`AUGUR_SIGNING_MODE=none`, un avertissement est affiché dans le run).
 
-Le pipeline accepte deux modes (variable `AUGUR_SIGNING_MODE`) :
+Ce qui reste signé, gratuitement, avec nos propres clés :
 
-| Mode | Produit | Coût indicatif | Remarques |
-|---|---|---|---|
-| `azure` (recommandé) | **Azure Artifact Signing** (ex-« Trusted Signing ») | ~10 $/mois | Signature dans le cloud, aucun matériel, intégration Tauri documentée. Éligibilité selon le pays et le statut (entreprise ou particulier) : **à vérifier** sur la page Microsoft au moment de la souscription. |
-| `signtool` | Certificat OV/EV d'une AC avec HSM cloud (DigiCert KeyLocker, SSL.com eSigner…) | 300 à 700 €/an | Ajouter l'étape d'installation du KSP du fournisseur dans `release-windows.yml` (emplacement marqué). |
-| `none` | Aucun | 0 | Uniquement pour tester le pipeline (`allow_unsigned`) ; rien n'est déposé sur le CDN. |
+- **les mises à jour** (clé minisign de l'updater Tauri) : une application installée
+  n'accepte qu'une mise à jour signée par le studio ;
+- **les paquets de données** (clé ed25519) ;
+- l'intégrité des installeurs est publiée dans `SHA256SUMS.txt` sur chaque release.
 
-La validation d'identité prend plusieurs jours dans les deux cas : c'est le chemin
-critique pour la Definition of Done « installation sans alerte SmartScreen ».
+Conséquences à connaître :
+
+- À l'installation, Windows SmartScreen affiche « Windows a protégé votre ordinateur » ;
+  le joueur doit cliquer sur **Informations complémentaires > Exécuter quand même**.
+  Prévoir ce geste dans le guide d'installation des testeurs. Les mises à jour
+  automatiques suivantes ne déclenchent pas cet écran.
+- La Definition of Done du sprint 1 « installation sans alerte SmartScreen » n'est pas
+  atteignable sans certificat et doit être amendée.
+- Les antivirus signalent plus souvent les binaires non signés : soumettre chaque
+  version à Microsoft Defender (gratuit, lien plus bas) avant de la promouvoir.
+
+Si la décision change, le pipeline sait déjà signer : `AUGUR_SIGNING_MODE=azure`
+(Azure Artifact Signing) ou `signtool` (certificat sur HSM cloud), avec les secrets
+listés ci-dessous. Rien d'autre à modifier.
 
 ## Configuration GitHub (Settings du dépôt)
 
 **Environnements** (Settings > Environments) :
 
-- `release` : secrets de signature. Restreindre aux tags `v*`.
+- `release` : clé de l'updater (et secrets Authenticode si un jour utilisés). Restreindre aux tags `v*`.
 - `production` : **Required reviewers = Max**. Protège la promotion des versions.
 - `data-production` : Required reviewers = Max (ou le responsable data). Protège la publication des données.
 
@@ -96,8 +106,8 @@ critique pour la Definition of Done « installation sans alerte SmartScreen ».
 |---|---|---|
 | `TAURI_SIGNING_PRIVATE_KEY` | release | Clé privée minisign de l'updater. |
 | `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | release | Son mot de passe. |
-| `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` | release | Principal de service autorisé à signer (rôle *Trusted Signing Certificate Profile Signer*, renommé « Artifact Signing » selon la date). |
-| `AUGUR_SIGNING_THUMBPRINT` | release | Empreinte du certificat (mode `signtool` seulement). |
+| `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` | release (optionnel) | Principal de service autorisé à signer (rôle *Trusted Signing Certificate Profile Signer*, renommé « Artifact Signing » selon la date). |
+| `AUGUR_SIGNING_THUMBPRINT` | release (optionnel) | Empreinte du certificat (mode `signtool` seulement). |
 | `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | release, production, data-production | Jeton R2 limité aux buckets. |
 | `CLOUDFLARE_PURGE_TOKEN` | production, data-production | Jeton limité à la purge de cache. |
 | `AUGUR_DATA_SIGNING_KEY` | data-production | Clé privée ed25519 des paquets de données. |
@@ -106,7 +116,7 @@ critique pour la Definition of Done « installation sans alerte SmartScreen ».
 
 | Nom | Exemple |
 |---|---|
-| `AUGUR_SIGNING_MODE` | `azure` |
+| `AUGUR_SIGNING_MODE` | `none` (défaut) ; `azure` ou `signtool` si un certificat est pris plus tard |
 | `AZURE_SIGNING_ENDPOINT` | `https://weu.codesigning.azure.net` |
 | `AZURE_SIGNING_ACCOUNT`, `AZURE_SIGNING_PROFILE` | noms choisis dans Azure |
 | `AUGUR_UPDATES_BASE_URL` | `https://updates.<domaine>` (sortie OpenTofu) |
@@ -138,7 +148,7 @@ l'application à la main.**
 3. Vérifier le run « Release Windows » et tester l'installeur de la release brouillon sur
    un Windows 11 vierge (SmartScreen, antivirus, mise à jour depuis la version précédente).
 4. Lancer « Promouvoir une release » (version, canal) et approuver.
-5. Versions majeures : soumettre les installeurs à Microsoft Defender
+5. Chaque version (installeurs non signés) : soumettre les installeurs à Microsoft Defender
    (https://www.microsoft.com/wdsi/filesubmission) avant la promotion en stable.
 
 ## Retour arrière
