@@ -5,29 +5,21 @@ import { isAppError } from "../bridge";
 export const EVALUATING_DELAY_MS = 150;
 
 export interface CopilotDeps {
-  parse: (text: string) => Promise<ParsedItem>;
   overlayState: () => Promise<OverlayState>;
   evaluate: (item: ParsedItem) => Promise<ItemDelta>;
   price: (item: ParsedItem) => Promise<PriceEstimate>;
 }
 
 /**
- * Enchaînement d'un Ctrl+C : parse, personnage, évaluation, prix.
- * `emit` est appelé à chaque étape visible ; le résultat final est renvoyé.
+ * Enchaînement d'un Ctrl+C sur un objet déjà parsé par le cœur Rust :
+ * personnage, évaluation, prix. `emit` est appelé à chaque étape visible ;
+ * le résultat final est renvoyé.
  */
-export async function runCopilot(text: string, deps: CopilotDeps, emit: (v: CopilotView) => void): Promise<CopilotView> {
-  let item: ParsedItem;
-  try {
-    item = await deps.parse(text);
-  } catch (err) {
-    const view: CopilotView = {
-      status: "unrecognized",
-      error: isAppError(err) ? err : { code: "internal", message: String(err), retryAfterMs: null },
-    };
-    emit(view);
-    return view;
-  }
-
+export async function runCopilot(
+  item: ParsedItem,
+  deps: CopilotDeps,
+  emit: (v: CopilotView) => void,
+): Promise<CopilotView> {
   const state = await deps.overlayState().catch(() => null);
   if (!state?.character) {
     const view: CopilotView = { status: "noCharacter", item };

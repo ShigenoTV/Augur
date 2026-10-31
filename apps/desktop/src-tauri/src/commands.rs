@@ -3,11 +3,8 @@
 
 use tauri::{AppHandle, State};
 
-use crate::contracts::{AppError, OverlayState, ParsedItem};
+use crate::contracts::{AppError, CONTRACT_VERSION, OverlayState, ParsedItem, app_error};
 use crate::{AppState, game_window, item_text, overlay};
-
-/// Version du contrat application ↔ interface (voir crates/augur-contracts).
-pub const CONTRACT_VERSION: u32 = 1;
 
 #[tauri::command]
 pub fn parse_clipboard_item(text: String) -> Result<ParsedItem, AppError> {
@@ -66,7 +63,7 @@ pub fn set_update_channel(
     beta: bool,
 ) -> Result<crate::settings::Settings, AppError> {
     store.update(&app, |s| s.beta_channel = beta).map_err(|e| {
-        AppError::new(
+        app_error(
             crate::contracts::ErrorCode::Internal,
             format!("Réglage non enregistré ({e})."),
         )

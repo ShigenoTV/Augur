@@ -11,10 +11,8 @@ use std::time::Duration;
 
 use tauri::{AppHandle, Emitter};
 
-use crate::contracts::ZoneChanged;
+use crate::contracts::{ZoneChanged, events};
 use crate::time::rfc3339_now;
-
-pub const EVENT_ZONE_CHANGED: &str = "augur://zone-changed";
 
 const POLL: Duration = Duration::from_millis(500);
 const DISCOVERY_RETRY: Duration = Duration::from_secs(30);
@@ -154,7 +152,7 @@ pub fn spawn(app: AppHandle) {
                                         zone,
                                         at: rfc3339_now(),
                                     };
-                                    let _ = app.emit(EVENT_ZONE_CHANGED, payload);
+                                    let _ = app.emit(events::ZONE_CHANGED, payload);
                                 }
                             }
                         }

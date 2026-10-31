@@ -4,21 +4,12 @@
 
 use std::time::Duration;
 
-use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::{AppState, game_window, item_text, overlay, time};
-
-pub const EVENT_ITEM_COPIED: &str = "augur://item-copied";
+use crate::contracts::events;
+use crate::{AppState, game_window, item_text, overlay};
 
 const POLL: Duration = Duration::from_millis(60);
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ItemCopied {
-    pub text: String,
-    pub captured_at_ms: u64,
-}
 
 /// Jeton qui change à chaque modification du presse-papier.
 #[cfg(windows)]
@@ -64,12 +55,16 @@ pub fn spawn_watcher(app: AppHandle) {
                 if !item_text::looks_like_item(&text) {
                     continue;
                 }
-                app.state::<AppState>().set_last_text(text.clone());
-                let payload = ItemCopied {
-                    text,
-                    captured_at_ms: time::unix_millis_now(),
+                // Contrat : `augur://item-copied` porte l'objet déjà parsé.
+                let item = match item_text::parse(&text) {
+                    Ok(item) => item,
+                    Err(err) => {
+                        log::warn!("objet copié illisible : {}", err.message);
+                        continue;
+                    }
                 };
-                let _ = app.emit_to(overlay::LABEL, EVENT_ITEM_COPIED, payload);
+                app.state::<AppState>().set_last_text(text);
+                let _ = app.emit_to(overlay::LABEL, events::ITEM_COPIED, item);
                 let handle = app.clone();
                 let _ = app.run_on_main_thread(move || overlay::show_near_cursor(&handle));
             }

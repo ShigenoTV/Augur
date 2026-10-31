@@ -30,8 +30,6 @@ export const EVENTS = {
 
 export type Settings = { betaChannel: boolean };
 
-export type ItemCopied = { text: string; capturedAtMs: number };
-
 export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
@@ -56,7 +54,9 @@ export const commands = {
 };
 
 export const on = {
-  itemCopied: (cb: (p: ItemCopied) => void): Promise<UnlistenFn> => listen<ItemCopied>(EVENTS.itemCopied, (e) => cb(e.payload)),
+  /** Contrat : la charge est l'objet déjà parsé par le cœur Rust. */
+  itemCopied: (cb: (p: ParsedItem) => void): Promise<UnlistenFn> =>
+    listen<ParsedItem>(EVENTS.itemCopied, (e) => cb(e.payload)),
   zoneChanged: (cb: (p: ZoneChanged) => void): Promise<UnlistenFn> => listen<ZoneChanged>(EVENTS.zoneChanged, (e) => cb(e.payload)),
   overlayHidden: (cb: () => void): Promise<UnlistenFn> => listen(EVENTS.overlayHidden, () => cb()),
   upgradeSearchRequested: (cb: () => void): Promise<UnlistenFn> => listen(EVENTS.upgradeSearchRequested, () => cb()),
