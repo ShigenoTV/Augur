@@ -158,7 +158,7 @@ l'application à la main.**
 ## Publier une version
 
 0. Une seule fois : remplacer dans `tauri.conf.json` la clé publique provisoire de l'updater
-   et le domaine `updates.augur.invalid` (constante `UPDATES_BASE_URL` de `src/updates.rs`).
+   et le domaine `updates.augur.invalid` (constante `STABLE_ENDPOINT` de `src/updates.rs`).
    La release refuse de construire tant que ce n'est pas fait, car une version publiée
    avec une clé factice ne pourrait plus jamais se mettre à jour.
 1. Monter la version dans l'application, fusionner sur `main`.
