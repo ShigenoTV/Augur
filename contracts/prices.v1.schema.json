@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://augur.invalid/contracts/prices.v1.schema.json",
+  "title": "Augur — prix d'une ligue (GET /prices/{league}), v1",
+  "description": "Contrat entre le pipeline data, l'API privée et l'application. Tous les prix sont en exalts. Évolution incompatible = nouveau fichier v2.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "realm", "league", "unit", "generated_at", "data_as_of", "fresh_until", "frozen", "etag", "items", "quality"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "realm": { "type": "string", "enum": ["poe2"] },
+    "league": { "type": "string", "minLength": 1 },
+    "unit": { "const": "exalted" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "data_as_of": { "type": ["string", "null"], "format": "date-time", "description": "Horodatage de l'observation la plus récente." },
+    "fresh_until": { "type": "string", "format": "date-time", "description": "Au-delà, l'application affiche les prix comme anciens, avec leur horodatage." },
+    "frozen": { "type": "boolean", "description": "Mode dégradé : prix gelés volontairement (incident, lancement de ligue)." },
+    "etag": { "type": "string", "pattern": "^\"[0-9a-f]{32}\"$" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "name", "price", "low", "high", "sample_size", "confidence", "method", "source", "updated_at"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_-]+/[A-Za-z0-9_.-]+$", "description": "Identifiant stable : {catégorie}/{identifiant}." },
+          "kind": { "enum": ["currency", "item"] },
+          "name": { "type": "string" },
+          "price": { "type": "number", "exclusiveMinimum": 0 },
+          "low": { "type": "number", "exclusiveMinimum": 0 },
+          "high": { "type": "number", "exclusiveMinimum": 0 },
+          "sample_size": { "type": "integer", "minimum": 0 },
+          "confidence": { "enum": ["high", "medium", "low"] },
+          "method": { "type": "string" },
+          "source": { "enum": ["currency_exchange", "trade_sample"] },
+          "updated_at": { "type": ["string", "null"], "format": "date-time" }
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "description": "Indicateurs de qualité des données (tableau de bord Data).",
+      "additionalProperties": true
+    }
+  }
+}
