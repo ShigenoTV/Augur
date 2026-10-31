@@ -12,6 +12,7 @@ fichier) et la section 3.1 du plan fondateur. Résumé :
 | `confiance` | `confirmé`, `mesuré` ou `supposé` |
 | `statut` | `actif` (défaut) ou `non_supporte` (mécanique pas encore implémentée : listé, non exécuté) |
 | `personnage.competence` | Gemme : `temps_incantation`, `critique_base`, `efficacite_degats_ajoutes`, `degats: { feu: [min, max] }` |
+| `personnage.penalite_campagne` | Pénalité de résistances élémentaires en points (ex. `-60`), 0 par défaut |
 | `personnage.modificateurs` | Liste de `{ stat, type, valeur, source }` ; `type` ∈ `base`, `added`, `increased`, `more`, `override` (valeur négative = reduced / less) |
 | `conditions` | `cible: { resistances: { feu: 30 }, armure: 0 }`, `coup_subi` (dégâts physiques d'un coup reçu) |
 | `attendu` | `nom_de_sortie: valeur` ou `{ valeur, tolerance_pct, tolerance_abs }` ; `tolerance_pct` par défaut 0,5 |

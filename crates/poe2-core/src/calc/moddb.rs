@@ -80,11 +80,14 @@ impl ModDb {
         self.contributions(TypeModificateur::Override, stats).pop()
     }
 
-    /// Trace du facteur « increased » : 1 + Σ/100.
+    /// Trace du facteur « increased » : max(0, 1 + Σ/100).
+    ///
+    /// Plancher à 0 : des « reduced » cumulés au-delà de −100 % annulent la
+    /// stat sans la rendre négative (confiance `supposé`, cas degats-002).
     pub fn trace_increased(&self, libelle: &str, stats: &[&str]) -> Trace {
         let inc = self.somme(TypeModificateur::Increased, stats);
-        let mut t = Trace::feuille(libelle, 1.0 + inc.valeur / 100.0)
-            .avec_formule(format!("1 + {}% / 100", nombre(inc.valeur)));
+        let mut t = Trace::feuille(libelle, (1.0 + inc.valeur / 100.0).max(0.0))
+            .avec_formule(format!("max(0, 1 + {}% / 100)", nombre(inc.valeur)));
         t.contributions = inc.contributions;
         t
     }
@@ -170,6 +173,12 @@ mod tests {
         let t = db.evaluer("vie", &["life"], None);
         // 150 × 1.2 × 1.2 × 0.5
         assert!((t.valeur - 108.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn increased_plancher_a_zero() {
+        let db = ModDb::new([m("life", Base, 100.0), m("life", Increased, -150.0)]);
+        assert_eq!(db.evaluer("vie", &["life"], None).valeur, 0.0);
     }
 
     #[test]

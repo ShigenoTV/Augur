@@ -6,8 +6,13 @@
 //!   bonus, plafond absolu 90 % ;
 //! - réduction de l'armure contre un coup physique `D` :
 //!   `A / (A + 10 × D)`, plafonnée à 90 % ;
+//! - pénalité de campagne : paramètre explicite du personnage, ajouté aux
+//!   résistances élémentaires avant plafonnement (−60 % en fin de campagne,
+//!   0 pour le chaos ; inconnue I-02 du Theorycrafter) ;
 //! - coup maximal encaissable (« EHP par coup ») : plus gros coup d'un type
-//!   qui ne vide pas vie + bouclier d'énergie.
+//!   qui ne vide pas la réserve. Réserve = vie + bouclier d'énergie, sauf
+//!   contre le chaos qui retire le bouclier d'énergie au double :
+//!   vie + ES / 2 (fiche 07, inconnue I-01).
 
 use super::moddb::ModDb;
 use super::modifier::TypeModificateur;
@@ -53,13 +58,19 @@ pub struct Defense {
     pub coups_max: Vec<(TypeDegats, Trace)>,
 }
 
-fn resistance(db: &ModDb, t: TypeDegats) -> Trace {
+fn resistance(db: &ModDb, t: TypeDegats, penalite_campagne: f64) -> Trace {
     let sr = t.stat_resistance();
     let mut s = vec![sr.as_str()];
     if t.est_elementaire() {
         s.push(stats::ELEMENTAL_RESISTANCE);
     }
     let brute = db.somme(TypeModificateur::Added, &s);
+    let penalite = if t.est_elementaire() {
+        penalite_campagne
+    } else {
+        0.0
+    };
+    let total = brute.valeur + penalite;
     let smax = t.stat_resistance_max();
     let mut s_max = vec![smax.as_str()];
     if t.est_elementaire() {
@@ -67,9 +78,13 @@ fn resistance(db: &ModDb, t: TypeDegats) -> Trace {
     }
     let bonus_max = db.somme(TypeModificateur::Added, &s_max);
     let max = (RESISTANCE_MAX_BASE + bonus_max.valeur).min(RESISTANCE_MAX_ABSOLUE);
-    let valeur = brute.valeur.min(max);
+    let valeur = total.min(max);
 
-    let mut t_brute = Trace::feuille("résistance non plafonnée", brute.valeur);
+    let mut t_brute = Trace::feuille("résistance non plafonnée", total).avec_formule(format!(
+        "Σ {} + pénalité de campagne {}",
+        nombre(brute.valeur),
+        nombre(penalite)
+    ));
     t_brute.contributions = brute.contributions;
     let mut t_max = Trace::feuille("résistance maximale", max).avec_formule(format!(
         "min({}, {} + {})",
@@ -79,22 +94,26 @@ fn resistance(db: &ModDb, t: TypeDegats) -> Trace {
     ));
     t_max.contributions = bonus_max.contributions;
     Trace::feuille(format!("résistance {}", t.nom()), valeur)
-        .avec_formule(format!("min({}, {})", nombre(brute.valeur), nombre(max)))
+        .avec_formule(format!("min({}, {})", nombre(total), nombre(max)))
         .avec_enfants([t_brute, t_max])
 }
 
-pub fn calculer(db: &ModDb, coup_subi: Option<f64>) -> Defense {
+pub fn calculer(db: &ModDb, coup_subi: Option<f64>, penalite_campagne: f64) -> Defense {
     let vie = db.evaluer("vie", &[stats::LIFE], None);
     let bouclier_energie = db.evaluer("bouclier d'énergie", &[stats::ENERGY_SHIELD], None);
     let armure = db.evaluer("armure", &[stats::ARMOUR], None);
     let reserve = vie.valeur.max(0.0) + bouclier_energie.valeur.max(0.0);
     let t_reserve = Trace::feuille("réserve (vie + bouclier d'énergie)", reserve)
         .avec_enfants([vie.clone(), bouclier_energie.clone()]);
+    let reserve_chaos = vie.valeur.max(0.0) + bouclier_energie.valeur.max(0.0) / 2.0;
+    let t_reserve_chaos = Trace::feuille("réserve contre le chaos (vie + ES / 2)", reserve_chaos)
+        .avec_formule("le chaos retire le bouclier d'énergie au double")
+        .avec_enfants([vie.clone(), bouclier_energie.clone()]);
 
     let resistances: Vec<_> = TypeDegats::TOUS
         .into_iter()
         .filter(|t| *t != TypeDegats::Physique)
-        .map(|t| (t, resistance(db, t)))
+        .map(|t| (t, resistance(db, t, penalite_campagne)))
         .collect();
 
     let reduction = coup_subi.map(|d| {
@@ -120,6 +139,11 @@ pub fn calculer(db: &ModDb, coup_subi: Option<f64>) -> Defense {
         .avec_enfants([t_reserve.clone(), armure.clone()]),
     )];
     for (t, res) in &resistances {
+        let (reserve, t_reserve) = if *t == TypeDegats::Chaos {
+            (reserve_chaos, &t_reserve_chaos)
+        } else {
+            (reserve, &t_reserve)
+        };
         let mult = 1.0 - res.valeur / 100.0;
         let valeur = if mult > 0.0 {
             reserve / mult

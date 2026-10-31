@@ -26,13 +26,14 @@ recevoir une fiche mécanique et des cas golden mesurés en jeu.
 
 | Mécanique | Formule implémentée |
 |---|---|
-| Ordre des opérations | gemme + ajoutés × efficacité → × (1 + Σ increased) → × Π more |
+| Ordre des opérations | gemme + ajoutés × efficacité → × max(0, 1 + Σ increased) → × Π more (plancher à 0 des increased cumulés) |
 | Stats d'increased d'un sort | `damage`, `spell_damage`, `elemental_damage` (feu, froid, foudre), `<type>_damage` |
 | Critique | chance = (base gemme + added) × increased × more, plafond 100 % ; multiplicateur moyen = 1 + chance × bonus ; bonus de base 100 % |
 | Pénétration | ne fait pas descendre une résistance positive sous 0 ; sans effet sur une résistance négative |
 | Résistances | min(Σ, maximum) ; maximum = 75 % + bonus, plafond absolu 90 % |
 | Armure | réduction = A / (A + 10 × D), plafond 90 % |
-| Réserve | vie + bouclier d'énergie pour tous les types de dégâts (y compris chaos) |
+| Réserve | vie + bouclier d'énergie ; contre le chaos, vie + ES / 2 (le chaos retire l'ES au double, fiche 07, I-01) |
+| Pénalité de campagne | paramètre explicite `personnage.penalite_campagne` (ex. −60), ajouté aux résistances élémentaires avant plafonnement, sans effet sur le chaos (I-02) |
 | Arrondis | aucun en interne ; l'arrondi relève de l'affichage et des tolérances |
 
 ## Pas encore couvert

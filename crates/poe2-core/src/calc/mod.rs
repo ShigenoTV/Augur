@@ -70,6 +70,10 @@ pub struct Personnage {
     pub competence: Option<Competence>,
     #[serde(default)]
     pub modificateurs: Vec<Modificateur>,
+    /// Pénalité de résistances élémentaires due à la progression dans la
+    /// campagne, en points (par exemple −60). Explicite pour rester testable.
+    #[serde(default)]
+    pub penalite_campagne: f64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
@@ -143,6 +147,11 @@ pub fn valider(perso: &Personnage) -> Result<(), Vec<ErreurCalcul>> {
             )));
         }
     }
+    if !perso.penalite_campagne.is_finite() {
+        erreurs.push(ErreurCalcul::ValeurNonFinie(
+            "penalite_campagne".to_string(),
+        ));
+    }
     if let Some(c) = &perso.competence {
         if !(c.temps_incantation > 0.0 && c.temps_incantation.is_finite()) {
             erreurs.push(ErreurCalcul::TempsIncantation(c.temps_incantation));
@@ -184,7 +193,7 @@ pub fn calculer(perso: &Personnage, cond: &Conditions) -> Result<Resultats, Vec<
         ins("incantations_par_seconde", o.incantations_par_seconde);
     }
 
-    let d = defense::calculer(&db, cond.coup_subi);
+    let d = defense::calculer(&db, cond.coup_subi, perso.penalite_campagne);
     ins("vie", d.vie);
     ins("bouclier_energie", d.bouclier_energie);
     ins("armure", d.armure);

@@ -25,6 +25,6 @@ attendu:
   resistance_chaos: { valeur: -20, tolerance_abs: 0 }
   reduction_armure: 33.3333                            # 5000 / (5000 + 10 × 1000)
   coup_max_feu: 45000                                  # 4500 / (1 − 90 %)
-  coup_max_chaos: 3750                                 # 4500 / 1,2
+  coup_max_chaos: 3125                                 # (3000 + 1500 / 2) / 1,2
   coup_max_physique: 4954.1635
 preuve: "calcul manuel (cohérence du moteur)"
