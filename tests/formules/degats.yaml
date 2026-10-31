@@ -138,3 +138,49 @@ cas:
     attendu: { par_type: { feu: 130.0, froid: 66.3 }, total: 196.3 }
     tolerance_pct: 0.01
     preuve: null
+  - id: degats-010
+    type: unitaire
+    calcul: degats.coup_moyen
+    nature: interaction
+    patch: null
+    confiance: supposé
+    statut: brouillon
+    description: "[poe2wiki, Damage conversion, 31/10/2026] Exemple 1 : compétence 80 % physique → feu, puis Avatar of Fire 75 % physique → feu sur le reste. 95 feu, 5 physique."
+    entrees:
+      base: { physique: [100, 100] }
+      conversion_competence: { physique: { feu: 80 } }
+      conversion_secondaire: { physique: { feu: 75 } }
+    attendu: { par_type: { physique: 5.0, feu: 95.0 }, total: 100.0 }
+    tolerance_pct: 0.01
+    preuve: null
+  - id: degats-011
+    type: unitaire
+    calcul: degats.coup_moyen
+    nature: discriminant
+    patch: null
+    confiance: supposé
+    statut: brouillon
+    description: "[poe2wiki, Damage conversion, 31/10/2026] Exemple (Explosive Grenade + Blueflame Bracers) : 80 % physique → feu (compétence), gain de 50 % des dégâts en feu, puis 100 % feu → froid. Les dégâts gagnés à l'étape 2 sont convertis dans la même étape."
+    entrees:
+      base: { physique: [100, 100] }
+      conversion_competence: { physique: { feu: 80 } }
+      gain_secondaire: { degats: { feu: 50 } }
+      conversion_secondaire: { feu: { froid: 100 } }
+    attendu: { par_type: { physique: 20.0, feu: 0.0, froid: 130.0 }, total: 150.0 }
+    tolerance_pct: 0.01
+    a_verifier_en_jeu: "Si les dégâts gagnés n'étaient pas convertis, on aurait 50 feu et 80 froid."
+    preuve: null
+  - id: degats-012
+    type: unitaire
+    calcul: degats.coup_moyen
+    nature: nominal
+    patch: null
+    confiance: supposé
+    statut: brouillon
+    description: "[poe2wiki, Damage conversion, 31/10/2026] Exemple : 50 physique + 50 feu, gain de 20 % des dégâts (total) en feu supplémentaire → 50 physique, 70 feu."
+    entrees:
+      base: { physique: [50, 50], feu: [50, 50] }
+      gain_secondaire: { degats: { feu: 20 } }
+    attendu: { par_type: { physique: 50.0, feu: 70.0 }, total: 120.0 }
+    tolerance_pct: 0.01
+    preuve: null

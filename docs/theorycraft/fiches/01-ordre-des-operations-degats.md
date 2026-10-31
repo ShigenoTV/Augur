@@ -36,12 +36,14 @@ Le calcul est linéaire jusqu'au crit : la moyenne des dégâts est la moyenne d
 - Dans une même étape, si la somme des conversions d'un type source dépasse 100 %, elles sont **ramenées proportionnellement à 100 %** (ex. 60 % vers feu + 60 % vers foudre deviennent 50 % + 50 %).
 - La normalisation se fait **par étape**, pas sur les deux étapes cumulées. Les étapes 1 et 2 ne s'additionnent pas : l'étape 2 s'applique à ce qui reste après l'étape 1.
 - **Rupture avec PoE 1 :** les dégâts convertis **ne se souviennent pas** de leur type d'origine. Ils ne profitent que des modificateurs de leur type final. Exemple : du feu converti en foudre profite de « increased Lightning Damage », pas de « increased Fire Damage ».
-- Hypothèse de travail : à l'intérieur d'une étape, une conversion ne s'enchaîne pas (du froid converti en feu à l'étape 2 n'est pas reconverti en foudre par une autre conversion de la même étape). Les dégâts gagnés à l'étape 2 ne sont pas reconvertis.
+- À l'intérieur d'une étape, une conversion ne s'enchaîne pas (la conversion n'est pas récursive) : du froid converti en feu à l'étape 2 n'est pas reconverti en foudre par une autre conversion de la même étape. Un type ne peut pas être converti en lui-même.
+- Les conversions se font dans n'importe quel sens (pas d'ordre physique → foudre → froid → feu → chaos comme en PoE 1).
 
 ### Gain en dégâts supplémentaires (« gain X% of Y as extra Z »)
 
 - Les dégâts gagnés ne profitent que des modificateurs du **type gagné** (pas de ceux du type source).
-- Hypothèse de travail : le montant gagné se calcule sur le montant du type source **avant** les conversions de la même étape.
+- Le montant gagné se calcule sur la **valeur de base** du type source avant l'étape ; « of Damage » désigne le total de tous les types (source `degats` dans les cas). Les gains propres à la compétence ont lieu à l'étape 1, tous les autres à l'étape 2.
+- Les dégâts gagnés à l'étape 2 **sont** convertis par les conversions de l'étape 2 : exemple du wiki, 80 feu + 20 physique, gain de 50 % des dégâts en feu, puis 100 % feu → froid, donne 130 froid et 20 physique (cas `degats-011`).
 
 ### Étiquettes des increased
 
@@ -59,12 +61,12 @@ Un pourcentage s'applique à un type s'il porte l'une de ses étiquettes : le ty
 
 ## Sources
 
+- [S-WIKI-CONV] poe2wiki.net, captures transmises par Max le 31 octobre 2026 : *Damage conversion* (type final seulement, deux étapes, normalisation, gains et leurs exemples, repris dans `degats-010` à `degats-012`). https://www.poe2wiki.net/wiki/Damage_conversion
 - [S-ORDRE] mobalytics, *Damage & Defence Calculation Order* (PoE 2), mis à jour le 20 janvier 2026, pas de numéro de patch indiqué. https://mobalytics.gg/poe-2/guides/damage-defence-calc-order
 - [S-CONVERSION] mobalytics, *Damage Conversion* (PoE 2), date non relevée. https://mobalytics.gg/poe-2/guides/damage-conversion
 - Le wiki communautaire poe2wiki.net n'a pas pu être consulté (protection anti-robots) : à relire par un humain.
 
 ## À vérifier en jeu
 
-- Héritage des modificateurs après conversion : comparer le tooltip d'un sort converti avec et sans un objet « increased <type source> » (cas discriminant `degats-003`).
-- Base du gain en dégâts supplémentaires quand une conversion de la même étape existe (`degats-007`).
+- Héritage des modificateurs et gains : tranchés par le wiki et mobalytics, qui concordent ; une mesure en jeu (mesure optionnelle) le confirmerait.
 - Règles d'arrondi du minimum et du maximum affichés.
