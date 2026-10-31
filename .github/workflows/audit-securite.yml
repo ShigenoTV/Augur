@@ -47,7 +47,7 @@ jobs:
           echo "npm=$(find . -name package-lock.json -not -path '*/node_modules/*' | head -1)" >> "$GITHUB_OUTPUT"
           echo "pnpm=$(find . -name pnpm-lock.yaml -not -path '*/node_modules/*' | head -1)" >> "$GITHUB_OUTPUT"
       - if: steps.detect.outputs.npm != '' || steps.detect.outputs.pnpm != ''
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           package-manager-cache: false
