@@ -64,6 +64,20 @@ Le canal bêta s'obtient en remplaçant l'endpoint au runtime (option « Rejoind
 via le builder du plugin `tauri-plugin-updater`. La CI force `createUpdaterArtifacts` et
 injecte la commande de signature, l'application n'a donc rien d'autre à prévoir.
 
+## Hébergement des mises à jour sans domaine (GitHub Releases)
+
+Tant que le domaine et le compte Cloudflare n'existent pas, les mises à jour sont
+servies par les releases GitHub du dépôt (public). C'est le mode par défaut quand la
+variable `R2_UPDATES_BUCKET` n'est pas définie :
+
+- la release attache les installeurs, leurs `.sig` et `latest.json` à la release brouillon ;
+- l'application interroge `https://github.com/ShigenoTV/Augur/releases/latest/download/latest.json` ;
+- « Promouvoir une release » (canal `stable`) publie la release brouillon, ce qui la
+  rend « latest » et donc visible des applications installées.
+
+Limite : pas de canal bêta dans ce mode. Passer au CDN plus tard ne demande qu'une
+version de l'application avec le nouvel endpoint.
+
 ## Signature Authenticode : pas de certificat (décision du 2026-10-31)
 
 Max a décidé de **ne pas acheter de certificat de signature de code vérifié**. Le
