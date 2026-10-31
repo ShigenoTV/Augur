@@ -1,6 +1,8 @@
 # Release Windows d'Augur : build, signature Authenticode, artefacts de mise à jour.
 #
-# Déclenchement : pousser un tag `vX.Y.Z` (canal stable) ou `vX.Y.Z-beta.N` (canal bêta).
+# Déclenchement : pousser un tag `vX.Y.Z` (canal stable) ou `vX.Y.Z-beta.N` (canal bêta),
+# ou lancer le workflow à la main (Actions > Release Windows > Run workflow) : le tag
+# est alors créé sur le commit de la branche choisie s'il n'existe pas.
 # Signature Authenticode optionnelle (AUGUR_SIGNING_MODE, défaut « none » :
 # décision de Max du 2026-10-31). Les mises à jour sont toujours signées.
 # Ce workflow NE PUBLIE PAS la mise à jour auprès des joueurs : il dépose une
@@ -17,7 +19,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag à construire (ex. v0.1.0-beta.1)"
+        description: "Tag à construire (ex. v0.1.0-beta.1). Créé sur le commit choisi s'il n'existe pas."
         required: true
 
 permissions:
@@ -37,8 +39,31 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  tag:
+    name: Créer le tag (lancement manuel)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Créer le tag s'il n'existe pas
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-beta\.[0-9]+)?$ ]]; then
+            echo "::error::Tag invalide : $TAG"; exit 1
+          fi
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" >/dev/null 2>&1; then
+            echo "Le tag $TAG existe déjà, il est réutilisé tel quel."
+          else
+            gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$TAG" -f sha="$GITHUB_SHA" >/dev/null
+            echo "Tag $TAG créé sur $GITHUB_SHA ($GITHUB_REF_NAME)."
+          fi
+
   build:
     name: Build et signature
+    needs: tag
+    if: ${{ !cancelled() && (needs.tag.result == 'success' || needs.tag.result == 'skipped') }}
     runs-on: windows-latest
     environment: release   # secrets de signature isolés ; règles de protection possibles
     timeout-minutes: 90
@@ -122,6 +147,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          # pnpm est activé ensuite par corepack : pas de cache automatique ici.
+          package-manager-cache: false
       - run: corepack enable
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2

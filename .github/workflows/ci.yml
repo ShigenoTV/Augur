@@ -61,6 +61,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          # pnpm est activé ensuite par corepack : pas de cache automatique ici.
+          package-manager-cache: false
       - name: Tests des paquets de données
         run: |
           pip install -r tools/datapack/requirements.txt
@@ -117,6 +119,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          # pnpm est activé ensuite par corepack : pas de cache automatique ici.
+          package-manager-cache: false
       - name: pnpm (via corepack, version de packageManager)
         run: corepack enable
       - uses: dtolnay/rust-toolchain@stable
