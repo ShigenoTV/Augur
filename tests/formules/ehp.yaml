@@ -33,4 +33,4 @@ cas:
   - { id: ehp-008, type: unitaire, calcul: ehp.coup_max, nature: interaction, patch: null, confiance: supposé, statut: brouillon,
       description: "Physique, armure calculée sur le coup entrant, puis 10 % less damage taken.",
       entrees: { type: physique, vie: 4000, armure: 10000, more_subi: [-10] },
-      attendu: { coup_max: 5285.3434 }, tolerance_pct: 0.01, preuve: null }
+      attendu: { coup_max: 5285.3442 }, tolerance_pct: 0.01, preuve: null }
