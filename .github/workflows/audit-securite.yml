@@ -1,0 +1,84 @@
+# Audit des vulnérabilités connues (CVE / RUSTSEC / GHSA) des dépendances.
+# Tourne sur chaque PR, chaque push sur main et tous les jours, car une
+# nouvelle CVE peut toucher du code qui n'a pas changé.
+name: Audit de sécurité
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    name: Rust (cargo-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect
+        run: echo "found=$(find . -name Cargo.lock -not -path '*/target/*' | head -1)" >> "$GITHUB_OUTPUT"
+      - if: steps.detect.outputs.found != ''
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+      - if: steps.detect.outputs.found != ''
+        run: |
+          set -e
+          for lock in $(find . -name Cargo.lock -not -path '*/target/*'); do
+            echo "::group::$lock"
+            cargo audit --file "$lock" --deny warnings
+            echo "::endgroup::"
+          done
+      - if: steps.detect.outputs.found == ''
+        run: echo "Aucun Cargo.lock, audit Rust ignoré."
+
+  npm:
+    name: Front (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect
+        run: echo "found=$(find . -name package-lock.json -not -path '*/node_modules/*' | head -1)" >> "$GITHUB_OUTPUT"
+      - if: steps.detect.outputs.found != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - if: steps.detect.outputs.found != ''
+        run: |
+          set -e
+          for lock in $(find . -name package-lock.json -not -path '*/node_modules/*'); do
+            dir=$(dirname "$lock")
+            echo "::group::$dir"
+            (cd "$dir" && npm audit --omit=dev --audit-level=high)
+            echo "::endgroup::"
+          done
+      - if: steps.detect.outputs.found == ''
+        run: echo "Aucun package-lock.json, audit npm ignoré."
+
+  python:
+    name: Data (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect
+        run: echo "found=$(find . -name 'requirements*.txt' -not -path '*/.venv/*' | head -1)" >> "$GITHUB_OUTPUT"
+      - if: steps.detect.outputs.found != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - if: steps.detect.outputs.found != ''
+        run: |
+          set -e
+          pip install pip-audit
+          for req in $(find . -name 'requirements*.txt' -not -path '*/.venv/*'); do
+            echo "::group::$req"
+            pip-audit -r "$req"
+            echo "::endgroup::"
+          done
+      - if: steps.detect.outputs.found == ''
+        run: echo "Aucun requirements*.txt, audit Python ignoré."
