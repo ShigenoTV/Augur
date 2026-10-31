@@ -1,4 +1,5 @@
 # Mises à jour automatiques des dépendances et correctifs de sécurité.
+# L’écosystème « npm » de Dependabot couvre aussi les projets pnpm (pnpm-lock.yaml).
 # Les alertes et les « security updates » Dependabot doivent aussi être
 # activés dans Settings > Code security du dépôt.
 version: 2

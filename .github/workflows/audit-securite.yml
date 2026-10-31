@@ -37,28 +37,40 @@ jobs:
       - if: steps.detect.outputs.found == ''
         run: echo "Aucun Cargo.lock, audit Rust ignoré."
 
-  npm:
-    name: Front (npm audit)
+  js:
+    name: Front (npm / pnpm audit)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - id: detect
-        run: echo "found=$(find . -name package-lock.json -not -path '*/node_modules/*' | head -1)" >> "$GITHUB_OUTPUT"
-      - if: steps.detect.outputs.found != ''
+        run: |
+          echo "npm=$(find . -name package-lock.json -not -path '*/node_modules/*' | head -1)" >> "$GITHUB_OUTPUT"
+          echo "pnpm=$(find . -name pnpm-lock.yaml -not -path '*/node_modules/*' | head -1)" >> "$GITHUB_OUTPUT"
+      - if: steps.detect.outputs.npm != '' || steps.detect.outputs.pnpm != ''
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - if: steps.detect.outputs.found != ''
+      - if: steps.detect.outputs.npm != ''
         run: |
           set -e
           for lock in $(find . -name package-lock.json -not -path '*/node_modules/*'); do
             dir=$(dirname "$lock")
-            echo "::group::$dir"
+            echo "::group::npm $dir"
             (cd "$dir" && npm audit --omit=dev --audit-level=high)
             echo "::endgroup::"
           done
-      - if: steps.detect.outputs.found == ''
-        run: echo "Aucun package-lock.json, audit npm ignoré."
+      - if: steps.detect.outputs.pnpm != ''
+        run: |
+          set -e
+          npm install -g pnpm@10
+          for lock in $(find . -name pnpm-lock.yaml -not -path '*/node_modules/*'); do
+            dir=$(dirname "$lock")
+            echo "::group::pnpm $dir"
+            (cd "$dir" && pnpm audit --prod --audit-level high)
+            echo "::endgroup::"
+          done
+      - if: steps.detect.outputs.npm == '' && steps.detect.outputs.pnpm == ''
+        run: echo "Aucun package-lock.json ni pnpm-lock.yaml, audit JS ignoré."
 
   python:
     name: Data (pip-audit)

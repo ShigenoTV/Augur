@@ -11,7 +11,7 @@ Ne publiez pas d'issue publique. Utilisez le signalement privé de GitHub : ongl
 | Source | Outil | Fréquence |
 |---|---|---|
 | Dépendances Rust (cœur, application, backend) | `cargo audit` (base RustSec) | Chaque PR, chaque push sur `main`, tous les jours |
-| Dépendances front (React, Tauri JS) | `npm audit` | Idem |
+| Dépendances front (React, Tauri JS) | `pnpm audit` (ou `npm audit` si `package-lock.json`) | Idem |
 | Dépendances data (Python) | `pip-audit` (base PyPA / OSV) | Idem |
 | Toutes les dépendances et les GitHub Actions | Alertes et PR Dependabot | En continu, PR groupées chaque lundi |
 | Runtime embarqué | Bulletins Tauri et WebView2 (Microsoft Edge) | Veille hebdomadaire |
