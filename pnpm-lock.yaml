@@ -57,6 +57,10 @@ importers:
   packages/contracts: {}
 
   packages/ui:
+    dependencies:
+      '@augur/contracts':
+        specifier: workspace:*
+        version: link:../contracts
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4.3.3

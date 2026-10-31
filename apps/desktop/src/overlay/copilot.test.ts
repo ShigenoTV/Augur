@@ -13,7 +13,6 @@ const withCharacter: OverlayState = {
 
 function deps(overrides: Partial<CopilotDeps> = {}): CopilotDeps {
   return {
-    parse: async () => fixtures.rareBow,
     overlayState: async () => withCharacter,
     evaluate: async () => fixtures.upgradeDelta,
     price: async () => fixtures.tradePrice,
@@ -23,7 +22,7 @@ function deps(overrides: Partial<CopilotDeps> = {}): CopilotDeps {
 
 async function run(d: CopilotDeps) {
   const seen: CopilotView[] = [];
-  const final = await runCopilot("texte", d, (v) => seen.push(v));
+  const final = await runCopilot(fixtures.rareBow, d, (v) => seen.push(v));
   return { final, seen };
 }
 
@@ -32,13 +31,6 @@ describe("runCopilot", () => {
     const { final, seen } = await run(deps());
     expect(seen.map((v) => (v.status === "ready" ? v.pricing : v.status))).toEqual(["pending", "done"]);
     expect(final.status === "ready" && final.price?.median).toBe(14);
-  });
-
-  it("objet non reconnu", async () => {
-    const { final } = await run(
-      deps({ parse: async () => Promise.reject({ code: "parseFailed", message: "non", retryAfterMs: null }) }),
-    );
-    expect(final.status).toBe("unrecognized");
   });
 
   it("sans personnage importé", async () => {
