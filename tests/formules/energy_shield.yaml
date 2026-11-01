@@ -2,14 +2,14 @@ mecanique: energy-shield
 fiche: docs/theorycraft/fiches/07-energy-shield.md
 cas:
   - { id: es-001, type: unitaire, calcul: es.maximum, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
-      description: "Un objet : base 100, +50 % local, qualité 20.",
+      description: "Un objet : base 100, +50 % local, qualité 20 (multiplicative : 100 × 1,5 × 1,2).",
       entrees: { objets: [ { base: 100, increased_local: 50, qualite: 20 } ] },
-      attendu: { es_max: 170.0 }, tolerance_pct: 0.01,
-      a_verifier_en_jeu: "I-12 : qualité additive aux increased locaux ? Si multiplicative : 180.", preuve: null }
+      attendu: { es_max: 180.0 }, tolerance_pct: 0.01,
+      preuve: "I-12 mesuré le 1er novembre 2026 : la qualité est multiplicative (voir tests/golden/archetype/es-objets-mesures.yaml)" }
   - { id: es-002, type: unitaire, calcul: es.maximum, nature: interaction, patch: null, confiance: supposé, statut: brouillon,
       description: "Objet local + ES plate de l'arbre, puis +40 % global.",
       entrees: { objets: [ { base: 100, increased_local: 50, qualite: 20 } ], plat_global: 30, increased_global: 40 },
-      attendu: { es_max: 280.0 }, tolerance_pct: 0.01, preuve: null }
+      attendu: { es_max: 294.0 }, tolerance_pct: 0.01, preuve: null }
   - { id: es-003, type: unitaire, calcul: es.maximum, nature: nominal, patch: null, confiance: supposé, statut: brouillon,
       description: "Deux objets, les increased locaux de l'un ne touchent pas l'autre.",
       entrees: { objets: [ { base: 200, increased_local: 100 }, { base: 50 } ], increased_global: 10 },

@@ -6,9 +6,10 @@
 //!   bonus, plafond absolu 90 % ;
 //! - réduction de l'armure contre un coup physique `D` :
 //!   `A / (A + 10 × D)` + réduction additionnelle, plafonnée à 90 % (fiche 05) ;
-//! - défenses des objets : valeur locale = base × (1 + (increased local +
-//!   qualité) / 100), puis somme des objets + plats globaux, × increased
-//!   global × more global (fiche 07) ;
+//! - défenses des objets : valeur locale = base × (1 + increased local / 100)
+//!   × (1 + qualité / 100) (la qualité est multiplicative, mesuré sur
+//!   4 objets le 1er novembre 2026), puis somme des objets + plats globaux,
+//!   × increased global × more global (fiche 07) ;
 //! - recharge du bouclier d'énergie : délai 4 s / (1 + démarrage plus rapide),
 //!   12,5 % du maximum par seconde × (1 + increased) (fiche 07) ;
 //! - évasion : chance d'éviter = 1 − 1,25 × P / (P + 0,3 × É), entre 0 et
@@ -113,10 +114,10 @@ fn defense_locale(
         .enumerate()
         .filter(|(_, o)| base(o) != 0.0)
         .map(|(i, o)| {
-            let v = base(o) * (1.0 + (o.increased_local + o.qualite) / 100.0);
+            let v = base(o) * (1.0 + o.increased_local / 100.0) * (1.0 + o.qualite / 100.0);
             let nom = o.nom.clone().unwrap_or_else(|| format!("objet {}", i + 1));
             Trace::feuille(nom, v).avec_formule(format!(
-                "{} × (1 + ({} + qualité {}) / 100)",
+                "{} × (1 + {} / 100) × (1 + qualité {} / 100)",
                 nombre(base(o)),
                 nombre(o.increased_local),
                 nombre(o.qualite)

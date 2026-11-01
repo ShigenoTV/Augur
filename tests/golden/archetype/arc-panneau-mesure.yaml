@@ -1,0 +1,30 @@
+# Panneau d'information d'Arc de Max (équipement complet, client 0.5.5e, 1er novembre 2026).
+# Les dégâts par type, la chance et le bonus de critique et la cadence sont repris tels
+# qu'affichés : le cas vérifie seulement comment le panneau les combine
+# (moyenne × (1 + chance × bonus), puis × cadence), pas l'origine des chiffres.
+- id: arc-panneau-mesure-001
+  patch: "0.5.5e"
+  confiance: mesuré
+  description: >
+    Dégâts moyens par coup 77510,26 et DPS 120140,9 : moyenne des trois types
+    (31501) × (1 + 31,41 % × 465 %) × 1,55 incantations par seconde.
+  personnage:
+    competence:
+      nom: Arc (niveau 32, panneau d'information)
+      type: sort
+      temps_incantation: 0.6451613   # 1 / 1,55
+      critique_base: 31.41
+      degats:
+        foudre: [2445, 51241]
+        feu: [168, 3207]
+        froid: [296, 5645]
+    modificateurs:
+      - { stat: critical_damage_bonus, type: increased, valeur: 365, source: "Bonus de +465 % affiché" }
+  attendu:
+    tolerance_pct: 0.01
+    coup_moyen: 31501
+    chance_critique: { valeur: 31.41, tolerance_abs: 0.001 }
+    bonus_degats_critiques: 465
+    incantations_par_seconde: 1.55
+    dps: 120140.9
+  preuve: "Captures du panneau d'information d'Arc envoyées par Max le 1er novembre 2026 (Damage per second 120140.9, Average damage per Hit 77510.26)"
