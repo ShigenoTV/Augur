@@ -8,8 +8,6 @@ Personne ne peut fermer une entrée sans preuve (capture ou vidéo référencée
 |---|---|---|---|---|---|
 | I-02 | P0 | Résistances (fiche 04) | **Données de Max reçues le 1er novembre 2026** (carte niveau 66) : écart constant de −33 sur feu, froid et foudre entre ses objets et le panneau, cohérent avec −60 % plus 27 % venant de l'arbre ; reste à confirmer les 27 % dans l'arbre. Pénalité de progression : le wiki donne −10/−20/−30 % aux actes 2 à 4, puis −40/−50/−60 % selon le niveau de zone (54, 60, 65+). Reste à confirmer −60 % en endgame sur le patch courant | Objets connus + panneau dans une zone de niveau 65+ (mesure 2) | Mesure de Max |
 | I-06 | P0 | Évasion (fiche 06) | Précision des monstres par niveau | Table `accuracy` de `default_monster_stats.json` dans RePoE (ex. niveau 65 : 1114, niveau 80 : 1964) ; à recouper avec la chance d'éviter du panneau (mesure 3) | **Débloqué via RePoE** (voir plus bas) |
-| I-07 | P0 | Dégâts (fiche 01) | Arrondis du minimum et du maximum affichés dans le tooltip | Comparer nos valeurs non arrondies au tooltip sur 10 configurations | Jeu installé |
-| I-13 | P0 | Gemmes | Dégâts de base, chance de critique et temps d'incantation de la gemme choisie, par niveau | `skills.json` de RePoE (dégâts min/max par niveau, `cast_time` en ms, `crit_chance` en centièmes de %), recoupé avec le tooltip (mesure 4) | **Résolu pour Lightning Bolt (RePoE 0.5.5.5)** : 0,85 s, 10 %, niveau 20 = 30 à 565 ; reste le recoupement avec le tooltip |
 | I-09 | P1 | Vitesse (fiche 03) | Le temps d'incantation est-il arrondi au tick serveur (~33 ms) ? | Temps d'incantation affiché pour 5 valeurs de vitesse ; mesure vidéo à 60 i/s si l'affichage ne tranche pas | Jeu installé |
 | I-11 | P1 | Résistances (fiche 04) | Résistances des boss et des monstres de carte | Données extraites ; à défaut, documentation de GGG | Extraction `.datc64` (absent de `default_monster_stats.json` de RePoE) |
 | I-10 | P2 | Résistances (fiche 04) | Résistance minimale (−200 % en PoE 1) | Cumul de malus de résistance en jeu | Jeu installé |
@@ -17,7 +15,7 @@ Personne ne peut fermer une entrée sans preuve (capture ou vidéo référencée
 
 ## Inconnues fermées
 
-Fermées par la documentation (sources concordantes). Les fiches restent au niveau `supposé` tant qu'une mesure en jeu ne les a pas recoupées, sauf I-01 (texte du jeu) et I-12 (mesuré).
+Fermées par la documentation (sources concordantes). Les fiches restent au niveau `supposé` tant qu'une mesure en jeu ne les a pas recoupées, sauf I-01 (texte du jeu), I-07, I-12 et I-13 (mesurés).
 
 | Id | Mécanique | Réponse | Source |
 | --- | --- | --- | --- |
@@ -27,6 +25,8 @@ Fermées par la documentation (sources concordantes). Les fiches restent au nive
 | I-08 | Critique (fiche 02) | Chance de base additionnelle avant increased/more ; bonus = (100 + plats) puis increased/more | poe2wiki *Critical hit* |
 | I-14 | Dégâts (fiche 01) | Gains calculés sur la base d'avant l'étape, puis convertis par les conversions de la même étape | poe2wiki *Damage conversion* (exemple, cas `degats-011`) |
 | I-01 | ES (fiche 07) | Le chaos retire bien 2× l'ES | Texte du mot-clé du jeu, via [poe2db](https://poe2db.tw/us/Energy_Shield), 31 octobre 2026 |
+| I-13 | Gemmes | Les tables de gemmes de RePoE 0.5.5.5 sont exactes pour le client 0.5.5e : Arc niveau 22 = 26 à 499, niveau 32 = 94 à 1791, incantation 1,10 s, critique 9 % | **Mesuré** sur le tooltip de Max, 1er novembre 2026 (2 captures) |
+| I-07 | Dégâts (fiche 01) | Le tooltip de la gemme affiche les dégâts **de base du niveau**, entiers, **sans aucun modificateur** (ni increased, ni vitesse, ni critique) ; il n'y a donc pas d'arrondi de dégâts modifiés à recouper à cet endroit | **Mesuré**, mêmes captures |
 | I-12 | ES (fiche 07) | La qualité multiplie l'ES locale (elle ne s'ajoute pas aux increased locaux) ; affichage arrondi au plus proche | **Mesuré** sur 4 objets de Max le 1er novembre 2026 (client 0.5.5e). Reste : arrondi du total du personnage |
 
 ## Source de données en attendant notre propre extraction
@@ -40,4 +40,4 @@ Fermées par la documentation (sources concordantes). Les fiches restent au nive
 
 ## Autre point bloquant
 
-Le client de Max affiche **0.5.5e** (1er novembre 2026), alors que l'export RePoE est étiqueté 0.5.5.5. Les deux sont-ils le même état du jeu ? À trancher avec le tooltip de la mesure 4.
+Le client de Max affiche **0.5.5e** (1er novembre 2026), l'export RePoE est étiqueté 0.5.5.5. Les données de gemme sont identiques (Arc aux niveaux 22 et 32, I-13) : on garde 0.5.5.5 pour les tables et 0.5.5e pour les mesures en jeu.

@@ -31,7 +31,9 @@ Source : RePoE, export du patch 0.5.5.5 (`skills.json`, compétence `LightningBo
 
 Écarté : Comet (1 s d'incantation plus « +1 seconde au temps d'incantation total », infusion de feu, critique 13 %), qui ajoute deux mécaniques à vérifier.
 
-Cas de test : [`tests/golden/archetype/lightning-bolt.yaml`](../../tests/golden/archetype/lightning-bolt.yaml), six cas au format du moteur (nominal, +1 niveau, équipement, pénétration, résistance négative, bonus critique). Confiance « supposé » tant que la mesure 4 n'est pas faite.
+Cas de test : [`tests/golden/archetype/lightning-bolt.yaml`](../../tests/golden/archetype/lightning-bolt.yaml), six cas au format du moteur (nominal, +1 niveau, équipement, pénétration, résistance négative, bonus critique). Les chiffres de gemme sont confirmés en jeu (Arc, I-13) ; la confiance des cas reste « supposé » parce que le tooltip de la gemme n'affiche aucun modificateur : il ne permet pas de mesurer un DPS.
+
+**Note du 1er novembre 2026 :** le personnage de Max joue Arc (niveau 32 de gemme avec l'équipement), un sort à chaînes, donc hors du critère « un seul coup ». Le tooltip d'Arc a servi à vérifier la table RePoE (niveaux 22 et 32, tous deux exacts). Arc est un candidat pour le deuxième archétype : proposition à valider par Max.
 
 ## Pourquoi un sort plutôt qu'une attaque à l'arc
 
