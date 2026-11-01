@@ -1,0 +1,23 @@
+# Résistance au feu du personnage de Max (niveau 95, zone de niveau 66, client 0.5.5e,
+# 1er novembre 2026). Ventilation lue dans Path of Building, qui retombe sur le panneau
+# du jeu (Fire 70 %, 70 % non plafonné) : 130 de sources moins 60 de pénalité.
+- id: resistance-feu-mesuree-001
+  patch: "0.5.5e"
+  confiance: mesuré
+  description: >
+    Gants +37, anneau +32, torse +20, anneau « toutes les résistances » +16, quêtes
+    +10 (acte 3), +5 (acte 4), +5 (interlude 2), arbre +5 : 130, moins 60 de pénalité = 70.
+  personnage:
+    penalite_campagne: -60
+    modificateurs:
+      - { stat: fire_resistance, type: added, valeur: 37, source: "Foe Hold (gants)" }
+      - { stat: fire_resistance, type: added, valeur: 32, source: "Maelström Coil (anneau)" }
+      - { stat: fire_resistance, type: added, valeur: 20, source: "Rapture Jack (torse)" }
+      - { stat: fire_resistance, type: added, valeur: 16, source: "Rift Grasp (toutes les résistances, qualité comprise)" }
+      - { stat: fire_resistance, type: added, valeur: 10, source: "Quête acte 3 : Jiquani's Machinarium" }
+      - { stat: fire_resistance, type: added, valeur: 5, source: "Quête acte 4 : Halls of the Dead" }
+      - { stat: fire_resistance, type: added, valeur: 5, source: "Quête interlude 2 : Qimah" }
+      - { stat: fire_resistance, type: added, valeur: 5, source: "Arbre : All Natural" }
+  attendu:
+    resistance_feu: { valeur: 70, tolerance_abs: 0 }
+  preuve: "Capture du panneau (Fire 70 % (70 %)) et ventilation Path of Building envoyées par Max le 1er novembre 2026"
