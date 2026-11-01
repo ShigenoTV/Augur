@@ -1,0 +1,147 @@
+# Archétype du Sprint 1 : Lightning Bolt (gemme LightningBoltPlayer).
+# Données de la gemme : RePoE, export du patch 0.5.5.5 (skills.json) :
+#   temps d'incantation 850 ms, chance de critique de base 1000 (= 10 %),
+#   dégâts de foudre par niveau (niveau 20 : 30 à 565 ; niveau 21 : 34 à 642).
+# Formules : fiches docs/theorycraft/fiches/ (confiance « supposé »).
+# Ces cas seront recoupés par la mesure 4 de Max (tooltip en jeu) ; ils passeront
+# alors à « mesuré » avec la capture en preuve.
+- id: lightning-bolt-nominal-001
+  patch: "0.5.5.5"
+  confiance: supposé
+  description: >
+    Lightning Bolt niveau 20 sans aucun modificateur, cible sans résistance.
+    Coup moyen = (30 + 565) / 2.
+  personnage:
+    competence:
+      nom: Lightning Bolt (niveau 20)
+      type: sort
+      temps_incantation: 0.85
+      critique_base: 10
+      degats: { foudre: [30, 565] }
+  conditions:
+    cible: { description: "cible sans résistance" }
+  attendu:
+    tolerance_pct: 0.01
+    coup_moyen: 297.5
+    chance_critique: { valeur: 10, tolerance_abs: 0 }
+    incantations_par_seconde: 1.176471
+    dps: 385                  # 297,5 × 1,10 × 1/0,85
+  preuve: "RePoE 0.5.5.5 (données de gemme) ; formules supposées"
+
+- id: lightning-bolt-niveau-plus-un-002
+  patch: "0.5.5.5"
+  confiance: supposé
+  description: >
+    Même personnage avec la gemme au niveau 21 (« +1 au niveau des sorts » sur une
+    baguette) : c'est le premier delta que l'overlay doit savoir afficher.
+    De 385 à 437,41 de DPS, soit +13,6 %.
+  personnage:
+    competence:
+      nom: Lightning Bolt (niveau 21)
+      type: sort
+      temps_incantation: 0.85
+      critique_base: 10
+      degats: { foudre: [34, 642] }
+  conditions:
+    cible: { description: "cible sans résistance" }
+  attendu:
+    tolerance_pct: 0.01
+    coup_moyen: 338
+    dps: 437.4118
+  preuve: "RePoE 0.5.5.5 (données de gemme) ; formules supposées"
+
+- id: lightning-bolt-equipement-003
+  patch: "0.5.5.5"
+  confiance: supposé
+  description: >
+    Personnage d'endgame type : +60 % dégâts de foudre, +40 % dégâts de sort,
+    +20 % dégâts élémentaires (additifs : +120 %), +100 % chance de critique,
+    +30 % vitesse d'incantation, cible à 30 % de résistance à la foudre.
+  personnage:
+    competence:
+      nom: Lightning Bolt (niveau 20)
+      type: sort
+      temps_incantation: 0.85
+      critique_base: 10
+      degats: { foudre: [30, 565] }
+    modificateurs:
+      - { stat: lightning_damage, type: increased, valeur: 60, source: "Objet : baguette" }
+      - { stat: spell_damage, type: increased, valeur: 40, source: "Objet : amulette" }
+      - { stat: elemental_damage, type: increased, valeur: 20, source: "Passif" }
+      - { stat: critical_hit_chance, type: increased, valeur: 100, source: "Objet : casque" }
+      - { stat: cast_speed, type: increased, valeur: 30, source: "Objet : anneau" }
+  conditions:
+    cible: { resistances: { foudre: 30 } }
+  attendu:
+    tolerance_pct: 0.01
+    coup_moyen_brut: 654.5    # 297,5 × 2,2
+    coup_moyen: 458.15        # × (1 − 30 %)
+    chance_critique: 20
+    incantations_par_seconde: 1.529412
+    dps: 840.84               # 458,15 × 1,20 × 1,529412
+  preuve: "RePoE 0.5.5.5 (données de gemme) ; formules supposées"
+
+- id: lightning-bolt-penetration-004
+  patch: "0.5.5.5"
+  confiance: supposé
+  description: Cible à 40 % de résistance à la foudre, 30 % de pénétration (10 % effectifs).
+  personnage:
+    competence:
+      nom: Lightning Bolt (niveau 20)
+      type: sort
+      temps_incantation: 0.85
+      critique_base: 10
+      degats: { foudre: [30, 565] }
+    modificateurs:
+      - { stat: lightning_penetration, type: added, valeur: 30, source: "Gemme de soutien" }
+  conditions:
+    cible: { resistances: { foudre: 40 } }
+  attendu:
+    tolerance_pct: 0.01
+    coup_moyen: 267.75
+    dps: 346.5
+  preuve: "RePoE 0.5.5.5 (données de gemme) ; formules supposées"
+
+- id: lightning-bolt-exposition-005
+  patch: "0.5.5.5"
+  confiance: supposé
+  description: >
+    Cible à −20 % de résistance (exposition) : la pénétration de 30 % n'a aucun
+    effet (pas de descente sous 0 %, et rien de plus sur une résistance négative).
+  personnage:
+    competence:
+      nom: Lightning Bolt (niveau 20)
+      type: sort
+      temps_incantation: 0.85
+      critique_base: 10
+      degats: { foudre: [30, 565] }
+    modificateurs:
+      - { stat: lightning_penetration, type: added, valeur: 30, source: "Gemme de soutien" }
+  conditions:
+    cible: { resistances: { foudre: -20 } }
+  attendu:
+    tolerance_pct: 0.01
+    coup_moyen: 357
+    dps: 462
+  preuve: "RePoE 0.5.5.5 (données de gemme) ; formules supposées"
+
+- id: lightning-bolt-bonus-critique-006
+  patch: "0.5.5.5"
+  confiance: supposé
+  description: "+50 % de bonus de dégâts critiques (increased) : bonus de 150 %."
+  personnage:
+    competence:
+      nom: Lightning Bolt (niveau 20)
+      type: sort
+      temps_incantation: 0.85
+      critique_base: 10
+      degats: { foudre: [30, 565] }
+    modificateurs:
+      - { stat: critical_damage_bonus, type: increased, valeur: 50, source: "Objet : anneau" }
+  conditions:
+    cible: { description: "cible sans résistance" }
+  attendu:
+    tolerance_pct: 0.01
+    bonus_degats_critiques: 150
+    dps: 402.5                # 297,5 × 1,15 × 1/0,85
+  preuve: "RePoE 0.5.5.5 (données de gemme) ; formules supposées"
