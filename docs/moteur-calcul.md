@@ -29,7 +29,7 @@ recevoir une fiche mécanique et des cas golden mesurés en jeu.
 |---|---|
 | Ordre des opérations | gemme + ajoutés × efficacité → conversions et gains (étape 1 compétence, étape 2 équipement) → × max(0, 1 + Σ increased du type final) → × Π more (plancher à 0 des increased cumulés) |
 | Conversion (fiche 01) | à chaque étape, gains d'abord, calculés sur les montants d'avant l'étape (`degats` = total), puis conversions sur les montants gains compris, ramenées à 100 % par type source, sans enchaînement ; les dégâts convertis ou gagnés ne profitent que des modificateurs de leur type final |
-| Défenses des objets (fiche 07) | valeur locale = base × (1 + (increased local + qualité) / 100), puis Σ objets + plats globaux, × increased global × more global |
+| Défenses des objets (fiche 07) | valeur locale = base × (1 + increased local / 100) × (1 + qualité / 100) (qualité multiplicative, **mesuré** sur 4 objets pour l'ES le 1er novembre 2026, PR #36 ; appliqué aussi à l'armure, l'évasion et la déflexion par hypothèse), puis Σ objets + plats globaux, × increased global × more global |
 | Recharge de l'ES (fiche 07) | délai = 4 s / (1 + démarrage plus rapide) ; 12,5 % du maximum par seconde × (1 + increased) |
 | Évasion et déflexion (fiche 06) | éviter = 1 − 1,25 P / (P + 0,3 É) ; déflexion = 150 % × (1 − P / (P + 0,12 D)) ; entre 0 et 95 % |
 | Stats d'increased d'un sort | `damage`, `spell_damage`, `elemental_damage` (feu, froid, foudre), `<type>_damage` |
