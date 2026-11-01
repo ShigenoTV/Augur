@@ -1,0 +1,15 @@
+# Résistance au chaos du personnage de Max, ceinture Mageblood retirée (client 0.5.5e,
+# 1er novembre 2026) : le panneau affiche 44 % (44 % non plafonné), soit exactement
+# la somme de ses deux anneaux (+17 et +27). Aucune pénalité sur le chaos.
+- id: resistance-chaos-mesuree-001
+  patch: "0.5.5e"
+  confiance: mesuré
+  description: "Deux anneaux à +17 % et +27 % de résistance au chaos : 44 % affiché, sans pénalité de progression."
+  personnage:
+    penalite_campagne: -60
+    modificateurs:
+      - { stat: chaos_resistance, type: added, valeur: 17, source: "Anneau Rift Grasp" }
+      - { stat: chaos_resistance, type: added, valeur: 27, source: "Anneau Maelström Coil" }
+  attendu:
+    resistance_chaos: { valeur: 44, tolerance_abs: 0 }
+  preuve: "Capture du panneau du personnage envoyée par Max le 1er novembre 2026 : Chaos 44% (44%)"
