@@ -55,5 +55,5 @@ Les résistances sont des entiers dans le panneau. Hypothèse : aucun arrondi su
 
 ## À vérifier en jeu
 
-- Pénalité en endgame sur le patch courant : somme brute des objets comparée à la valeur du panneau dans une zone de niveau 65 ou plus (mesure 2 de la fiche de mesures, I-02).
+- Pénalité en endgame : **mesurée à −60 %** le 1er novembre 2026 (I-02), sur un personnage de niveau 95 dans une zone de niveau 66. Reste à vérifier les paliers −40 et −50 %, qui ne sont connus que par le wiki.
 - Valeurs de résistance des boss et des monstres de carte (nécessaires pour un DPS « réaliste » ; I-11).

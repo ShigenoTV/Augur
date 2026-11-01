@@ -35,6 +35,10 @@ function Overlay() {
           },
         );
       }),
+      on.itemUnrecognized((error) => {
+        run.current++;
+        setView({ status: "unrecognized", error });
+      }),
       on.overlayHidden(() => {
         run.current++;
         setView({ status: "hidden" });

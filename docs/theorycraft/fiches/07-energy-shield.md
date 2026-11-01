@@ -1,15 +1,15 @@
 # 07. Energy Shield
 
-**Confiance :** `supposé` · **Patch de référence :** inconnu · **Cas golden :** `tests/formules/energy_shield.yaml`
+**Confiance :** `supposé` (l'ES locale d'un objet est `mesuré`) · **Patch de référence :** inconnu · **Cas golden :** `tests/formules/energy_shield.yaml`
 
 ## Maximum
 
 ```
-es_objet(i) = base(i) × (1 + (increased_local(i) + qualite(i)) / 100)        (hypothèse : qualité additive aux increased locaux)
+es_objet(i) = base(i) × (1 + increased_local(i) / 100) × (1 + qualite(i) / 100)        (qualité multiplicative : mesuré)
 es_max      = (Σ es_objet + es_plat_global) × (1 + increased_global/100) × Π(1 + more/100)
 ```
 
-- Les increased **locaux** (sur l'objet) s'appliquent à la base de cet objet seul.
+- Les increased **locaux** (sur l'objet, runes comprises) s'additionnent entre eux et s'appliquent à la base de cet objet seul, **plats locaux compris** (base de l'objet + ES plate de ses affixes). **La qualité ne s'ajoute pas à ces increased : elle multiplie le résultat.** **`mesuré`** le 1er novembre 2026 sur 4 objets de Max (casque, torse, gants, bottes, client 0.5.5e), écart inférieur à 0,3 sur chacun (cas `tests/golden/archetype/es-objets-mesures.yaml`). Le calcul additif donnait 263, 491, 132 et 237 pour 275, 528, 146 et 254 affichés.
 - Le total des objets et des sources plates est ensuite multiplié par les increased **globaux** (y compris « increased Global Defences »).
 
 ## Recharge
@@ -32,7 +32,7 @@ vitesse        = 12,5 % × es_max × (1 + increased_recharge/100)         par se
 
 ## Arrondis
 
-Hypothèse : l'ES de chaque objet est arrondie à l'entier à l'affichage. Arrondi local (par objet) ou global : inconnu (I-12).
+L'ES affichée d'un objet est **arrondie au plus proche** (145,8 est affiché 146, donc ce n'est pas un arrondi à l'inférieur). Arrondi du total du personnage, par objet ou global : inconnu, car le personnage de Max a 0 ES au panneau (I-12).
 
 ## Sources
 
@@ -43,4 +43,4 @@ Hypothèse : l'ES de chaque objet est arrondie à l'entier à l'affichage. Arron
 
 ## À vérifier en jeu
 
-- Rôle de la qualité sur l'ES d'un objet (additive aux increased locaux ou multiplicative ; I-12).
+- Arrondi du total d'ES du personnage (par objet ou global ; I-12), sur un personnage qui a de l'ES au panneau.

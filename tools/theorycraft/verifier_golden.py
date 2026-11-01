@@ -152,7 +152,7 @@ def deflexion_chance(e):
 
 
 def es_maximum(e):
-    objets = sum(o["base"] * (1 + (o.get("increased_local", 0) + o.get("qualite", 0)) / 100) for o in e.get("objets", []))
+    objets = sum(o["base"] * (1 + o.get("increased_local", 0) / 100) * (1 + o.get("qualite", 0) / 100) for o in e.get("objets", []))
     total = (objets + e.get("plat_global", 0)) * (1 + e.get("increased_global", 0) / 100) * _produit_more(e.get("more"))
     return {"es_max": total}
 

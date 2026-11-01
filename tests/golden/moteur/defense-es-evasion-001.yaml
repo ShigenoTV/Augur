@@ -2,7 +2,7 @@ id: defense-es-evasion-001
 patch: "0.3.0"
 confiance: supposé
 description: >
-  Bouclier d'énergie local d'un objet (increased local + qualité), plat et
+  Bouclier d'énergie local d'un objet (increased local, puis qualité multiplicative), plat et
   increased globaux, recharge, évasion et déflexion contre une précision
   donnée (fiches 06 et 07).
 personnage:
@@ -19,9 +19,9 @@ conditions:
   precision_attaquant: 1000
 attendu:
   tolerance_pct: 0.01
-  bouclier_energie: 280     # (170 + 30) × 1,4
+  bouclier_energie: 294     # (100 × 1,5 × 1,2 + 30) × 1,4
   delai_recharge_es: 2
-  recharge_es: 52.5         # 12,5 % × 280 × 1,5
+  recharge_es: 55.125       # 12,5 % × 294 × 1,5
   chance_eviter: 50
   chance_deflexion: 56.25
 preuve: "calcul manuel (cohérence du moteur)"

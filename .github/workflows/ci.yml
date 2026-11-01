@@ -67,6 +67,8 @@ jobs:
         run: |
           pip install -r tools/datapack/requirements.txt
           python -m pytest -q tools/datapack/tests
+      - name: Tests de l'import des données de jeu (RePoE)
+        run: python -m pytest -q tools/gamedata/tests
       - name: Tests du manifeste de mise à jour
         run: node --test scripts/release/*.test.mjs
       - name: Analyse du script de signature (PSScriptAnalyzer)
