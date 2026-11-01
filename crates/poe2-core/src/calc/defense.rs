@@ -6,6 +6,14 @@
 //!   bonus, plafond absolu 90 % ;
 //! - réduction de l'armure contre un coup physique `D` :
 //!   `A / (A + 10 × D)` + réduction additionnelle, plafonnée à 90 % (fiche 05) ;
+//! - défenses des objets : valeur locale = base × (1 + (increased local +
+//!   qualité) / 100), puis somme des objets + plats globaux, × increased
+//!   global × more global (fiche 07) ;
+//! - recharge du bouclier d'énergie : délai 4 s / (1 + démarrage plus rapide),
+//!   12,5 % du maximum par seconde × (1 + increased) (fiche 07) ;
+//! - évasion : chance d'éviter = 1 − 1,25 × P / (P + 0,3 × É), entre 0 et
+//!   95 % ; déflexion : 150 % × (1 − P / (P + 0,12 × D)), entre 0 et 95 %
+//!   (fiche 06), contre une précision d'attaquant P ;
 //! - dégâts subis : × max(0, 1 + Σ increased) × Π more (`damage_taken`) ;
 //! - pénalité de campagne : paramètre explicite du personnage, ajouté aux
 //!   résistances élémentaires avant plafonnement (−60 % en fin de campagne,
@@ -14,6 +22,8 @@
 //!   qui ne vide pas la réserve. Réserve = vie + bouclier d'énergie, sauf
 //!   contre le chaos qui retire le bouclier d'énergie au double :
 //!   vie + ES / 2 (fiche 07, inconnue I-01).
+
+use serde::{Deserialize, Serialize};
 
 use super::moddb::ModDb;
 use super::modifier::TypeModificateur;
@@ -71,7 +81,100 @@ pub fn coup_physique_max_complet(reserve: f64, armure: f64, r_pct: f64, m: f64) 
     (qb + (qb * qb + 4.0 * qa * qc).sqrt()) / (2.0 * qa)
 }
 
+/// Un objet portant des défenses locales (armure de corps, casque, bouclier…).
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ObjetDefense {
+    #[serde(default)]
+    pub nom: Option<String>,
+    #[serde(default)]
+    pub energy_shield: f64,
+    #[serde(default)]
+    pub armure: f64,
+    #[serde(default)]
+    pub evasion: f64,
+    #[serde(default)]
+    pub deflexion: f64,
+    /// Increased local à l'objet, en % (s'applique à toutes ses défenses).
+    #[serde(default)]
+    pub increased_local: f64,
+    #[serde(default)]
+    pub qualite: f64,
+}
+
+/// Somme des défenses locales d'un type sur tous les objets, avec trace.
+fn defense_locale(
+    objets: &[ObjetDefense],
+    libelle: &str,
+    base: impl Fn(&ObjetDefense) -> f64,
+) -> Option<Trace> {
+    let enfants: Vec<Trace> = objets
+        .iter()
+        .enumerate()
+        .filter(|(_, o)| base(o) != 0.0)
+        .map(|(i, o)| {
+            let v = base(o) * (1.0 + (o.increased_local + o.qualite) / 100.0);
+            let nom = o.nom.clone().unwrap_or_else(|| format!("objet {}", i + 1));
+            Trace::feuille(nom, v).avec_formule(format!(
+                "{} × (1 + ({} + qualité {}) / 100)",
+                nombre(base(o)),
+                nombre(o.increased_local),
+                nombre(o.qualite)
+            ))
+        })
+        .collect();
+    if enfants.is_empty() {
+        return None;
+    }
+    let total = enfants.iter().map(|t| t.valeur).sum();
+    Some(
+        Trace::feuille(libelle, total)
+            .avec_formule("Σ des valeurs locales")
+            .avec_enfants(enfants),
+    )
+}
+
+fn evaluer_avec_objets(db: &ModDb, libelle: &str, stat: &str, locale: Option<Trace>) -> Trace {
+    match locale {
+        None => db.evaluer(libelle, &[stat], None),
+        Some(l) => {
+            let mut t = db.evaluer(
+                libelle,
+                &[stat],
+                Some((l.valeur, "objets (valeurs locales)")),
+            );
+            if let Some(base) = t.enfants.first_mut() {
+                base.enfants = vec![l];
+            }
+            t
+        }
+    }
+}
+
+/// Chance d'éviter une attaque (0 à 95 %) avec `evasion` contre `precision`.
+pub fn chance_eviter(precision: f64, evasion: f64) -> f64 {
+    if precision <= 0.0 {
+        return 95.0;
+    }
+    let toucher = 1.25 * precision / (precision + 0.3 * evasion.max(0.0));
+    ((1.0 - toucher) * 100.0).clamp(0.0, 95.0)
+}
+
+/// Chance de déflexion (0 à 95 %) avec `deflexion` contre `precision`.
+pub fn chance_deflexion(precision: f64, deflexion: f64) -> f64 {
+    if precision <= 0.0 {
+        return 95.0;
+    }
+    (150.0 * (1.0 - precision / (precision + 0.12 * deflexion.max(0.0)))).clamp(0.0, 95.0)
+}
+
 pub struct Defense {
+    pub evasion: Trace,
+    pub deflexion: Trace,
+    pub chance_eviter: Option<Trace>,
+    pub chance_deflexion: Option<Trace>,
+    pub delai_recharge_es: Trace,
+    pub recharge_es: Trace,
     pub vie: Trace,
     pub bouclier_energie: Trace,
     pub armure: Trace,
@@ -120,10 +223,81 @@ fn resistance(db: &ModDb, t: TypeDegats, penalite_campagne: f64) -> Trace {
         .avec_enfants([t_brute, t_max])
 }
 
-pub fn calculer(db: &ModDb, coup_subi: Option<f64>, penalite_campagne: f64) -> Defense {
+pub fn calculer(
+    db: &ModDb,
+    objets: &[ObjetDefense],
+    coup_subi: Option<f64>,
+    precision_attaquant: Option<f64>,
+    penalite_campagne: f64,
+) -> Defense {
     let vie = db.evaluer("vie", &[stats::LIFE], None);
-    let bouclier_energie = db.evaluer("bouclier d'énergie", &[stats::ENERGY_SHIELD], None);
-    let armure = db.evaluer("armure", &[stats::ARMOUR], None);
+    let bouclier_energie = evaluer_avec_objets(
+        db,
+        "bouclier d'énergie",
+        stats::ENERGY_SHIELD,
+        defense_locale(objets, "bouclier d'énergie des objets", |o| {
+            o.energy_shield
+        }),
+    );
+    let armure = evaluer_avec_objets(
+        db,
+        "armure",
+        stats::ARMOUR,
+        defense_locale(objets, "armure des objets", |o| o.armure),
+    );
+    let evasion = evaluer_avec_objets(
+        db,
+        "évasion",
+        stats::EVASION_RATING,
+        defense_locale(objets, "évasion des objets", |o| o.evasion),
+    );
+    let deflexion = evaluer_avec_objets(
+        db,
+        "déflexion",
+        stats::DEFLECTION_RATING,
+        defense_locale(objets, "déflexion des objets", |o| o.deflexion),
+    );
+    let chance_eviter = precision_attaquant.map(|p| {
+        Trace::feuille("chance d'éviter", chance_eviter(p, evasion.valeur))
+            .avec_formule(format!(
+                "(1 − 1,25 × {} / ({} + 0,3 × {})) × 100, entre 0 et 95",
+                nombre(p),
+                nombre(p),
+                nombre(evasion.valeur)
+            ))
+            .avec_enfant(evasion.clone())
+    });
+    let chance_deflexion = precision_attaquant.map(|p| {
+        Trace::feuille("chance de déflexion", chance_deflexion(p, deflexion.valeur))
+            .avec_formule(format!(
+                "150 × (1 − {} / ({} + 0,12 × {})), entre 0 et 95",
+                nombre(p),
+                nombre(p),
+                nombre(deflexion.valeur)
+            ))
+            .avec_enfant(deflexion.clone())
+    });
+    let demarrage = db.somme(
+        TypeModificateur::Added,
+        &[stats::FASTER_ENERGY_SHIELD_RECHARGE_START],
+    );
+    let mut delai_recharge_es = Trace::feuille(
+        "délai avant recharge du bouclier d'énergie",
+        4.0 / (1.0 + demarrage.valeur / 100.0),
+    )
+    .avec_formule(format!("4 s / (1 + {}% / 100)", nombre(demarrage.valeur)));
+    delai_recharge_es.contributions = demarrage.contributions;
+    let t_inc_recharge = db.trace_increased("increased", &[stats::ENERGY_SHIELD_RECHARGE_RATE]);
+    let recharge_es = Trace::feuille(
+        "recharge du bouclier d'énergie par seconde",
+        0.125 * bouclier_energie.valeur.max(0.0) * t_inc_recharge.valeur,
+    )
+    .avec_formule(format!(
+        "12,5 % × {} × {}",
+        nombre(bouclier_energie.valeur),
+        nombre(t_inc_recharge.valeur)
+    ))
+    .avec_enfants([bouclier_energie.clone(), t_inc_recharge]);
     let reserve = vie.valeur.max(0.0) + bouclier_energie.valeur.max(0.0);
     let t_reserve = Trace::feuille("réserve (vie + bouclier d'énergie)", reserve)
         .avec_enfants([vie.clone(), bouclier_energie.clone()]);
@@ -202,6 +376,12 @@ pub fn calculer(db: &ModDb, coup_subi: Option<f64>, penalite_campagne: f64) -> D
     }
 
     Defense {
+        evasion,
+        deflexion,
+        chance_eviter,
+        chance_deflexion,
+        delai_recharge_es,
+        recharge_es,
         vie,
         bouclier_energie,
         armure,

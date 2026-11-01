@@ -1,0 +1,25 @@
+id: conversion-deux-etapes-001
+patch: "0.3.0"
+confiance: supposé
+description: >
+  Exemple poe2wiki (fiche 01, cas degats-011) porté sur un personnage :
+  80 % physique → feu par la compétence, puis à l'étape 2 gain de 50 % des
+  dégâts en feu et 100 % feu → froid. Le froid final ne profite que des
+  increased froid.
+personnage:
+  competence:
+    nom: Sort de test
+    temps_incantation: 1.0
+    critique_base: 0
+    degats: { physique: [100, 100] }
+    conversion: { physique: { feu: 80 } }
+  modificateurs:
+    - { stat: gain_damage_as_extra_fire, type: added, valeur: 50, source: "Objet : bracelets" }
+    - { stat: convert_fire_damage_to_cold, type: added, valeur: 100, source: "Objet : bracelets" }
+    - { stat: fire_damage, type: increased, valeur: 300, source: "Test (ne doit rien changer)" }
+    - { stat: cold_damage, type: increased, valeur: 100, source: "Passif de test" }
+attendu:
+  tolerance_pct: 0.01
+  coup_moyen_brut: 280      # 20 physique + 130 froid × 2
+  dps: 280
+preuve: "calcul manuel (cohérence du moteur)"

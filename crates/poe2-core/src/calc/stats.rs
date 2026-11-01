@@ -99,8 +99,30 @@ pub const ALL_MAXIMUM_ELEMENTAL_RESISTANCE: &str = "maximum_elemental_resistance
 /// Réduction des dégâts physiques additionnelle, en points, ajoutée à celle
 /// de l'armure avant le plafond de 90 %.
 pub const PHYSICAL_DAMAGE_REDUCTION: &str = "physical_damage_reduction";
+/// Évasion et déflexion (base, added, increased, more), globales.
+pub const EVASION_RATING: &str = "evasion_rating";
+pub const DEFLECTION_RATING: &str = "deflection_rating";
+/// Vitesse de recharge du bouclier d'énergie (increased).
+pub const ENERGY_SHIELD_RECHARGE_RATE: &str = "energy_shield_recharge_rate";
+/// Démarrage plus rapide de la recharge du bouclier d'énergie (added, en %).
+pub const FASTER_ENERGY_SHIELD_RECHARGE_START: &str = "faster_energy_shield_recharge_start";
 /// Dégâts subis (increased / more), tous types confondus.
 pub const DAMAGE_TAKEN: &str = "damage_taken";
+
+/// Conversion de l'étape 2 : `convert_<source>_damage_to_<cible>` (en %).
+pub fn stat_conversion(source: TypeDegats, cible: TypeDegats) -> String {
+    format!("convert_{}_damage_to_{}", source.cle(), cible.cle())
+}
+
+/// Gain de l'étape 2 : `gain_<source>_damage_as_extra_<cible>` (en %).
+pub fn stat_gain(source: TypeDegats, cible: TypeDegats) -> String {
+    format!("gain_{}_damage_as_extra_{}", source.cle(), cible.cle())
+}
+
+/// Gain de l'étape 2 sur le total : `gain_damage_as_extra_<cible>` (en %).
+pub fn stat_gain_tous(cible: TypeDegats) -> String {
+    format!("gain_damage_as_extra_{}", cible.cle())
+}
 
 /// Liste exhaustive des stats que le moteur sait lire.
 pub fn stats_connues() -> Vec<String> {
@@ -120,6 +142,10 @@ pub fn stats_connues() -> Vec<String> {
         ALL_MAXIMUM_ELEMENTAL_RESISTANCE,
         PHYSICAL_DAMAGE_REDUCTION,
         DAMAGE_TAKEN,
+        EVASION_RATING,
+        DEFLECTION_RATING,
+        ENERGY_SHIELD_RECHARGE_RATE,
+        FASTER_ENERGY_SHIELD_RECHARGE_START,
     ]
     .iter()
     .map(|s| s.to_string())
@@ -131,6 +157,13 @@ pub fn stats_connues() -> Vec<String> {
         v.push(t.stat_penetration());
         v.push(t.stat_resistance());
         v.push(t.stat_resistance_max());
+        v.push(stat_gain_tous(t));
+        for c in TypeDegats::TOUS {
+            if c != t {
+                v.push(stat_conversion(t, c));
+                v.push(stat_gain(t, c));
+            }
+        }
     }
     v
 }
