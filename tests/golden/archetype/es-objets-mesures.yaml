@@ -1,0 +1,52 @@
+# Energy Shield local de 4 objets réels de Max (texte copié par Ctrl+Alt+C, client 0.5.5e,
+# 1er novembre 2026). Bases tirées de RePoE (Ancestral Tiara 109, Vile Robe 171,
+# Sirenscale Gloves 54, Luxurious Slippers 73), les plats locaux sont ajoutés à la base,
+# les increased locaux (runes comprises) s'additionnent, puis la qualité multiplie.
+# L'affichage du jeu est arrondi à l'entier : tolérance de 0,5 en valeur absolue.
+- id: es-objet-casque-mesure-001
+  patch: "0.5.5e"
+  confiance: mesuré
+  description: "Casque : (109 + 62) × (1 + 34 %) × (1 + 20 % de qualité). Affiché 275."
+  personnage:
+    objets:
+      - { nom: "Bramble Crest (Ancestral Tiara)", energy_shield: 171, increased_local: 34, qualite: 20 }
+  attendu:
+    tolerance_pct: 0.01
+    bouclier_energie: { valeur: 274.968, tolerance_abs: 0.5 }
+  preuve: "Texte Ctrl+Alt+C de Max, 1er novembre 2026 : Energy Shield: 275 (augmented)"
+
+- id: es-objet-torse-mesure-002
+  patch: "0.5.5e"
+  confiance: mesuré
+  description: "Torse : (171 + 82) × (1 + 56 % + 18 % de rune) × (1 + 20 %). Affiché 528."
+  personnage:
+    objets:
+      - { nom: "Rapture Jack (Vile Robe)", energy_shield: 253, increased_local: 74, qualite: 20 }
+  attendu:
+    tolerance_pct: 0.01
+    bouclier_energie: { valeur: 528.264, tolerance_abs: 0.5 }
+  preuve: "Texte Ctrl+Alt+C de Max, 1er novembre 2026 : Energy Shield: 528 (augmented)"
+
+- id: es-objet-gants-mesure-003
+  patch: "0.5.5e"
+  confiance: mesuré
+  description: "Gants : 54 × (1 + 38 % + 69 % + 18 % de rune) × (1 + 20 %). Affiché 146 (145,8 : arrondi au plus proche)."
+  personnage:
+    objets:
+      - { nom: "Foe Hold (Sirenscale Gloves)", energy_shield: 54, increased_local: 125, qualite: 20 }
+  attendu:
+    tolerance_pct: 0.01
+    bouclier_energie: { valeur: 145.8, tolerance_abs: 0.5 }
+  preuve: "Texte Ctrl+Alt+C de Max, 1er novembre 2026 : Energy Shield: 146 (augmented)"
+
+- id: es-objet-bottes-mesure-004
+  patch: "0.5.5e"
+  confiance: mesuré
+  description: "Bottes : (73 + 56) × (1 + 64 % de rune) × (1 + 20 %). Affiché 254."
+  personnage:
+    objets:
+      - { nom: "Fate Tread (Luxurious Slippers)", energy_shield: 129, increased_local: 64, qualite: 20 }
+  attendu:
+    tolerance_pct: 0.01
+    bouclier_energie: { valeur: 253.872, tolerance_abs: 0.5 }
+  preuve: "Texte Ctrl+Alt+C de Max, 1er novembre 2026 : Energy Shield: 254 (augmented)"
