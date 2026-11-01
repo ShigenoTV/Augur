@@ -3,11 +3,8 @@
 
 use tauri::{AppHandle, State};
 
-use crate::contracts::{AppError, OverlayState, ParsedItem};
+use crate::contracts::{AppError, CONTRACT_VERSION, OverlayState, ParsedItem, app_error};
 use crate::{AppState, game_window, item_text, overlay};
-
-/// Version du contrat application ↔ interface (voir crates/augur-contracts).
-pub const CONTRACT_VERSION: u32 = 1;
 
 #[tauri::command]
 pub fn parse_clipboard_item(text: String) -> Result<ParsedItem, AppError> {
@@ -66,9 +63,47 @@ pub fn set_update_channel(
     beta: bool,
 ) -> Result<crate::settings::Settings, AppError> {
     store.update(&app, |s| s.beta_channel = beta).map_err(|e| {
-        AppError::new(
+        app_error(
             crate::contracts::ErrorCode::Internal,
             format!("Réglage non enregistré ({e})."),
         )
     })
+}
+
+#[tauri::command]
+pub fn get_client_log_status(
+    state: State<'_, crate::client_log::ClientLogState>,
+) -> crate::client_log::ClientLogStatus {
+    state.get()
+}
+
+/// Enregistre le chemin de `Client.txt` choisi par le joueur (fichier, dossier
+/// `logs` ou dossier du jeu). `None` revient à la détection automatique.
+#[tauri::command]
+pub fn set_client_log_path(
+    app: AppHandle,
+    store: State<'_, crate::settings::SettingsStore>,
+    path: Option<String>,
+) -> Result<crate::settings::Settings, AppError> {
+    let path = path.filter(|p| !p.trim().is_empty());
+    if let Some(p) = &path {
+        let file = crate::log_locator::normalize_user_path(p);
+        if !file.is_file() {
+            return Err(app_error(
+                crate::contracts::ErrorCode::Internal,
+                format!(
+                    "Aucun fichier Client.txt à cet endroit\u{a0}: {}",
+                    file.display()
+                ),
+            ));
+        }
+    }
+    store
+        .update(&app, |s| s.client_log_path = path)
+        .map_err(|e| {
+            app_error(
+                crate::contracts::ErrorCode::Internal,
+                format!("Réglage non enregistré ({e})."),
+            )
+        })
 }

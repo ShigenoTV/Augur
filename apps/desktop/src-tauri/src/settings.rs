@@ -13,6 +13,8 @@ use tauri::{AppHandle, Manager};
 pub struct Settings {
     /// Canal bêta des mises à jour (option « Rejoindre la bêta »).
     pub beta_channel: bool,
+    /// Chemin de `Client.txt` choisi par le joueur (prioritaire sur la détection).
+    pub client_log_path: Option<String>,
 }
 
 #[derive(Default)]

@@ -5,7 +5,9 @@
 //! il lit l'en-tête (classe, rareté, nom, base), le niveau d'objet, la qualité,
 //! l'état corrompu et les lignes de mods, sans reconnaître les `stat_id`.
 
-use crate::contracts::{Affix, AppError, ErrorCode, ItemMod, ModKind, ParsedItem, Rarity};
+use crate::contracts::{
+    Affix, AppError, ErrorCode, ItemMod, ModKind, ParsedItem, Rarity, app_error,
+};
 
 const SEPARATOR: &str = "--------";
 
@@ -99,7 +101,7 @@ fn first_number(s: &str) -> Option<u32> {
 
 pub fn parse(text: &str) -> Result<ParsedItem, AppError> {
     if !looks_like_item(text) {
-        return Err(AppError::new(
+        return Err(app_error(
             ErrorCode::ParseFailed,
             "Le texte copié ne ressemble pas à un objet de Path of Exile 2.",
         ));

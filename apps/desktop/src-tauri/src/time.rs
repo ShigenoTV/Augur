@@ -36,13 +36,6 @@ pub fn rfc3339_now() -> String {
     rfc3339_from_unix(secs)
 }
 
-pub fn unix_millis_now() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_millis() as u64)
-        .unwrap_or_default()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

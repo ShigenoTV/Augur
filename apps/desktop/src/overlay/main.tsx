@@ -15,7 +15,7 @@ function Overlay() {
   useEffect(() => {
     if (!isTauri()) return;
     const unlisten = [
-      on.itemCopied(({ text }) => {
+      on.itemCopied((item) => {
         const id = ++run.current;
         const emit = (v: CopilotView) => {
           if (run.current === id) setView(v);
@@ -23,9 +23,8 @@ function Overlay() {
         // L'état « analyse » n'apparaît que si le calcul dépasse 150 ms.
         const slow = setTimeout(() => emit({ status: "evaluating" }), EVALUATING_DELAY_MS);
         void runCopilot(
-          text,
+          item,
           {
-            parse: commands.parseClipboardItem,
             overlayState: commands.getOverlayState,
             evaluate: commands.evaluateItem,
             price: commands.estimatePrice,
