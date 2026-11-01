@@ -101,6 +101,8 @@ pub struct ResultatFormule {
 }
 
 enum Issue {
+    /// Réservé aux mécaniques pas encore dans le moteur.
+    #[allow(dead_code)]
     Attente(String),
     Erreur(String),
 }
@@ -231,27 +233,64 @@ fn competence(nom: &str) -> Competence {
         critique_base: 0.0,
         efficacite_degats_ajoutes: 100.0,
         degats: BTreeMap::new(),
+        conversion: BTreeMap::new(),
+        gain: BTreeMap::new(),
     }
 }
 
+use super::offense::Repartition;
+
+type GainsBruts = Vec<(String, BTreeMap<TypeDegats, f64>)>;
+
+fn pourcentages(cle: &str, source: &str, v: &Value) -> Result<BTreeMap<TypeDegats, f64>, Issue> {
+    let Value::Mapping(map) = v else {
+        return Err(Issue::Erreur(format!(
+            "`{cle}.{source}` doit être un dictionnaire"
+        )));
+    };
+    map.iter()
+        .map(|(k, v)| {
+            let k = k
+                .as_str()
+                .ok_or_else(|| Issue::Erreur(format!("`{cle}.{source}` : clé texte attendue")))?;
+            let p = v
+                .as_f64()
+                .ok_or_else(|| Issue::Erreur(format!("`{cle}.{source}.{k}` : nombre attendu")))?;
+            Ok((type_degats(k)?, p))
+        })
+        .collect()
+}
+
+fn conversions(e: &Entrees, cle: &str) -> Result<Repartition, Issue> {
+    e.dict(cle)?
+        .into_iter()
+        .map(|(source, v)| Ok((type_degats(&source)?, pourcentages(cle, &source, v)?)))
+        .collect()
+}
+
+/// Gains : la source est un type de dégâts ou `degats` (le total).
+fn gains(e: &Entrees, cle: &str) -> Result<GainsBruts, Issue> {
+    e.dict(cle)?
+        .into_iter()
+        .map(|(source, v)| {
+            if source != "degats" {
+                type_degats(&source)?;
+            }
+            let p = pourcentages(cle, &source, v)?;
+            Ok((source, p))
+        })
+        .collect()
+}
+
 fn degats_coup_moyen(e: &Entrees) -> Result<Sortie, Issue> {
-    for cle in [
-        "conversion_competence",
-        "gain_competence",
-        "conversion_secondaire",
-        "gain_secondaire",
-    ] {
-        if !e.dict(cle)?.is_empty() {
-            return Err(Issue::Attente(format!(
-                "conversions et gains de dégâts pas encore dans le moteur (`{cle}`)"
-            )));
-        }
-    }
     let mut comp = competence("cas de formule");
     comp.efficacite_degats_ajoutes = e.nombre("efficacite_ajoutes", Some(1.0))? * 100.0;
     for (t, p) in e.plages("base")? {
         comp.degats.insert(t, p);
     }
+    // Étape 1 : conversion et gains propres à la compétence.
+    comp.conversion = conversions(e, "conversion_competence")?;
+    comp.gain = gains(e, "gain_competence")?.into_iter().collect();
     let mut mods = Vec::new();
     for (t, [min, max]) in e.plages("ajoutes")? {
         mods.push(m(t.stat_ajoutes_min(), T::Added, min));
@@ -271,6 +310,21 @@ fn degats_coup_moyen(e: &Entrees) -> Result<Sortie, Issue> {
     }
     for v in e.liste("more")? {
         mods.push(m(stats::DAMAGE, T::More, v));
+    }
+    // Étape 2 : conversion et gains de l'équipement, sous forme de modificateurs.
+    for (source, cibles) in conversions(e, "conversion_secondaire")? {
+        for (cible, pct) in cibles {
+            mods.push(m(stats::stat_conversion(source, cible), T::Added, pct));
+        }
+    }
+    for (source, cibles) in gains(e, "gain_secondaire")? {
+        for (cible, pct) in cibles {
+            let stat = match source.as_str() {
+                "degats" => stats::stat_gain_tous(cible),
+                autre => stats::stat_gain(type_degats(autre)?, cible),
+            };
+            mods.push(m(stat, T::Added, pct));
+        }
     }
     let o = offense::calculer(&ModDb::new(mods), &comp, &Cible::default());
     let par_type = Sortie::Dict(
@@ -478,6 +532,137 @@ fn ehp_coup_max(e: &Entrees) -> Result<Sortie, Issue> {
     Ok(dict([("coup_max", v)]))
 }
 
+fn calculer_perso(perso: Personnage, cond: Conditions) -> Result<super::Resultats, Issue> {
+    calculer(&perso, &cond).map_err(|e| Issue::Erreur(format!("{e:?}")))
+}
+
+fn sortie(r: &super::Resultats, nom: &str) -> Result<f64, Issue> {
+    r.valeur(nom)
+        .ok_or_else(|| Issue::Erreur(format!("sortie « {nom} » absente")))
+}
+
+fn evasion_chance(e: &Entrees) -> Result<Sortie, Issue> {
+    let perso = Personnage {
+        modificateurs: vec![m(
+            stats::EVASION_RATING,
+            T::Base,
+            e.nombre("evasion", None)?,
+        )],
+        ..Default::default()
+    };
+    let cond = Conditions {
+        precision_attaquant: Some(e.nombre("precision", None)?),
+        ..Default::default()
+    };
+    let r = calculer_perso(perso, cond)?;
+    Ok(dict([("chance_eviter_pct", sortie(&r, "chance_eviter")?)]))
+}
+
+fn deflexion_chance(e: &Entrees) -> Result<Sortie, Issue> {
+    let perso = Personnage {
+        modificateurs: vec![m(
+            stats::DEFLECTION_RATING,
+            T::Base,
+            e.nombre("deflexion", None)?,
+        )],
+        ..Default::default()
+    };
+    let cond = Conditions {
+        precision_attaquant: Some(e.nombre("precision", None)?),
+        ..Default::default()
+    };
+    let r = calculer_perso(perso, cond)?;
+    Ok(dict([(
+        "chance_deflexion_pct",
+        sortie(&r, "chance_deflexion")?,
+    )]))
+}
+
+fn es_maximum(e: &Entrees) -> Result<Sortie, Issue> {
+    let mut objets = Vec::new();
+    if let Some(v) = e.brut("objets") {
+        let Value::Sequence(liste) = v else {
+            return Err(Issue::Erreur("`objets` doit être une liste".into()));
+        };
+        for (i, o) in liste.iter().enumerate() {
+            let Value::Mapping(map) = o else {
+                return Err(Issue::Erreur(format!(
+                    "`objets[{i}]` doit être un dictionnaire"
+                )));
+            };
+            let mut objet = super::defense::ObjetDefense {
+                nom: Some(format!("objet {}", i + 1)),
+                ..Default::default()
+            };
+            for (k, v) in map {
+                let k = k.as_str().unwrap_or("");
+                let v = v
+                    .as_f64()
+                    .ok_or_else(|| Issue::Erreur(format!("`objets[{i}].{k}` : nombre attendu")))?;
+                match k {
+                    "base" => objet.energy_shield = v,
+                    "increased_local" => objet.increased_local = v,
+                    "qualite" => objet.qualite = v,
+                    autre => {
+                        return Err(Issue::Erreur(format!(
+                            "`objets[{i}]` : clé inconnue « {autre} »"
+                        )));
+                    }
+                }
+            }
+            objets.push(objet);
+        }
+    }
+    let mut mods = vec![
+        m(
+            stats::ENERGY_SHIELD,
+            T::Added,
+            e.nombre("plat_global", Some(0.0))?,
+        ),
+        m(
+            stats::ENERGY_SHIELD,
+            T::Increased,
+            e.nombre("increased_global", Some(0.0))?,
+        ),
+    ];
+    mods.extend(
+        e.liste("more")?
+            .into_iter()
+            .map(|v| m(stats::ENERGY_SHIELD, T::More, v)),
+    );
+    let perso = Personnage {
+        modificateurs: mods,
+        objets,
+        ..Default::default()
+    };
+    let r = calculer_perso(perso, Conditions::default())?;
+    Ok(dict([("es_max", sortie(&r, "bouclier_energie")?)]))
+}
+
+fn es_recharge(e: &Entrees) -> Result<Sortie, Issue> {
+    let perso = Personnage {
+        modificateurs: vec![
+            m(stats::ENERGY_SHIELD, T::Base, e.nombre("es_max", None)?),
+            m(
+                stats::ENERGY_SHIELD_RECHARGE_RATE,
+                T::Increased,
+                e.nombre("increased_recharge", Some(0.0))?,
+            ),
+            m(
+                stats::FASTER_ENERGY_SHIELD_RECHARGE_START,
+                T::Added,
+                e.nombre("demarrage_plus_rapide", Some(0.0))?,
+            ),
+        ],
+        ..Default::default()
+    };
+    let r = calculer_perso(perso, Conditions::default())?;
+    Ok(dict([
+        ("delai_s", sortie(&r, "delai_recharge_es")?),
+        ("par_seconde", sortie(&r, "recharge_es")?),
+    ]))
+}
+
 fn executer_calcul(calcul: &str, e: &Entrees) -> Result<Sortie, Issue> {
     match calcul {
         "degats.coup_moyen" => degats_coup_moyen(e),
@@ -488,14 +673,10 @@ fn executer_calcul(calcul: &str, e: &Entrees) -> Result<Sortie, Issue> {
         "resistances.cible" => resistances_cible(e),
         "armure.reduction" => armure_reduction(e),
         "ehp.coup_max" => ehp_coup_max(e),
-        "evasion.chance" => Err(Issue::Attente("évasion pas encore dans le moteur".into())),
-        "deflexion.chance" => Err(Issue::Attente("déflexion pas encore dans le moteur".into())),
-        "es.maximum" => Err(Issue::Attente(
-            "bouclier d'énergie local des objets pas encore dans le moteur".into(),
-        )),
-        "es.recharge" => Err(Issue::Attente(
-            "recharge du bouclier d'énergie pas encore dans le moteur".into(),
-        )),
+        "evasion.chance" => evasion_chance(e),
+        "deflexion.chance" => deflexion_chance(e),
+        "es.maximum" => es_maximum(e),
+        "es.recharge" => es_recharge(e),
         autre => Err(Issue::Erreur(format!("calcul inconnu « {autre} »"))),
     }
 }

@@ -121,10 +121,14 @@ mod formules {
     }
 
     #[test]
-    fn calcul_absent_du_moteur_en_attente() {
-        let y = "cas:\n  - { id: e, type: unitaire, calcul: evasion.chance, entrees: {}, attendu: { chance_eviter_pct: 0 } }";
-        assert_eq!(un(y), Verdict::EnAttente);
+    fn calcul_inconnu_en_erreur() {
         let y = "cas:\n  - { id: x, type: unitaire, calcul: inconnu, attendu: { x: 0 } }";
         assert_eq!(un(y), Verdict::Erreur);
+    }
+
+    #[test]
+    fn gabarit_personnage_en_attente() {
+        let y = "cas:\n  - { id: p, type: personnage, statut: à-mesurer, attendu: null }";
+        assert_eq!(un(y), Verdict::EnAttente);
     }
 }

@@ -15,11 +15,13 @@
 //! Aucun arrondi n'est appliqué en interne : l'arrondi relève de l'affichage
 //! et de la tolérance des cas golden.
 
+use std::collections::BTreeMap;
+
 use super::defense::reduction_armure;
 use super::moddb::ModDb;
 use super::modifier::TypeModificateur;
 use super::stats::{self, TypeDegats};
-use super::trace::{Trace, nombre};
+use super::trace::{Contribution, Trace, nombre};
 use super::{Cible, Competence};
 
 /// Bonus de dégâts critiques de base de PoE 2, en pourcentage.
@@ -50,8 +52,12 @@ fn refs(v: &[String]) -> Vec<&str> {
     v.iter().map(String::as_str).collect()
 }
 
-/// Dégâts d'un type, avant mitigation : (min, max, trace de la moyenne).
-fn degats_type(db: &ModDb, comp: &Competence, t: TypeDegats) -> Option<(f64, f64, Trace)> {
+/// Dégâts d'un type avant conversion : gemme + ajoutés × efficacité.
+fn degats_avant_conversion(
+    db: &ModDb,
+    comp: &Competence,
+    t: TypeDegats,
+) -> Option<([f64; 2], Trace)> {
     let [gmin, gmax] = comp.degats.get(&t).copied().unwrap_or([0.0, 0.0]);
     let smin = t.stat_ajoutes_min();
     let smax = t.stat_ajoutes_max();
@@ -78,7 +84,153 @@ fn degats_type(db: &ModDb, comp: &Competence, t: TypeDegats) -> Option<(f64, f64
     t_ajoutes.contributions.extend(amax.contributions);
     let t_gemme = Trace::feuille("dégâts de la gemme (moyenne)", (gmin + gmax) / 2.0)
         .avec_formule(format!("{} à {}", nombre(gmin), nombre(gmax)));
+    let trace = Trace::feuille(
+        format!("dégâts {} avant conversion (moyenne)", t.nom()),
+        (bmin + bmax) / 2.0,
+    )
+    .avec_formule(format!("{} à {}", nombre(bmin), nombre(bmax)))
+    .avec_enfants([t_gemme, t_ajoutes]);
+    Some(([bmin, bmax], trace))
+}
 
+/// Pourcentages de conversion par type source, puis par type cible.
+pub type Repartition = BTreeMap<TypeDegats, BTreeMap<TypeDegats, f64>>;
+/// Gains : (source, cible, pourcentage).
+pub type Gains = Vec<(SourceGain, TypeDegats, f64)>;
+
+/// Source d'un gain « gain X% of Y as extra Z ».
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SourceGain {
+    /// « of Damage » : le total de tous les types.
+    Tous,
+    Type(TypeDegats),
+}
+
+/// Une étape de conversion (compétence ou équipement), fiche 01 :
+/// 1. les gains se calculent sur les montants d'avant l'étape et s'ajoutent ;
+/// 2. les conversions s'appliquent aux montants obtenus, gains compris,
+///    ramenées à 100 % par type source si elles dépassent, sans enchaînement
+///    dans l'étape.
+///
+/// Les opérations sont linéaires : minimum et maximum sont traités à part.
+pub fn etape_conversion(
+    montants: &BTreeMap<TypeDegats, [f64; 2]>,
+    conversions: &Repartition,
+    gains: &[(SourceGain, TypeDegats, f64)],
+) -> BTreeMap<TypeDegats, [f64; 2]> {
+    let mut total = [0.0; 2];
+    for v in montants.values() {
+        total[0] += v[0];
+        total[1] += v[1];
+    }
+    let mut apres_gains = montants.clone();
+    for (source, cible, pct) in gains {
+        let depart = match source {
+            SourceGain::Tous => total,
+            SourceGain::Type(t) => montants.get(t).copied().unwrap_or([0.0; 2]),
+        };
+        let e = apres_gains.entry(*cible).or_insert([0.0; 2]);
+        e[0] += depart[0] * pct / 100.0;
+        e[1] += depart[1] * pct / 100.0;
+    }
+    let mut sortie = apres_gains.clone();
+    for (source, cibles) in conversions {
+        let somme: f64 = cibles
+            .iter()
+            .filter(|(c, _)| *c != source)
+            .map(|(_, p)| p.max(0.0))
+            .sum();
+        if somme <= 0.0 {
+            continue;
+        }
+        let echelle = if somme > 100.0 { 100.0 / somme } else { 1.0 };
+        let depart = apres_gains.get(source).copied().unwrap_or([0.0; 2]);
+        for (cible, pct) in cibles {
+            if cible == source || *pct <= 0.0 {
+                continue;
+            }
+            let part = pct * echelle / 100.0;
+            for (i, d) in depart.iter().enumerate() {
+                let transfert = d * part;
+                sortie.entry(*source).or_insert([0.0; 2])[i] -= transfert;
+                sortie.entry(*cible).or_insert([0.0; 2])[i] += transfert;
+            }
+        }
+    }
+    sortie
+}
+
+/// Conversions et gains de l'étape 2, lus dans les modificateurs.
+fn etape_equipement(db: &ModDb) -> (Repartition, Gains, Vec<Contribution>) {
+    let mut conv = BTreeMap::new();
+    let mut gains = Vec::new();
+    let mut contributions = Vec::new();
+    for cible in TypeDegats::TOUS {
+        let stat = stats::stat_gain_tous(cible);
+        let g = db.somme(TypeModificateur::Added, &[stat.as_str()]);
+        if g.valeur != 0.0 {
+            gains.push((SourceGain::Tous, cible, g.valeur));
+            contributions.extend(g.contributions);
+        }
+        for source in TypeDegats::TOUS {
+            if source == cible {
+                continue;
+            }
+            let stat = stats::stat_gain(source, cible);
+            let g = db.somme(TypeModificateur::Added, &[stat.as_str()]);
+            if g.valeur != 0.0 {
+                gains.push((SourceGain::Type(source), cible, g.valeur));
+                contributions.extend(g.contributions);
+            }
+            let stat = stats::stat_conversion(source, cible);
+            let c = db.somme(TypeModificateur::Added, &[stat.as_str()]);
+            if c.valeur != 0.0 {
+                conv.entry(source)
+                    .or_insert_with(BTreeMap::new)
+                    .insert(cible, c.valeur);
+                contributions.extend(c.contributions);
+            }
+        }
+    }
+    (conv, gains, contributions)
+}
+
+fn gains_competence(comp: &Competence) -> Gains {
+    let mut v = Vec::new();
+    for (source, cibles) in &comp.gain {
+        let source = match source.as_str() {
+            "degats" => SourceGain::Tous,
+            autre => match TypeDegats::TOUS.into_iter().find(|t| t.nom() == autre) {
+                Some(t) => SourceGain::Type(t),
+                // Refusé par `valider` ; ignoré ici par prudence.
+                None => continue,
+            },
+        };
+        for (cible, pct) in cibles {
+            v.push((source, *cible, *pct));
+        }
+    }
+    v
+}
+
+fn trace_repartition(libelle: &str, m: &BTreeMap<TypeDegats, [f64; 2]>) -> Trace {
+    let total: f64 = m.values().map(|v| (v[0] + v[1]) / 2.0).sum();
+    Trace::feuille(libelle, total).avec_enfants(m.iter().map(|(t, v)| {
+        Trace::feuille(t.nom(), (v[0] + v[1]) / 2.0).avec_formule(format!(
+            "{} à {}",
+            nombre(v[0]),
+            nombre(v[1])
+        ))
+    }))
+}
+
+/// Applique increased et more du type final aux dégâts d'un type.
+fn degats_type(
+    db: &ModDb,
+    t: TypeDegats,
+    [bmin, bmax]: [f64; 2],
+    origine: Vec<Trace>,
+) -> (f64, f64, Trace) {
     let s = stats_degats(t);
     let s = refs(&s);
     let t_inc = db.trace_increased("increased", &s);
@@ -96,8 +248,9 @@ fn degats_type(db: &ModDb, comp: &Competence, t: TypeDegats) -> Option<(f64, f64
             nombre(min),
             nombre(max)
         ))
-        .avec_enfants([t_gemme, t_ajoutes, t_inc, t_more]);
-    Some((min, max, trace))
+        .avec_enfants(origine)
+        .avec_enfants([t_inc, t_more]);
+    (min, max, trace)
 }
 
 /// Résistance effective d'une cible : la pénétration ne fait pas descendre
@@ -149,10 +302,51 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
     let mut enfants_brut = Vec::new();
     let mut enfants_net = Vec::new();
     let mut par_type_brut = Vec::new();
+
+    // 1-2 : gemme et ajoutés ; 3 : conversions et gains en deux étapes.
+    let mut avant = BTreeMap::new();
+    let mut traces_avant = BTreeMap::new();
     for t in TypeDegats::TOUS {
-        let Some((min, max, trace_type)) = degats_type(db, comp, t) else {
+        if let Some((v, tr)) = degats_avant_conversion(db, comp, t) {
+            avant.insert(t, v);
+            traces_avant.insert(t, tr);
+        }
+    }
+    let (conv2, gains2, contrib2) = etape_equipement(db);
+    let gains1 = gains_competence(comp);
+    let sans_conversion =
+        comp.conversion.is_empty() && gains1.is_empty() && conv2.is_empty() && gains2.is_empty();
+    let apres = if sans_conversion {
+        avant.clone()
+    } else {
+        let e1 = etape_conversion(&avant, &comp.conversion, &gains1);
+        etape_conversion(&e1, &conv2, &gains2)
+    };
+    let t_conversion = (!sans_conversion).then(|| {
+        let e1 = etape_conversion(&avant, &comp.conversion, &gains1);
+        let mut t2 = trace_repartition("après l'étape 2 (équipement, arbre, buffs)", &apres);
+        t2.contributions = contrib2;
+        Trace::feuille(
+            "conversions et gains",
+            apres.values().map(|v| (v[0] + v[1]) / 2.0).sum(),
+        )
+        .avec_formule("gains sur les montants d'avant l'étape, puis conversions, étape par étape")
+        .avec_enfants([
+            trace_repartition("avant conversion", &avant),
+            trace_repartition("après l'étape 1 (compétence)", &e1),
+            t2,
+        ])
+    });
+
+    for t in TypeDegats::TOUS {
+        let Some(base) = apres.get(&t).copied() else {
             continue;
         };
+        let mut origine: Vec<Trace> = traces_avant.remove(&t).into_iter().collect();
+        if let Some(tc) = &t_conversion {
+            origine.push(tc.clone());
+        }
+        let (min, max, trace_type) = degats_type(db, t, base, origine);
         let moyenne = (min + max) / 2.0;
         let mitig = mitigation_cible(db, cible, t, moyenne);
         let apres = moyenne * mitig.valeur;

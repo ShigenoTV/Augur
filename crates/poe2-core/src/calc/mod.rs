@@ -58,6 +58,13 @@ pub struct Competence {
     /// Dégâts de base de la gemme par type : `[min, max]`.
     #[serde(default)]
     pub degats: BTreeMap<TypeDegats, [f64; 2]>,
+    /// Conversion propre à la compétence (étape 1), en % : `{ physique: { feu: 80 } }`.
+    #[serde(default)]
+    pub conversion: BTreeMap<TypeDegats, BTreeMap<TypeDegats, f64>>,
+    /// Gains propres à la compétence (étape 1), en % ; source `degats` = total
+    /// de tous les types : `{ degats: { feu: 50 } }`.
+    #[serde(default)]
+    pub gain: BTreeMap<String, BTreeMap<TypeDegats, f64>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
@@ -75,6 +82,9 @@ pub struct Personnage {
     /// campagne, en points (par exemple −60). Explicite pour rester testable.
     #[serde(default)]
     pub penalite_campagne: f64,
+    /// Objets portant des défenses locales (ES, armure, évasion, déflexion).
+    #[serde(default)]
+    pub objets: Vec<defense::ObjetDefense>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
@@ -96,6 +106,9 @@ pub struct Conditions {
     /// Dégâts physiques bruts d'un coup subi, pour la réduction de l'armure.
     #[serde(default)]
     pub coup_subi: Option<f64>,
+    /// Précision de l'attaquant, pour l'évasion et la déflexion.
+    #[serde(default)]
+    pub precision_attaquant: Option<f64>,
 }
 
 #[derive(Debug, Error, PartialEq)]
@@ -106,6 +119,8 @@ pub enum ErreurCalcul {
     ValeurNonFinie(String),
     #[error("le temps d'incantation doit être strictement positif (reçu {0})")]
     TempsIncantation(f64),
+    #[error("source de gain inconnue « {0} » : un type de dégâts ou « degats »")]
+    SourceGain(String),
     #[error("dégâts {0} : le minimum dépasse le maximum ou est négatif")]
     PlageDegats(&'static str),
 }
@@ -148,6 +163,21 @@ pub fn valider(perso: &Personnage) -> Result<(), Vec<ErreurCalcul>> {
             )));
         }
     }
+    for o in &perso.objets {
+        let v = [
+            o.energy_shield,
+            o.armure,
+            o.evasion,
+            o.deflexion,
+            o.increased_local,
+            o.qualite,
+        ];
+        if v.iter().any(|x| !x.is_finite()) {
+            erreurs.push(ErreurCalcul::ValeurNonFinie(
+                o.nom.clone().unwrap_or_else(|| "objet".into()),
+            ));
+        }
+    }
     if !perso.penalite_campagne.is_finite() {
         erreurs.push(ErreurCalcul::ValeurNonFinie(
             "penalite_campagne".to_string(),
@@ -161,6 +191,22 @@ pub fn valider(perso: &Personnage) -> Result<(), Vec<ErreurCalcul>> {
             if !v.is_finite() {
                 erreurs.push(ErreurCalcul::ValeurNonFinie(c.nom.clone()));
             }
+        }
+        for source in c.gain.keys() {
+            if source != "degats" && !TypeDegats::TOUS.iter().any(|t| t.nom() == source) {
+                erreurs.push(ErreurCalcul::SourceGain(source.clone()));
+            }
+        }
+        let pourcentages = c
+            .conversion
+            .values()
+            .chain(c.gain.values())
+            .flat_map(|m| m.values());
+        if pourcentages.into_iter().any(|v| !v.is_finite()) {
+            erreurs.push(ErreurCalcul::ValeurNonFinie(format!(
+                "{} (conversion)",
+                c.nom
+            )));
         }
         for (t, [min, max]) in &c.degats {
             if !(min.is_finite() && max.is_finite()) || *min < 0.0 || min > max {
@@ -194,7 +240,23 @@ pub fn calculer(perso: &Personnage, cond: &Conditions) -> Result<Resultats, Vec<
         ins("incantations_par_seconde", o.incantations_par_seconde);
     }
 
-    let d = defense::calculer(&db, cond.coup_subi, perso.penalite_campagne);
+    let d = defense::calculer(
+        &db,
+        &perso.objets,
+        cond.coup_subi,
+        cond.precision_attaquant,
+        perso.penalite_campagne,
+    );
+    ins("evasion", d.evasion);
+    ins("deflexion", d.deflexion);
+    ins("delai_recharge_es", d.delai_recharge_es);
+    ins("recharge_es", d.recharge_es);
+    if let Some(tr) = d.chance_eviter {
+        ins("chance_eviter", tr);
+    }
+    if let Some(tr) = d.chance_deflexion {
+        ins("chance_deflexion", tr);
+    }
     ins("vie", d.vie);
     ins("bouclier_energie", d.bouclier_energie);
     ins("armure", d.armure);
