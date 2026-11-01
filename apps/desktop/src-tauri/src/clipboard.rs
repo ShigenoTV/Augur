@@ -10,6 +10,9 @@ use crate::contracts::events;
 use crate::{AppState, game_window, item_text, overlay};
 
 const POLL: Duration = Duration::from_millis(60);
+/// Événement propre à l'appli (hors contrat) : charge `AppError`, émis quand
+/// le texte copié ressemble à un objet mais que le parseur le refuse.
+pub const EVENT_ITEM_UNRECOGNIZED: &str = "augur://item-unrecognized";
 
 /// Jeton qui change à chaque modification du presse-papier.
 #[cfg(windows)]
@@ -60,6 +63,10 @@ pub fn spawn_watcher(app: AppHandle) {
                     Ok(item) => item,
                     Err(err) => {
                         log::warn!("objet copié illisible : {}", err.message);
+                        // L'overlay affiche l'état « objet non reconnu » avec la raison.
+                        let _ = app.emit_to(overlay::LABEL, EVENT_ITEM_UNRECOGNIZED, err);
+                        let handle = app.clone();
+                        let _ = app.run_on_main_thread(move || overlay::show_near_cursor(&handle));
                         continue;
                     }
                 };

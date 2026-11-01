@@ -240,6 +240,7 @@ dependencies = [
  "arboard",
  "augur-contracts",
  "log",
+ "poe2-core",
  "serde",
  "serde_json",
  "tauri",
