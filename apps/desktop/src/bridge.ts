@@ -18,6 +18,8 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
 export const EVENTS = {
   itemCopied: "augur://item-copied",
+  /** Texte copié qui ressemble à un objet mais que le parseur refuse (charge : AppError). */
+  itemUnrecognized: "augur://item-unrecognized",
   zoneChanged: "augur://zone-changed",
   overlayHidden: "augur://overlay-hidden",
   upgradeSearchRequested: "augur://upgrade-search-requested",
@@ -69,6 +71,8 @@ export const on = {
   itemCopied: (cb: (p: ParsedItem) => void): Promise<UnlistenFn> =>
     listen<ParsedItem>(EVENTS.itemCopied, (e) => cb(e.payload)),
   zoneChanged: (cb: (p: ZoneChanged) => void): Promise<UnlistenFn> => listen<ZoneChanged>(EVENTS.zoneChanged, (e) => cb(e.payload)),
+  itemUnrecognized: (cb: (p: AppError) => void): Promise<UnlistenFn> =>
+    listen<AppError>(EVENTS.itemUnrecognized, (e) => cb(e.payload)),
   overlayHidden: (cb: () => void): Promise<UnlistenFn> => listen(EVENTS.overlayHidden, () => cb()),
   upgradeSearchRequested: (cb: () => void): Promise<UnlistenFn> => listen(EVENTS.upgradeSearchRequested, () => cb()),
   updateAvailable: (cb: (p: UpdateInfo) => void): Promise<UnlistenFn> =>
