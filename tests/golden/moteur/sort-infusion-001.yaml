@@ -1,0 +1,80 @@
+# Infusion consommée par une compétence (Arc, fiche 09) : cas de cohérence du moteur,
+# calculés à la main. Gemme 100 à 200 de foudre, 10 chaînes, infusion « 200 % de dégâts
+# en plus, 6 chaînes de plus ». Le mode « panneau » (défaut) reproduit le panneau du jeu
+# observé sur le build de Max (I-17) : dégâts infusés, chaînes sans l'infusion.
+- id: sort-infusion-panneau-001
+  patch: "0.5.5"
+  confiance: supposé
+  description: "Mode panneau : (100 + 200) / 2 × 3 = 450, 10 chaînes."
+  personnage:
+    competence:
+      nom: Sort infusable
+      temps_incantation: 1.0
+      critique_base: 0
+      degats: { foudre: [100, 200] }
+      chaines_base: 10
+      infusion: { element: foudre, degats_more: 200, chaines: 6 }
+  attendu:
+    tolerance_pct: 0.01
+    coup_moyen: 450
+    nombre_chaines: 10
+
+- id: sort-infusion-active-002
+  patch: "0.5.5"
+  confiance: supposé
+  description: "Infusion réellement consommée : 450 et 16 chaînes."
+  personnage:
+    competence:
+      nom: Sort infusable
+      temps_incantation: 1.0
+      critique_base: 0
+      degats: { foudre: [100, 200] }
+      chaines_base: 10
+      infusion: { element: foudre, degats_more: 200, chaines: 6 }
+  conditions:
+    infusion: active
+  attendu:
+    tolerance_pct: 0.01
+    coup_moyen: 450
+    nombre_chaines: 16
+
+- id: sort-infusion-absente-003
+  patch: "0.5.5"
+  confiance: supposé
+  description: "Sans infusion : 150 et 10 chaînes ; le DPS réel d'un build sans source d'infusion est celui-ci."
+  personnage:
+    competence:
+      nom: Sort infusable
+      temps_incantation: 1.0
+      critique_base: 0
+      degats: { foudre: [100, 200] }
+      chaines_base: 10
+      infusion: { element: foudre, degats_more: 200, chaines: 6 }
+  conditions:
+    infusion: absente
+  attendu:
+    tolerance_pct: 0.01
+    coup_moyen: 150
+    dps: 150
+    nombre_chaines: 10
+
+- id: sort-chaines-more-004
+  patch: "0.5.5"
+  confiance: supposé
+  description: >
+    Infusion active et Dominus' Grasp : (10 + 6) × 2 = 32. L'ordre (ajouts puis more) est
+    celui de la fiche 09 ; le cumul avec l'infusion n'a pas été mesuré.
+  personnage:
+    competence:
+      nom: Sort infusable
+      temps_incantation: 1.0
+      critique_base: 0
+      degats: { foudre: [100, 200] }
+      chaines_base: 10
+      infusion: { element: foudre, degats_more: 200, chaines: 6 }
+    modificateurs:
+      - { stat: number_of_chains, type: more, valeur: 100, source: "Support : Dominus' Grasp" }
+  conditions:
+    infusion: active
+  attendu:
+    nombre_chaines: 32

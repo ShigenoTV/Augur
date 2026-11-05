@@ -2,7 +2,8 @@
 
 État au sprint 1 : squelette du moteur, archétype provisoire **sort à dégâts
 directs**, mitigations défensives de base, traces de calcul, exécuteur des cas
-golden et parseur d'objets.
+golden et parseur d'objets. Deuxième archétype (Arc, fiche 09) : chaînes,
+infusion, modificateurs conditionnels et cadence du panneau.
 
 ## Organisation
 
@@ -40,7 +41,11 @@ recevoir une fiche mécanique et des cas golden mesurés en jeu.
 | Dégâts subis | `damage_taken` : × max(0, 1 + Σ increased) × Π more, appliqué au coup maximal encaissable |
 | Réserve | vie + bouclier d'énergie ; contre le chaos, vie + ES / 2 (le chaos retire l'ES au double, fiche 07, I-01) |
 | Pénalité de campagne | paramètre explicite `personnage.penalite_campagne` (ex. −60), ajouté aux résistances élémentaires avant plafonnement, sans effet sur le chaos (I-02) |
-| Arrondis | aucun en interne ; l'arrondi relève de l'affichage et des tolérances |
+| Cadence et DPS (I-16, **mesuré**) | incantations par seconde = 1 / temps de base × (1 + Σ increased) × Π more ; le DPS utilise la cadence **arrondie à 2 décimales**, comme le panneau du jeu. Spell Totem = `cast_speed` more −25, Urgent Totems III = `cast_speed` increased +20 |
+| Chaînes (fiche 09, **mesuré**) | `nombre_chaines` = plancher((chaînes de base du niveau + plancher(qualité × chaînes par qualité) + `number_of_chains` added) × increased × Π more) ; Dominus' Grasp = `number_of_chains` more +100 |
+| Infusion (fiche 09, I-17) | `competence.infusion` (élément, dégâts more, chaînes). `conditions.infusion` : `panneau` par défaut (dégâts infusés, chaînes sans l'infusion, comme le panneau du jeu), `active` (dégâts et chaînes), `absente` (rien : DPS réel d'un build sans source d'infusion) |
+| Modificateurs conditionnels | `condition: { mana_min_pct: 90 }` (Zenith II) : actif si `conditions.mana_pct` (100 par défaut, mana plein comme le panneau) ≥ 90 ; la borne incluse est supposée |
+| Arrondis | seulement la cadence du DPS (ci-dessus) ; les autres relèvent de l'affichage et des tolérances |
 
 ## Pas encore couvert
 

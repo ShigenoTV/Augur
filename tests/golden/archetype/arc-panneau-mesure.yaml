@@ -81,3 +81,118 @@
     incantations_par_seconde: 1.55
     dps: 92415.94
   preuve: "Capture de Max du 5 novembre 2026 : Spell Totem sans Zenith II (Damage per second 92415.94, Average damage per Hit 59623.18, Total damage 2238-46225)"
+
+# Les cas suivants rejouent les mêmes panneaux à partir des supports d'Arc, au lieu de
+# reprendre les chiffres combinés : Zenith II (modificateur conditionnel au mana) et
+# la cadence via Spell Totem.
+
+- id: arc-zenith-mana-plein-004
+  patch: "0.5.5e"
+  confiance: mesuré
+  description: >
+    Dégâts du panneau sans Zenith II, plus Zenith II (30 % de dégâts en plus au-dessus de
+    90 % de mana) avec le mana plein : on retombe sur le panneau complet (coup moyen
+    77510,26, DPS 120140,9). 24231,5 × 1,30 = 31500,95 contre 31501 affiché.
+  personnage:
+    competence:
+      nom: Arc (niveau 32, panneau sans Zenith II)
+      type: sort
+      temps_incantation: 0.6451613   # 1 / 1,55
+      critique_base: 31.41
+      degats:
+        foudre: [1881, 39416]
+        feu: [129, 2467]
+        froid: [228, 4342]
+    modificateurs:
+      - { stat: critical_damage_bonus, type: increased, valeur: 365, source: "Bonus de +465 % affiché" }
+      - { stat: spell_damage, type: more, valeur: 30, source: "Support : Zenith II", condition: { mana_min_pct: 90 } }
+  conditions:
+    mana_pct: 100
+  attendu:
+    tolerance_pct: 0.01
+    coup_moyen: 31501
+    dps: 120140.9
+  preuve: "Captures de Max du 1er et du 5 novembre 2026 (panneau avec et sans Zenith II)"
+
+- id: arc-zenith-mana-bas-005
+  patch: "0.5.5e"
+  confiance: mesuré
+  description: >
+    Même personnage à 50 % de mana : Zenith II ne s'applique pas et le moteur retombe sur
+    le panneau mesuré sans Zenith II (coup moyen 24231,5, DPS 92415,94).
+  personnage:
+    competence:
+      nom: Arc (niveau 32, panneau sans Zenith II)
+      type: sort
+      temps_incantation: 0.6451613
+      critique_base: 31.41
+      degats:
+        foudre: [1881, 39416]
+        feu: [129, 2467]
+        froid: [228, 4342]
+    modificateurs:
+      - { stat: critical_damage_bonus, type: increased, valeur: 365, source: "Bonus de +465 % affiché" }
+      - { stat: spell_damage, type: more, valeur: 30, source: "Support : Zenith II", condition: { mana_min_pct: 90 } }
+  conditions:
+    mana_pct: 50
+  attendu:
+    tolerance_pct: 0.01
+    coup_moyen: 24231.5
+    dps: 92415.94
+  preuve: "Capture de Max du 5 novembre 2026 : Spell Totem sans Zenith II (Damage per second 92415.94)"
+
+- id: arc-cadence-spell-totem-006
+  patch: "0.5.5e"
+  confiance: mesuré
+  description: >
+    Cadence reconstruite depuis le temps de base de la gemme (1,10 s) : Spell Totem
+    (25 % de vitesse d'incantation en moins), Urgent Totems III (+20 % increased) et
+    107 % increased des objets et de l'arbre. Ce dernier chiffre est déduit des deux
+    panneaux (seule plage compatible avec 1,41 et 1,55 : 106,6 à 107,5 %).
+    1 / 1,1 × 0,75 × 2,27 = 1,5477, affiché et utilisé arrondi à 1,55.
+  personnage:
+    competence:
+      nom: Arc (niveau 32, lancé par Spell Totem)
+      type: sort
+      temps_incantation: 1.1
+      critique_base: 31.41
+      degats:
+        foudre: [2445, 51241]
+        feu: [168, 3207]
+        froid: [296, 5645]
+    modificateurs:
+      - { stat: critical_damage_bonus, type: increased, valeur: 365, source: "Bonus de +465 % affiché" }
+      - { stat: cast_speed, type: more, valeur: -25, source: "Méta-gemme : Spell Totem" }
+      - { stat: cast_speed, type: increased, valeur: 20, source: "Support : Urgent Totems III" }
+      - { stat: cast_speed, type: increased, valeur: 107, source: "Objets et arbre (déduit des panneaux)" }
+  attendu:
+    tolerance_pct: 0.01
+    incantations_par_seconde: { valeur: 1.55, tolerance_abs: 0.005 }
+    dps: 120140.9
+  preuve: "Captures de Max du 1er et du 5 novembre 2026 (Casts per second 1.55 et 1.41)"
+
+- id: arc-cadence-sans-urgent-totems-007
+  patch: "0.5.5e"
+  confiance: mesuré
+  description: >
+    Même personnage sans Urgent Totems III : 1 / 1,1 × 0,75 × 2,07 = 1,4114, arrondi à 1,41 ;
+    DPS 109289,46.
+  personnage:
+    competence:
+      nom: Arc (niveau 32, lancé par Spell Totem, sans Urgent Totems III)
+      type: sort
+      temps_incantation: 1.1
+      critique_base: 31.41
+      degats:
+        foudre: [2445, 51241]
+        feu: [168, 3207]
+        froid: [296, 5645]
+    modificateurs:
+      - { stat: critical_damage_bonus, type: increased, valeur: 365, source: "Bonus de +465 % affiché" }
+      - { stat: cast_speed, type: more, valeur: -25, source: "Méta-gemme : Spell Totem" }
+      - { stat: cast_speed, type: increased, valeur: 107, source: "Objets et arbre (déduit des panneaux)" }
+  attendu:
+    tolerance_pct: 0.01
+    incantations_par_seconde: { valeur: 1.41, tolerance_abs: 0.005 }
+    dps: 109289.46
+  preuve: "Captures de Max du 5 novembre 2026 : Spell Totem sans Urgent Totems III (Damage per second 109289.46)"
