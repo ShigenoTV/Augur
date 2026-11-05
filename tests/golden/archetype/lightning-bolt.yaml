@@ -2,7 +2,8 @@
 # Données de la gemme : RePoE, export du patch 0.5.5.5 (skills.json) :
 #   temps d'incantation 850 ms, chance de critique de base 1000 (= 10 %),
 #   dégâts de foudre par niveau (niveau 20 : 30 à 565 ; niveau 21 : 34 à 642).
-# Formules : fiches docs/theorycraft/fiches/ (confiance « supposé »).
+# Formules : fiches docs/theorycraft/fiches/ (confiance « supposé »). Le DPS utilise la
+# cadence arrondie à 2 décimales, comme le panneau du jeu (I-16, mesuré sur Arc).
 # Ces cas seront recoupés par la mesure 4 de Max (tooltip en jeu) ; ils passeront
 # alors à « mesuré » avec la capture en preuve.
 - id: lightning-bolt-nominal-001
@@ -25,7 +26,7 @@
     coup_moyen: 297.5
     chance_critique: { valeur: 10, tolerance_abs: 0 }
     incantations_par_seconde: 1.176471
-    dps: 385                  # 297,5 × 1,10 × 1/0,85
+    dps: 386.155              # 297,5 × 1,10 × 1,18 (1/0,85 arrondi à 2 décimales, I-16)
   preuve: "RePoE 0.5.5.5 (données de gemme) ; formules supposées"
 
 - id: lightning-bolt-niveau-plus-un-002
@@ -34,7 +35,7 @@
   description: >
     Même personnage avec la gemme au niveau 21 (« +1 au niveau des sorts » sur une
     baguette) : c'est le premier delta que l'overlay doit savoir afficher.
-    De 385 à 437,41 de DPS, soit +13,6 %.
+    De 386,16 à 438,72 de DPS, soit +13,6 %.
   personnage:
     competence:
       nom: Lightning Bolt (niveau 21)
@@ -47,7 +48,7 @@
   attendu:
     tolerance_pct: 0.01
     coup_moyen: 338
-    dps: 437.4118
+    dps: 438.724              # 338 × 1,10 × 1,18
   preuve: "RePoE 0.5.5.5 (données de gemme) ; formules supposées"
 
 - id: lightning-bolt-equipement-003
@@ -78,7 +79,7 @@
     coup_moyen: 458.15        # × (1 − 30 %)
     chance_critique: 20
     incantations_par_seconde: 1.529412
-    dps: 840.84               # 458,15 × 1,20 × 1,529412
+    dps: 841.1634             # 458,15 × 1,20 × 1,53 (cadence arrondie)
   preuve: "RePoE 0.5.5.5 (données de gemme) ; formules supposées"
 
 - id: lightning-bolt-penetration-004
@@ -99,7 +100,7 @@
   attendu:
     tolerance_pct: 0.01
     coup_moyen: 267.75
-    dps: 346.5
+    dps: 347.5395             # 267,75 × 1,10 × 1,18
   preuve: "RePoE 0.5.5.5 (données de gemme) ; formules supposées"
 
 - id: lightning-bolt-exposition-005
@@ -122,7 +123,7 @@
   attendu:
     tolerance_pct: 0.01
     coup_moyen: 357
-    dps: 462
+    dps: 463.386              # 357 × 1,10 × 1,18
   preuve: "RePoE 0.5.5.5 (données de gemme) ; formules supposées"
 
 - id: lightning-bolt-bonus-critique-006
@@ -143,5 +144,5 @@
   attendu:
     tolerance_pct: 0.01
     bonus_degats_critiques: 150
-    dps: 402.5                # 297,5 × 1,15 × 1/0,85
+    dps: 403.7075             # 297,5 × 1,15 × 1,18
   preuve: "RePoE 0.5.5.5 (données de gemme) ; formules supposées"

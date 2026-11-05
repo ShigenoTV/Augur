@@ -235,6 +235,10 @@ fn competence(nom: &str) -> Competence {
         degats: BTreeMap::new(),
         conversion: BTreeMap::new(),
         gain: BTreeMap::new(),
+        chaines_base: None,
+        qualite: 0.0,
+        chaines_par_qualite: 0.0,
+        infusion: None,
     }
 }
 

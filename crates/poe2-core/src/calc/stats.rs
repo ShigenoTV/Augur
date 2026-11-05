@@ -108,6 +108,9 @@ pub const ENERGY_SHIELD_RECHARGE_RATE: &str = "energy_shield_recharge_rate";
 pub const FASTER_ENERGY_SHIELD_RECHARGE_START: &str = "faster_energy_shield_recharge_start";
 /// Dégâts subis (increased / more), tous types confondus.
 pub const DAMAGE_TAKEN: &str = "damage_taken";
+/// Nombre de chaînes (`number_of_chains` de RePoE) : `added` pour « Chains
+/// +N times », `more` pour « Chain 100% more times » (Dominus' Grasp).
+pub const NUMBER_OF_CHAINS: &str = "number_of_chains";
 
 /// Conversion de l'étape 2 : `convert_<source>_damage_to_<cible>` (en %).
 pub fn stat_conversion(source: TypeDegats, cible: TypeDegats) -> String {
@@ -146,6 +149,7 @@ pub fn stats_connues() -> Vec<String> {
         DEFLECTION_RATING,
         ENERGY_SHIELD_RECHARGE_RATE,
         FASTER_ENERGY_SHIELD_RECHARGE_START,
+        NUMBER_OF_CHAINS,
     ]
     .iter()
     .map(|s| s.to_string())

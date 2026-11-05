@@ -1,6 +1,6 @@
 # 09. Arc (deuxième archétype)
 
-**Confiance :** `supposé` pour le DPS complet, `mesuré` pour les données de gemme, le nombre de chaînes et la pénétration · **Patch :** client 0.5.5e, données RePoE 0.5.5.5 · **Cas golden :** `tests/golden/archetype/arc-*.yaml`
+**Confiance :** `supposé` pour le DPS complet, `mesuré` pour les données de gemme, le nombre de chaînes, la pénétration, la cadence et Zenith II · **Patch :** client 0.5.5e, données RePoE 0.5.5.5 · **Cas golden :** `tests/golden/archetype/arc-*.yaml`
 
 Arc est le sort que joue Max (Gemling Legionnaire niveau 95, Arc lancé par un totem). Il valide le deuxième archétype du plan : un sort de foudre qui **chaîne**. Le moteur reste sur la définition de DPS du panneau d'information du jeu, c'est-à-dire **un coup sur une cible par incantation** ; les chaînes ne comptent que pour le nombre de cibles touchées.
 
@@ -12,7 +12,7 @@ Arc est le sort que joue Max (Gemling Legionnaire niveau 95, Arc lancé par un t
 | Chance de critique de base | 9 % |
 | Dégâts de foudre, niveau 20 / 22 / 32 / 33 | 20 à 386 / 26 à 499 / 94 à 1791 / 107 à 2039 |
 | Chaînes de base, niveau 1 / 20 / 22 / 32 | 5 / 9 / 9 / 11 |
-| Infusion de foudre (consommée si possible) | +6 chaînes, 200 % de dégâts en plus |
+| Infusion de foudre (consommée si possible) | +6 chaînes, 200 % de dégâts en plus (`arc_damage_+%_final_from_infusion_consumption`, tous types) |
 | Choc | 50 % d'ampleur en plus (ailment, hors périmètre) |
 
 Les niveaux 22 et 32 sont **mesurés** : le tooltip du jeu retombe exactement dessus (I-13).
@@ -49,11 +49,25 @@ DPS                    = dégâts moyens par coup × incantations par seconde   
 
 | Gemme | Effet |
 |---|---|
-| Spell Totem (niveau 14) | Lance Arc par un totem ; 10 % de dégâts en plus par charge de puissance consommée (non vérifié) |
-| Urgent Totems III | 20 % de vitesse d'incantation en plus pour les sorts des totems ; 100 % de placement |
+| Spell Totem (niveau 14) | Lance Arc par un totem ; 25 % de vitesse d'incantation en moins (`support_spell_totem_cast_speed_+%_final`) ; 10 % de dégâts en plus par charge de puissance consommée (non vérifié) |
+| Urgent Totems III | 20 % de vitesse d'incantation **increased** pour les sorts des totems (`totem_skill_cast_speed_+%`, additif avec les autres increased, conforme à I-16) ; 100 % de placement |
 | Lightning Penetration | Pénétration de 30 % de la résistance à la foudre |
-| Zenith II | 30 % de dégâts de sort en plus au-dessus de 90 % de mana |
+| Zenith II | 30 % de dégâts de sort en plus au-dessus de 90 % de mana (`support_spell_damage_+%_final_while_above_90%_maximum_mana`) |
 | Dominus' Grasp | 100 % de chaînes en plus |
+
+## Dans le moteur (5 novembre 2026)
+
+| Mécanique | Saisie dans un cas golden |
+|---|---|
+| Chaînes | `competence: { chaines_base: 11, qualite: 36, chaines_par_qualite: 0.1 }`, sortie `nombre_chaines` |
+| Dominus' Grasp | `{ stat: number_of_chains, type: more, valeur: 100 }` |
+| Infusion | `competence.infusion: { element: foudre, degats_more: 200, chaines: 6 }` ; `conditions.infusion` : `panneau` (défaut, comme le jeu), `active` ou `absente` |
+| Spell Totem | `{ stat: cast_speed, type: more, valeur: -25 }` |
+| Urgent Totems III | `{ stat: cast_speed, type: increased, valeur: 20 }` |
+| Zenith II | `{ stat: spell_damage, type: more, valeur: 30, condition: { mana_min_pct: 90 } }`, `conditions.mana_pct` (100 par défaut) |
+| Cadence du DPS | arrondie à 2 décimales, comme le panneau (I-16) |
+
+Les cas `arc-zenith-*` et `arc-cadence-*` reconstruisent les panneaux mesurés à partir de ces supports, au chiffre près (écart ≤ 0,0002 %). Le DPS d'Arc complet depuis la gemme (94 à 1791) reste hors de portée tant que la liste exacte des sources de dégâts de l'arbre n'est pas connue (I-17).
 
 ## Sources
 

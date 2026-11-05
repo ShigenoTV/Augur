@@ -1,10 +1,9 @@
 # Nombre de chaînes d'Arc de Max (client 0.5.5e, 1er novembre 2026).
 # chaînes = chaînes de base du niveau (RePoE) + plancher(qualité × 0,1), ×2 avec Dominus' Grasp.
-# Mécanique pas encore implémentée par le moteur : statut non_supporte (listé, non exécuté).
+# Sortie du moteur : nombre_chaines (chaines_base, qualite, chaines_par_qualite, number_of_chains).
 - id: arc-chaines-niveau-22-001
   patch: "0.5.5e"
   confiance: mesuré
-  statut: non_supporte
   description: "Arc niveau 22, qualité 31 % : 9 chaînes de base + 3 = 12 affichées au tooltip."
   personnage:
     competence:
@@ -13,6 +12,9 @@
       temps_incantation: 1.1
       critique_base: 9
       degats: { foudre: [26, 499] }
+      chaines_base: 9
+      qualite: 31
+      chaines_par_qualite: 0.1
   attendu:
     nombre_chaines: 12
   preuve: "Tooltip d'Arc envoyé par Max le 1er novembre 2026 : Chains 12 times"
@@ -20,7 +22,6 @@
 - id: arc-chaines-niveau-32-002
   patch: "0.5.5e"
   confiance: mesuré
-  statut: non_supporte
   description: "Arc niveau 32, qualité 36 % : 11 chaînes de base + 3 = 14 affichées au tooltip."
   personnage:
     competence:
@@ -29,6 +30,9 @@
       temps_incantation: 1.1
       critique_base: 9
       degats: { foudre: [94, 1791] }
+      chaines_base: 11
+      qualite: 36
+      chaines_par_qualite: 0.1
   attendu:
     nombre_chaines: 14
   preuve: "Tooltip d'Arc envoyé par Max le 1er novembre 2026 : Chains 14 times"
@@ -36,8 +40,10 @@
 - id: arc-chaines-dominus-003
   patch: "0.5.5e"
   confiance: mesuré
-  statut: non_supporte
-  description: "Avec Dominus' Grasp (100 % de chaînes en plus), 14 chaînes deviennent 28 dans le panneau d'information."
+  description: >
+    Avec Dominus' Grasp (100 % de chaînes en plus), 14 chaînes deviennent 28 dans le panneau
+    d'information. Le panneau n'ajoute pas les 6 chaînes de l'infusion (I-17) : mode
+    d'infusion « panneau » par défaut.
   personnage:
     competence:
       nom: Arc (niveau 32, Dominus' Grasp)
@@ -45,6 +51,12 @@
       temps_incantation: 1.1
       critique_base: 9
       degats: { foudre: [94, 1791] }
+      chaines_base: 11
+      qualite: 36
+      chaines_par_qualite: 0.1
+      infusion: { element: foudre, degats_more: 200, chaines: 6 }
+    modificateurs:
+      - { stat: number_of_chains, type: more, valeur: 100, source: "Support : Dominus' Grasp" }
   attendu:
     nombre_chaines: 28
   preuve: "Panneau d'information d'Arc envoyé par Max le 1er novembre 2026 : Chain count 28"
