@@ -12,6 +12,8 @@ Ce dossier contient la « vérité » du moteur `poe2-core`, au sens de la secti
 | [format-cas-golden.md](format-cas-golden.md) | Le format YAML des cas golden (contrat avec l'exécuteur Rust) |
 | `../../tests/formules/*.yaml` | Les cas unitaires de formule, un fichier par mécanique (les cas personnage mesurés iront dans `tests/golden/archetype/`, format de l’exécuteur Rust) |
 | `../../tools/theorycraft/verifier_golden.py` | Vérificateur de cohérence : recalcule chaque cas unitaire avec les formules des fiches |
+| `../../tools/theorycraft/craft_proba.py` | Exploration Forge : probabilité des mods au prochain tirage (éligibilité RePoE, poids fournis en entrée) |
+| `../../tools/theorycraft/poe2db_poids.py` | Relève les poids de mods sur poe2db.tw (estimations de Krakenbul, CC BY-NC-SA 3.0) et les rapproche des identifiants RePoE ; cache et sorties en local (`var/`), jamais versés au dépôt |
 
 ## Niveaux de confiance
 
