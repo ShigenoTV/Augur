@@ -54,3 +54,30 @@
     incantations_par_seconde: 1.41
     dps: 109289.46
   preuve: "Captures de Max du 5 novembre 2026 : Spell Totem sans Urgent Totems III (Damage per second 109289.46, Casts per second 1.41, Average damage per Hit inchangé 77510.26)"
+
+- id: arc-panneau-sans-zenith-003
+  patch: "0.5.5e"
+  confiance: mesuré
+  description: >
+    Panneau après retrait de Zenith II (Urgent Totems III remis) : tous les dégâts sont
+    divisés par 1,30 (Zenith II = 30 % de dégâts en plus, actif avec le mana de Max au
+    maximum), la cadence reste 1,55 par seconde. Moyenne des trois types (2238 + 46225) / 2
+    = 24231,5 ; coup moyen 59623,18 ; DPS 92415,94.
+  personnage:
+    competence:
+      nom: Arc (niveau 32, panneau d'information, sans Zenith II)
+      type: sort
+      temps_incantation: 0.6451613   # 1 / 1,55
+      critique_base: 31.41
+      degats:
+        foudre: [1881, 39416]
+        feu: [129, 2467]
+        froid: [228, 4342]
+    modificateurs:
+      - { stat: critical_damage_bonus, type: increased, valeur: 365, source: "Bonus de +465 % affiché" }
+  attendu:
+    tolerance_pct: 0.01
+    coup_moyen: 24231.5
+    incantations_par_seconde: 1.55
+    dps: 92415.94
+  preuve: "Capture de Max du 5 novembre 2026 : Spell Totem sans Zenith II (Damage per second 92415.94, Average damage per Hit 59623.18, Total damage 2238-46225)"
