@@ -34,6 +34,10 @@ Augur est une application **Windows** d'outils tiers pour **Path of Exile 2**. E
 - [Application Windows](apps/desktop/README.md) : coquille Tauri 2, overlay, mises à jour.
 - [Architecture](docs/architecture/README.md) : API GGG, décisions d'architecture, contrats entre modules.
 
+## Données de tiers
+
+- Poids de mods PoE 2 : estimations de Krakenbul (Prohibited Library), publiées par [PoE2DB](https://poe2db.tw/us/weightings), sous licence **CC BY-NC-SA 3.0** (pas d'usage commercial). Fichier et attribution : [tools/theorycraft/donnees/](tools/theorycraft/donnees/LICENCE-poids-poe2db.md).
+
 ---
 
 Augur n'est ni affilié à Grinding Gear Games ni approuvé par eux. Path of Exile est une marque de Grinding Gear Games.

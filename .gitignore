@@ -35,3 +35,6 @@ data/var/
 
 # Bac à sable du design system
 dist-playground/
+
+# Données locales (caches, poids tiers non redistribuables)
+/var/
