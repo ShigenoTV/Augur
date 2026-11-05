@@ -10,6 +10,11 @@
 //! mitigations défensives de base. Les conversions de dégâts, les attaques,
 //! les ailments et les dégâts dans le temps ne sont pas encore couverts :
 //! un cas golden qui en dépend doit être marqué « non supporté ».
+//!
+//! Deuxième archétype (Arc, fiche 09) : nombre de chaînes (base du niveau,
+//! qualité, `number_of_chains`), infusion consommée par la compétence,
+//! modificateurs conditionnels (Zenith II : mana au-dessus de 90 %) et
+//! cadence affichée par le panneau du jeu (arrondie à 2 décimales).
 
 pub mod defense;
 pub mod formules;
@@ -26,7 +31,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 pub use moddb::ModDb;
-pub use modifier::{Modificateur, TypeModificateur};
+pub use modifier::{ConditionModificateur, Modificateur, TypeModificateur};
 pub use stats::TypeDegats;
 pub use trace::{Contribution, Trace};
 
@@ -65,6 +70,49 @@ pub struct Competence {
     /// de tous les types : `{ degats: { feu: 50 } }`.
     #[serde(default)]
     pub gain: BTreeMap<String, BTreeMap<TypeDegats, f64>>,
+    /// Chaînes de base du niveau de la gemme (RePoE `number_of_chains`).
+    /// Sans valeur, la compétence ne chaîne pas et `nombre_chaines` n'est pas calculé.
+    #[serde(default)]
+    pub chaines_base: Option<f64>,
+    /// Qualité de la gemme, en pourcentage.
+    #[serde(default)]
+    pub qualite: f64,
+    /// Chaînes gagnées par point de qualité (Arc : 0,1, arrondi à l'inférieur).
+    #[serde(default)]
+    pub chaines_par_qualite: f64,
+    /// Infusion consommée par la compétence si possible (Arc : foudre).
+    #[serde(default)]
+    pub infusion: Option<Infusion>,
+}
+
+/// Effet d'une infusion consommée (Arc : « 200% more damage » et « Chain 6
+/// additional times when Lightning Infused », RePoE `ArcPlayer`).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Infusion {
+    /// Élément de l'infusion consommée.
+    pub element: TypeDegats,
+    /// Dégâts en plus (more), en pourcentage, sur tous les types.
+    #[serde(default)]
+    pub degats_more: f64,
+    /// Chaînes supplémentaires.
+    #[serde(default)]
+    pub chaines: f64,
+}
+
+/// Prise en compte de l'infusion d'une compétence.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum ModeInfusion {
+    /// Comme le panneau d'information du jeu (I-17, mesuré sur le build de
+    /// Max) : les dégâts supposent l'infusion consommée, mais les chaînes
+    /// affichées n'incluent pas ses chaînes supplémentaires.
+    #[default]
+    Panneau,
+    /// Infusion réellement consommée : dégâts et chaînes.
+    Active,
+    /// Aucune infusion disponible.
+    Absente,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
@@ -109,6 +157,29 @@ pub struct Conditions {
     /// Précision de l'attaquant, pour l'évasion et la déflexion.
     #[serde(default)]
     pub precision_attaquant: Option<f64>,
+    /// Mana actuel en pourcentage du maximum, pour les modificateurs
+    /// conditionnels. Sans valeur : 100 (mana plein, comme le panneau).
+    #[serde(default)]
+    pub mana_pct: Option<f64>,
+    /// Prise en compte de l'infusion de la compétence.
+    #[serde(default)]
+    pub infusion: ModeInfusion,
+}
+
+impl Conditions {
+    /// Mana courant retenu, en pourcentage du maximum.
+    pub fn mana(&self) -> f64 {
+        self.mana_pct.unwrap_or(100.0)
+    }
+
+    /// Le modificateur est-il actif dans ces conditions ?
+    pub fn active(&self, m: &Modificateur) -> bool {
+        match m.condition {
+            None => true,
+            // « above 90% of your Maximum Mana » : la borne exacte est supposée incluse.
+            Some(ConditionModificateur::ManaMinPct(p)) => self.mana() >= p,
+        }
+    }
 }
 
 #[derive(Debug, Error, PartialEq)]
@@ -187,7 +258,17 @@ pub fn valider(perso: &Personnage) -> Result<(), Vec<ErreurCalcul>> {
         if !(c.temps_incantation > 0.0 && c.temps_incantation.is_finite()) {
             erreurs.push(ErreurCalcul::TempsIncantation(c.temps_incantation));
         }
-        for v in [c.critique_base, c.efficacite_degats_ajoutes] {
+        let mut nombres = vec![
+            c.critique_base,
+            c.efficacite_degats_ajoutes,
+            c.qualite,
+            c.chaines_par_qualite,
+        ];
+        nombres.extend(c.chaines_base);
+        if let Some(i) = &c.infusion {
+            nombres.extend([i.degats_more, i.chaines]);
+        }
+        for v in nombres {
             if !v.is_finite() {
                 erreurs.push(ErreurCalcul::ValeurNonFinie(c.nom.clone()));
             }
@@ -214,6 +295,16 @@ pub fn valider(perso: &Personnage) -> Result<(), Vec<ErreurCalcul>> {
             }
         }
     }
+    for m in &perso.modificateurs {
+        if let Some(ConditionModificateur::ManaMinPct(p)) = m.condition {
+            if !p.is_finite() {
+                erreurs.push(ErreurCalcul::ValeurNonFinie(format!(
+                    "{} (condition)",
+                    m.source
+                )));
+            }
+        }
+    }
     if erreurs.is_empty() {
         Ok(())
     } else {
@@ -224,7 +315,22 @@ pub fn valider(perso: &Personnage) -> Result<(), Vec<ErreurCalcul>> {
 /// Calcule toutes les sorties disponibles pour ce personnage.
 pub fn calculer(perso: &Personnage, cond: &Conditions) -> Result<Resultats, Vec<ErreurCalcul>> {
     valider(perso)?;
-    let db = ModDb::new(perso.modificateurs.iter().cloned());
+    if let Some(m) = cond.mana_pct {
+        if !m.is_finite() {
+            return Err(vec![ErreurCalcul::ValeurNonFinie("mana_pct".to_string())]);
+        }
+    }
+    // Les modificateurs dont la condition n'est pas remplie sont écartés.
+    let mut db = ModDb::new(
+        perso
+            .modificateurs
+            .iter()
+            .filter(|m| cond.active(m))
+            .cloned(),
+    );
+    if let Some(comp) = &perso.competence {
+        ajouter_mods_competence(&mut db, comp, cond.infusion);
+    }
     let mut r = Resultats::default();
     let mut ins = |nom: &str, t: Trace| {
         r.valeurs.insert(nom.to_string(), t);
@@ -238,6 +344,9 @@ pub fn calculer(perso: &Personnage, cond: &Conditions) -> Result<Resultats, Vec<
         ins("chance_critique", o.chance_critique);
         ins("bonus_degats_critiques", o.bonus_critique);
         ins("incantations_par_seconde", o.incantations_par_seconde);
+        if let Some(base) = comp.chaines_base {
+            ins("nombre_chaines", nombre_chaines(&db, base));
+        }
     }
 
     let d = defense::calculer(
@@ -270,6 +379,59 @@ pub fn calculer(perso: &Personnage, cond: &Conditions) -> Result<Resultats, Vec<
         ins(&format!("coup_max_{}", t.nom()), tr);
     }
     Ok(r)
+}
+
+/// Modificateurs propres à la compétence : qualité (chaînes) et infusion
+/// consommée. Ils passent par la base de modificateurs pour apparaître dans
+/// la trace avec leur source.
+fn ajouter_mods_competence(db: &mut ModDb, comp: &Competence, mode: ModeInfusion) {
+    let chaines_qualite = (comp.qualite * comp.chaines_par_qualite + 1e-9).floor();
+    if comp.chaines_base.is_some() && chaines_qualite != 0.0 {
+        db.ajouter(Modificateur::new(
+            stats::NUMBER_OF_CHAINS,
+            TypeModificateur::Added,
+            chaines_qualite,
+            format!(
+                "Qualité de la gemme : plancher({} % × {})",
+                trace::nombre(comp.qualite),
+                trace::nombre(comp.chaines_par_qualite)
+            ),
+        ));
+    }
+    let Some(inf) = &comp.infusion else {
+        return;
+    };
+    let nom = format!("Infusion de {} consommée ({})", inf.element.nom(), comp.nom);
+    if matches!(mode, ModeInfusion::Panneau | ModeInfusion::Active) && inf.degats_more != 0.0 {
+        db.ajouter(Modificateur::new(
+            stats::DAMAGE,
+            TypeModificateur::More,
+            inf.degats_more,
+            nom.clone(),
+        ));
+    }
+    if mode == ModeInfusion::Active && inf.chaines != 0.0 && comp.chaines_base.is_some() {
+        db.ajouter(Modificateur::new(
+            stats::NUMBER_OF_CHAINS,
+            TypeModificateur::Added,
+            inf.chaines,
+            nom,
+        ));
+    }
+}
+
+/// Nombre de chaînes : (base du niveau + ajouts) × increased × more,
+/// arrondi à l'inférieur (fiche 09, mesuré : 11 + 3 = 14, × 2 = 28).
+fn nombre_chaines(db: &ModDb, base: f64) -> Trace {
+    let brut = db.evaluer(
+        "chaînes (avant arrondi)",
+        &[stats::NUMBER_OF_CHAINS],
+        Some((base, "chaînes de base du niveau de la gemme")),
+    );
+    let v = (brut.valeur + 1e-9).floor().max(0.0);
+    Trace::feuille("nombre de chaînes", v)
+        .avec_formule(format!("plancher({})", trace::nombre(brut.valeur)))
+        .avec_enfant(brut)
 }
 
 /// Écart d'une sortie quand on ajoute des modificateurs (le « delta » de

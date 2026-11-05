@@ -40,6 +40,29 @@ pub struct Modificateur {
     pub valeur: f64,
     #[serde(default = "source_inconnue")]
     pub source: String,
+    /// Condition d'activation (Zenith II : mana au-dessus de 90 %). Sans
+    /// condition, le modificateur est toujours actif.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub condition: Option<ConditionModificateur>,
+}
+
+/// Condition dont dépend un modificateur, évaluée contre les [`super::Conditions`].
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", deny_unknown_fields)]
+pub enum ConditionModificateur {
+    /// Actif quand le mana du personnage est au-dessus de ce pourcentage
+    /// de son maximum (Zenith : « above 90% of your Maximum Mana »).
+    ManaMinPct(f64),
+}
+
+impl ConditionModificateur {
+    pub fn libelle(self) -> String {
+        match self {
+            ConditionModificateur::ManaMinPct(p) => {
+                format!("mana au-dessus de {} %", super::trace::nombre(p))
+            }
+        }
+    }
 }
 
 fn source_inconnue() -> String {
@@ -58,6 +81,13 @@ impl Modificateur {
             kind,
             valeur,
             source: source.into(),
+            condition: None,
         }
+    }
+
+    /// Ajoute une condition d'activation.
+    pub fn sous_condition(mut self, c: ConditionModificateur) -> Self {
+        self.condition = Some(c);
+        self
     }
 }

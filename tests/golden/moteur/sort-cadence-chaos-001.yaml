@@ -20,5 +20,5 @@ attendu:
   tolerance_pct: 0.01
   coup_moyen: 54            # 20 × 1,2 + 20 × 1,5
   incantations_par_seconde: 0.916667
-  dps: 51.975
+  dps: 52.164              # 54 × 1,05 × 0,92 (cadence arrondie à 2 décimales)
 preuve: "calcul manuel (cohérence du moteur)"

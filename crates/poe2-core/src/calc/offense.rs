@@ -10,10 +10,11 @@
 //! 4. mitigation de la cible : résistance moins pénétration (la pénétration ne
 //!    fait pas descendre une résistance positive sous 0), armure pour le physique ;
 //! 5. coup moyen × (1 + chance de critique × bonus de dégâts critiques) ;
-//! 6. × incantations par seconde.
+//! 6. × incantations par seconde, arrondies à 2 décimales comme le panneau
+//!    d'information du jeu (I-16, mesuré : 77 510,26 × 1,55 = 120 140,9).
 //!
-//! Aucun arrondi n'est appliqué en interne : l'arrondi relève de l'affichage
-//! et de la tolérance des cas golden.
+//! C'est le seul arrondi interne : les autres relèvent de l'affichage et de
+//! la tolérance des cas golden.
 
 use std::collections::BTreeMap;
 
@@ -295,6 +296,12 @@ fn mitigation_cible(db: &ModDb, cible: &Cible, t: TypeDegats, moyenne: f64) -> T
     .avec_enfant(t_pen)
 }
 
+/// Cadence utilisée par le DPS du panneau : arrondie à 2 décimales (I-16).
+/// Le petit décalage absorbe les erreurs de représentation (1 / 0,8 s).
+pub fn arrondi_cadence(cadence: f64) -> f64 {
+    (cadence * 100.0 + 1e-9).round() / 100.0
+}
+
 pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
     // 1 à 4 : coup moyen par type, avant et après mitigation.
     let mut brut = 0.0;
@@ -413,14 +420,21 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
         ))
         .avec_enfants([t_inc, t_more]);
 
-    let dps = Trace::feuille(format!("DPS de {}", comp.nom), net * mult_crit * cadence)
-        .avec_formule(format!(
-            "{} × {} × {}",
-            nombre(net),
-            nombre(mult_crit),
-            nombre(cadence)
-        ))
-        .avec_enfants([coup_moyen.clone(), t_crit, incantations_par_seconde.clone()]);
+    let cadence_affichee = arrondi_cadence(cadence);
+    let t_cadence_affichee = Trace::feuille("incantations par seconde (panneau)", cadence_affichee)
+        .avec_formule(format!("arrondi à 2 décimales de {}", nombre(cadence)))
+        .avec_enfant(incantations_par_seconde.clone());
+    let dps = Trace::feuille(
+        format!("DPS de {}", comp.nom),
+        net * mult_crit * cadence_affichee,
+    )
+    .avec_formule(format!(
+        "{} × {} × {}",
+        nombre(net),
+        nombre(mult_crit),
+        nombre(cadence_affichee)
+    ))
+    .avec_enfants([coup_moyen.clone(), t_crit, t_cadence_affichee]);
 
     Offense {
         par_type_brut,

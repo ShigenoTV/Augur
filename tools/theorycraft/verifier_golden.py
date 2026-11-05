@@ -114,7 +114,9 @@ def dps_sort(e):
     for t, v in e["coup_moyen_par_type"].items():
         _, mult = _res_cible(e.get("res_cible", {}).get(t, 0), e.get("penetration", {}).get(t, 0))
         total += v * mult
-    return {"dps": total * e.get("multiplicateur_crit", 1.0) * e["cadence"]}
+    # Le panneau du jeu multiplie par la cadence arrondie à 2 décimales (I-16, mesuré).
+    cadence = math.floor(e["cadence"] * 100 + 0.5 + 1e-9) / 100
+    return {"dps": total * e.get("multiplicateur_crit", 1.0) * cadence}
 
 
 def resistances_joueur(e):
