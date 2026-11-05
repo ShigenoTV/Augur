@@ -1,0 +1,50 @@
+# Nombre de chaînes d'Arc de Max (client 0.5.5e, 1er novembre 2026).
+# chaînes = chaînes de base du niveau (RePoE) + plancher(qualité × 0,1), ×2 avec Dominus' Grasp.
+# Mécanique pas encore implémentée par le moteur : statut non_supporte (listé, non exécuté).
+- id: arc-chaines-niveau-22-001
+  patch: "0.5.5e"
+  confiance: mesuré
+  statut: non_supporte
+  description: "Arc niveau 22, qualité 31 % : 9 chaînes de base + 3 = 12 affichées au tooltip."
+  personnage:
+    competence:
+      nom: Arc (niveau 22)
+      type: sort
+      temps_incantation: 1.1
+      critique_base: 9
+      degats: { foudre: [26, 499] }
+  attendu:
+    nombre_chaines: 12
+  preuve: "Tooltip d'Arc envoyé par Max le 1er novembre 2026 : Chains 12 times"
+
+- id: arc-chaines-niveau-32-002
+  patch: "0.5.5e"
+  confiance: mesuré
+  statut: non_supporte
+  description: "Arc niveau 32, qualité 36 % : 11 chaînes de base + 3 = 14 affichées au tooltip."
+  personnage:
+    competence:
+      nom: Arc (niveau 32)
+      type: sort
+      temps_incantation: 1.1
+      critique_base: 9
+      degats: { foudre: [94, 1791] }
+  attendu:
+    nombre_chaines: 14
+  preuve: "Tooltip d'Arc envoyé par Max le 1er novembre 2026 : Chains 14 times"
+
+- id: arc-chaines-dominus-003
+  patch: "0.5.5e"
+  confiance: mesuré
+  statut: non_supporte
+  description: "Avec Dominus' Grasp (100 % de chaînes en plus), 14 chaînes deviennent 28 dans le panneau d'information."
+  personnage:
+    competence:
+      nom: Arc (niveau 32, Dominus' Grasp)
+      type: sort
+      temps_incantation: 1.1
+      critique_base: 9
+      degats: { foudre: [94, 1791] }
+  attendu:
+    nombre_chaines: 28
+  preuve: "Panneau d'information d'Arc envoyé par Max le 1er novembre 2026 : Chain count 28"
