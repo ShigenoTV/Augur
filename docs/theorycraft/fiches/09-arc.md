@@ -62,6 +62,6 @@ DPS                    = dégâts moyens par coup × incantations par seconde   
 
 ## À vérifier en jeu
 
-- **Cadence** : le panneau donne exactement 1,55 incantation par seconde, alors que les objets seuls (71 % de vitesse d'incantation) donneraient 1,5545 et que les nœuds de l'arbre en ajouteraient encore (I-16). Test : retirer Urgent Totems III et relire le panneau.
+- **Cadence** (I-16, fermée le 5 novembre 2026) : Arc est lancé par Spell Totem, qui retire 25 % de vitesse d'incantation (`skills.json`). Cadence = (1 / 1,1 s) × 0,75 × (1 + somme des increased + 20 % d'Urgent Totems III). Mesuré : 1,55/s avec Urgent Totems III, 1,41/s sans (DPS 120 140,9 et 109 289,46 = 77 510,26 × cadence arrondie à 2 décimales) ; les dégâts par coup ne bougent pas.
 - **Infusion** : le panneau suppose-t-il l'infusion (×3 sur la foudre) ? (I-17). Test : retirer Zenith II (−30 % de dégâts attendus) puis lire si l'infusion change l'affichage.
 - **Charges de puissance** du Spell Totem : prises en compte ou non dans le DPS affiché ?
