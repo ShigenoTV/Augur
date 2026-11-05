@@ -62,6 +62,7 @@ DPS                    = dégâts moyens par coup × incantations par seconde   
 
 ## À vérifier en jeu
 
-- **Cadence** : le panneau donne exactement 1,55 incantation par seconde, alors que les objets seuls (71 % de vitesse d'incantation) donneraient 1,5545 et que les nœuds de l'arbre en ajouteraient encore (I-16). Test : retirer Urgent Totems III et relire le panneau.
-- **Infusion** : le panneau suppose-t-il l'infusion (×3 sur la foudre) ? (I-17). Test : retirer Zenith II (−30 % de dégâts attendus) puis lire si l'infusion change l'affichage.
+- **Cadence** (I-16, fermée le 5 novembre 2026) : Arc est lancé par Spell Totem, qui retire 25 % de vitesse d'incantation (`skills.json`). Cadence = (1 / 1,1 s) × 0,75 × (1 + somme des increased + 20 % d'Urgent Totems III). Mesuré : 1,55/s avec Urgent Totems III, 1,41/s sans (DPS 120 140,9 et 109 289,46 = 77 510,26 × cadence arrondie à 2 décimales) ; les dégâts par coup ne bougent pas.
+- **Zenith II** (mesuré le 5 novembre 2026) : sans lui, tous les dégâts du panneau sont divisés par 1,300 (foudre 2445 à 51 241 devient 1881 à 39 416, total 2909 à 60 093 devient 2238 à 46 225) ; coup moyen 59 623,18, DPS 92 415,94, cadence inchangée. Le multiplicateur total sur la foudre minimale tombe de 26,0 à 20,0 fois la base du niveau 32 (94).
+- **Infusion** (I-17, reste ouverte) : le multiplicateur de 20,0 reste 3,06 fois plus grand que la somme de mes modificateurs connus ; l'infusion (×3) l'explique à 2 % près, donc le panneau semble bien supposer l'infusion. Les chaînes affichées (28) n'incluent en revanche pas les 6 chaînes d'infusion. À confirmer par un relevé du panneau sans infusion possible.
 - **Charges de puissance** du Spell Totem : prises en compte ou non dans le DPS affiché ?
