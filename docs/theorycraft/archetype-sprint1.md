@@ -67,3 +67,9 @@ L'arc reste le meilleur candidat pour le **deuxième** archétype : c'est là qu
 | [07 Energy Shield](fiches/07-energy-shield.md) | Défense |
 | [08 EHP](fiches/08-ehp.md) | Défense (indicateur produit) |
 | Niveaux de gemmes | Débloqué via RePoE (Lightning Bolt ci-dessus) |
+
+## Deuxième archétype : Arc (validé par Max le 5 novembre 2026)
+
+Arc est le sort que joue Max (niveau 95, lancé par un totem). C'est un sort de foudre qui chaîne, mais le panneau d'information du jeu définit son DPS comme **un coup sur une cible par incantation** : le moteur garde donc la même définition que pour Lightning Bolt, et les chaînes ne servent qu'à compter les cibles touchées. Détails, formules et inconnues dans la [fiche 09](fiches/09-arc.md) ; cas de test dans `tests/golden/archetype/arc-*.yaml`.
+
+Périmètre ajouté : nombre de chaînes, infusion de foudre, supports de chaînes et de pénétration, totem. Hors périmètre : choc et autres ailments, charges de puissance du totem tant qu'elles ne sont pas vérifiées.
