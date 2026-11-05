@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-stop-measure-session"
+description = "Enables the stop_measure_session command without any pre-configured scope."
+commands.allow = ["stop_measure_session"]
+
+[[permission]]
+identifier = "deny-stop-measure-session"
+description = "Denies the stop_measure_session command without any pre-configured scope."
+commands.deny = ["stop_measure_session"]

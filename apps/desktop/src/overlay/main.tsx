@@ -11,6 +11,17 @@ function Overlay() {
   );
   const panel = useRef<HTMLDivElement>(null);
   const run = useRef(0);
+  const [measuring, setMeasuring] = useState(false);
+
+  useEffect(() => {
+    if (!isTauri()) return;
+    void commands
+      .getMeasureStatus()
+      .then((s) => setMeasuring(s.active))
+      .catch(() => undefined);
+    const unlisten = on.measureSession((s) => setMeasuring(s.active));
+    return () => void unlisten.then((f) => f());
+  }, []);
 
   useEffect(() => {
     if (!isTauri()) return;
@@ -64,6 +75,12 @@ function Overlay() {
 
   return (
     <div ref={panel} className="inline-block">
+      {measuring && view.status !== "hidden" && (
+        <p className="mb-1 flex items-center gap-1.5 text-[11px] text-text-subtle">
+          <span className="inline-block size-1.5 rounded-full bg-signal-loss" aria-hidden />
+          Mesures en cours : objet enregistré
+        </p>
+      )}
       <CopilotOverlay state={view} onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)} />
     </div>
   );
