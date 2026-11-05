@@ -12,6 +12,9 @@ Sépare deux choses :
   inventé.
 
 Usage : python3 tools/theorycraft/craft_proba.py REPOE_DIR POIDS.json BASE ILVL MOD...
+
+Avec le relevé versé au dépôt, POIDS.json se note `fichier#page` :
+    tools/theorycraft/donnees/poids-poe2db.json#Body_Armours_int
 """
 
 from __future__ import annotations
@@ -72,9 +75,14 @@ def distribution_prochain_mod(
     return {mid: w / total for mid, w in pool.items()} if total else {}
 
 
-def charger_poids(chemin) -> dict[str, float]:
-    """Poids `{id: poids}`, à plat ou au format de sortie de `poe2db_poids.py`."""
+def charger_poids(chemin, page=None) -> dict[str, float]:
+    """Poids `{id: poids}` : à plat, sortie d'une page de `poe2db_poids.py`, ou
+    fichier multi-pages (`donnees/poids-poe2db.json`), dont on prend `page`."""
     donnees = json.loads(Path(chemin).read_text(encoding="utf-8"))
+    if isinstance(donnees.get("pages"), dict):
+        if page not in donnees["pages"]:
+            raise KeyError(f"page poe2db à préciser parmi : {sorted(donnees['pages'])}")
+        donnees = donnees["pages"][page]
     if isinstance(donnees.get("poids"), dict):
         donnees = donnees["poids"]
     return {k: float(v) for k, v in donnees.items()}
@@ -134,7 +142,8 @@ def _principal(argv):
     bases = json.loads(_fichier_repoe(repoe, "base_items").read_text(encoding="utf-8"))
     tags = set(next(b for b in bases.values() if b["name"] == base)["tags"])
     cands = candidats(mods, tags, int(ilvl))
-    poids = charger_poids(poids_fichier)
+    chemin, _, page = poids_fichier.partition("#")
+    poids = charger_poids(chemin, page or None)
     cands = {k: v for k, v in cands.items() if k in poids}
     d = distribution_prochain_mod(cands, poids)
     p = proba_cible(d, cibles)

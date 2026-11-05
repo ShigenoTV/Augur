@@ -6,8 +6,9 @@ poe2db les publie (champ `DropChance` des pages « Modifiers » de chaque classe
 d'objet), compilés par Krakenbul (Prohibited Library) à partir d'essais de
 recombinaison, ou relevés sur le site d'échange pour les bases non recombinables
 (page https://poe2db.tw/us/weightings). Ce sont donc des ESTIMATIONS d'un tiers,
-sous licence CC BY-NC-SA 3.0 sauf mention contraire : elles ne sont pas versées
-au dépôt. Le cache HTML et les fichiers produits restent en local (`var/`).
+sous licence CC BY-NC-SA 3.0. Le relevé versé au dépôt, avec son attribution,
+est dans `donnees/poids-poe2db.json` (voir `donnees/LICENCE-poids-poe2db.md`,
+décision de Max du 05/11/2026) ; le cache HTML reste en local (`var/`).
 
 Deux étapes :
 
@@ -43,6 +44,10 @@ from pathlib import Path
 BASE_URL = "https://poe2db.tw/us/"
 USER_AGENT = "Augur-theorycraft/0.1 (+https://github.com/ShigenoTV/Augur)"
 DELAI_S = 6.0
+SOURCE = (
+    "poe2db.tw (https://poe2db.tw/us/weightings), poids estimés par Krakenbul "
+    "(Prohibited Library)"
+)
 
 # Indices d'une page de vérification anti-robot : on s'arrête, sans contourner.
 ANTI_ROBOT = (
@@ -221,7 +226,18 @@ def _principal(argv=None) -> int:
     w = sp.add_parser("poids", help="extraire et rapprocher les poids")
     w.add_argument("--cache", type=Path, required=True)
     w.add_argument("--repoe-mods", type=Path, required=True)
-    w.add_argument("--out", type=Path, required=True)
+    w.add_argument("--out", type=Path, required=True, help="une sortie par page")
+    w.add_argument(
+        "--fichier",
+        type=Path,
+        help="en plus, toutes les pages dans un seul fichier (format versé au dépôt)",
+    )
+    w.add_argument(
+        "--repoe-version", default="?", help="version RePoE, notée dans --fichier"
+    )
+    w.add_argument(
+        "--date", default="?", help="date du relevé (AAAA-MM-JJ), notée dans --fichier"
+    )
     a = p.parse_args(argv)
 
     if a.cmd == "telecharger":
@@ -238,12 +254,13 @@ def _principal(argv=None) -> int:
     idx = index_repoe(mods)
     a.out.mkdir(parents=True, exist_ok=True)
     total = {"poids": 0, "inconnus": 0, "non_rapproches": 0}
+    pages = {}
     for f in sorted(a.cache.glob("*.html")):
         if f.stem == "Modifiers":
             continue
         res = poids_page(f.read_text(encoding="utf-8"), mods, idx)
         sortie = {
-            "source": "poe2db.tw (estimations Krakenbul)",
+            "source": SOURCE,
             "page": BASE_URL + f.stem,
             **res,
         }
@@ -251,6 +268,7 @@ def _principal(argv=None) -> int:
             json.dumps(sortie, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
             encoding="utf-8",
         )
+        pages[f.stem] = {"poids": res["poids"], "inconnus": res["inconnus"]}
         for k in total:
             total[k] += len(res[k])
         print(
@@ -258,6 +276,19 @@ def _principal(argv=None) -> int:
             f"{len(res['non_rapproches'])} non rapprochés"
         )
     print(f"TOTAL : {total}")
+    if a.fichier:
+        a.fichier.parent.mkdir(parents=True, exist_ok=True)
+        unique = {
+            "source": SOURCE,
+            "licence": "CC BY-NC-SA 3.0",
+            "date_releve": a.date,
+            "repoe_version": a.repoe_version,
+            "pages": pages,
+        }
+        a.fichier.write_text(
+            json.dumps(unique, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
     return 0
 
 

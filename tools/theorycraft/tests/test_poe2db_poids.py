@@ -148,3 +148,24 @@ def test_craft_proba_lit_la_sortie_poe2db(tmp_path):
     g = tmp_path / "plat.json"
     g.write_text(json.dumps({"Int1": 7}))
     assert c.charger_poids(g) == {"Int1": 7.0}
+
+
+def test_craft_proba_lit_le_fichier_multi_pages(tmp_path):
+    f = tmp_path / "poids-poe2db.json"
+    f.write_text(json.dumps({"pages": {"Bows": {"poids": {"A": 5}, "inconnus": []}}}))
+    assert c.charger_poids(f, "Bows") == {"A": 5.0}
+    with pytest.raises(KeyError):
+        c.charger_poids(f)
+
+
+def test_releve_verse_au_depot_est_coherent():
+    """Le relevé versé garde son attribution et ne contient que des poids mesurés."""
+    racine = Path(__file__).resolve().parents[1] / "donnees"
+    d = json.loads((racine / "poids-poe2db.json").read_text(encoding="utf-8"))
+    assert "Krakenbul" in d["source"] and d["licence"] == "CC BY-NC-SA 3.0"
+    assert (racine / "LICENCE-poids-poe2db.md").exists()
+    for page, contenu in d["pages"].items():
+        assert all(isinstance(v, int) and v > 1 for v in contenu["poids"].values()), (
+            page
+        )
+        assert not set(contenu["poids"]) & set(contenu["inconnus"]), page
