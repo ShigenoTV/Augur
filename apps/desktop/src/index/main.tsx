@@ -14,6 +14,7 @@ import { createRoot } from "react-dom/client";
 import { commands, isAppError, isTauri, on, type ClientLogStatus, type Settings } from "../bridge";
 import { ClientLogCard } from "./ClientLogCard";
 import { summarizeClientLog } from "./clientLog";
+import { MeasureCard } from "./MeasureCard";
 import { useUpdates } from "./useUpdates";
 
 /** Pas de canal bêta tant que les mises à jour passent par GitHub Releases (voir src-tauri/src/updates.rs). */
@@ -142,6 +143,10 @@ function App() {
           </p>
         </Card>
       </div>
+
+      <Card title="Session de mesures">
+        <MeasureCard />
+      </Card>
 
       <Card title="Journal du jeu (Client.txt)">
         <ClientLogCard status={clientLog} settings={settings} onSettings={setSettings} />

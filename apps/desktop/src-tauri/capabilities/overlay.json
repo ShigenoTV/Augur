@@ -10,6 +10,7 @@
     "allow-get-overlay-state",
     "allow-hide-overlay",
     "allow-fit-overlay",
-    "allow-open-main-window"
+    "allow-open-main-window",
+    "allow-get-measure-status"
   ]
 }

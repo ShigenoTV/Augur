@@ -29,6 +29,7 @@ export const EVENTS = {
   updateProgress: "augur://update-progress",
   updateCheckRequested: "augur://update-check-requested",
   clientLogStatus: "augur://client-log-status",
+  measureSession: "augur://measure-session",
 } as const;
 
 export type Settings = { betaChannel: boolean; clientLogPath: string | null };
@@ -39,6 +40,16 @@ export type ClientLogStatus = {
   watching: boolean;
   lastZone: ZoneChanged | null;
   searched: string[];
+};
+
+/** Session de mesures (apps/desktop/src-tauri/src/measures.rs). */
+export type MeasureCounts = { items: number; pobCodes: number; zones: number; notes: number };
+export type MeasureExport = { jsonPath: string; markdownPath: string; counts: MeasureCounts };
+export type MeasureStatus = {
+  active: boolean;
+  startedAt: string | null;
+  counts: MeasureCounts;
+  lastExport: MeasureExport | null;
 };
 
 export function isTauri(): boolean {
@@ -61,6 +72,11 @@ export const commands = {
   setUpdateChannel: (beta: boolean) => invoke<Settings>("set_update_channel", { beta }),
   getClientLogStatus: () => invoke<ClientLogStatus>("get_client_log_status"),
   setClientLogPath: (path: string | null) => invoke<Settings>("set_client_log_path", { path }),
+  getMeasureStatus: () => invoke<MeasureStatus>("get_measure_status"),
+  startMeasureSession: () => invoke<MeasureStatus>("start_measure_session"),
+  stopMeasureSession: () => invoke<MeasureStatus>("stop_measure_session"),
+  addMeasureNote: (text: string) => invoke<MeasureStatus>("add_measure_note", { text }),
+  copyMeasureExport: () => invoke<void>("copy_measure_export"),
   // Commandes du chantier Architecture / moteur, branchées dès leur fusion.
   evaluateItem: (item: ParsedItem) => invoke<ItemDelta>("evaluate_item", { item }),
   estimatePrice: (item: ParsedItem) => invoke<PriceEstimate>("estimate_price", { item }),
@@ -82,4 +98,6 @@ export const on = {
   updateCheckRequested: (cb: () => void): Promise<UnlistenFn> => listen(EVENTS.updateCheckRequested, () => cb()),
   clientLogStatus: (cb: (p: ClientLogStatus) => void): Promise<UnlistenFn> =>
     listen<ClientLogStatus>(EVENTS.clientLogStatus, (e) => cb(e.payload)),
+  measureSession: (cb: (p: MeasureStatus) => void): Promise<UnlistenFn> =>
+    listen<MeasureStatus>(EVENTS.measureSession, (e) => cb(e.payload)),
 };

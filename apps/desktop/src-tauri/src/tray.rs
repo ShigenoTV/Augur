@@ -1,11 +1,35 @@
-//! Icône de la zone de notification : ouvrir Augur, quitter.
+//! Icône de la zone de notification : ouvrir Augur, session de mesures,
+//! mises à jour, quitter.
 
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager, Wry};
+
+const MEASURE_START: &str = "Démarrer une session de mesures";
+const MEASURE_STOP: &str = "Arrêter et exporter les mesures";
+
+/// Entrée du menu dont le libellé suit l'état de la session de mesures.
+struct MeasureMenuItem(MenuItem<Wry>);
+
+pub fn set_measure_active(app: &AppHandle, active: bool) {
+    if let Some(item) = app.try_state::<MeasureMenuItem>() {
+        let _ = item
+            .0
+            .set_text(if active { MEASURE_STOP } else { MEASURE_START });
+    }
+    if let Some(tray) = app.tray_by_id("augur") {
+        let tip = if active {
+            "Augur · mesures en cours"
+        } else {
+            "Augur"
+        };
+        let _ = tray.set_tooltip(Some(tip));
+    }
+}
 
 pub fn create(app: &AppHandle) -> tauri::Result<()> {
     let open = MenuItem::with_id(app, "open", "Ouvrir Augur", true, None::<&str>)?;
+    let measure = MenuItem::with_id(app, "measure", MEASURE_START, true, None::<&str>)?;
     let update = MenuItem::with_id(
         app,
         "update",
@@ -14,7 +38,8 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
         None::<&str>,
     )?;
     let quit = MenuItem::with_id(app, "quit", "Quitter", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&open, &update, &quit])?;
+    let menu = Menu::with_items(app, &[&open, &measure, &update, &quit])?;
+    app.manage(MeasureMenuItem(measure));
 
     let mut builder = TrayIconBuilder::with_id("augur")
         .tooltip("Augur")
@@ -22,6 +47,7 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {
             "open" => crate::show_main_window(app),
+            "measure" => crate::measures::toggle(app),
             "update" => {
                 // La fenêtre principale affiche le résultat (bandeau ou « à jour »).
                 crate::show_main_window(app);

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-add-measure-note"
+description = "Enables the add_measure_note command without any pre-configured scope."
+commands.allow = ["add_measure_note"]
+
+[[permission]]
+identifier = "deny-add-measure-note"
+description = "Denies the add_measure_note command without any pre-configured scope."
+commands.deny = ["add_measure_note"]

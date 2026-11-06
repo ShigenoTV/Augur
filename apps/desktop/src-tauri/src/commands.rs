@@ -1,7 +1,7 @@
 //! Commandes Tauri exposées à l'interface. Chaque commande est soumise aux
 //! permissions déclarées dans `build.rs` et `capabilities/`.
 
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 
 use crate::contracts::{AppError, CONTRACT_VERSION, OverlayState, ParsedItem, app_error};
 use crate::{AppState, game_window, item_text, overlay};
@@ -104,6 +104,57 @@ pub fn set_client_log_path(
             app_error(
                 crate::contracts::ErrorCode::Internal,
                 format!("Réglage non enregistré ({e})."),
+            )
+        })
+}
+
+#[tauri::command]
+pub fn get_measure_status(
+    state: State<'_, crate::measures::MeasureState>,
+) -> crate::measures::MeasureStatus {
+    state.status()
+}
+
+#[tauri::command]
+pub fn start_measure_session(app: AppHandle) -> crate::measures::MeasureStatus {
+    crate::measures::start(&app)
+}
+
+/// Arrête la session et écrit `augur-mesures-<date>.json` et `.md`.
+#[tauri::command]
+pub fn stop_measure_session(app: AppHandle) -> Result<crate::measures::MeasureStatus, AppError> {
+    crate::measures::stop(&app).map_err(|e| {
+        app_error(
+            crate::contracts::ErrorCode::Internal,
+            format!("Export des mesures impossible ({e})."),
+        )
+    })
+}
+
+#[tauri::command]
+pub fn add_measure_note(app: AppHandle, text: String) -> crate::measures::MeasureStatus {
+    crate::measures::add_note(&app, &text);
+    app.state::<crate::measures::MeasureState>().status()
+}
+
+/// Copie le JSON de la dernière session terminée dans le presse-papier, sur
+/// demande explicite du joueur (bouton de la fenêtre principale).
+#[tauri::command]
+pub fn copy_measure_export(
+    state: State<'_, crate::measures::MeasureState>,
+) -> Result<(), AppError> {
+    let Some(json) = state.finished_json() else {
+        return Err(app_error(
+            crate::contracts::ErrorCode::Internal,
+            "Aucune session terminée à copier.",
+        ));
+    };
+    arboard::Clipboard::new()
+        .and_then(|mut c| c.set_text(json))
+        .map_err(|e| {
+            app_error(
+                crate::contracts::ErrorCode::Internal,
+                format!("Presse-papier indisponible ({e})."),
             )
         })
 }

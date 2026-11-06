@@ -14,6 +14,11 @@ fn main() {
             "set_update_channel",
             "get_client_log_status",
             "set_client_log_path",
+            "get_measure_status",
+            "start_measure_session",
+            "stop_measure_session",
+            "add_measure_note",
+            "copy_measure_export",
         ]),
     ))
     .expect("échec du build Tauri");

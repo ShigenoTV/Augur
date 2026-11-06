@@ -7,6 +7,7 @@ use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::contracts::events;
+use crate::measures::{self, MeasureState};
 use crate::{AppState, game_window, item_text, overlay};
 
 const POLL: Duration = Duration::from_millis(60);
@@ -46,7 +47,11 @@ pub fn spawn_watcher(app: AppHandle) {
                     continue;
                 }
                 last = token;
-                if !game_window::game_is_foreground() {
+                // Pendant une session de mesures, les codes Path of Building
+                // copiés depuis PoB (jeu pas au premier plan) sont aussi gardés.
+                let measuring = app.state::<MeasureState>().is_active();
+                let in_game = game_window::game_is_foreground();
+                if !in_game && !measuring {
                     continue;
                 }
                 if clipboard.is_none() {
@@ -55,11 +60,20 @@ pub fn spawn_watcher(app: AppHandle) {
                 let Some(text) = clipboard.as_mut().and_then(|c| c.get_text().ok()) else {
                     continue;
                 };
-                if !item_text::looks_like_item(&text) {
+                if measuring && measures::looks_like_pob_code(&text) {
+                    measures::record_pob_code(&app, &text);
+                    continue;
+                }
+                if !in_game || !item_text::looks_like_item(&text) {
                     continue;
                 }
                 // Contrat : `augur://item-copied` porte l'objet déjà parsé.
-                let item = match item_text::parse(&text) {
+                let parsed = item_text::parse(&text);
+                if measuring {
+                    let result = parsed.clone().map_err(|e| e.message.clone());
+                    measures::record_item(&app, &text, &result);
+                }
+                let item = match parsed {
                     Ok(item) => item,
                     Err(err) => {
                         log::warn!("objet copié illisible : {}", err.message);

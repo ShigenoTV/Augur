@@ -205,13 +205,23 @@ pub fn spawn(app: AppHandle) {
                     match tail.poll() {
                         Ok(lines) => {
                             for event in lines.iter().filter_map(|l| parse_line(l)) {
-                                if let LogEvent::ZoneEntered(zone) = event {
-                                    let payload = ZoneChanged {
-                                        zone,
-                                        at: rfc3339_now(),
-                                    };
-                                    state.update(&app, |s| s.last_zone = Some(payload.clone()));
-                                    let _ = app.emit(events::ZONE_CHANGED, payload);
+                                match event {
+                                    LogEvent::ZoneEntered(zone) => {
+                                        let payload = ZoneChanged {
+                                            zone,
+                                            at: rfc3339_now(),
+                                        };
+                                        crate::measures::record_zone(
+                                            &app,
+                                            &payload.zone,
+                                            payload.at.clone(),
+                                        );
+                                        state.update(&app, |s| s.last_zone = Some(payload.clone()));
+                                        let _ = app.emit(events::ZONE_CHANGED, payload);
+                                    }
+                                    LogEvent::AreaGenerated { level, area_id } => {
+                                        crate::measures::note_area_generated(&app, level, area_id);
+                                    }
                                 }
                             }
                         }
