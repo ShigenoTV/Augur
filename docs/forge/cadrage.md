@@ -72,7 +72,12 @@ une source de prix d'objets (même blocage OAuth).
    `reset_forge_prices` / `refresh_forge_prices`) : table de prix enregistrée dans `forge-prix.json` (dossier de
    configuration d'Augur) ; corrections du joueur, relevé poe.ninja, valeurs indicatives. Une saisie invalide est
    refusée en bloc, un fichier abîmé est réparé au chargement.
-5. **Panneau Forge** dans la fenêtre principale : choix de la base et de l'objectif, plan, coût espéré, P90, sources.
+5. **Panneau Forge** dans la fenêtre principale (`forge::atelier`, commandes `get_forge_bases` /
+   `get_forge_affixes` / `get_forge_catalogue` / `plan_forge_craft`) : données embarquées
+   (`data/forge.json.gz`, `tools/gamedata/forge_data.py`), choix de la base, du niveau d'objet, des affixes voulus
+   et des monnaies autorisées ; coût espéré, P50 / P90 sur 4 000 crafts simulés par le moteur exact, que faire
+   selon l'état de l'objet, achats moyens, sources des prix et des poids ; onglet Prix (corrections, relevé
+   poe.ninja, ligue). Seules les bases dont la page poe2db porte des poids sont proposées.
 6. **Overlay** : Ctrl+Alt+C sur l'objet en cours de craft, l'overlay affiche la prochaine étape du plan.
 
 Hors périmètre pour l'instant : « craftez ou achetez » (pas de prix d'objets), boucle de validation communautaire.

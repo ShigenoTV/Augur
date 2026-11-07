@@ -17,6 +17,7 @@ mod clipboard;
 mod commands;
 pub mod contracts;
 mod evaluation;
+mod forge;
 mod forge_prices;
 mod game_window;
 pub mod item_text;
@@ -108,6 +109,10 @@ pub fn run() {
             commands::set_forge_prices,
             commands::reset_forge_prices,
             commands::refresh_forge_prices,
+            commands::get_forge_bases,
+            commands::get_forge_affixes,
+            commands::get_forge_catalogue,
+            commands::plan_forge_craft,
         ])
         .setup(|app| {
             let handle = app.handle();
@@ -115,6 +120,7 @@ pub fn run() {
             app.manage(character::CharacterState::load(handle));
             app.manage(ledger::LedgerState::open(handle));
             app.manage(forge_prices::ForgePrices::load(handle));
+            app.manage(forge::ForgePlanner::default());
             overlay::prepare(handle)?;
             tray::create(handle)?;
             clipboard::spawn_watcher(handle.clone());

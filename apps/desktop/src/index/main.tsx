@@ -15,6 +15,7 @@ import { commands, isAppError, isTauri, on, type ClientLogStatus, type Settings 
 import { CharacterCard } from "./CharacterCard";
 import { ClientLogCard } from "./ClientLogCard";
 import { summarizeClientLog } from "./clientLog";
+import { ForgeCard } from "./ForgeCard";
 import { LedgerCard } from "./LedgerCard";
 import { MeasureCard } from "./MeasureCard";
 import { useUpdates } from "./useUpdates";
@@ -137,6 +138,10 @@ function App() {
           </p>
         </Card>
       </div>
+
+      <Card title="Forge">
+        <ForgeCard />
+      </Card>
 
       <Card title="Atlas Ledger">
         <LedgerCard />

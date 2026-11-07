@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-forge-bases"
+description = "Enables the get_forge_bases command without any pre-configured scope."
+commands.allow = ["get_forge_bases"]
+
+[[permission]]
+identifier = "deny-get-forge-bases"
+description = "Denies the get_forge_bases command without any pre-configured scope."
+commands.deny = ["get_forge_bases"]

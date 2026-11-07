@@ -67,6 +67,9 @@ pub struct BaseTable {
     pub nom: String,
     pub classe: String,
     pub tags: Vec<String>,
+    /// Niveau d'apparition de la base (absent des anciennes tables).
+    #[serde(default)]
+    pub niveau_drop: u32,
 }
 
 /// Relevé de poids poe2db (`poids-poe2db.json`).
@@ -89,7 +92,7 @@ pub struct PagePoids {
 }
 
 /// Mod éligible écarté du pool faute de poids mesuré.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 pub struct SansPoids {
     pub id: String,
     pub slot: Slot,
@@ -335,6 +338,7 @@ mod tests {
                 "armour".into(),
                 "default".into(),
             ],
+            niveau_drop: 1,
         }
     }
 

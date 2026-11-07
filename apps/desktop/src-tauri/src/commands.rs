@@ -291,3 +291,30 @@ pub async fn refresh_forge_prices(
 ) -> Result<poe2_core::forge::prix::TablePrix, AppError> {
     prices.refresh(&app, ligue.as_deref().unwrap_or("")).await
 }
+
+#[tauri::command]
+pub fn get_forge_bases() -> Result<Vec<poe2_core::forge::atelier::BaseForge>, AppError> {
+    poe2_core::forge::atelier::bases().map_err(crate::forge::error)
+}
+
+#[tauri::command]
+pub fn get_forge_affixes(
+    base_id: String,
+    ilvl: u32,
+) -> Result<poe2_core::forge::atelier::AffixesBase, AppError> {
+    poe2_core::forge::atelier::affixes(&base_id, ilvl).map_err(crate::forge::error)
+}
+
+#[tauri::command]
+pub fn get_forge_catalogue() -> Vec<poe2_core::forge::atelier::EntreeCatalogue> {
+    poe2_core::forge::atelier::catalogue()
+}
+
+#[tauri::command]
+pub async fn plan_forge_craft(
+    planner: State<'_, crate::forge::ForgePlanner>,
+    prices: State<'_, crate::forge_prices::ForgePrices>,
+    demande: poe2_core::forge::atelier::DemandePlan,
+) -> Result<poe2_core::forge::atelier::ResultatPlan, AppError> {
+    planner.plan(demande, prices.get()).await
+}

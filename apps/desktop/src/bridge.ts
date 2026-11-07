@@ -126,6 +126,113 @@ export type CharacterInfo = {
   treeVersion: string | null;
 };
 
+/** Forge (crates/poe2-core/src/forge/atelier.rs, prix.rs, ninja.rs, solveur/plan.rs). */
+export type ForgeSlot = "prefix" | "suffix";
+export type ForgeRarity = "normal" | "magic" | "rare";
+export type ForgeAttribution = { source: string; licence: string; dateReleve: string; repoeVersion: string };
+export type ForgeBase = { id: string; nom: string; classe: string; niveauDrop: number; page: string };
+export type ForgeTier = { tier: number; niveau: number; texte: string; poids: number };
+export type ForgeAffix = { group: number; family: number; slot: ForgeSlot; libelle: string; part: number; paliers: ForgeTier[] };
+export type ForgeAffixes = {
+  baseId: string;
+  ilvl: number;
+  page: string;
+  affixes: ForgeAffix[];
+  sansPoids: { id: string; slot: ForgeSlot; niveau: number }[];
+  attribution: ForgeAttribution;
+};
+export type ForgeCatalogueEntry = { id: string; nom: string; genre: "base" | "monnaie" | "omen" };
+export type ForgePriceSource = "joueur" | "poeNinja" | "indicatif";
+export type ForgeMarket = {
+  ligue: string;
+  releveA: number;
+  prix: Record<string, number>;
+  dates: Record<string, number>;
+  manquants: string[];
+};
+export type ForgePrices = {
+  corrections: Record<string, number>;
+  marche: ForgeMarket | null;
+  prix: Record<string, number>;
+  sources: Record<string, ForgePriceSource>;
+};
+export type ForgeWanted = { group: number; family: number; maxTier: number };
+export type ForgePlanRequest = { baseId: string; ilvl: number; voulus: ForgeWanted[]; exclues: string[] };
+export type ForgeItemSummary = {
+  rarity: ForgeRarity;
+  heldWanted: number[];
+  blockedWanted: number[];
+  fracturedWanted: number | null;
+  badPrefixes: number;
+  badSuffixes: number;
+};
+export type ForgeActionInfo = { id: string; label: string; unitCost: number; isAbandon: boolean };
+export type ForgeRepeat = { selfLoopProbability: number; expectedAttempts: number; p90Attempts: number };
+export type ForgeBranch = {
+  id: string;
+  kind: "success" | "failure";
+  label: string;
+  probability: number;
+  to: string;
+  loopback: boolean;
+  extraCost: number;
+};
+export type ForgeActionNode = {
+  kind: "action";
+  id: string;
+  stateKey: string;
+  state: ForgeItemSummary;
+  expectedVisits: number;
+  costToGo: number;
+  action: ForgeActionInfo;
+  repeat: ForgeRepeat | null;
+  branches: ForgeBranch[];
+  mergedMinorProbability: number;
+  mergedMinorCount: number;
+};
+export type ForgeTerminalNode = {
+  kind: "terminal";
+  id: string;
+  stateKey: string;
+  state: ForgeItemSummary;
+  expectedVisits: number;
+  costToGo: number;
+  result: string;
+  note: string | null;
+};
+export type ForgeShoppingLine = { id: string; label: string; expectedCount: number; unitCost: number; expectedCost: number };
+export type ForgeVerify = {
+  trials: number;
+  meanCost: number;
+  medianCost: number;
+  p90Cost: number;
+  p99Cost: number;
+  meanSteps: number;
+  meanAbandons: number;
+  censored: number;
+};
+export type ForgePlan = {
+  baseId: string;
+  ilvl: number;
+  goal: { label: string; slot: ForgeSlot; group: number; familyId: number; maxTier: number }[];
+  rootId: string;
+  nodes: Record<string, ForgeActionNode | ForgeTerminalNode>;
+  expectedCost: number;
+  baseCost: number;
+  shopping: ForgeShoppingLine[];
+  solver: { states: number; sweeps: number; converged: boolean; millis: number; costFromVisits: number };
+  mc: ForgeVerify | null;
+  pricesSource: string;
+};
+export type ForgePlanResult = {
+  plan: ForgePlan;
+  complet: boolean;
+  sansPoids: number;
+  prix: { id: string; prix: number; source: ForgePriceSource }[];
+  ligue: string | null;
+  attribution: ForgeAttribution;
+};
+
 export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
@@ -162,6 +269,14 @@ export const commands = {
   getCharacter: () => invoke<CharacterInfo | null>("get_character"),
   importPobCode: (code: string) => invoke<CharacterInfo>("import_pob_code", { code }),
   clearCharacter: () => invoke<void>("clear_character"),
+  getForgeBases: () => invoke<ForgeBase[]>("get_forge_bases"),
+  getForgeAffixes: (baseId: string, ilvl: number) => invoke<ForgeAffixes>("get_forge_affixes", { baseId, ilvl }),
+  getForgeCatalogue: () => invoke<ForgeCatalogueEntry[]>("get_forge_catalogue"),
+  planForgeCraft: (demande: ForgePlanRequest) => invoke<ForgePlanResult>("plan_forge_craft", { demande }),
+  getForgePrices: () => invoke<ForgePrices>("get_forge_prices"),
+  setForgePrices: (prix: Record<string, number>) => invoke<ForgePrices>("set_forge_prices", { prix }),
+  resetForgePrices: () => invoke<ForgePrices>("reset_forge_prices"),
+  refreshForgePrices: (ligue: string | null) => invoke<ForgePrices>("refresh_forge_prices", { ligue }),
   // Commandes du chantier Architecture / moteur, branchées dès leur fusion.
   evaluateItem: (item: ParsedItem) => invoke<ItemDelta>("evaluate_item", { item }),
   estimatePrice: (item: ParsedItem) => invoke<PriceEstimate>("estimate_price", { item }),
