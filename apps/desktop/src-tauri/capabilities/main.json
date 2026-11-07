@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
-  "description": "Fenêtre principale : état de l'application, événements, réglages et mise à jour de l'application (vérification et installation de paquets signés). Session de mesures (l'export est écrit par le cœur Rust dans Documents\\Augur\\mesures, jamais un chemin choisi par la WebView). Aucun accès fichier, shell ni réseau depuis la WebView.",
+  "description": "Fenêtre principale : état de l'application, événements, réglages et mise à jour de l'application (vérification et installation de paquets signés). Session de mesures (l'export est écrit par le cœur Rust dans Documents\\Augur\\mesures, jamais un chemin choisi par la WebView). Atlas Ledger : session de farm et historique local (base SQLite dans le dossier de données d'Augur, écrite par le cœur Rust). Aucun accès fichier, shell ni réseau depuis la WebView.",
   "windows": [
     "main"
   ],
@@ -21,6 +21,13 @@
     "allow-start-measure-session",
     "allow-stop-measure-session",
     "allow-add-measure-note",
-    "allow-copy-measure-export"
+    "allow-copy-measure-export",
+    "allow-get-ledger-status",
+    "allow-start-ledger-session",
+    "allow-stop-ledger-session",
+    "allow-set-ledger-strategy",
+    "allow-list-ledger-sessions",
+    "allow-get-ledger-session",
+    "allow-delete-ledger-session"
   ]
 }

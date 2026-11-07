@@ -19,6 +19,13 @@ fn main() {
             "stop_measure_session",
             "add_measure_note",
             "copy_measure_export",
+            "get_ledger_status",
+            "start_ledger_session",
+            "stop_ledger_session",
+            "set_ledger_strategy",
+            "list_ledger_sessions",
+            "get_ledger_session",
+            "delete_ledger_session",
         ]),
     ))
     .expect("échec du build Tauri");

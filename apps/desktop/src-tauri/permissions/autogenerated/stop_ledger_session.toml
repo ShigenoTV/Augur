@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-stop-ledger-session"
+description = "Enables the stop_ledger_session command without any pre-configured scope."
+commands.allow = ["stop_ledger_session"]
+
+[[permission]]
+identifier = "deny-stop-ledger-session"
+description = "Denies the stop_ledger_session command without any pre-configured scope."
+commands.deny = ["stop_ledger_session"]

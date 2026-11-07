@@ -17,6 +17,8 @@ mod commands;
 pub mod contracts;
 mod game_window;
 pub mod item_text;
+mod ledger;
+pub mod ledger_store;
 mod log_locator;
 pub mod measures;
 mod overlay;
@@ -87,10 +89,18 @@ pub fn run() {
             commands::stop_measure_session,
             commands::add_measure_note,
             commands::copy_measure_export,
+            commands::get_ledger_status,
+            commands::start_ledger_session,
+            commands::stop_ledger_session,
+            commands::set_ledger_strategy,
+            commands::list_ledger_sessions,
+            commands::get_ledger_session,
+            commands::delete_ledger_session,
         ])
         .setup(|app| {
             let handle = app.handle();
             app.manage(settings::SettingsStore::load(handle));
+            app.manage(ledger::LedgerState::open(handle));
             overlay::prepare(handle)?;
             tray::create(handle)?;
             clipboard::spawn_watcher(handle.clone());

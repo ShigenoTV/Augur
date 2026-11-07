@@ -29,6 +29,14 @@ Hors périmètre pour l'instant : valeur du butin, couche communautaire et prév
 - **Partie de map** : même identifiant et même graine = même instance. Un retour par portail après un passage au hideout prolonge la partie ; une zone « autre » ouverte depuis la map compte dans la partie ; une autre map ferme la précédente.
 - Maps par heure = maps commencées / durée de la session (à partir d'une minute).
 
+## Historique local
+
+- Base SQLite `ledger.sqlite` dans le dossier de données d'Augur (`%APPDATA%\com.shigenotv.augur`), écrite uniquement par le cœur Rust.
+- Une ligne par session terminée : début et fin réels, stratégie (JSON), bilan du moteur (JSON), et en colonnes le nombre de maps et les durées pour le tri. Une session vide n'est pas enregistrée.
+- Stratégie étiquetée par le joueur : tier de Waystone (1 à 16), tablettes, mécaniques, note. La saisie est nettoyée (espaces, doublons, 20 étiquettes et 500 caractères au plus).
+- « Maintenant » sur l'échelle du journal = dernière ligne datée + temps écoulé depuis sa lecture : pas besoin du fuseau horaire.
+- Une session démarrée dans une zone compte cette zone dès le démarrage.
+
 ## Hypothèses à vérifier en jeu
 
 | # | Hypothèse | Comment vérifier |
