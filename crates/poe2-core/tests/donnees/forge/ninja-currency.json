@@ -1,0 +1,88 @@
+{
+ "core": {
+  "primary": "divine",
+  "secondary": "chaos",
+  "rates": {
+   "exalted": 635.0,
+   "chaos": 9.56
+  }
+ },
+ "lines": [
+  {
+   "id": "alch",
+   "primaryValue": 0.005446
+  },
+  {
+   "id": "exalted",
+   "primaryValue": 0.001575
+  },
+  {
+   "id": "chaos",
+   "primaryValue": 0.1046
+  },
+  {
+   "id": "divine",
+   "primaryValue": 1
+  },
+  {
+   "id": "annul",
+   "primaryValue": 0.3666
+  },
+  {
+   "id": "aug",
+   "primaryValue": 0.002522
+  },
+  {
+   "id": "fracturing-orb",
+   "primaryValue": 9.04
+  },
+  {
+   "id": "greater-regal-orb",
+   "primaryValue": 0.003622
+  },
+  {
+   "id": "perfect-chaos-orb",
+   "primaryValue": 8.5
+  },
+  {
+   "id": "perfect-exalted-orb",
+   "primaryValue": 2.89
+  },
+  {
+   "id": "perfect-regal-orb",
+   "primaryValue": 0.04555
+  },
+  {
+   "id": "regal",
+   "primaryValue": 0.003579
+  },
+  {
+   "id": "greater-chaos-orb",
+   "primaryValue": 0.3402
+  },
+  {
+   "id": "greater-exalted-orb",
+   "primaryValue": 0.03107
+  },
+  {
+   "id": "greater-orb-of-augmentation",
+   "primaryValue": 0.003257
+  },
+  {
+   "id": "greater-orb-of-transmutation",
+   "primaryValue": 0.0002364
+  },
+  {
+   "id": "perfect-orb-of-augmentation",
+   "primaryValue": 0.3493
+  },
+  {
+   "id": "perfect-orb-of-transmutation",
+   "primaryValue": 0.01919
+  },
+  {
+   "id": "transmute",
+   "primaryValue": 0.003247
+  }
+ ]
+}

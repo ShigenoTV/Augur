@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
-  "description": "Fenêtre principale : état de l'application, événements, réglages et mise à jour de l'application (vérification et installation de paquets signés). Session de mesures (l'export est écrit par le cœur Rust dans Documents\\Augur\\mesures, jamais un chemin choisi par la WebView). Atlas Ledger : session de farm et historique local (base SQLite dans le dossier de données d'Augur, écrite par le cœur Rust). Personnage : import d'un code Path of Building collé par le joueur (gardé dans le dossier de données d'Augur). Forge : table de prix saisie par le joueur (fichier dans le dossier de configuration d'Augur, écrit par le cœur Rust). Aucun accès fichier, shell ni réseau depuis la WebView.",
+  "description": "Fenêtre principale : état de l'application, événements, réglages et mise à jour de l'application (vérification et installation de paquets signés). Session de mesures (l'export est écrit par le cœur Rust dans Documents\\Augur\\mesures, jamais un chemin choisi par la WebView). Atlas Ledger : session de farm et historique local (base SQLite dans le dossier de données d'Augur, écrite par le cœur Rust). Personnage : import d'un code Path of Building collé par le joueur (gardé dans le dossier de données d'Augur). Forge : table de prix saisie par le joueur et relevé poe.ninja téléchargé par le cœur Rust à la demande (fichier dans le dossier de configuration d'Augur, écrit par le cœur Rust). Aucun accès fichier, shell ni réseau depuis la WebView.",
   "windows": [
     "main"
   ],
@@ -34,6 +34,7 @@
     "allow-clear-character",
     "allow-get-forge-prices",
     "allow-set-forge-prices",
-    "allow-reset-forge-prices"
+    "allow-reset-forge-prices",
+    "allow-refresh-forge-prices"
   ]
 }

@@ -16,7 +16,7 @@ craft donné, **quelle stratégie a le meilleur coût espéré, et vaut-il mieux
 | Calculateur `tools/theorycraft/craft_proba.py` (PR #39) | sert de **référence** : le moteur Rust doit redonner ses probabilités | tests croisés (PR 2) |
 | Parseur Ctrl+Alt+C d'Augur (`poe2-core::parser`) | oui | lire la base en cours de craft (PR 6) |
 | Jeu de données de poe2-craft-assistant (`data/poe2/dataset.json`) | **non** : ses poids viennent de Craft of Exile, données tierces non redistribuables | — |
-| Prix poe.ninja de poe2-craft-assistant (`craft-api`, `prices.rs`) | **pas sans accord de Max** (voir « Prix ») | — |
+| Prix poe.ninja de poe2-craft-assistant (`craft-api`, `prices.rs`) | **oui** (accord de Max le 07/11), extraction et règles de cadence reprises | `forge::ninja` |
 | Interface React Flow de poe2-craft-assistant | non : l'interface d'Augur a son propre style (React 19 + Tailwind) | — |
 
 Le code repris garde ses noms (`AffixPool`, `Currency`, `Goal`…) pour rester comparable à l'original ; seuls changent
@@ -45,10 +45,17 @@ clippy en édition 2024.
 ## Prix
 
 Le coût espéré se compte en Exalted Orbs. Aucune source officielle n'est ouverte (GGG n'accorde pas de client OAuth
-pour l'instant, voir [api-ggg.md](../architecture/api-ggg.md)). Par défaut, Forge prend des **prix saisis par le
-joueur** (une table pré-remplie, modifiable). poe2-craft-assistant lisait l'API publique de poe.ninja ; la brancher dans
-Augur est une idée **hors plan, à proposer à Max** avant tout code. La comparaison « craftez ou achetez » attend une
-source de prix d'objets (même blocage).
+pour l'instant, voir [api-ggg.md](../architecture/api-ggg.md)). **Décision de Max (7 novembre 2026) :** poe.ninja
+**en plus** des prix saisis. Chaque prix effectif vient, dans l'ordre :
+
+1. d'une **correction** saisie par le joueur ;
+2. du dernier **relevé poe.ninja** (API économique publique PoE 2, catégories `Currency` et `Ritual`), converti en
+   Exalted. Le relevé est déclenché par le joueur, au plus une fois toutes les 5 minutes (10 après un échec), avec un
+   User-Agent qui identifie Augur. Un prix absent d'un relevé garde sa dernière cote (même ligue) ;
+3. d'une valeur **indicative** (relevé de septembre 2026 de poe2-craft-assistant).
+
+La base neuve et sa revente n'ont pas de cote : elles restent saisies. La comparaison « craftez ou achetez » attend
+une source de prix d'objets (même blocage OAuth).
 
 ## Découpage en PR
 
@@ -61,15 +68,14 @@ source de prix d'objets (même blocage).
    iteration), coût espéré, quantiles P50 / P90, plan de décision, vérification sur le moteur exact ; catalogue des
    18 monnaies (Greater / Perfect compris) et des 6 Omens d'Exaltation, d'Annulment et d'Erasure. Essences,
    Désécration et Liquid Emotions viendront avec leurs données (cible par base, poids des mods désacralisés).
-4. **Prix** (`forge::prix`, commandes `get_forge_prices` / `set_forge_prices` / `reset_forge_prices`) : table de
-   prix saisie par le joueur, en Exalted, enregistrée dans `forge-prix.json` (dossier de configuration d'Augur).
-   Elle part de valeurs indicatives (relevé de septembre 2026 de poe2-craft-assistant), affichées comme telles ;
-   une saisie invalide est refusée en bloc, un fichier abîmé est réparé au chargement.
+4. **Prix** (`forge::prix`, `forge::ninja`, commandes `get_forge_prices` / `set_forge_prices` /
+   `reset_forge_prices` / `refresh_forge_prices`) : table de prix enregistrée dans `forge-prix.json` (dossier de
+   configuration d'Augur) ; corrections du joueur, relevé poe.ninja, valeurs indicatives. Une saisie invalide est
+   refusée en bloc, un fichier abîmé est réparé au chargement.
 5. **Panneau Forge** dans la fenêtre principale : choix de la base et de l'objectif, plan, coût espéré, P90, sources.
 6. **Overlay** : Ctrl+Alt+C sur l'objet en cours de craft, l'overlay affiche la prochaine étape du plan.
 
-Hors périmètre pour l'instant : « craftez ou achetez » (pas de prix d'objets), boucle de validation communautaire,
-prix poe.ninja (sur accord de Max).
+Hors périmètre pour l'instant : « craftez ou achetez » (pas de prix d'objets), boucle de validation communautaire.
 
 ## Hypothèses à vérifier
 
