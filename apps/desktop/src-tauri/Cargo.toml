@@ -1,6 +1,6 @@
 [package]
 name = "augur-desktop"
-version = "0.1.3"
+version = "0.1.4"
 description = "Application Windows Augur : overlay en jeu (Upgrade Copilot) et planificateur"
 edition = "2024"
 rust-version = "1.90"
