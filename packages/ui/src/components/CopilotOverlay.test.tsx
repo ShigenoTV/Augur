@@ -25,6 +25,15 @@ describe("CopilotOverlay", () => {
     expect(screen.getByText(/pas encore pris en charge/)).toBeTruthy();
   });
 
+  it("masque l'EHP quand il n'est pas calculé (zéro avant et après)", () => {
+    const s = overlayStates.find((o) => o.id === "upgrade")!.state;
+    if (s.status !== "ready" || !s.delta) throw new Error("fixture");
+    const sansEhp = { ...s, delta: { ...s.delta, ehp: { before: 0, after: 0 } } };
+    render(<CopilotOverlay state={sansEhp} now={NOW} />);
+    expect(screen.getByText("DPS total")).toBeTruthy();
+    expect(screen.queryByText("EHP")).toBeNull();
+  });
+
   it("alerte quand une résistance passe sous le plafond", () => {
     const s = overlayStates.find((o) => o.id === "tradeoff")!.state;
     render(<CopilotOverlay state={s} now={NOW} />);

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-evaluate-item"
+description = "Enables the evaluate_item command without any pre-configured scope."
+commands.allow = ["evaluate_item"]
+
+[[permission]]
+identifier = "deny-evaluate-item"
+description = "Denies the evaluate_item command without any pre-configured scope."
+commands.deny = ["evaluate_item"]

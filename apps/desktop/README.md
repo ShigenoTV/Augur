@@ -17,6 +17,7 @@ cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
 | `shortcuts.rs` | Échap et Alt+U, enregistrés seulement pendant l'affichage de l'overlay |
 | `client_log.rs` | Suivi de `Client.txt` (zones), émet `augur://zone-changed` ; `AUGUR_CLIENT_LOG` force le chemin |
 | `updates.rs`, `settings.rs` | Mise à jour signée depuis l'application, canal stable ou bêta |
+| `character.rs` | Personnage importé d'un code Path of Building PoE 2 (lecture par `poe2-core::pob`), gardé dans `personnage.json` ; compétence comparée : Lightning Bolt ou Arc en priorité |
 | `item_text.rs` | Lecture du texte d'objet par le parseur de `poe2-core`, convertie vers le contrat `ParsedItem` |
 | `contracts.rs` | Miroir de `crates/augur-contracts`, **temporaire** jusqu'à sa fusion |
 

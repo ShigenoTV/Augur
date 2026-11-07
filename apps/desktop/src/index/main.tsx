@@ -12,6 +12,7 @@ import {
 import { StrictMode, useEffect, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { commands, isAppError, isTauri, on, type ClientLogStatus, type Settings } from "../bridge";
+import { CharacterCard } from "./CharacterCard";
 import { ClientLogCard } from "./ClientLogCard";
 import { summarizeClientLog } from "./clientLog";
 import { LedgerCard } from "./LedgerCard";
@@ -117,15 +118,7 @@ function App() {
           </div>
         </Card>
         <Card title="Personnage">
-          {state?.character ? (
-            <p className="text-sm">
-              {state.character.name} · {state.character.class} {state.character.level}
-            </p>
-          ) : (
-            <StatePanel icon="user" title="Aucun personnage importé" variant="info">
-              L'import par connexion GGG ou code Path of Building arrive au sprint 3.
-            </StatePanel>
-          )}
+          <CharacterCard />
         </Card>
         <Card title="Raccourcis">
           <ul className="space-y-2 text-sm text-text-muted">

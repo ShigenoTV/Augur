@@ -5,6 +5,7 @@
  */
 import type {
   AppError,
+  CharacterSummary,
   ItemDelta,
   OverlayState,
   ParsedItem,
@@ -31,6 +32,7 @@ export const EVENTS = {
   clientLogStatus: "augur://client-log-status",
   measureSession: "augur://measure-session",
   ledgerSession: "augur://ledger-session",
+  characterChanged: "augur://character-changed",
 } as const;
 
 export type Settings = { betaChannel: boolean; clientLogPath: string | null };
@@ -111,6 +113,19 @@ export type LedgerSession = {
   summary: LedgerSummary;
 };
 
+/** Personnage importé d'un code Path of Building (apps/desktop/src-tauri/src/character.rs). */
+export type GemInfo = { name: string; level: number; quality: number };
+export type CharacterInfo = {
+  summary: CharacterSummary;
+  importedAt: string;
+  skill: GemInfo | null;
+  supports: string[];
+  skillSupported: boolean;
+  equippedSlots: string[];
+  passives: number;
+  treeVersion: string | null;
+};
+
 export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
@@ -144,6 +159,9 @@ export const commands = {
   listLedgerSessions: (limit: number) => invoke<LedgerSessionRow[]>("list_ledger_sessions", { limit }),
   getLedgerSession: (id: number) => invoke<LedgerSession>("get_ledger_session", { id }),
   deleteLedgerSession: (id: number) => invoke<void>("delete_ledger_session", { id }),
+  getCharacter: () => invoke<CharacterInfo | null>("get_character"),
+  importPobCode: (code: string) => invoke<CharacterInfo>("import_pob_code", { code }),
+  clearCharacter: () => invoke<void>("clear_character"),
   // Commandes du chantier Architecture / moteur, branchées dès leur fusion.
   evaluateItem: (item: ParsedItem) => invoke<ItemDelta>("evaluate_item", { item }),
   estimatePrice: (item: ParsedItem) => invoke<PriceEstimate>("estimate_price", { item }),
@@ -169,4 +187,6 @@ export const on = {
     listen<MeasureStatus>(EVENTS.measureSession, (e) => cb(e.payload)),
   ledgerSession: (cb: (p: LedgerStatus) => void): Promise<UnlistenFn> =>
     listen<LedgerStatus>(EVENTS.ledgerSession, (e) => cb(e.payload)),
+  characterChanged: (cb: (p: CharacterInfo | null) => void): Promise<UnlistenFn> =>
+    listen<CharacterInfo | null>(EVENTS.characterChanged, (e) => cb(e.payload)),
 };

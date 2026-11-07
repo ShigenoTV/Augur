@@ -43,6 +43,12 @@ const mechanics: Record<string, string> = {
   "weapon-set-passives": "Set d'armes : bonus passifs du set",
   "spirit-reservation": "Réservation de Spirit",
   "damage-order": "Ordre des opérations des dégâts",
+  "formules-supposees": "Formules de dégâts encore à mesurer en jeu",
+  "mods-objet-non-traduits": "Certains mods de cet objet ne sont pas comptés",
+  "mods-equipement-non-traduits": "Certains mods de ton équipement ne sont pas comptés",
+  "passifs-non-traduits": "Certains passifs ne sont pas comptés",
+  "supports-non-modelises": "Certains supports ne sont pas comptés",
+  "arbre-autre-version": "Build fait sur une autre version de l'arbre",
 };
 
 export function mechanicLabel(id: string): string {

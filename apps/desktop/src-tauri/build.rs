@@ -26,6 +26,11 @@ fn main() {
             "list_ledger_sessions",
             "get_ledger_session",
             "delete_ledger_session",
+            "get_character",
+            "evaluate_item",
+            "estimate_price",
+            "import_pob_code",
+            "clear_character",
         ]),
     ))
     .expect("échec du build Tauri");
