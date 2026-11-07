@@ -1,0 +1,69 @@
+name: Bug de la bêta
+description: Quelque chose ne marche pas dans Augur (overlay, mesures, Atlas Ledger, installation, mises à jour).
+title: "[Bêta] "
+labels: ["bêta", "bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de tester Augur ! Ce ticket est **public** : n'y colle jamais ton mot de passe, ton `POESESSID` ni d'information personnelle.
+        Le texte d'un objet, un code Path of Building ou un export de mesures peuvent être collés sans risque.
+  - type: dropdown
+    id: module
+    attributes:
+      label: Où est le problème ?
+      options:
+        - Installation ou SmartScreen / antivirus
+        - Overlay (Ctrl+C sur un objet)
+        - Objet mal lu ou « Objet non reconnu »
+        - Session de mesures
+        - Atlas Ledger
+        - Mises à jour
+        - Autre
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version d'Augur
+      description: En haut de la fenêtre principale, par exemple v0.1.4.
+      placeholder: v0.1.4
+    validations:
+      required: true
+  - type: dropdown
+    id: windows
+    attributes:
+      label: Windows
+      options:
+        - Windows 11
+        - Windows 10
+    validations:
+      required: true
+  - type: textarea
+    id: etapes
+    attributes:
+      label: Ce que tu as fait
+      description: Étape par étape, pour qu'on puisse refaire la même chose.
+      placeholder: |
+        1. Jeu en fenêtré sans bordure, Augur lancé
+        2. Ctrl+C sur un anneau rare dans la réserve
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: attendu
+    attributes:
+      label: Ce que tu attendais, et ce qui s'est passé
+    validations:
+      required: true
+  - type: textarea
+    id: objet
+    attributes:
+      label: Texte de l'objet (si un objet est en cause)
+      description: En jeu, Ctrl+C (ou Ctrl+Alt+C) sur l'objet, puis colle ici.
+      render: text
+  - type: textarea
+    id: captures
+    attributes:
+      label: Captures d'écran, export de mesures, autres détails
+      description: Glisse une capture (Win+Maj+S) ou un fichier ici. Nom de l'antivirus et message exact en cas de blocage.
