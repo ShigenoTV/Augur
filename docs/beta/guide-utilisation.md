@@ -8,13 +8,28 @@ mode **fenêtré sans bordure**.
 | Fonction | État dans la bêta |
 |---|---|
 | Overlay sur Ctrl+C : lecture de l'objet (nom, base, mods, tiers) | ✅ à tester |
-| Overlay : gain de DPS pour **Lightning Bolt** et **Arc** | ⏳ le moteur est prêt, l'import de personnage pas encore : l'overlay affiche « Aucun personnage importé » |
+| Import du personnage par code Path of Building | ✅ à tester à partir de la v0.1.5 |
+| Overlay : gain de DPS pour **Lightning Bolt** et **Arc** | ✅ à tester à partir de la v0.1.5, chiffre marqué « ≈ » (approximatif) ; en v0.1.4 l'overlay affiche « Aucun personnage importé » |
+| Overlay : gain d'EHP (défense) | ⏳ pas encore |
 | Overlay : prix estimé | ⏳ pas encore |
 | Session de mesures (export des objets, codes PoB, zones) | ✅ à tester |
 | Atlas Ledger (temps en map, maps par heure) | ✅ à tester |
 | Mises à jour automatiques | ✅ à tester |
 
 Ce tableau est mis à jour à chaque version de la bêta.
+
+## Importer ton personnage (v0.1.5 et suivantes)
+
+1. Dans **Path of Building PoE 2** : **Import/Export Build > Generate**, puis **Copy**.
+   Sur pobb.in, utilise le bouton qui copie le **code** (une longue suite de lettres
+   commençant souvent par `eN`), pas le lien.
+2. Fenêtre principale Augur > carte **Personnage** : colle le code, puis **Importer**.
+3. Augur affiche ta classe, ton niveau et la **compétence comparée** : Lightning Bolt ou
+   Arc en priorité, même si ce n'est pas la compétence principale du build. Pour une
+   autre compétence, l'overlay indique qu'elle n'est pas encore prise en charge.
+4. **Changer** importe un nouveau code ; **Oublier** efface le personnage.
+
+Ton build reste sur ton PC. Pense à le réimporter quand tu changes d'équipement.
 
 ## L'overlay (Augur Copilot)
 
@@ -32,6 +47,11 @@ Bon à savoir :
   navigateur ou Discord ne déclenche rien.
 - **Échap** et **Alt+U** ne sont captés par Augur que pendant l'affichage de l'overlay.
   Le reste du temps, ils restent au jeu.
+- Avec un personnage importé, l'overlay affiche le **gain ou la perte de DPS** si
+  l'objet remplaçait celui que tu portes au même emplacement (pour une bague : le
+  meilleur des deux emplacements). Le calcul suit le panneau de compétence du jeu
+  (cible sans résistance, mana plein). Le signe **≈** et l'encadré « Calcul approximatif »
+  listent ce qui n'est pas encore compté (certains mods, passifs ou supports).
 - Si l'overlay affiche **« Objet non reconnu »**, c'est exactement ce qu'on cherche :
   signale-le (voir plus bas) avec le texte de l'objet.
 
@@ -39,6 +59,8 @@ Ce qu'il faut regarder pendant tes tests :
 
 - L'overlay s'affiche-t-il à chaque Ctrl+C, et assez vite (moins d'une demi-seconde) ?
 - Le nom, la base et les mods affichés correspondent-ils à l'objet en jeu ?
+- Le gain de DPS a-t-il l'air plausible ? Un objet que tu sais meilleur est-il bien
+  affiché en hausse ? Note l'objet (Ctrl+C) et le chiffre si ça te semble faux.
 - Le jeu perd-il le focus, saccade-t-il, ou une touche part-elle au mauvais endroit ?
 - L'overlay est-il bien placé (pas hors de l'écran, pas sur un second écran) ?
 
