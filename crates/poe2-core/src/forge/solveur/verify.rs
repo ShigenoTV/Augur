@@ -1,0 +1,172 @@
+use super::model::*;
+use super::solve::*;
+use crate::forge::*;
+use rand::{SeedableRng, rngs::SmallRng};
+use rayon::prelude::*;
+use serde::Serialize;
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VerifyResult {
+    pub trials: u64,
+    pub mean_cost: f64,
+    /// écart-type du coût des essais réussis (racine de la variance) : la régularité du chemin
+    pub std_dev: f64,
+    pub ci95_mean: (f64, f64),
+    pub median_cost: f64,
+    pub p90_cost: f64,
+    pub p99_cost: f64,
+    pub mean_steps: f64,
+    pub mean_abandons: f64,
+    /// essais interrompus (max_steps atteint) : exclus des statistiques
+    pub censored: u64,
+    /// Coût (hors base neuve) aux quantiles 0 %, 0,5 %, …, 100 % des essais réussis (`QUANTILE_STEPS` + 1
+    /// valeurs croissantes) : permet de répondre à « j'ai X, quelle chance de finir ? » sans renvoyer
+    /// tous les essais.
+    pub cost_quantiles: Vec<f64>,
+}
+
+/// Résolution de `VerifyResult::cost_quantiles` : un point tous les 0,5 %.
+pub const QUANTILE_STEPS: usize = 200;
+
+impl VerifyResult {
+    /// Probabilité de finir le craft en dépensant au plus `budget` (hors base neuve), en suivant le plan.
+    /// Lecture prudente des quantiles (palier inférieur, jamais interpolé : un coût discret reste exact) ;
+    /// les essais interrompus comptent comme des échecs. Même calcul côté interface (`successProbability`).
+    pub fn success_probability(&self, budget: f64) -> f64 {
+        let q = &self.cost_quantiles;
+        // les coûts des essais sont stockés en f32 : tolérance relative pour qu'un budget pile égal compte
+        let budget = budget + budget.abs() * 1e-6;
+        if q.is_empty() || budget < q[0] {
+            return 0.0;
+        }
+        let i = q.partition_point(|&c| c <= budget) - 1;
+        let done = self.trials as f64 / (self.trials + self.censored) as f64;
+        i as f64 / (q.len() - 1) as f64 * done
+    }
+}
+
+/// Exécute la politique sur le moteur EXACT (tirage pondéré réel, exclusion de groupes complète).
+/// Écart avec `V(s0)` = erreur d'abstraction.
+pub fn verify_policy(
+    model: &Model,
+    sol: &Solution,
+    start: ItemState,
+    trials: u64,
+    max_steps: u32,
+    seed: u64,
+    mut on_progress: impl FnMut(u64, u64) -> bool,
+) -> Option<VerifyResult> {
+    const CHUNK: u64 = 512;
+    const BATCH: u64 = 64;
+    let chunks = trials.div_ceil(CHUNK);
+    let mut all: Vec<(f32, u32, u32, bool)> = Vec::with_capacity(trials as usize); // coût, étapes, abandons, censuré
+    let mut c0 = 0;
+    while c0 < chunks {
+        let c1 = (c0 + BATCH).min(chunks);
+        let part: Vec<Vec<(f32, u32, u32, bool)>> = (c0..c1)
+            .into_par_iter()
+            .map(|c| {
+                let n = CHUNK.min(trials - c * CHUNK);
+                let mut rng = SmallRng::seed_from_u64(
+                    seed.wrapping_add(c.wrapping_mul(0x9E37_79B9_7F4A_7C15)),
+                );
+                (0..n)
+                    .map(|_| one_trial(model, sol, start, max_steps, &mut rng))
+                    .collect()
+            })
+            .collect();
+        for p in part {
+            all.extend(p);
+        }
+        c0 = c1;
+        if !on_progress(all.len() as u64, trials) {
+            return None;
+        }
+    }
+    let censored = all.iter().filter(|r| r.3).count() as u64;
+    let mut ok: Vec<&(f32, u32, u32, bool)> = all.iter().filter(|r| !r.3).collect();
+    if ok.is_empty() {
+        return None;
+    }
+    let n = ok.len() as f64;
+    let mean = ok.iter().map(|r| r.0 as f64).sum::<f64>() / n;
+    let var = ok.iter().map(|r| (r.0 as f64 - mean).powi(2)).sum::<f64>() / (n - 1.0).max(1.0);
+    let se = (var / n).sqrt();
+    ok.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    let q = |p: f64| ok[((ok.len() as f64 - 1.0) * p).round() as usize].0 as f64;
+    Some(VerifyResult {
+        trials: ok.len() as u64,
+        mean_cost: mean,
+        std_dev: var.sqrt(),
+        ci95_mean: (mean - 1.96 * se, mean + 1.96 * se),
+        median_cost: q(0.5),
+        p90_cost: q(0.9),
+        p99_cost: q(0.99),
+        mean_steps: ok.iter().map(|r| r.1 as f64).sum::<f64>() / n,
+        mean_abandons: ok.iter().map(|r| r.2 as f64).sum::<f64>() / n,
+        censored,
+        cost_quantiles: (0..=QUANTILE_STEPS)
+            .map(|i| q(i as f64 / QUANTILE_STEPS as f64))
+            .collect(),
+    })
+}
+
+/// Refus consécutifs du moteur exact au-delà desquels un essai est interrompu (compté comme censuré).
+/// Assez large pour qu'une monnaie au résultat aléatoire (Perfect Essence, Désécration d'un objet plein)
+/// ait mille fois sa chance de passer.
+const MAX_REFUSED: u32 = 64;
+
+pub(crate) fn one_trial(
+    model: &Model,
+    sol: &Solution,
+    start: ItemState,
+    max_steps: u32,
+    rng: &mut SmallRng,
+) -> (f32, u32, u32, bool) {
+    let fresh = ItemState::new(Rarity::Normal, start.ilvl);
+    let (mut item, mut cost, mut abandons) = (start, 0.0f64, 0u32);
+    // monnaies refusées d'affilée par le moteur exact (voir plus bas)
+    let mut refused = 0u32;
+    for step in 0..max_steps {
+        if model.goal.is_met(&item) {
+            return (cost as f32, step, abandons, false);
+        }
+        let act = match model.project(&item).and_then(|s| sol.id(&s)) {
+            Some(i) if sol.policy[i] != NONE => sol.policy[i] as usize,
+            _ => model
+                .actions
+                .iter()
+                .position(|a| matches!(a.kind, ActionKind::Abandon))
+                .unwrap_or(0),
+        };
+        match &model.actions[act].kind {
+            ActionKind::Abandon => {
+                cost += model.abandon_extra;
+                abandons += 1;
+                item = fresh;
+            }
+            ActionKind::Currency(c) => {
+                // en jeu, une monnaie qui ne s'applique pas n'est pas consommée : rien à payer. Si le plan
+                // la redemande sans fin (plan et moteur exact en désaccord sur cet état), l'essai est
+                // interrompu au lieu de tourner jusqu'à `max_steps`.
+                if model.pool.apply(&mut item, c, rng) == Outcome::NotApplicable {
+                    refused += 1;
+                    if refused >= MAX_REFUSED {
+                        return (cost as f32, step + 1, abandons, true);
+                    }
+                    continue;
+                }
+                refused = 0;
+                cost += model.actions[act].cost;
+            }
+        }
+        // objet « mort » (fracturé sur un mauvais affixe) : abandon immédiat
+        if model.project(&item).is_none() {
+            cost += model.abandon_extra;
+            abandons += 1;
+            item = fresh;
+        }
+    }
+    (cost as f32, max_steps, abandons, true)
+}
