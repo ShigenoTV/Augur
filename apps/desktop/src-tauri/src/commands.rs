@@ -258,3 +258,27 @@ pub fn estimate_price(_item: ParsedItem) -> Result<crate::contracts::PriceEstima
         "L'estimation de prix arrive dans une prochaine version.",
     ))
 }
+
+#[tauri::command]
+pub fn get_forge_prices(
+    prices: State<'_, crate::forge_prices::ForgePrices>,
+) -> poe2_core::forge::prix::TablePrix {
+    prices.get()
+}
+
+#[tauri::command]
+pub fn set_forge_prices(
+    app: AppHandle,
+    prices: State<'_, crate::forge_prices::ForgePrices>,
+    prix: std::collections::BTreeMap<String, f64>,
+) -> Result<poe2_core::forge::prix::TablePrix, AppError> {
+    prices.set(&app, &prix)
+}
+
+#[tauri::command]
+pub fn reset_forge_prices(
+    app: AppHandle,
+    prices: State<'_, crate::forge_prices::ForgePrices>,
+) -> Result<poe2_core::forge::prix::TablePrix, AppError> {
+    prices.reset(&app)
+}

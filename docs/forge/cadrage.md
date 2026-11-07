@@ -61,7 +61,10 @@ source de prix d'objets (même blocage).
    iteration), coût espéré, quantiles P50 / P90, plan de décision, vérification sur le moteur exact ; catalogue des
    18 monnaies (Greater / Perfect compris) et des 6 Omens d'Exaltation, d'Annulment et d'Erasure. Essences,
    Désécration et Liquid Emotions viendront avec leurs données (cible par base, poids des mods désacralisés).
-4. **Prix** : table de prix saisie par le joueur, enregistrée en local ; coût en Exalted.
+4. **Prix** (`forge::prix`, commandes `get_forge_prices` / `set_forge_prices` / `reset_forge_prices`) : table de
+   prix saisie par le joueur, en Exalted, enregistrée dans `forge-prix.json` (dossier de configuration d'Augur).
+   Elle part de valeurs indicatives (relevé de septembre 2026 de poe2-craft-assistant), affichées comme telles ;
+   une saisie invalide est refusée en bloc, un fichier abîmé est réparé au chargement.
 5. **Panneau Forge** dans la fenêtre principale : choix de la base et de l'objectif, plan, coût espéré, P90, sources.
 6. **Overlay** : Ctrl+Alt+C sur l'objet en cours de craft, l'overlay affiche la prochaine étape du plan.
 

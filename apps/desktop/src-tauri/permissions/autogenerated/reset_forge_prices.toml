@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-reset-forge-prices"
+description = "Enables the reset_forge_prices command without any pre-configured scope."
+commands.allow = ["reset_forge_prices"]
+
+[[permission]]
+identifier = "deny-reset-forge-prices"
+description = "Denies the reset_forge_prices command without any pre-configured scope."
+commands.deny = ["reset_forge_prices"]
