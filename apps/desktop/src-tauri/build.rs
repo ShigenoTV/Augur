@@ -31,6 +31,9 @@ fn main() {
             "estimate_price",
             "import_pob_code",
             "clear_character",
+            "get_forge_prices",
+            "set_forge_prices",
+            "reset_forge_prices",
         ]),
     ))
     .expect("échec du build Tauri");

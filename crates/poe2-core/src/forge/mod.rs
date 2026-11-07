@@ -20,6 +20,7 @@ pub mod donnees;
 pub mod monte_carlo;
 pub mod moteur;
 pub mod objectif;
+pub mod prix;
 pub mod solveur;
 
 pub use monte_carlo::*;
