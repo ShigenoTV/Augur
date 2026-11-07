@@ -33,6 +33,12 @@ clippy en édition 2024.
 - Bases sans poids chez poe2db au 05/11 : griffes, dagues, épées et haches à une et deux mains, fléaux, pièges, joyaux,
   charmes, flacons, armures de corps force/dextérité/intelligence. Forge les affiche « non supportées » tant qu'aucune
   source n'existe.
+- Page poe2db d'une base : classe au pluriel (`Rings`, `Quarterstaves` pour les bâtons de guerre…), suivie des
+  attributs pour les armures (`Body_Armours_int`, `Shields_str_dex`). Pas de page pour les armures force /
+  dextérité / intelligence hors armures de corps, ni pour les quelques bases d'armure sans attribut.
+- Limites du pool actuel : pas de mods désacralisés (aucun poids chez poe2db, la Désécration n'est donc pas
+  calculable) ; plafond de la base fixé à 3 préfixes / 3 suffixes (les implicites « +1 Prefix Modifier allowed »
+  ne sont pas encore extraits des tables) ; joyaux non traités (pas de bases de joyaux dans les tables).
 - L'attribution CC BY-NC-SA des poids suit les données partout où elles vont (paquet de données, appli, écran « À
   propos »). Le dépôt reste sans licence.
 
@@ -48,11 +54,11 @@ source de prix d'objets (même blocage).
 
 1. **Moteur exact** (`poe2-core::forge`, Rust pur) : modèle d'objet, monnaies, Omens, Essences, Désécration, objectif,
    Monte-Carlo, avec les tests d'origine. *Cette PR, avec ce cadrage.*
-2. **Pool d'une base** : construire l'`AffixPool` d'une base à un niveau d'objet à partir des tables RePoE et des
-   poids poe2db (source de chaque poids, mods indisponibles), catalogue des monnaies, Omens et Essences ; tests
-   croisés avec `craft_proba.py`.
-3. **Solveur** : reverse-crafting (MDP, policy iteration), coût espéré, quantiles P50 / P90, plan de décision,
-   vérification sur le moteur exact.
+2. **Pool d'une base** (`forge::donnees`) : construire l'`AffixPool` d'une base à un niveau d'objet à partir des
+   tables RePoE et des poids poe2db, mods sans poids listés à part ; distribution exacte du prochain mod ; tests
+   croisés avec `craft_proba.py` sur trois vraies bases (`tools/theorycraft/fixture_forge.py`).
+3. **Solveur** : catalogue des monnaies, Omens et Essences, reverse-crafting (MDP, policy iteration), coût espéré,
+   quantiles P50 / P90, plan de décision, vérification sur le moteur exact.
 4. **Prix** : table de prix saisie par le joueur, enregistrée en local ; coût en Exalted.
 5. **Panneau Forge** dans la fenêtre principale : choix de la base et de l'objectif, plan, coût espéré, P90, sources.
 6. **Overlay** : Ctrl+Alt+C sur l'objet en cours de craft, l'overlay affiche la prochaine étape du plan.

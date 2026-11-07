@@ -1,0 +1,7770 @@
+{
+ "base": {
+  "classe": "Body Armour",
+  "exigences": {
+   "dexterite": 0,
+   "force": 0,
+   "intelligence": 121,
+   "niveau": 65
+  },
+  "id": "Metadata/Items/Armours/BodyArmours/FourBodyInt3Endgame",
+  "implicites": [],
+  "niveau_drop": 65,
+  "nom": "Vile Robe",
+  "tags": [
+   "int_armour",
+   "body_armour",
+   "armour",
+   "default"
+  ]
+ },
+ "cas": [
+  {
+   "attendu": {
+    "AttackerTakesDamage1": 0.008438818565400843,
+    "AttackerTakesDamage2": 0.008438818565400843,
+    "AttackerTakesDamage3": 0.008438818565400843,
+    "AttackerTakesDamage4": 0.008438818565400843,
+    "AttackerTakesDamage5": 0.008438818565400843,
+    "AttackerTakesDamage6": 0.008438818565400843,
+    "AttackerTakesDamage7": 0.008438818565400843,
+    "ChaosResist1": 0.002109704641350211,
+    "ChaosResist2": 0.002109704641350211,
+    "ChaosResist3": 0.002109704641350211,
+    "ChaosResist4": 0.002109704641350211,
+    "ChaosResist5": 0.002109704641350211,
+    "ChaosResist6": 0.002109704641350211,
+    "ColdResist1": 0.008438818565400843,
+    "ColdResist2": 0.008438818565400843,
+    "ColdResist3": 0.008438818565400843,
+    "ColdResist4": 0.008438818565400843,
+    "ColdResist5": 0.008438818565400843,
+    "ColdResist6": 0.008438818565400843,
+    "ColdResist7": 0.008438818565400843,
+    "ColdResist8": 0.008438818565400843,
+    "FireResist1": 0.008438818565400843,
+    "FireResist2": 0.008438818565400843,
+    "FireResist3": 0.008438818565400843,
+    "FireResist4": 0.008438818565400843,
+    "FireResist5": 0.008438818565400843,
+    "FireResist6": 0.008438818565400843,
+    "FireResist7": 0.008438818565400843,
+    "FireResist8": 0.008438818565400843,
+    "IncreasedLife1": 0.008438818565400843,
+    "IncreasedLife10": 0.008438818565400843,
+    "IncreasedLife11": 0.008438818565400843,
+    "IncreasedLife12": 0.008438818565400843,
+    "IncreasedLife13": 0.008438818565400843,
+    "IncreasedLife2": 0.008438818565400843,
+    "IncreasedLife3": 0.008438818565400843,
+    "IncreasedLife4": 0.008438818565400843,
+    "IncreasedLife5": 0.008438818565400843,
+    "IncreasedLife6": 0.008438818565400843,
+    "IncreasedLife7": 0.008438818565400843,
+    "IncreasedLife8": 0.008438818565400843,
+    "IncreasedLife9": 0.008438818565400843,
+    "IncreasedSpirit1": 0.004219409282700422,
+    "IncreasedSpirit2": 0.004219409282700422,
+    "IncreasedSpirit3": 0.004219409282700422,
+    "IncreasedSpirit4": 0.004219409282700422,
+    "IncreasedSpirit5": 0.0033755274261603376,
+    "IncreasedSpirit6": 0.002531645569620253,
+    "IncreasedSpirit7": 0.0016877637130801688,
+    "IncreasedSpirit8": 0.0008438818565400844,
+    "Intelligence1": 0.008438818565400843,
+    "Intelligence2": 0.008438818565400843,
+    "Intelligence3": 0.008438818565400843,
+    "Intelligence4": 0.008438818565400843,
+    "Intelligence5": 0.008438818565400843,
+    "Intelligence6": 0.008438818565400843,
+    "Intelligence7": 0.008438818565400843,
+    "Intelligence8": 0.008438818565400843,
+    "LifeRegeneration1": 0.008438818565400843,
+    "LifeRegeneration10__": 0.008438818565400843,
+    "LifeRegeneration11____": 0.008438818565400843,
+    "LifeRegeneration2": 0.008438818565400843,
+    "LifeRegeneration3": 0.008438818565400843,
+    "LifeRegeneration4": 0.008438818565400843,
+    "LifeRegeneration5": 0.008438818565400843,
+    "LifeRegeneration6": 0.008438818565400843,
+    "LifeRegeneration7": 0.008438818565400843,
+    "LifeRegeneration8_": 0.008438818565400843,
+    "LifeRegeneration9": 0.008438818565400843,
+    "LightningResist1": 0.008438818565400843,
+    "LightningResist2": 0.008438818565400843,
+    "LightningResist3": 0.008438818565400843,
+    "LightningResist4": 0.008438818565400843,
+    "LightningResist5": 0.008438818565400843,
+    "LightningResist6": 0.008438818565400843,
+    "LightningResist7": 0.008438818565400843,
+    "LightningResist8": 0.008438818565400843,
+    "LocalIncreasedEnergyShield1": 0.008438818565400843,
+    "LocalIncreasedEnergyShield10": 0.008438818565400843,
+    "LocalIncreasedEnergyShield11": 0.008438818565400843,
+    "LocalIncreasedEnergyShield2": 0.008438818565400843,
+    "LocalIncreasedEnergyShield3": 0.008438818565400843,
+    "LocalIncreasedEnergyShield4": 0.008438818565400843,
+    "LocalIncreasedEnergyShield5": 0.008438818565400843,
+    "LocalIncreasedEnergyShield6": 0.008438818565400843,
+    "LocalIncreasedEnergyShield7": 0.008438818565400843,
+    "LocalIncreasedEnergyShield8": 0.008438818565400843,
+    "LocalIncreasedEnergyShield9": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldAndBase1": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldAndBase2": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldAndBase3": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldAndBase4": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldAndBase5": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldAndBase6": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldAndLife1": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldAndLife2": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldAndLife3": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldAndLife4": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldAndLife5": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldAndLife6": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldPercent1": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldPercent2": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldPercent3": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldPercent4": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldPercent5": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldPercent6": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldPercent7_": 0.008438818565400843,
+    "LocalIncreasedEnergyShieldPercent8": 0.008438818565400843,
+    "ReducedBleedDuration1": 0.004219409282700422,
+    "ReducedBleedDuration2": 0.004219409282700422,
+    "ReducedBleedDuration3": 0.004219409282700422,
+    "ReducedBleedDuration4": 0.004219409282700422,
+    "ReducedBleedDuration5": 0.004219409282700422,
+    "ReducedBurnDuration1": 0.004219409282700422,
+    "ReducedBurnDuration2": 0.004219409282700422,
+    "ReducedBurnDuration3": 0.004219409282700422,
+    "ReducedBurnDuration4": 0.004219409282700422,
+    "ReducedBurnDuration5": 0.004219409282700422,
+    "ReducedLocalAttributeRequirements1": 0.007594936708860759,
+    "ReducedLocalAttributeRequirements2": 0.007594936708860759,
+    "ReducedLocalAttributeRequirements3": 0.007594936708860759,
+    "ReducedLocalAttributeRequirements4": 0.007594936708860759,
+    "ReducedLocalAttributeRequirements5": 0.007594936708860759,
+    "ReducedPoisonDuration1": 0.004219409282700422,
+    "ReducedPoisonDuration2": 0.004219409282700422,
+    "ReducedPoisonDuration3": 0.004219409282700422,
+    "ReducedPoisonDuration4": 0.004219409282700422,
+    "ReducedPoisonDuration5": 0.004219409282700422,
+    "StunThreshold1": 0.006751054852320675,
+    "StunThreshold10": 0.006751054852320675,
+    "StunThreshold2": 0.006751054852320675,
+    "StunThreshold3": 0.006751054852320675,
+    "StunThreshold4": 0.006751054852320675,
+    "StunThreshold5": 0.006751054852320675,
+    "StunThreshold6": 0.006751054852320675,
+    "StunThreshold7": 0.006751054852320675,
+    "StunThreshold8": 0.006751054852320675,
+    "StunThreshold9": 0.006751054852320675
+   },
+   "presents": []
+  },
+  {
+   "attendu": {
+    "ColdResist1": 0.00909090909090909,
+    "ColdResist2": 0.00909090909090909,
+    "ColdResist3": 0.00909090909090909,
+    "ColdResist4": 0.00909090909090909,
+    "ColdResist5": 0.00909090909090909,
+    "ColdResist6": 0.00909090909090909,
+    "ColdResist7": 0.00909090909090909,
+    "ColdResist8": 0.00909090909090909,
+    "FireResist1": 0.00909090909090909,
+    "FireResist2": 0.00909090909090909,
+    "FireResist3": 0.00909090909090909,
+    "FireResist4": 0.00909090909090909,
+    "FireResist5": 0.00909090909090909,
+    "FireResist6": 0.00909090909090909,
+    "FireResist7": 0.00909090909090909,
+    "FireResist8": 0.00909090909090909,
+    "IncreasedLife1": 0.00909090909090909,
+    "IncreasedLife10": 0.00909090909090909,
+    "IncreasedLife11": 0.00909090909090909,
+    "IncreasedLife12": 0.00909090909090909,
+    "IncreasedLife13": 0.00909090909090909,
+    "IncreasedLife2": 0.00909090909090909,
+    "IncreasedLife3": 0.00909090909090909,
+    "IncreasedLife4": 0.00909090909090909,
+    "IncreasedLife5": 0.00909090909090909,
+    "IncreasedLife6": 0.00909090909090909,
+    "IncreasedLife7": 0.00909090909090909,
+    "IncreasedLife8": 0.00909090909090909,
+    "IncreasedLife9": 0.00909090909090909,
+    "IncreasedSpirit1": 0.004545454545454545,
+    "IncreasedSpirit2": 0.004545454545454545,
+    "IncreasedSpirit3": 0.004545454545454545,
+    "IncreasedSpirit4": 0.004545454545454545,
+    "IncreasedSpirit5": 0.0036363636363636364,
+    "IncreasedSpirit6": 0.0027272727272727275,
+    "IncreasedSpirit7": 0.0018181818181818182,
+    "IncreasedSpirit8": 0.0009090909090909091,
+    "Intelligence1": 0.00909090909090909,
+    "Intelligence2": 0.00909090909090909,
+    "Intelligence3": 0.00909090909090909,
+    "Intelligence4": 0.00909090909090909,
+    "Intelligence5": 0.00909090909090909,
+    "Intelligence6": 0.00909090909090909,
+    "Intelligence7": 0.00909090909090909,
+    "Intelligence8": 0.00909090909090909,
+    "LifeRegeneration1": 0.00909090909090909,
+    "LifeRegeneration10__": 0.00909090909090909,
+    "LifeRegeneration11____": 0.00909090909090909,
+    "LifeRegeneration2": 0.00909090909090909,
+    "LifeRegeneration3": 0.00909090909090909,
+    "LifeRegeneration4": 0.00909090909090909,
+    "LifeRegeneration5": 0.00909090909090909,
+    "LifeRegeneration6": 0.00909090909090909,
+    "LifeRegeneration7": 0.00909090909090909,
+    "LifeRegeneration8_": 0.00909090909090909,
+    "LifeRegeneration9": 0.00909090909090909,
+    "LightningResist1": 0.00909090909090909,
+    "LightningResist2": 0.00909090909090909,
+    "LightningResist3": 0.00909090909090909,
+    "LightningResist4": 0.00909090909090909,
+    "LightningResist5": 0.00909090909090909,
+    "LightningResist6": 0.00909090909090909,
+    "LightningResist7": 0.00909090909090909,
+    "LightningResist8": 0.00909090909090909,
+    "LocalIncreasedEnergyShield1": 0.00909090909090909,
+    "LocalIncreasedEnergyShield10": 0.00909090909090909,
+    "LocalIncreasedEnergyShield11": 0.00909090909090909,
+    "LocalIncreasedEnergyShield2": 0.00909090909090909,
+    "LocalIncreasedEnergyShield3": 0.00909090909090909,
+    "LocalIncreasedEnergyShield4": 0.00909090909090909,
+    "LocalIncreasedEnergyShield5": 0.00909090909090909,
+    "LocalIncreasedEnergyShield6": 0.00909090909090909,
+    "LocalIncreasedEnergyShield7": 0.00909090909090909,
+    "LocalIncreasedEnergyShield8": 0.00909090909090909,
+    "LocalIncreasedEnergyShield9": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldAndBase1": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldAndBase2": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldAndBase3": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldAndBase4": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldAndBase5": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldAndBase6": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldAndLife1": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldAndLife2": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldAndLife3": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldAndLife4": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldAndLife5": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldAndLife6": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldPercent1": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldPercent2": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldPercent3": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldPercent4": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldPercent5": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldPercent6": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldPercent7_": 0.00909090909090909,
+    "LocalIncreasedEnergyShieldPercent8": 0.00909090909090909,
+    "ReducedBleedDuration1": 0.004545454545454545,
+    "ReducedBleedDuration2": 0.004545454545454545,
+    "ReducedBleedDuration3": 0.004545454545454545,
+    "ReducedBleedDuration4": 0.004545454545454545,
+    "ReducedBleedDuration5": 0.004545454545454545,
+    "ReducedBurnDuration1": 0.004545454545454545,
+    "ReducedBurnDuration2": 0.004545454545454545,
+    "ReducedBurnDuration3": 0.004545454545454545,
+    "ReducedBurnDuration4": 0.004545454545454545,
+    "ReducedBurnDuration5": 0.004545454545454545,
+    "ReducedLocalAttributeRequirements1": 0.008181818181818182,
+    "ReducedLocalAttributeRequirements2": 0.008181818181818182,
+    "ReducedLocalAttributeRequirements3": 0.008181818181818182,
+    "ReducedLocalAttributeRequirements4": 0.008181818181818182,
+    "ReducedLocalAttributeRequirements5": 0.008181818181818182,
+    "ReducedPoisonDuration1": 0.004545454545454545,
+    "ReducedPoisonDuration2": 0.004545454545454545,
+    "ReducedPoisonDuration3": 0.004545454545454545,
+    "ReducedPoisonDuration4": 0.004545454545454545,
+    "ReducedPoisonDuration5": 0.004545454545454545,
+    "StunThreshold1": 0.007272727272727273,
+    "StunThreshold10": 0.007272727272727273,
+    "StunThreshold2": 0.007272727272727273,
+    "StunThreshold3": 0.007272727272727273,
+    "StunThreshold4": 0.007272727272727273,
+    "StunThreshold5": 0.007272727272727273,
+    "StunThreshold6": 0.007272727272727273,
+    "StunThreshold7": 0.007272727272727273,
+    "StunThreshold8": 0.007272727272727273,
+    "StunThreshold9": 0.007272727272727273
+   },
+   "presents": [
+    "AttackerTakesDamage1",
+    "ChaosResist1"
+   ]
+  },
+  {
+   "attendu": {
+    "ChaosResist1": 0.003875968992248062,
+    "ChaosResist2": 0.003875968992248062,
+    "ChaosResist3": 0.003875968992248062,
+    "ChaosResist4": 0.003875968992248062,
+    "ChaosResist5": 0.003875968992248062,
+    "ChaosResist6": 0.003875968992248062,
+    "ColdResist1": 0.015503875968992248,
+    "ColdResist2": 0.015503875968992248,
+    "ColdResist3": 0.015503875968992248,
+    "ColdResist4": 0.015503875968992248,
+    "ColdResist5": 0.015503875968992248,
+    "ColdResist6": 0.015503875968992248,
+    "ColdResist7": 0.015503875968992248,
+    "ColdResist8": 0.015503875968992248,
+    "FireResist1": 0.015503875968992248,
+    "FireResist2": 0.015503875968992248,
+    "FireResist3": 0.015503875968992248,
+    "FireResist4": 0.015503875968992248,
+    "FireResist5": 0.015503875968992248,
+    "FireResist6": 0.015503875968992248,
+    "FireResist7": 0.015503875968992248,
+    "FireResist8": 0.015503875968992248,
+    "Intelligence1": 0.015503875968992248,
+    "Intelligence2": 0.015503875968992248,
+    "Intelligence3": 0.015503875968992248,
+    "Intelligence4": 0.015503875968992248,
+    "Intelligence5": 0.015503875968992248,
+    "Intelligence6": 0.015503875968992248,
+    "Intelligence7": 0.015503875968992248,
+    "Intelligence8": 0.015503875968992248,
+    "LifeRegeneration1": 0.015503875968992248,
+    "LifeRegeneration10__": 0.015503875968992248,
+    "LifeRegeneration11____": 0.015503875968992248,
+    "LifeRegeneration2": 0.015503875968992248,
+    "LifeRegeneration3": 0.015503875968992248,
+    "LifeRegeneration4": 0.015503875968992248,
+    "LifeRegeneration5": 0.015503875968992248,
+    "LifeRegeneration6": 0.015503875968992248,
+    "LifeRegeneration7": 0.015503875968992248,
+    "LifeRegeneration8_": 0.015503875968992248,
+    "LifeRegeneration9": 0.015503875968992248,
+    "LightningResist1": 0.015503875968992248,
+    "LightningResist2": 0.015503875968992248,
+    "LightningResist3": 0.015503875968992248,
+    "LightningResist4": 0.015503875968992248,
+    "LightningResist5": 0.015503875968992248,
+    "LightningResist6": 0.015503875968992248,
+    "LightningResist7": 0.015503875968992248,
+    "LightningResist8": 0.015503875968992248,
+    "ReducedBleedDuration1": 0.007751937984496124,
+    "ReducedBleedDuration2": 0.007751937984496124,
+    "ReducedBleedDuration3": 0.007751937984496124,
+    "ReducedBleedDuration4": 0.007751937984496124,
+    "ReducedBleedDuration5": 0.007751937984496124,
+    "ReducedBurnDuration1": 0.007751937984496124,
+    "ReducedBurnDuration2": 0.007751937984496124,
+    "ReducedBurnDuration3": 0.007751937984496124,
+    "ReducedBurnDuration4": 0.007751937984496124,
+    "ReducedBurnDuration5": 0.007751937984496124,
+    "ReducedLocalAttributeRequirements1": 0.013953488372093023,
+    "ReducedLocalAttributeRequirements2": 0.013953488372093023,
+    "ReducedLocalAttributeRequirements3": 0.013953488372093023,
+    "ReducedLocalAttributeRequirements4": 0.013953488372093023,
+    "ReducedLocalAttributeRequirements5": 0.013953488372093023,
+    "ReducedPoisonDuration1": 0.007751937984496124,
+    "ReducedPoisonDuration2": 0.007751937984496124,
+    "ReducedPoisonDuration3": 0.007751937984496124,
+    "ReducedPoisonDuration4": 0.007751937984496124,
+    "ReducedPoisonDuration5": 0.007751937984496124,
+    "StunThreshold1": 0.012403100775193798,
+    "StunThreshold10": 0.012403100775193798,
+    "StunThreshold2": 0.012403100775193798,
+    "StunThreshold3": 0.012403100775193798,
+    "StunThreshold4": 0.012403100775193798,
+    "StunThreshold5": 0.012403100775193798,
+    "StunThreshold6": 0.012403100775193798,
+    "StunThreshold7": 0.012403100775193798,
+    "StunThreshold8": 0.012403100775193798,
+    "StunThreshold9": 0.012403100775193798
+   },
+   "presents": [
+    "AttackerTakesDamage1",
+    "IncreasedLife1",
+    "IncreasedSpirit1"
+   ]
+  }
+ ],
+ "ilvl": 82,
+ "mods": {
+  "mods": [
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Thorns",
+    "groupes": [
+     "Thorns"
+    ],
+    "id": "AttackerTakesDamage1",
+    "niveau": 1,
+    "nom": "Thorny",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "thorns_minimum_base_physical_damage",
+      "max": 2,
+      "min": 1
+     },
+     {
+      "id": "thorns_maximum_base_physical_damage",
+      "max": 4,
+      "min": 3
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical"
+    ],
+    "texte": "(1-2) to (3-4) Physical Thorns damage",
+    "tirable": true,
+    "type": "ThornsPhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Thorns",
+    "groupes": [
+     "Thorns"
+    ],
+    "id": "AttackerTakesDamage2",
+    "niveau": 10,
+    "nom": "Spiny",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "thorns_minimum_base_physical_damage",
+      "max": 7,
+      "min": 5
+     },
+     {
+      "id": "thorns_maximum_base_physical_damage",
+      "max": 10,
+      "min": 7
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical"
+    ],
+    "texte": "(5-7) to (7-10) Physical Thorns damage",
+    "tirable": true,
+    "type": "ThornsPhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Thorns",
+    "groupes": [
+     "Thorns"
+    ],
+    "id": "AttackerTakesDamage3",
+    "niveau": 19,
+    "nom": "Barbed",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "thorns_minimum_base_physical_damage",
+      "max": 16,
+      "min": 11
+     },
+     {
+      "id": "thorns_maximum_base_physical_damage",
+      "max": 23,
+      "min": 17
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical"
+    ],
+    "texte": "(11-16) to (17-23) Physical Thorns damage",
+    "tirable": true,
+    "type": "ThornsPhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Thorns",
+    "groupes": [
+     "Thorns"
+    ],
+    "id": "AttackerTakesDamage4",
+    "niveau": 38,
+    "nom": "Pointed",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "thorns_minimum_base_physical_damage",
+      "max": 35,
+      "min": 24
+     },
+     {
+      "id": "thorns_maximum_base_physical_damage",
+      "max": 53,
+      "min": 36
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical"
+    ],
+    "texte": "(24-35) to (36-53) Physical Thorns damage",
+    "tirable": true,
+    "type": "ThornsPhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Thorns",
+    "groupes": [
+     "Thorns"
+    ],
+    "id": "AttackerTakesDamage5",
+    "niveau": 48,
+    "nom": "Spiked",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "thorns_minimum_base_physical_damage",
+      "max": 60,
+      "min": 40
+     },
+     {
+      "id": "thorns_maximum_base_physical_damage",
+      "max": 92,
+      "min": 61
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical"
+    ],
+    "texte": "(40-60) to (61-92) Physical Thorns damage",
+    "tirable": true,
+    "type": "ThornsPhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Thorns",
+    "groupes": [
+     "Thorns"
+    ],
+    "id": "AttackerTakesDamage6",
+    "niveau": 63,
+    "nom": "Edged",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "thorns_minimum_base_physical_damage",
+      "max": 97,
+      "min": 64
+     },
+     {
+      "id": "thorns_maximum_base_physical_damage",
+      "max": 145,
+      "min": 98
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical"
+    ],
+    "texte": "(64-97) to (98-145) Physical Thorns damage",
+    "tirable": true,
+    "type": "ThornsPhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Thorns",
+    "groupes": [
+     "Thorns"
+    ],
+    "id": "AttackerTakesDamage7",
+    "niveau": 74,
+    "nom": "Jagged",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "thorns_minimum_base_physical_damage",
+      "max": 151,
+      "min": 101
+     },
+     {
+      "id": "thorns_maximum_base_physical_damage",
+      "max": 220,
+      "min": 152
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical"
+    ],
+    "texte": "(101-151) to (152-220) Physical Thorns damage",
+    "tirable": true,
+    "type": "ThornsPhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ChaosResistance",
+    "groupes": [
+     "ChaosResistance"
+    ],
+    "id": "ChaosResist1",
+    "niveau": 16,
+    "nom": "of the Lost",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_chaos_damage_resistance_%",
+      "max": 7,
+      "min": 4
+     }
+    ],
+    "tags": [
+     "chaos_resistance",
+     "chaos",
+     "resistance"
+    ],
+    "texte": "+(4-7)% to Chaos Resistance",
+    "tirable": true,
+    "type": "ChaosResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ChaosResistance",
+    "groupes": [
+     "ChaosResistance"
+    ],
+    "id": "ChaosResist2",
+    "niveau": 30,
+    "nom": "of Banishment",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_chaos_damage_resistance_%",
+      "max": 11,
+      "min": 8
+     }
+    ],
+    "tags": [
+     "chaos_resistance",
+     "chaos",
+     "resistance"
+    ],
+    "texte": "+(8-11)% to Chaos Resistance",
+    "tirable": true,
+    "type": "ChaosResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ChaosResistance",
+    "groupes": [
+     "ChaosResistance"
+    ],
+    "id": "ChaosResist3",
+    "niveau": 44,
+    "nom": "of Eviction",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_chaos_damage_resistance_%",
+      "max": 15,
+      "min": 12
+     }
+    ],
+    "tags": [
+     "chaos_resistance",
+     "chaos",
+     "resistance"
+    ],
+    "texte": "+(12-15)% to Chaos Resistance",
+    "tirable": true,
+    "type": "ChaosResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ChaosResistance",
+    "groupes": [
+     "ChaosResistance"
+    ],
+    "id": "ChaosResist4",
+    "niveau": 56,
+    "nom": "of Expulsion",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_chaos_damage_resistance_%",
+      "max": 19,
+      "min": 16
+     }
+    ],
+    "tags": [
+     "chaos_resistance",
+     "chaos",
+     "resistance"
+    ],
+    "texte": "+(16-19)% to Chaos Resistance",
+    "tirable": true,
+    "type": "ChaosResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ChaosResistance",
+    "groupes": [
+     "ChaosResistance"
+    ],
+    "id": "ChaosResist5",
+    "niveau": 68,
+    "nom": "of Exile",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_chaos_damage_resistance_%",
+      "max": 23,
+      "min": 20
+     }
+    ],
+    "tags": [
+     "chaos_resistance",
+     "chaos",
+     "resistance"
+    ],
+    "texte": "+(20-23)% to Chaos Resistance",
+    "tirable": true,
+    "type": "ChaosResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ChaosResistance",
+    "groupes": [
+     "ChaosResistance"
+    ],
+    "id": "ChaosResist6",
+    "niveau": 81,
+    "nom": "of Bameth",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_chaos_damage_resistance_%",
+      "max": 27,
+      "min": 24
+     }
+    ],
+    "tags": [
+     "chaos_resistance",
+     "chaos",
+     "resistance"
+    ],
+    "texte": "+(24-27)% to Chaos Resistance",
+    "tirable": true,
+    "type": "ChaosResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist1",
+    "niveau": 1,
+    "nom": "of the Seal",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 10,
+      "min": 6
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(6-10)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist2",
+    "niveau": 14,
+    "nom": "of the Penguin",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 15,
+      "min": 11
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(11-15)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist3",
+    "niveau": 26,
+    "nom": "of the Narwhal",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 20,
+      "min": 16
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(16-20)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist4",
+    "niveau": 38,
+    "nom": "of the Yeti",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 25,
+      "min": 21
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(21-25)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist5",
+    "niveau": 50,
+    "nom": "of the Walrus",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 30,
+      "min": 26
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(26-30)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist6",
+    "niveau": 60,
+    "nom": "of the Polar Bear",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 35,
+      "min": 31
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(31-35)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist7",
+    "niveau": 71,
+    "nom": "of the Ice",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 40,
+      "min": 36
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(36-40)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist8",
+    "niveau": 82,
+    "nom": "of Haast",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 45,
+      "min": 41
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(41-45)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "EnergyShieldRegeneration",
+    "groupes": [
+     "EnergyShieldRegeneration"
+    ],
+    "id": "EnergyShieldRechargeRate4",
+    "niveau": 48,
+    "nom": "of Buffering",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "energy_shield_recharge_rate_+%",
+      "max": 19,
+      "min": 16
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(16-19)% increased Energy Shield Recharge Rate",
+    "tirable": true,
+    "type": "EnergyShieldRegeneration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "EnergyShieldRegeneration",
+    "groupes": [
+     "EnergyShieldRegeneration"
+    ],
+    "id": "EnergyShieldRechargeRate5______",
+    "niveau": 66,
+    "nom": "of Ardour",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "helmet",
+      "weight": 0
+     },
+     {
+      "tag": "gloves",
+      "weight": 0
+     },
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "energy_shield_recharge_rate_+%",
+      "max": 23,
+      "min": 20
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(20-23)% increased Energy Shield Recharge Rate",
+    "tirable": true,
+    "type": "EnergyShieldRegeneration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "EnergyShieldRegeneration",
+    "groupes": [
+     "EnergyShieldRegeneration"
+    ],
+    "id": "EnergyShieldRechargeRate6",
+    "niveau": 81,
+    "nom": "of Suffusion",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "helmet",
+      "weight": 0
+     },
+     {
+      "tag": "gloves",
+      "weight": 0
+     },
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "energy_shield_recharge_rate_+%",
+      "max": 27,
+      "min": 24
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(24-27)% increased Energy Shield Recharge Rate",
+    "tirable": true,
+    "type": "EnergyShieldRegeneration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist1",
+    "niveau": 1,
+    "nom": "of the Whelpling",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 10,
+      "min": 6
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(6-10)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist2",
+    "niveau": 12,
+    "nom": "of the Salamander",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 15,
+      "min": 11
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(11-15)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist3",
+    "niveau": 24,
+    "nom": "of the Drake",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 20,
+      "min": 16
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(16-20)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist4",
+    "niveau": 36,
+    "nom": "of the Kiln",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 25,
+      "min": 21
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(21-25)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist5",
+    "niveau": 48,
+    "nom": "of the Furnace",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 30,
+      "min": 26
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(26-30)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist6",
+    "niveau": 60,
+    "nom": "of the Volcano",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 35,
+      "min": 31
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(31-35)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist7",
+    "niveau": 71,
+    "nom": "of Magma",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 40,
+      "min": 36
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(36-40)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist8",
+    "niveau": 82,
+    "nom": "of Tzteosh",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 45,
+      "min": 41
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(41-45)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife1",
+    "niveau": 1,
+    "nom": "Hale",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 19,
+      "min": 10
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(10-19) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife10",
+    "niveau": 65,
+    "nom": "Fecund",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 174,
+      "min": 150
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(150-174) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife11",
+    "niveau": 70,
+    "nom": "Vigorous",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 189,
+      "min": 175
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(175-189) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife12",
+    "niveau": 75,
+    "nom": "Rapturous",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 199,
+      "min": 190
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(190-199) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife13",
+    "niveau": 80,
+    "nom": "Prime",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 214,
+      "min": 200
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(200-214) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife2",
+    "niveau": 6,
+    "nom": "Healthy",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 29,
+      "min": 20
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(20-29) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife3",
+    "niveau": 16,
+    "nom": "Sanguine",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 39,
+      "min": 30
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(30-39) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife4",
+    "niveau": 24,
+    "nom": "Stalwart",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 59,
+      "min": 40
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(40-59) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife5",
+    "niveau": 33,
+    "nom": "Stout",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 69,
+      "min": 60
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(60-69) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife6",
+    "niveau": 38,
+    "nom": "Robust",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 84,
+      "min": 70
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(70-84) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife7",
+    "niveau": 46,
+    "nom": "Rotund",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 99,
+      "min": 85
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(85-99) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife8",
+    "niveau": 54,
+    "nom": "Virile",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 119,
+      "min": 100
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(100-119) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife9",
+    "niveau": 60,
+    "nom": "Athlete's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 149,
+      "min": 120
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(120-149) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseSpirit",
+    "groupes": [
+     "BaseSpirit"
+    ],
+    "id": "IncreasedSpirit1",
+    "niveau": 16,
+    "nom": "Lady's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_spirit_from_equipment",
+      "max": 33,
+      "min": 30
+     }
+    ],
+    "tags": [],
+    "texte": "+(30-33) to Spirit",
+    "tirable": true,
+    "type": "BaseSpirit"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseSpirit",
+    "groupes": [
+     "BaseSpirit"
+    ],
+    "id": "IncreasedSpirit2",
+    "niveau": 25,
+    "nom": "Baronness'",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_spirit_from_equipment",
+      "max": 37,
+      "min": 34
+     }
+    ],
+    "tags": [],
+    "texte": "+(34-37) to Spirit",
+    "tirable": true,
+    "type": "BaseSpirit"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseSpirit",
+    "groupes": [
+     "BaseSpirit"
+    ],
+    "id": "IncreasedSpirit3",
+    "niveau": 33,
+    "nom": "Viscountess'",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_spirit_from_equipment",
+      "max": 42,
+      "min": 38
+     }
+    ],
+    "tags": [],
+    "texte": "+(38-42) to Spirit",
+    "tirable": true,
+    "type": "BaseSpirit"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseSpirit",
+    "groupes": [
+     "BaseSpirit"
+    ],
+    "id": "IncreasedSpirit4",
+    "niveau": 46,
+    "nom": "Marchioness'",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_spirit_from_equipment",
+      "max": 46,
+      "min": 43
+     }
+    ],
+    "tags": [],
+    "texte": "+(43-46) to Spirit",
+    "tirable": true,
+    "type": "BaseSpirit"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseSpirit",
+    "groupes": [
+     "BaseSpirit"
+    ],
+    "id": "IncreasedSpirit5",
+    "niveau": 54,
+    "nom": "Countess'",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_spirit_from_equipment",
+      "max": 50,
+      "min": 47
+     }
+    ],
+    "tags": [],
+    "texte": "+(47-50) to Spirit",
+    "tirable": true,
+    "type": "BaseSpirit"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseSpirit",
+    "groupes": [
+     "BaseSpirit"
+    ],
+    "id": "IncreasedSpirit6",
+    "niveau": 60,
+    "nom": "Duchess'",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_spirit_from_equipment",
+      "max": 53,
+      "min": 51
+     }
+    ],
+    "tags": [],
+    "texte": "+(51-53) to Spirit",
+    "tirable": true,
+    "type": "BaseSpirit"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseSpirit",
+    "groupes": [
+     "BaseSpirit"
+    ],
+    "id": "IncreasedSpirit7",
+    "niveau": 65,
+    "nom": "Princess'",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_spirit_from_equipment",
+      "max": 56,
+      "min": 54
+     }
+    ],
+    "tags": [],
+    "texte": "+(54-56) to Spirit",
+    "tirable": true,
+    "type": "BaseSpirit"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseSpirit",
+    "groupes": [
+     "BaseSpirit"
+    ],
+    "id": "IncreasedSpirit8",
+    "niveau": 78,
+    "nom": "Queen's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_spirit_from_equipment",
+      "max": 61,
+      "min": 57
+     }
+    ],
+    "tags": [],
+    "texte": "+(57-61) to Spirit",
+    "tirable": true,
+    "type": "BaseSpirit"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Intelligence",
+    "groupes": [
+     "Intelligence"
+    ],
+    "id": "Intelligence1",
+    "niveau": 1,
+    "nom": "of the Pupil",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "flail",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "talisman",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_intelligence",
+      "max": 8,
+      "min": 5
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(5-8) to Intelligence",
+    "tirable": true,
+    "type": "Intelligence"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Intelligence",
+    "groupes": [
+     "Intelligence"
+    ],
+    "id": "Intelligence2",
+    "niveau": 11,
+    "nom": "of the Student",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "flail",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "talisman",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_intelligence",
+      "max": 12,
+      "min": 9
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(9-12) to Intelligence",
+    "tirable": true,
+    "type": "Intelligence"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Intelligence",
+    "groupes": [
+     "Intelligence"
+    ],
+    "id": "Intelligence3",
+    "niveau": 22,
+    "nom": "of the Prodigy",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "flail",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "talisman",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_intelligence",
+      "max": 16,
+      "min": 13
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(13-16) to Intelligence",
+    "tirable": true,
+    "type": "Intelligence"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Intelligence",
+    "groupes": [
+     "Intelligence"
+    ],
+    "id": "Intelligence4",
+    "niveau": 33,
+    "nom": "of the Augur",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "flail",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "talisman",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_intelligence",
+      "max": 20,
+      "min": 17
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(17-20) to Intelligence",
+    "tirable": true,
+    "type": "Intelligence"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Intelligence",
+    "groupes": [
+     "Intelligence"
+    ],
+    "id": "Intelligence5",
+    "niveau": 44,
+    "nom": "of the Philosopher",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "flail",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "talisman",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_intelligence",
+      "max": 24,
+      "min": 21
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(21-24) to Intelligence",
+    "tirable": true,
+    "type": "Intelligence"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Intelligence",
+    "groupes": [
+     "Intelligence"
+    ],
+    "id": "Intelligence6",
+    "niveau": 55,
+    "nom": "of the Sage",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "flail",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "talisman",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_intelligence",
+      "max": 27,
+      "min": 25
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(25-27) to Intelligence",
+    "tirable": true,
+    "type": "Intelligence"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Intelligence",
+    "groupes": [
+     "Intelligence"
+    ],
+    "id": "Intelligence7",
+    "niveau": 66,
+    "nom": "of the Savant",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "flail",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "talisman",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_intelligence",
+      "max": 30,
+      "min": 28
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(28-30) to Intelligence",
+    "tirable": true,
+    "type": "Intelligence"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Intelligence",
+    "groupes": [
+     "Intelligence"
+    ],
+    "id": "Intelligence8",
+    "niveau": 74,
+    "nom": "of the Virtuoso",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "flail",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "talisman",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_intelligence",
+      "max": 33,
+      "min": 31
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(31-33) to Intelligence",
+    "tirable": true,
+    "type": "Intelligence"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeRegeneration",
+    "groupes": [
+     "LifeRegeneration"
+    ],
+    "id": "LifeRegeneration1",
+    "niveau": 1,
+    "nom": "of the Newt",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_regeneration_rate_per_minute",
+      "max": 120,
+      "min": 60
+     }
+    ],
+    "tags": [
+     "flat_life_regen",
+     "resource",
+     "life"
+    ],
+    "texte": "(1-2) Life Regeneration per second",
+    "tirable": true,
+    "type": "LifeRegeneration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeRegeneration",
+    "groupes": [
+     "LifeRegeneration"
+    ],
+    "id": "LifeRegeneration10__",
+    "niveau": 75,
+    "nom": "of Immortality",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_regeneration_rate_per_minute",
+      "max": 1980,
+      "min": 1746
+     }
+    ],
+    "tags": [
+     "flat_life_regen",
+     "resource",
+     "life"
+    ],
+    "texte": "(29.1-33) Life Regeneration per second",
+    "tirable": true,
+    "type": "LifeRegeneration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeRegeneration",
+    "groupes": [
+     "LifeRegeneration"
+    ],
+    "id": "LifeRegeneration11____",
+    "niveau": 81,
+    "nom": "of the Phoenix",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_regeneration_rate_per_minute",
+      "max": 2160,
+      "min": 1986
+     }
+    ],
+    "tags": [
+     "flat_life_regen",
+     "resource",
+     "life"
+    ],
+    "texte": "(33.1-36) Life Regeneration per second",
+    "tirable": true,
+    "type": "LifeRegeneration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeRegeneration",
+    "groupes": [
+     "LifeRegeneration"
+    ],
+    "id": "LifeRegeneration2",
+    "niveau": 5,
+    "nom": "of the Lizard",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_regeneration_rate_per_minute",
+      "max": 180,
+      "min": 126
+     }
+    ],
+    "tags": [
+     "flat_life_regen",
+     "resource",
+     "life"
+    ],
+    "texte": "(2.1-3) Life Regeneration per second",
+    "tirable": true,
+    "type": "LifeRegeneration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeRegeneration",
+    "groupes": [
+     "LifeRegeneration"
+    ],
+    "id": "LifeRegeneration3",
+    "niveau": 11,
+    "nom": "of the Flatworm",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_regeneration_rate_per_minute",
+      "max": 240,
+      "min": 186
+     }
+    ],
+    "tags": [
+     "flat_life_regen",
+     "resource",
+     "life"
+    ],
+    "texte": "(3.1-4) Life Regeneration per second",
+    "tirable": true,
+    "type": "LifeRegeneration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeRegeneration",
+    "groupes": [
+     "LifeRegeneration"
+    ],
+    "id": "LifeRegeneration4",
+    "niveau": 17,
+    "nom": "of the Starfish",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_regeneration_rate_per_minute",
+      "max": 360,
+      "min": 246
+     }
+    ],
+    "tags": [
+     "flat_life_regen",
+     "resource",
+     "life"
+    ],
+    "texte": "(4.1-6) Life Regeneration per second",
+    "tirable": true,
+    "type": "LifeRegeneration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeRegeneration",
+    "groupes": [
+     "LifeRegeneration"
+    ],
+    "id": "LifeRegeneration5",
+    "niveau": 26,
+    "nom": "of the Hydra",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_regeneration_rate_per_minute",
+      "max": 540,
+      "min": 366
+     }
+    ],
+    "tags": [
+     "flat_life_regen",
+     "resource",
+     "life"
+    ],
+    "texte": "(6.1-9) Life Regeneration per second",
+    "tirable": true,
+    "type": "LifeRegeneration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeRegeneration",
+    "groupes": [
+     "LifeRegeneration"
+    ],
+    "id": "LifeRegeneration6",
+    "niveau": 35,
+    "nom": "of the Troll",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_regeneration_rate_per_minute",
+      "max": 780,
+      "min": 546
+     }
+    ],
+    "tags": [
+     "flat_life_regen",
+     "resource",
+     "life"
+    ],
+    "texte": "(9.1-13) Life Regeneration per second",
+    "tirable": true,
+    "type": "LifeRegeneration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeRegeneration",
+    "groupes": [
+     "LifeRegeneration"
+    ],
+    "id": "LifeRegeneration7",
+    "niveau": 47,
+    "nom": "of Convalescence",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_regeneration_rate_per_minute",
+      "max": 1080,
+      "min": 786
+     }
+    ],
+    "tags": [
+     "flat_life_regen",
+     "resource",
+     "life"
+    ],
+    "texte": "(13.1-18) Life Regeneration per second",
+    "tirable": true,
+    "type": "LifeRegeneration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeRegeneration",
+    "groupes": [
+     "LifeRegeneration"
+    ],
+    "id": "LifeRegeneration8_",
+    "niveau": 58,
+    "nom": "of Recuperation",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_regeneration_rate_per_minute",
+      "max": 1380,
+      "min": 1086
+     }
+    ],
+    "tags": [
+     "flat_life_regen",
+     "resource",
+     "life"
+    ],
+    "texte": "(18.1-23) Life Regeneration per second",
+    "tirable": true,
+    "type": "LifeRegeneration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeRegeneration",
+    "groupes": [
+     "LifeRegeneration"
+    ],
+    "id": "LifeRegeneration9",
+    "niveau": 68,
+    "nom": "of Resurgence",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_regeneration_rate_per_minute",
+      "max": 1740,
+      "min": 1386
+     }
+    ],
+    "tags": [
+     "flat_life_regen",
+     "resource",
+     "life"
+    ],
+    "texte": "(23.1-29) Life Regeneration per second",
+    "tirable": true,
+    "type": "LifeRegeneration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist1",
+    "niveau": 1,
+    "nom": "of the Cloud",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 10,
+      "min": 6
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(6-10)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist2",
+    "niveau": 13,
+    "nom": "of the Squall",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 15,
+      "min": 11
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(11-15)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist3",
+    "niveau": 25,
+    "nom": "of the Storm",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 20,
+      "min": 16
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(16-20)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist4",
+    "niveau": 37,
+    "nom": "of the Thunderhead",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 25,
+      "min": 21
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(21-25)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist5",
+    "niveau": 49,
+    "nom": "of the Tempest",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 30,
+      "min": 26
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(26-30)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist6",
+    "niveau": 60,
+    "nom": "of the Maelstrom",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 35,
+      "min": 31
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(31-35)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist7",
+    "niveau": 71,
+    "nom": "of the Lightning",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 40,
+      "min": 36
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(36-40)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist8",
+    "niveau": 82,
+    "nom": "of Ephij",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 45,
+      "min": 41
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(41-45)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEnergyShield1",
+    "niveau": 1,
+    "nom": "Shining",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield",
+      "max": 17,
+      "min": 10
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "+(10-17) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShield"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEnergyShield10",
+    "niveau": 70,
+    "nom": "Incandescent",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "helmet",
+      "weight": 0
+     },
+     {
+      "tag": "gloves",
+      "weight": 0
+     },
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield",
+      "max": 90,
+      "min": 81
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "+(81-90) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShield"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEnergyShield11",
+    "niveau": 79,
+    "nom": "Resplendent",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "focus",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "helmet",
+      "weight": 0
+     },
+     {
+      "tag": "gloves",
+      "weight": 0
+     },
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield",
+      "max": 96,
+      "min": 91
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "+(91-96) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShield"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEnergyShield2",
+    "niveau": 8,
+    "nom": "Glimmering",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield",
+      "max": 24,
+      "min": 18
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "+(18-24) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShield"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEnergyShield3",
+    "niveau": 16,
+    "nom": "Glittering",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield",
+      "max": 30,
+      "min": 25
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "+(25-30) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShield"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEnergyShield4",
+    "niveau": 25,
+    "nom": "Glowing",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield",
+      "max": 35,
+      "min": 31
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "+(31-35) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShield"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEnergyShield5",
+    "niveau": 33,
+    "nom": "Radiating",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield",
+      "max": 41,
+      "min": 36
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "+(36-41) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShield"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEnergyShield6",
+    "niveau": 46,
+    "nom": "Pulsing",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield",
+      "max": 47,
+      "min": 42
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "+(42-47) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShield"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEnergyShield7",
+    "niveau": 54,
+    "nom": "Blazing",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield",
+      "max": 60,
+      "min": 48
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "+(48-60) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShield"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEnergyShield8",
+    "niveau": 60,
+    "nom": "Dazzling",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 0
+     },
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield",
+      "max": 73,
+      "min": 61
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "+(61-73) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShield"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEnergyShield9",
+    "niveau": 65,
+    "nom": "Scintillating",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "helmet",
+      "weight": 0
+     },
+     {
+      "tag": "gloves",
+      "weight": 0
+     },
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield",
+      "max": 80,
+      "min": 74
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "+(74-80) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShield"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndDefencePercent",
+    "groupes": [
+     "BaseLocalDefencesAndDefencePercent"
+    ],
+    "id": "LocalIncreasedEnergyShieldAndBase1",
+    "niveau": 8,
+    "nom": "Deacon's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "helmet",
+      "weight": 0
+     },
+     {
+      "tag": "gloves",
+      "weight": 0
+     },
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "focus",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 13,
+      "min": 6
+     },
+     {
+      "id": "local_energy_shield",
+      "max": 7,
+      "min": 4
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(6-13)% increased Energy Shield\n+(4-7) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalIncreasedEnergyShieldAndBase"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndDefencePercent",
+    "groupes": [
+     "BaseLocalDefencesAndDefencePercent"
+    ],
+    "id": "LocalIncreasedEnergyShieldAndBase2",
+    "niveau": 16,
+    "nom": "Cardinal's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "helmet",
+      "weight": 0
+     },
+     {
+      "tag": "gloves",
+      "weight": 0
+     },
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "focus",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 20,
+      "min": 14
+     },
+     {
+      "id": "local_energy_shield",
+      "max": 13,
+      "min": 8
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(14-20)% increased Energy Shield\n+(8-13) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalIncreasedEnergyShieldAndBase"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndDefencePercent",
+    "groupes": [
+     "BaseLocalDefencesAndDefencePercent"
+    ],
+    "id": "LocalIncreasedEnergyShieldAndBase3",
+    "niveau": 33,
+    "nom": "Priest's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "helmet",
+      "weight": 0
+     },
+     {
+      "tag": "gloves",
+      "weight": 0
+     },
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "focus",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 26,
+      "min": 21
+     },
+     {
+      "id": "local_energy_shield",
+      "max": 16,
+      "min": 14
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(21-26)% increased Energy Shield\n+(14-16) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalIncreasedEnergyShieldAndBase"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndDefencePercent",
+    "groupes": [
+     "BaseLocalDefencesAndDefencePercent"
+    ],
+    "id": "LocalIncreasedEnergyShieldAndBase4",
+    "niveau": 46,
+    "nom": "High Priest's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "helmet",
+      "weight": 0
+     },
+     {
+      "tag": "gloves",
+      "weight": 0
+     },
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "focus",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 32,
+      "min": 27
+     },
+     {
+      "id": "local_energy_shield",
+      "max": 20,
+      "min": 17
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(27-32)% increased Energy Shield\n+(17-20) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalIncreasedEnergyShieldAndBase"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndDefencePercent",
+    "groupes": [
+     "BaseLocalDefencesAndDefencePercent"
+    ],
+    "id": "LocalIncreasedEnergyShieldAndBase5",
+    "niveau": 60,
+    "nom": "Archon's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "helmet",
+      "weight": 0
+     },
+     {
+      "tag": "gloves",
+      "weight": 0
+     },
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "focus",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 38,
+      "min": 33
+     },
+     {
+      "id": "local_energy_shield",
+      "max": 25,
+      "min": 21
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(33-38)% increased Energy Shield\n+(21-25) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalIncreasedEnergyShieldAndBase"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndDefencePercent",
+    "groupes": [
+     "BaseLocalDefencesAndDefencePercent"
+    ],
+    "id": "LocalIncreasedEnergyShieldAndBase6",
+    "niveau": 78,
+    "nom": "Divine",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "helmet",
+      "weight": 0
+     },
+     {
+      "tag": "gloves",
+      "weight": 0
+     },
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "focus",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 42,
+      "min": 39
+     },
+     {
+      "id": "local_energy_shield",
+      "max": 30,
+      "min": 26
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(39-42)% increased Energy Shield\n+(26-30) to maximum Energy Shield",
+    "tirable": true,
+    "type": "LocalIncreasedEnergyShieldAndBase"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndLife",
+    "groupes": [
+     "BaseLocalDefencesAndLife"
+    ],
+    "id": "LocalIncreasedEnergyShieldAndLife1",
+    "niveau": 8,
+    "nom": "Monk's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "focus",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 13,
+      "min": 6
+     },
+     {
+      "id": "base_maximum_life",
+      "max": 10,
+      "min": 7
+     }
+    ],
+    "tags": [
+     "defences",
+     "resource",
+     "life",
+     "energy_shield"
+    ],
+    "texte": "(6-13)% increased Energy Shield\n+(7-10) to maximum Life",
+    "tirable": true,
+    "type": "LocalIncreasedEnergyShieldAndLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndLife",
+    "groupes": [
+     "BaseLocalDefencesAndLife"
+    ],
+    "id": "LocalIncreasedEnergyShieldAndLife2",
+    "niveau": 16,
+    "nom": "Prior's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "focus",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 20,
+      "min": 14
+     },
+     {
+      "id": "base_maximum_life",
+      "max": 19,
+      "min": 11
+     }
+    ],
+    "tags": [
+     "defences",
+     "resource",
+     "life",
+     "energy_shield"
+    ],
+    "texte": "(14-20)% increased Energy Shield\n+(11-19) to maximum Life",
+    "tirable": true,
+    "type": "LocalIncreasedEnergyShieldAndLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndLife",
+    "groupes": [
+     "BaseLocalDefencesAndLife"
+    ],
+    "id": "LocalIncreasedEnergyShieldAndLife3",
+    "niveau": 33,
+    "nom": "Abbot's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "focus",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 26,
+      "min": 21
+     },
+     {
+      "id": "base_maximum_life",
+      "max": 25,
+      "min": 20
+     }
+    ],
+    "tags": [
+     "defences",
+     "resource",
+     "life",
+     "energy_shield"
+    ],
+    "texte": "(21-26)% increased Energy Shield\n+(20-25) to maximum Life",
+    "tirable": true,
+    "type": "LocalIncreasedEnergyShieldAndLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndLife",
+    "groupes": [
+     "BaseLocalDefencesAndLife"
+    ],
+    "id": "LocalIncreasedEnergyShieldAndLife4",
+    "niveau": 46,
+    "nom": "Bishop's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "focus",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 32,
+      "min": 27
+     },
+     {
+      "id": "base_maximum_life",
+      "max": 32,
+      "min": 26
+     }
+    ],
+    "tags": [
+     "defences",
+     "resource",
+     "life",
+     "energy_shield"
+    ],
+    "texte": "(27-32)% increased Energy Shield\n+(26-32) to maximum Life",
+    "tirable": true,
+    "type": "LocalIncreasedEnergyShieldAndLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndLife",
+    "groupes": [
+     "BaseLocalDefencesAndLife"
+    ],
+    "id": "LocalIncreasedEnergyShieldAndLife5",
+    "niveau": 60,
+    "nom": "Exarch's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "focus",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 38,
+      "min": 33
+     },
+     {
+      "id": "base_maximum_life",
+      "max": 41,
+      "min": 33
+     }
+    ],
+    "tags": [
+     "defences",
+     "resource",
+     "life",
+     "energy_shield"
+    ],
+    "texte": "(33-38)% increased Energy Shield\n+(33-41) to maximum Life",
+    "tirable": true,
+    "type": "LocalIncreasedEnergyShieldAndLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndLife",
+    "groupes": [
+     "BaseLocalDefencesAndLife"
+    ],
+    "id": "LocalIncreasedEnergyShieldAndLife6",
+    "niveau": 78,
+    "nom": "Pope's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "focus",
+      "weight": 0
+     },
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 42,
+      "min": 39
+     },
+     {
+      "id": "base_maximum_life",
+      "max": 49,
+      "min": 42
+     }
+    ],
+    "tags": [
+     "defences",
+     "resource",
+     "life",
+     "energy_shield"
+    ],
+    "texte": "(39-42)% increased Energy Shield\n+(42-49) to maximum Life",
+    "tirable": true,
+    "type": "LocalIncreasedEnergyShieldAndLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEnergyShieldPercent1",
+    "niveau": 2,
+    "nom": "Protective",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 26,
+      "min": 15
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(15-26)% increased Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShieldPercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEnergyShieldPercent2",
+    "niveau": 16,
+    "nom": "Strong-Willed",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 42,
+      "min": 27
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(27-42)% increased Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShieldPercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEnergyShieldPercent3",
+    "niveau": 33,
+    "nom": "Resolute",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 55,
+      "min": 43
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(43-55)% increased Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShieldPercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEnergyShieldPercent4",
+    "niveau": 46,
+    "nom": "Fearless",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 67,
+      "min": 56
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(56-67)% increased Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShieldPercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEnergyShieldPercent5",
+    "niveau": 54,
+    "nom": "Dauntless",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 79,
+      "min": 68
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(68-79)% increased Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShieldPercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEnergyShieldPercent6",
+    "niveau": 60,
+    "nom": "Indomitable",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 91,
+      "min": 80
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(80-91)% increased Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShieldPercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEnergyShieldPercent7_",
+    "niveau": 65,
+    "nom": "Unassailable",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 100,
+      "min": 92
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(92-100)% increased Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShieldPercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEnergyShieldPercent8",
+    "niveau": 75,
+    "nom": "Unfaltering",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "str_armour",
+      "weight": 0
+     },
+     {
+      "tag": "str_dex_armour",
+      "weight": 0
+     },
+     {
+      "tag": "str_int_armour",
+      "weight": 0
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 0
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 0
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 0
+     },
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_energy_shield_+%",
+      "max": 110,
+      "min": 101
+     }
+    ],
+    "tags": [
+     "defences",
+     "energy_shield"
+    ],
+    "texte": "(101-110)% increased Energy Shield",
+    "tirable": true,
+    "type": "LocalEnergyShieldPercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedBleedDuration1",
+    "niveau": 21,
+    "nom": "of Sealing",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "self_bleed_duration_+%",
+      "max": -36,
+      "min": -40
+     }
+    ],
+    "tags": [
+     "bleed",
+     "physical",
+     "ailment"
+    ],
+    "texte": "(40-36)% reduced Duration of Bleeding on You",
+    "tirable": true,
+    "type": "ReducedBleedDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedBleedDuration2",
+    "niveau": 37,
+    "nom": "of Alleviation",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "self_bleed_duration_+%",
+      "max": -41,
+      "min": -45
+     }
+    ],
+    "tags": [
+     "bleed",
+     "physical",
+     "ailment"
+    ],
+    "texte": "(45-41)% reduced Duration of Bleeding on You",
+    "tirable": true,
+    "type": "ReducedBleedDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedBleedDuration3",
+    "niveau": 50,
+    "nom": "of Allaying",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "self_bleed_duration_+%",
+      "max": -46,
+      "min": -50
+     }
+    ],
+    "tags": [
+     "bleed",
+     "physical",
+     "ailment"
+    ],
+    "texte": "(50-46)% reduced Duration of Bleeding on You",
+    "tirable": true,
+    "type": "ReducedBleedDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedBleedDuration4",
+    "niveau": 64,
+    "nom": "of Assuaging",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "self_bleed_duration_+%",
+      "max": -51,
+      "min": -55
+     }
+    ],
+    "tags": [
+     "bleed",
+     "physical",
+     "ailment"
+    ],
+    "texte": "(55-51)% reduced Duration of Bleeding on You",
+    "tirable": true,
+    "type": "ReducedBleedDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedBleedDuration5",
+    "niveau": 76,
+    "nom": "of Staunching",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "self_bleed_duration_+%",
+      "max": -56,
+      "min": -60
+     }
+    ],
+    "tags": [
+     "bleed",
+     "physical",
+     "ailment"
+    ],
+    "texte": "(60-56)% reduced Duration of Bleeding on You",
+    "tirable": true,
+    "type": "ReducedBleedDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedBurnDuration1",
+    "niveau": 21,
+    "nom": "of Damping",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_self_ignite_duration_-%",
+      "max": 40,
+      "min": 36
+     }
+    ],
+    "tags": [
+     "elemental",
+     "fire",
+     "ailment"
+    ],
+    "texte": "(36-40)% reduced Ignite Duration on you",
+    "tirable": true,
+    "type": "ReducedBurnDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedBurnDuration2",
+    "niveau": 37,
+    "nom": "of Quashing",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_self_ignite_duration_-%",
+      "max": 45,
+      "min": 41
+     }
+    ],
+    "tags": [
+     "elemental",
+     "fire",
+     "ailment"
+    ],
+    "texte": "(41-45)% reduced Ignite Duration on you",
+    "tirable": true,
+    "type": "ReducedBurnDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedBurnDuration3",
+    "niveau": 50,
+    "nom": "of Quelling",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_self_ignite_duration_-%",
+      "max": 50,
+      "min": 46
+     }
+    ],
+    "tags": [
+     "elemental",
+     "fire",
+     "ailment"
+    ],
+    "texte": "(46-50)% reduced Ignite Duration on you",
+    "tirable": true,
+    "type": "ReducedBurnDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedBurnDuration4",
+    "niveau": 64,
+    "nom": "of Quenching",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_self_ignite_duration_-%",
+      "max": 55,
+      "min": 51
+     }
+    ],
+    "tags": [
+     "elemental",
+     "fire",
+     "ailment"
+    ],
+    "texte": "(51-55)% reduced Ignite Duration on you",
+    "tirable": true,
+    "type": "ReducedBurnDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedBurnDuration5",
+    "niveau": 76,
+    "nom": "of Dousing",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_self_ignite_duration_-%",
+      "max": 60,
+      "min": 56
+     }
+    ],
+    "tags": [
+     "elemental",
+     "fire",
+     "ailment"
+    ],
+    "texte": "(56-60)% reduced Ignite Duration on you",
+    "tirable": true,
+    "type": "ReducedBurnDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LocalAttributeRequirements",
+    "groupes": [
+     "LocalAttributeRequirements"
+    ],
+    "id": "ReducedLocalAttributeRequirements1",
+    "niveau": 24,
+    "nom": "of the Worthy",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_attribute_requirements_+%",
+      "max": -15,
+      "min": -15
+     }
+    ],
+    "tags": [],
+    "texte": "15% reduced Attribute Requirements",
+    "tirable": true,
+    "type": "LocalAttributeRequirements"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LocalAttributeRequirements",
+    "groupes": [
+     "LocalAttributeRequirements"
+    ],
+    "id": "ReducedLocalAttributeRequirements2",
+    "niveau": 32,
+    "nom": "of the Apt",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_attribute_requirements_+%",
+      "max": -20,
+      "min": -20
+     }
+    ],
+    "tags": [],
+    "texte": "20% reduced Attribute Requirements",
+    "tirable": true,
+    "type": "LocalAttributeRequirements"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LocalAttributeRequirements",
+    "groupes": [
+     "LocalAttributeRequirements"
+    ],
+    "id": "ReducedLocalAttributeRequirements3",
+    "niveau": 40,
+    "nom": "of the Talented",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_attribute_requirements_+%",
+      "max": -25,
+      "min": -25
+     }
+    ],
+    "tags": [],
+    "texte": "25% reduced Attribute Requirements",
+    "tirable": true,
+    "type": "LocalAttributeRequirements"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LocalAttributeRequirements",
+    "groupes": [
+     "LocalAttributeRequirements"
+    ],
+    "id": "ReducedLocalAttributeRequirements4",
+    "niveau": 52,
+    "nom": "of the Skilled",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_attribute_requirements_+%",
+      "max": -30,
+      "min": -30
+     }
+    ],
+    "tags": [],
+    "texte": "30% reduced Attribute Requirements",
+    "tirable": true,
+    "type": "LocalAttributeRequirements"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LocalAttributeRequirements",
+    "groupes": [
+     "LocalAttributeRequirements"
+    ],
+    "id": "ReducedLocalAttributeRequirements5",
+    "niveau": 60,
+    "nom": "of the Proficient",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_attribute_requirements_+%",
+      "max": -35,
+      "min": -35
+     }
+    ],
+    "tags": [],
+    "texte": "35% reduced Attribute Requirements",
+    "tirable": true,
+    "type": "LocalAttributeRequirements"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedPoisonDuration1",
+    "niveau": 21,
+    "nom": "of the Antitoxin",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "self_poison_duration_+%",
+      "max": -36,
+      "min": -40
+     }
+    ],
+    "tags": [
+     "poison",
+     "chaos",
+     "ailment"
+    ],
+    "texte": "(40-36)% reduced Poison Duration on you",
+    "tirable": true,
+    "type": "ReducedPoisonDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedPoisonDuration2",
+    "niveau": 37,
+    "nom": "of the Remedy",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "self_poison_duration_+%",
+      "max": -41,
+      "min": -45
+     }
+    ],
+    "tags": [
+     "poison",
+     "chaos",
+     "ailment"
+    ],
+    "texte": "(45-41)% reduced Poison Duration on you",
+    "tirable": true,
+    "type": "ReducedPoisonDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedPoisonDuration3",
+    "niveau": 50,
+    "nom": "of the Cure",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "self_poison_duration_+%",
+      "max": -46,
+      "min": -50
+     }
+    ],
+    "tags": [
+     "poison",
+     "chaos",
+     "ailment"
+    ],
+    "texte": "(50-46)% reduced Poison Duration on you",
+    "tirable": true,
+    "type": "ReducedPoisonDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedPoisonDuration4",
+    "niveau": 64,
+    "nom": "of the Panacea",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "self_poison_duration_+%",
+      "max": -51,
+      "min": -55
+     }
+    ],
+    "tags": [
+     "poison",
+     "chaos",
+     "ailment"
+    ],
+    "texte": "(55-51)% reduced Poison Duration on you",
+    "tirable": true,
+    "type": "ReducedPoisonDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ReducedAilmentDuration",
+    "groupes": [
+     "ReducedAilmentDuration"
+    ],
+    "id": "ReducedPoisonDuration5",
+    "niveau": 76,
+    "nom": "of the Antidote",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "self_poison_duration_+%",
+      "max": -56,
+      "min": -60
+     }
+    ],
+    "tags": [
+     "poison",
+     "chaos",
+     "ailment"
+    ],
+    "texte": "(60-56)% reduced Poison Duration on you",
+    "tirable": true,
+    "type": "ReducedPoisonDuration"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "StunThreshold",
+    "groupes": [
+     "StunThreshold"
+    ],
+    "id": "StunThreshold1",
+    "niveau": 1,
+    "nom": "of Thick Skin",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "stun_threshold_+",
+      "max": 11,
+      "min": 6
+     }
+    ],
+    "tags": [],
+    "texte": "+(6-11) to Stun Threshold",
+    "tirable": true,
+    "type": "StunThreshold"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "StunThreshold",
+    "groupes": [
+     "StunThreshold"
+    ],
+    "id": "StunThreshold10",
+    "niveau": 72,
+    "nom": "of Obsidian Skin",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "stun_threshold_+",
+      "max": 304,
+      "min": 254
+     }
+    ],
+    "tags": [],
+    "texte": "+(254-304) to Stun Threshold",
+    "tirable": true,
+    "type": "StunThreshold"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "StunThreshold",
+    "groupes": [
+     "StunThreshold"
+    ],
+    "id": "StunThreshold2",
+    "niveau": 8,
+    "nom": "of Reinforced Skin",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "stun_threshold_+",
+      "max": 29,
+      "min": 12
+     }
+    ],
+    "tags": [],
+    "texte": "+(12-29) to Stun Threshold",
+    "tirable": true,
+    "type": "StunThreshold"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "StunThreshold",
+    "groupes": [
+     "StunThreshold"
+    ],
+    "id": "StunThreshold3",
+    "niveau": 15,
+    "nom": "of Stone Skin",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "stun_threshold_+",
+      "max": 49,
+      "min": 30
+     }
+    ],
+    "tags": [],
+    "texte": "+(30-49) to Stun Threshold",
+    "tirable": true,
+    "type": "StunThreshold"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "StunThreshold",
+    "groupes": [
+     "StunThreshold"
+    ],
+    "id": "StunThreshold4",
+    "niveau": 22,
+    "nom": "of Iron Skin",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "stun_threshold_+",
+      "max": 72,
+      "min": 50
+     }
+    ],
+    "tags": [],
+    "texte": "+(50-72) to Stun Threshold",
+    "tirable": true,
+    "type": "StunThreshold"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "StunThreshold",
+    "groupes": [
+     "StunThreshold"
+    ],
+    "id": "StunThreshold5",
+    "niveau": 29,
+    "nom": "of Steel Skin",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "stun_threshold_+",
+      "max": 97,
+      "min": 73
+     }
+    ],
+    "tags": [],
+    "texte": "+(73-97) to Stun Threshold",
+    "tirable": true,
+    "type": "StunThreshold"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "StunThreshold",
+    "groupes": [
+     "StunThreshold"
+    ],
+    "id": "StunThreshold6",
+    "niveau": 36,
+    "nom": "of Granite Skin",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "stun_threshold_+",
+      "max": 124,
+      "min": 98
+     }
+    ],
+    "tags": [],
+    "texte": "+(98-124) to Stun Threshold",
+    "tirable": true,
+    "type": "StunThreshold"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "StunThreshold",
+    "groupes": [
+     "StunThreshold"
+    ],
+    "id": "StunThreshold7",
+    "niveau": 45,
+    "nom": "of Platinum Skin",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "stun_threshold_+",
+      "max": 163,
+      "min": 125
+     }
+    ],
+    "tags": [],
+    "texte": "+(125-163) to Stun Threshold",
+    "tirable": true,
+    "type": "StunThreshold"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "StunThreshold",
+    "groupes": [
+     "StunThreshold"
+    ],
+    "id": "StunThreshold8",
+    "niveau": 54,
+    "nom": "of Adamantite Skin",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "stun_threshold_+",
+      "max": 206,
+      "min": 164
+     }
+    ],
+    "tags": [],
+    "texte": "+(164-206) to Stun Threshold",
+    "tirable": true,
+    "type": "StunThreshold"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "StunThreshold",
+    "groupes": [
+     "StunThreshold"
+    ],
+    "id": "StunThreshold9",
+    "niveau": 63,
+    "nom": "of Corundum Skin",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "stun_threshold_+",
+      "max": 253,
+      "min": 207
+     }
+    ],
+    "tags": [],
+    "texte": "+(207-253) to Stun Threshold",
+    "tirable": true,
+    "type": "StunThreshold"
+   }
+  ],
+  "schema": 1
+ },
+ "note": "Généré par tools/theorycraft/fixture_forge.py ; poids poe2db (estimations Krakenbul, CC BY-NC-SA 3.0, voir tools/theorycraft/donnees/LICENCE-poids-poe2db.md).",
+ "releve": {
+  "date_releve": "2026-11-05",
+  "licence": "CC BY-NC-SA 3.0",
+  "pages": {
+   "Body_Armours_int": {
+    "inconnus": [
+     "EnergyShieldRechargeRate4",
+     "EnergyShieldRechargeRate5______",
+     "EnergyShieldRechargeRate6"
+    ],
+    "poids": {
+     "AttackerTakesDamage1": 1000,
+     "AttackerTakesDamage2": 1000,
+     "AttackerTakesDamage3": 1000,
+     "AttackerTakesDamage4": 1000,
+     "AttackerTakesDamage5": 1000,
+     "AttackerTakesDamage6": 1000,
+     "AttackerTakesDamage7": 1000,
+     "ChaosResist1": 250,
+     "ChaosResist2": 250,
+     "ChaosResist3": 250,
+     "ChaosResist4": 250,
+     "ChaosResist5": 250,
+     "ChaosResist6": 250,
+     "ColdResist1": 1000,
+     "ColdResist2": 1000,
+     "ColdResist3": 1000,
+     "ColdResist4": 1000,
+     "ColdResist5": 1000,
+     "ColdResist6": 1000,
+     "ColdResist7": 1000,
+     "ColdResist8": 1000,
+     "FireResist1": 1000,
+     "FireResist2": 1000,
+     "FireResist3": 1000,
+     "FireResist4": 1000,
+     "FireResist5": 1000,
+     "FireResist6": 1000,
+     "FireResist7": 1000,
+     "FireResist8": 1000,
+     "IncreasedLife1": 1000,
+     "IncreasedLife10": 1000,
+     "IncreasedLife11": 1000,
+     "IncreasedLife12": 1000,
+     "IncreasedLife13": 1000,
+     "IncreasedLife2": 1000,
+     "IncreasedLife3": 1000,
+     "IncreasedLife4": 1000,
+     "IncreasedLife5": 1000,
+     "IncreasedLife6": 1000,
+     "IncreasedLife7": 1000,
+     "IncreasedLife8": 1000,
+     "IncreasedLife9": 1000,
+     "IncreasedSpirit1": 500,
+     "IncreasedSpirit2": 500,
+     "IncreasedSpirit3": 500,
+     "IncreasedSpirit4": 500,
+     "IncreasedSpirit5": 400,
+     "IncreasedSpirit6": 300,
+     "IncreasedSpirit7": 200,
+     "IncreasedSpirit8": 100,
+     "Intelligence1": 1000,
+     "Intelligence2": 1000,
+     "Intelligence3": 1000,
+     "Intelligence4": 1000,
+     "Intelligence5": 1000,
+     "Intelligence6": 1000,
+     "Intelligence7": 1000,
+     "Intelligence8": 1000,
+     "LifeRegeneration1": 1000,
+     "LifeRegeneration10__": 1000,
+     "LifeRegeneration11____": 1000,
+     "LifeRegeneration2": 1000,
+     "LifeRegeneration3": 1000,
+     "LifeRegeneration4": 1000,
+     "LifeRegeneration5": 1000,
+     "LifeRegeneration6": 1000,
+     "LifeRegeneration7": 1000,
+     "LifeRegeneration8_": 1000,
+     "LifeRegeneration9": 1000,
+     "LightningResist1": 1000,
+     "LightningResist2": 1000,
+     "LightningResist3": 1000,
+     "LightningResist4": 1000,
+     "LightningResist5": 1000,
+     "LightningResist6": 1000,
+     "LightningResist7": 1000,
+     "LightningResist8": 1000,
+     "LocalIncreasedEnergyShield1": 1000,
+     "LocalIncreasedEnergyShield10": 1000,
+     "LocalIncreasedEnergyShield11": 1000,
+     "LocalIncreasedEnergyShield2": 1000,
+     "LocalIncreasedEnergyShield3": 1000,
+     "LocalIncreasedEnergyShield4": 1000,
+     "LocalIncreasedEnergyShield5": 1000,
+     "LocalIncreasedEnergyShield6": 1000,
+     "LocalIncreasedEnergyShield7": 1000,
+     "LocalIncreasedEnergyShield8": 1000,
+     "LocalIncreasedEnergyShield9": 1000,
+     "LocalIncreasedEnergyShieldAndBase1": 1000,
+     "LocalIncreasedEnergyShieldAndBase2": 1000,
+     "LocalIncreasedEnergyShieldAndBase3": 1000,
+     "LocalIncreasedEnergyShieldAndBase4": 1000,
+     "LocalIncreasedEnergyShieldAndBase5": 1000,
+     "LocalIncreasedEnergyShieldAndBase6": 1000,
+     "LocalIncreasedEnergyShieldAndLife1": 1000,
+     "LocalIncreasedEnergyShieldAndLife2": 1000,
+     "LocalIncreasedEnergyShieldAndLife3": 1000,
+     "LocalIncreasedEnergyShieldAndLife4": 1000,
+     "LocalIncreasedEnergyShieldAndLife5": 1000,
+     "LocalIncreasedEnergyShieldAndLife6": 1000,
+     "LocalIncreasedEnergyShieldPercent1": 1000,
+     "LocalIncreasedEnergyShieldPercent2": 1000,
+     "LocalIncreasedEnergyShieldPercent3": 1000,
+     "LocalIncreasedEnergyShieldPercent4": 1000,
+     "LocalIncreasedEnergyShieldPercent5": 1000,
+     "LocalIncreasedEnergyShieldPercent6": 1000,
+     "LocalIncreasedEnergyShieldPercent7_": 1000,
+     "LocalIncreasedEnergyShieldPercent8": 1000,
+     "ReducedBleedDuration1": 500,
+     "ReducedBleedDuration2": 500,
+     "ReducedBleedDuration3": 500,
+     "ReducedBleedDuration4": 500,
+     "ReducedBleedDuration5": 500,
+     "ReducedBurnDuration1": 500,
+     "ReducedBurnDuration2": 500,
+     "ReducedBurnDuration3": 500,
+     "ReducedBurnDuration4": 500,
+     "ReducedBurnDuration5": 500,
+     "ReducedLocalAttributeRequirements1": 900,
+     "ReducedLocalAttributeRequirements2": 900,
+     "ReducedLocalAttributeRequirements3": 900,
+     "ReducedLocalAttributeRequirements4": 900,
+     "ReducedLocalAttributeRequirements5": 900,
+     "ReducedPoisonDuration1": 500,
+     "ReducedPoisonDuration2": 500,
+     "ReducedPoisonDuration3": 500,
+     "ReducedPoisonDuration4": 500,
+     "ReducedPoisonDuration5": 500,
+     "StunThreshold1": 800,
+     "StunThreshold10": 800,
+     "StunThreshold2": 800,
+     "StunThreshold3": 800,
+     "StunThreshold4": 800,
+     "StunThreshold5": 800,
+     "StunThreshold6": 800,
+     "StunThreshold7": 800,
+     "StunThreshold8": 800,
+     "StunThreshold9": 800
+    }
+   }
+  },
+  "repoe_version": "0.5.5.5",
+  "source": "poe2db.tw (https://poe2db.tw/us/weightings), poids estimés par Krakenbul (Prohibited Library)"
+ }
+}

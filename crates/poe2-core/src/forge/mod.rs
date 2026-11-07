@@ -8,11 +8,14 @@
 //!
 //! - [`moteur`] : objet en cours de craft, pool d'affixes d'une base, effet
 //!   exact de chaque monnaie (`AffixPool::apply`).
+//! - [`donnees`] : pool d'une base à partir des tables RePoE et des poids
+//!   poe2db (mods sans poids listés à part, jamais inventés).
 //! - [`objectif`] : « ces groupes d'affixes, à tel tier ou mieux ».
 //! - [`monte_carlo`] : simulation parallèle, déterministe pour une graine.
 //!
 //! Tout est indexé (`u16`) pour le chemin chaud ; aucune entrée-sortie.
 
+pub mod donnees;
 pub mod monte_carlo;
 pub mod moteur;
 pub mod objectif;

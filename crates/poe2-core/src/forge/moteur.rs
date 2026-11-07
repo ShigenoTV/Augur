@@ -287,8 +287,13 @@ impl AffixPool {
             .count() as u8
     }
 
-    /// Tirage pondéré exact parmi les affixes éligibles dans l'état courant.
-    pub fn draw(&self, item: &ItemState, f: &DrawFilter, rng: &mut impl Rng) -> Option<AffixIdx> {
+    /// Règle d'éligibilité d'un affixe au prochain tirage, partagée par [`Self::draw`] et
+    /// [`Self::distribution`].
+    fn eligibility<'a>(
+        &'a self,
+        item: &'a ItemState,
+        f: &'a DrawFilter,
+    ) -> impl Fn(&Affix) -> bool + 'a {
         let (cap_p, cap_s) = self.cap_of(item);
         let open_p = self.count(item, Slot::Prefix) < cap_p;
         let open_s = self.count(item, Slot::Suffix) < cap_s;
@@ -298,7 +303,7 @@ impl AffixPool {
             held[i] = self.affixes[m.idx as usize].group;
         }
 
-        let eligible = |a: &Affix| -> bool {
+        move |a: &Affix| -> bool {
             a.weight > 0
                 && a.desecrated == f.require_desecrated
                 && a.req_ilvl <= item.ilvl
@@ -310,7 +315,33 @@ impl AffixPool {
                 }
                 && f.force_slot.is_none_or(|s| s == a.slot)
                 && !held.contains(&a.group)
-        };
+        }
+    }
+
+    /// Probabilité exacte de chaque affixe au prochain tirage (même règle que [`Self::draw`]),
+    /// dans l'ordre du pool. Vide si aucun affixe n'est tirable.
+    pub fn distribution(&self, item: &ItemState, f: &DrawFilter) -> Vec<(AffixIdx, f64)> {
+        let eligible = self.eligibility(item, f);
+        let total: u64 = self
+            .affixes
+            .iter()
+            .filter(|a| eligible(a))
+            .map(|a| a.weight as u64)
+            .sum();
+        if total == 0 {
+            return Vec::new();
+        }
+        self.affixes
+            .iter()
+            .enumerate()
+            .filter(|(_, a)| eligible(a))
+            .map(|(i, a)| (i as AffixIdx, a.weight as f64 / total as f64))
+            .collect()
+    }
+
+    /// Tirage pondéré exact parmi les affixes éligibles dans l'état courant.
+    pub fn draw(&self, item: &ItemState, f: &DrawFilter, rng: &mut impl Rng) -> Option<AffixIdx> {
+        let eligible = self.eligibility(item, f);
 
         let total: u64 = self
             .affixes
