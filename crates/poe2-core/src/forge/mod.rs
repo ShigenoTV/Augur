@@ -15,10 +15,12 @@
 //!
 //! Tout est indexé (`u16`) pour le chemin chaud ; aucune entrée-sortie.
 
+pub mod catalogue;
 pub mod donnees;
 pub mod monte_carlo;
 pub mod moteur;
 pub mod objectif;
+pub mod solveur;
 
 pub use monte_carlo::*;
 pub use moteur::*;

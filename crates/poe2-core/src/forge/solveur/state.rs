@@ -1,0 +1,146 @@
+use crate::forge::*;
+use serde::Serialize;
+
+pub const DESEC_NONE: u8 = 0;
+pub const DESEC_HELD: u8 = 1;
+pub const DESEC_BLOCKED: u8 = 7;
+pub const DESEC_BAD_P: u8 = 13;
+pub const DESEC_BAD_S: u8 = 14;
+/// Mod crafted (Essence, Alloy, émotion) : mêmes codes que `DESEC_*` pour un mod voulu, bloquant ou mauvais
+/// anonyme, plus le mod décaleur et les mods garantis suivis (`Model::tracked`, bit i → `CRAFT_TRACKED + i`).
+pub const CRAFT_NONE: u8 = DESEC_NONE;
+pub const CRAFT_SHIFTER: u8 = 15;
+pub const CRAFT_TRACKED: u8 = 16;
+
+/// Abstraction de l'objet vis-à-vis de l'objectif (au plus 6 affixes voulus).
+/// Les affixes « inutiles » ne sont comptés que par slot : leur identité n'influe pas sur la décision.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MacroState {
+    pub rarity: Rarity,
+    /// bit k : le k-ième affixe voulu est présent (tier accepté)
+    pub held: u8,
+    /// bit k : le groupe du k-ième voulu est occupé par un tier trop bas
+    pub blocked: u8,
+    /// 0 = rien de fracturé ; k+1 = le k-ième voulu est fracturé
+    pub frac: u8,
+    pub bad_p: u8,
+    pub bad_s: u8,
+    /// un mod Désécré est déjà présent (un objet ne peut être désécré qu'une fois)
+    pub desecrated: bool,
+    /// Lequel des mods présents est le mod Désécré (pour l'Omen of Light, et pour savoir qu'un retrait l'a
+    /// enlevé) : `DESEC_NONE`, `DESEC_HELD + k`, `DESEC_BLOCKED + k`, `DESEC_BAD_P` ou `DESEC_BAD_S` (compté
+    /// aussi dans `bad_p`/`bad_s`).
+    pub desec: u8,
+    /// Mod inutile qui décale le plafond tant qu'il est là (ex. « +1 Suffix Modifier allowed » de Potent
+    /// Liquid Contempt), compté aussi dans `bad_p`/`bad_s` : son indice d'affixe, ou `None`.
+    pub shifter: Option<AffixIdx>,
+    /// bit i : le mod garanti inutile n° i d'une Essence/Alloy (`Model::tracked`) est sur l'objet, compté
+    /// aussi dans `bad_p`/`bad_s`. Sans ce suivi, le solveur croirait pouvoir reposer ce mod (groupe déjà
+    /// pris : le jeu refuse) et la politique tournerait en rond sur le moteur exact.
+    pub ess: u32,
+    /// Lequel des mods présents est le mod crafted (un seul par objet depuis 0.5.0 : une Essence, un Alloy ou une
+    /// émotion est refusé tant qu'il est là) : `CRAFT_NONE`, `DESEC_HELD + k`, `DESEC_BLOCKED + k`,
+    /// `DESEC_BAD_P`, `DESEC_BAD_S`, `CRAFT_SHIFTER` ou `CRAFT_TRACKED + i`.
+    pub craft: u8,
+}
+
+impl MacroState {
+    pub fn empty(rarity: Rarity) -> Self {
+        Self {
+            rarity,
+            held: 0,
+            blocked: 0,
+            frac: 0,
+            bad_p: 0,
+            bad_s: 0,
+            desecrated: false,
+            desec: DESEC_NONE,
+            shifter: None,
+            ess: 0,
+            craft: CRAFT_NONE,
+        }
+    }
+    pub fn key(&self) -> String {
+        let r = match self.rarity {
+            Rarity::Normal => "n",
+            Rarity::Magic => "m",
+            Rarity::Rare => "r",
+        };
+        let key = format!(
+            "{r}:h{:06b}:b{:06b}:f{}:p{}:s{}:d{}",
+            self.held, self.blocked, self.frac, self.bad_p, self.bad_s, self.desecrated as u8
+        );
+        let key = match self.shifter {
+            Some(i) => format!("{key}:x{i}"),
+            None => key,
+        };
+        let key = if self.ess != 0 {
+            format!("{key}:e{:x}", self.ess)
+        } else {
+            key
+        };
+        if self.craft != CRAFT_NONE {
+            format!("{key}:c{}", self.craft)
+        } else {
+            key
+        }
+    }
+    pub fn total(&self) -> u32 {
+        self.held.count_ones() + self.blocked.count_ones() + self.bad_p as u32 + self.bad_s as u32
+    }
+}
+
+/// Projette un objet réel vers son état abstrait.
+/// `None` = objet « mort » : un affixe fracturé qui n'est pas un affixe voulu accepté.
+pub fn project(goal: &Goal, pool: &AffixPool, item: &ItemState) -> Option<MacroState> {
+    let mut s = MacroState::empty(item.rarity);
+    for m in item.mods() {
+        if m.crafted {
+            s.craft = match goal.classify(pool, m.idx) {
+                Class::Wanted(k) => DESEC_HELD + k as u8,
+                Class::Blocked(k) => DESEC_BLOCKED + k as u8,
+                Class::Other if pool.affixes[m.idx as usize].cap_shift != (0, 0) => CRAFT_SHIFTER,
+                Class::Other if pool.affixes[m.idx as usize].slot == Slot::Prefix => DESEC_BAD_P,
+                Class::Other => DESEC_BAD_S,
+            };
+        }
+        let desecrated = pool.affixes[m.idx as usize].desecrated;
+        if desecrated {
+            s.desecrated = true;
+            s.desec = match goal.classify(pool, m.idx) {
+                Class::Wanted(k) => DESEC_HELD + k as u8,
+                Class::Blocked(k) => DESEC_BLOCKED + k as u8,
+                Class::Other if pool.affixes[m.idx as usize].slot == Slot::Prefix => DESEC_BAD_P,
+                Class::Other => DESEC_BAD_S,
+            };
+        }
+        match goal.classify(pool, m.idx) {
+            Class::Wanted(k) => {
+                s.held |= 1 << k;
+                if m.fractured {
+                    s.frac = k as u8 + 1;
+                }
+            }
+            Class::Blocked(k) => {
+                if m.fractured {
+                    return None;
+                }
+                s.blocked |= 1 << k;
+            }
+            Class::Other => {
+                if m.fractured {
+                    return None;
+                }
+                match pool.affixes[m.idx as usize].slot {
+                    Slot::Prefix => s.bad_p += 1,
+                    Slot::Suffix => s.bad_s += 1,
+                }
+                if pool.affixes[m.idx as usize].cap_shift != (0, 0) {
+                    s.shifter = Some(m.idx);
+                }
+            }
+        }
+    }
+    Some(s)
+}

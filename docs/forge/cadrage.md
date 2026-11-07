@@ -57,8 +57,10 @@ source de prix d'objets (même blocage).
 2. **Pool d'une base** (`forge::donnees`) : construire l'`AffixPool` d'une base à un niveau d'objet à partir des
    tables RePoE et des poids poe2db, mods sans poids listés à part ; distribution exacte du prochain mod ; tests
    croisés avec `craft_proba.py` sur trois vraies bases (`tools/theorycraft/fixture_forge.py`).
-3. **Solveur** : catalogue des monnaies, Omens et Essences, reverse-crafting (MDP, policy iteration), coût espéré,
-   quantiles P50 / P90, plan de décision, vérification sur le moteur exact.
+3. **Solveur** (`forge::solveur`, `forge::catalogue`) : reverse-crafting repris de `craft-solver` (MDP, policy
+   iteration), coût espéré, quantiles P50 / P90, plan de décision, vérification sur le moteur exact ; catalogue des
+   18 monnaies (Greater / Perfect compris) et des 6 Omens d'Exaltation, d'Annulment et d'Erasure. Essences,
+   Désécration et Liquid Emotions viendront avec leurs données (cible par base, poids des mods désacralisés).
 4. **Prix** : table de prix saisie par le joueur, enregistrée en local ; coût en Exalted.
 5. **Panneau Forge** dans la fenêtre principale : choix de la base et de l'objectif, plan, coût espéré, P90, sources.
 6. **Overlay** : Ctrl+Alt+C sur l'objet en cours de craft, l'overlay affiche la prochaine étape du plan.
