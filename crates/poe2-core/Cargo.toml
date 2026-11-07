@@ -10,6 +10,8 @@ publish.workspace = true
 [dependencies]
 base64 = "0.22"
 flate2 = "1"
+rand = { version = "0.9", default-features = false, features = ["std", "small_rng"] }
+rayon = "1.10"
 regex = "1"
 roxmltree = "0.20"
 serde.workspace = true
