@@ -12,13 +12,17 @@ pub fn parse_clipboard_item(text: String) -> Result<ParsedItem, AppError> {
 }
 
 #[tauri::command]
-pub fn get_overlay_state(app: AppHandle, state: State<'_, AppState>) -> OverlayState {
+pub fn get_overlay_state(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    character: State<'_, crate::character::CharacterState>,
+) -> OverlayState {
     let last_item = state.last_text().and_then(|t| item_text::parse(&t).ok());
     OverlayState {
         contract_version: CONTRACT_VERSION,
         app_version: app.package_info().version.to_string(),
         game_focused: game_window::game_is_foreground(),
-        character: None,
+        character: character.summary(),
         last_item,
         data_patch: None,
     }
@@ -211,4 +215,26 @@ pub fn get_ledger_session(
 #[tauri::command]
 pub fn delete_ledger_session(app: AppHandle, id: i64) -> Result<(), AppError> {
     crate::ledger::delete(&app, id).map_err(internal)
+}
+
+#[tauri::command]
+pub fn get_character(
+    state: State<'_, crate::character::CharacterState>,
+) -> Option<crate::character::CharacterInfo> {
+    state.info()
+}
+
+/// Importe le personnage d'un code d'export Path of Building PoE 2 collé par
+/// le joueur (rien n'est téléchargé : un lien pobb.in est refusé avec un message).
+#[tauri::command]
+pub fn import_pob_code(
+    app: AppHandle,
+    code: String,
+) -> Result<crate::character::CharacterInfo, AppError> {
+    crate::character::import(&app, &code).map_err(internal)
+}
+
+#[tauri::command]
+pub fn clear_character(app: AppHandle) -> Result<(), AppError> {
+    crate::character::clear(&app).map_err(internal)
 }

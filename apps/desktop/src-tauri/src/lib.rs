@@ -11,6 +11,7 @@ use std::sync::Mutex;
 
 use tauri::{AppHandle, Manager, WindowEvent};
 
+mod character;
 mod client_log;
 mod clipboard;
 mod commands;
@@ -96,10 +97,14 @@ pub fn run() {
             commands::list_ledger_sessions,
             commands::get_ledger_session,
             commands::delete_ledger_session,
+            commands::get_character,
+            commands::import_pob_code,
+            commands::clear_character,
         ])
         .setup(|app| {
             let handle = app.handle();
             app.manage(settings::SettingsStore::load(handle));
+            app.manage(character::CharacterState::load(handle));
             app.manage(ledger::LedgerState::open(handle));
             overlay::prepare(handle)?;
             tray::create(handle)?;

@@ -7,6 +7,7 @@
 //!   avec une trace de calcul complète pour chaque valeur produite.
 //! - [`ledger`] (Atlas Ledger) suit les sessions de farm à partir des lignes
 //!   de `Client.txt` : parties de map, répartition du temps, maps par heure.
+//! - [`pob`] lit un code d'export Path of Building PoE 2 (personnage du joueur).
 //!
 //! Le crate ne fait aucune entrée-sortie réseau et ne lit jamais la mémoire du
 //! jeu : il ne travaille que sur des données que l'utilisateur lui fournit.
@@ -16,3 +17,4 @@
 pub mod calc;
 pub mod ledger;
 pub mod parser;
+pub mod pob;
