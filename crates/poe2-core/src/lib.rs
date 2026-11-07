@@ -5,6 +5,8 @@
 //!   le parseur ne panique jamais et borne la taille de ce qu'il accepte.
 //! - [`calc`] est le moteur de calcul : modificateurs typés, DPS, mitigations,
 //!   avec une trace de calcul complète pour chaque valeur produite.
+//! - [`ledger`] (Atlas Ledger) suit les sessions de farm à partir des lignes
+//!   de `Client.txt` : parties de map, répartition du temps, maps par heure.
 //!
 //! Le crate ne fait aucune entrée-sortie réseau et ne lit jamais la mémoire du
 //! jeu : il ne travaille que sur des données que l'utilisateur lui fournit.
@@ -12,4 +14,5 @@
 #![forbid(unsafe_code)]
 
 pub mod calc;
+pub mod ledger;
 pub mod parser;
