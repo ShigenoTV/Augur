@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Guide d'installation
+    url: https://github.com/ShigenoTV/Augur/blob/main/docs/beta/guide-installation.md
+    about: Installer Augur, passer l'écran SmartScreen, mises à jour.
+  - name: Guide d'utilisation
+    url: https://github.com/ShigenoTV/Augur/blob/main/docs/beta/guide-utilisation.md
+    about: Overlay, session de mesures, Atlas Ledger.
