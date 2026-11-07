@@ -1,0 +1,36 @@
+{
+ "core": {
+  "primary": "divine",
+  "secondary": "chaos",
+  "rates": {
+   "exalted": 635.0,
+   "chaos": 9.56
+  }
+ },
+ "lines": [
+  {
+   "id": "omen-of-dextral-annulment",
+   "primaryValue": 14.42
+  },
+  {
+   "id": "omen-of-dextral-erasure",
+   "primaryValue": 14.27
+  },
+  {
+   "id": "omen-of-sinistral-annulment",
+   "primaryValue": 22.39
+  },
+  {
+   "id": "omen-of-sinistral-exaltation",
+   "primaryValue": 0.07668
+  },
+  {
+   "id": "omen-of-dextral-exaltation",
+   "primaryValue": 0.04876
+  },
+  {
+   "id": "omen-of-sinistral-erasure",
+   "primaryValue": 24.04
+  }
+ ]
+}

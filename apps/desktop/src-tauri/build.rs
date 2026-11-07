@@ -34,6 +34,7 @@ fn main() {
             "get_forge_prices",
             "set_forge_prices",
             "reset_forge_prices",
+            "refresh_forge_prices",
         ]),
     ))
     .expect("échec du build Tauri");

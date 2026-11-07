@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-refresh-forge-prices"
+description = "Enables the refresh_forge_prices command without any pre-configured scope."
+commands.allow = ["refresh_forge_prices"]
+
+[[permission]]
+identifier = "deny-refresh-forge-prices"
+description = "Denies the refresh_forge_prices command without any pre-configured scope."
+commands.deny = ["refresh_forge_prices"]

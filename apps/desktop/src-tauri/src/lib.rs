@@ -107,6 +107,7 @@ pub fn run() {
             commands::get_forge_prices,
             commands::set_forge_prices,
             commands::reset_forge_prices,
+            commands::refresh_forge_prices,
         ])
         .setup(|app| {
             let handle = app.handle();

@@ -19,6 +19,7 @@ pub mod catalogue;
 pub mod donnees;
 pub mod monte_carlo;
 pub mod moteur;
+pub mod ninja;
 pub mod objectif;
 pub mod prix;
 pub mod solveur;

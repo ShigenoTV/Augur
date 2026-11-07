@@ -25,6 +25,11 @@ serde_json = "1"
 arboard = { version = "3", default-features = false }
 log = "0.4"
 rusqlite = { version = "0.41", features = ["bundled"] }
+# Relevé poe.ninja (Forge). Même version que celle de tauri-plugin-updater : ses
+# fonctionnalités (TLS rustls, sans fournisseur de chiffrement) s'appliquent aussi ici.
+reqwest = { version = "0.13", default-features = false }
+# Fournisseur de chiffrement de rustls, comme tauri-plugin-updater (reqwest « rustls-no-provider »).
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.61", features = [

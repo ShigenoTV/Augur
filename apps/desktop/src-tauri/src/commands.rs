@@ -282,3 +282,12 @@ pub fn reset_forge_prices(
 ) -> Result<poe2_core::forge::prix::TablePrix, AppError> {
     prices.reset(&app)
 }
+
+#[tauri::command]
+pub async fn refresh_forge_prices(
+    app: AppHandle,
+    prices: State<'_, crate::forge_prices::ForgePrices>,
+    ligue: Option<String>,
+) -> Result<poe2_core::forge::prix::TablePrix, AppError> {
+    prices.refresh(&app, ligue.as_deref().unwrap_or("")).await
+}
