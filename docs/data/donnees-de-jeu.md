@@ -55,7 +55,8 @@ d'équipement publiée (`id` = chemin Metadata, `nom`, `classe`, `tags`, `niveau
 - **Poids de spawn** : RePoE donne les poids du client. poe2-craft-assistant notait que le
   client met souvent un poids de 1 à tous les paliers ; les vrais poids sont estimés par la
   communauté (Craft of Exile / Prohibited Library). Ces estimations sont des données d'un
-  tiers : **non reprises** ici, à ne pas redistribuer sans accord. Sujet à trancher avant Forge.
+  tiers : **non reprises** dans ces tables. Forge prend ses poids dans le relevé poe2db
+  (CC BY-NC-SA, voir [cadrage de Forge](../forge/cadrage.md)) ; Craft of Exile reste exclu.
 - Les Talismans et Pièges, ajoutés à la main dans poe2-craft-assistant, ne sont pas dans
   la liste des classes tant que leur présence dans RePoE n'est pas vérifiée.
 - Les mods d'objets uniques, de corruption et les implicites ne sont pas encore extraits.

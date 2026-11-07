@@ -1,0 +1,9746 @@
+{
+ "base": {
+  "classe": "Gloves",
+  "exigences": {
+   "dexterite": 0,
+   "force": 0,
+   "intelligence": 0,
+   "niveau": 1
+  },
+  "id": "Metadata/Items/Armours/Gloves/FourGlovesDex1",
+  "implicites": [],
+  "niveau_drop": 1,
+  "nom": "Suede Bracers",
+  "tags": [
+   "dex_armour",
+   "ezomyte_basetype",
+   "gloves",
+   "armour",
+   "default"
+  ]
+ },
+ "cas": [
+  {
+   "attendu": {
+    "AddedColdDamage1": 0.005945303210463734,
+    "AddedColdDamage2": 0.005945303210463734,
+    "AddedColdDamage3": 0.005945303210463734,
+    "AddedColdDamage4": 0.005945303210463734,
+    "AddedFireDamage1": 0.005945303210463734,
+    "AddedFireDamage2": 0.005945303210463734,
+    "AddedFireDamage3": 0.005945303210463734,
+    "AddedFireDamage4": 0.005945303210463734,
+    "AddedLightningDamage1": 0.005945303210463734,
+    "AddedLightningDamage2": 0.005945303210463734,
+    "AddedLightningDamage3": 0.005945303210463734,
+    "AddedLightningDamage4": 0.005945303210463734,
+    "AddedPhysicalDamage1": 0.011890606420927468,
+    "AddedPhysicalDamage2": 0.011890606420927468,
+    "AddedPhysicalDamage3": 0.011890606420927468,
+    "AddedPhysicalDamage4": 0.011890606420927468,
+    "ChaosResist1": 0.002972651605231867,
+    "ChaosResist2": 0.002972651605231867,
+    "ChaosResist3": 0.002972651605231867,
+    "ColdResist1": 0.011890606420927468,
+    "ColdResist2": 0.011890606420927468,
+    "ColdResist3": 0.011890606420927468,
+    "ColdResist4": 0.011890606420927468,
+    "CriticalMultiplier1": 0.011890606420927468,
+    "CriticalMultiplier2": 0.011890606420927468,
+    "CriticalMultiplier3": 0.011890606420927468,
+    "CriticalMultiplier4": 0.005945303210463734,
+    "Dexterity1": 0.011890606420927468,
+    "Dexterity2": 0.011890606420927468,
+    "Dexterity3": 0.011890606420927468,
+    "Dexterity4": 0.011890606420927468,
+    "Dexterity5": 0.011890606420927468,
+    "EvasionGrantsDeflection1": 0.011890606420927468,
+    "EvasionGrantsDeflection2": 0.011890606420927468,
+    "EvasionGrantsDeflection3": 0.011890606420927468,
+    "FireResist1": 0.011890606420927468,
+    "FireResist2": 0.011890606420927468,
+    "FireResist3": 0.011890606420927468,
+    "FireResist4": 0.011890606420927468,
+    "GlobalMeleeSkillGemLevel1": 0.005945303210463734,
+    "GlobalMeleeSkillGemLevel2": 0.002972651605231867,
+    "IncreasedAccuracy1": 0.009512485136741973,
+    "IncreasedAccuracy2": 0.009512485136741973,
+    "IncreasedAccuracy3": 0.009512485136741973,
+    "IncreasedAccuracy4": 0.009512485136741973,
+    "IncreasedAccuracy5": 0.009512485136741973,
+    "IncreasedAttackSpeed1": 0.005945303210463734,
+    "IncreasedAttackSpeed2": 0.005945303210463734,
+    "IncreasedAttackSpeed3": 0.005945303210463734,
+    "IncreasedLife1": 0.011890606420927468,
+    "IncreasedLife2": 0.011890606420927468,
+    "IncreasedLife3": 0.011890606420927468,
+    "IncreasedLife4": 0.011890606420927468,
+    "IncreasedLife5": 0.011890606420927468,
+    "IncreasedLife6": 0.011890606420927468,
+    "IncreasedMana1": 0.011890606420927468,
+    "IncreasedMana2": 0.011890606420927468,
+    "IncreasedMana3": 0.011890606420927468,
+    "IncreasedMana4": 0.011890606420927468,
+    "IncreasedMana5": 0.011890606420927468,
+    "IncreasedMana6": 0.011890606420927468,
+    "ItemFoundRarityIncrease1": 0.011890606420927468,
+    "ItemFoundRarityIncrease2": 0.011890606420927468,
+    "ItemFoundRarityIncrease3": 0.011890606420927468,
+    "LifeGainPerTarget1": 0.011890606420927468,
+    "LifeGainPerTarget2": 0.011890606420927468,
+    "LifeGainPerTarget3": 0.011890606420927468,
+    "LifeGainPerTarget4": 0.011890606420927468,
+    "LifeGainedFromEnemyDeath1": 0.0089179548156956,
+    "LifeGainedFromEnemyDeath2": 0.0089179548156956,
+    "LifeGainedFromEnemyDeath3": 0.0089179548156956,
+    "LifeGainedFromEnemyDeath4": 0.0089179548156956,
+    "LifeGainedFromEnemyDeath5": 0.0089179548156956,
+    "LifeLeech2": 0.011890606420927468,
+    "LifeLeech3": 0.011890606420927468,
+    "LightningResist1": 0.011890606420927468,
+    "LightningResist2": 0.011890606420927468,
+    "LightningResist3": 0.011890606420927468,
+    "LightningResist4": 0.011890606420927468,
+    "LocalIncreasedEvasionAndLife1": 0.011890606420927468,
+    "LocalIncreasedEvasionAndLife2": 0.011890606420927468,
+    "LocalIncreasedEvasionAndLife3": 0.011890606420927468,
+    "LocalIncreasedEvasionRating1": 0.011890606420927468,
+    "LocalIncreasedEvasionRating2": 0.011890606420927468,
+    "LocalIncreasedEvasionRating3": 0.011890606420927468,
+    "LocalIncreasedEvasionRating4": 0.011890606420927468,
+    "LocalIncreasedEvasionRating5": 0.011890606420927468,
+    "LocalIncreasedEvasionRatingPercent1": 0.011890606420927468,
+    "LocalIncreasedEvasionRatingPercent2": 0.011890606420927468,
+    "LocalIncreasedEvasionRatingPercent3": 0.011890606420927468,
+    "ManaGainedFromEnemyDeath1": 0.0089179548156956,
+    "ManaGainedFromEnemyDeath2": 0.0089179548156956,
+    "ManaGainedFromEnemyDeath3": 0.0089179548156956,
+    "ManaGainedFromEnemyDeath4": 0.0089179548156956,
+    "ManaGainedFromEnemyDeath5": 0.0089179548156956,
+    "ManaLeech2": 0.011890606420927468,
+    "ManaLeech3": 0.011890606420927468,
+    "ReducedLocalAttributeRequirements1": 0.008323424494649227,
+    "ReducedLocalAttributeRequirements2": 0.008323424494649227,
+    "ReducedLocalAttributeRequirements3": 0.008323424494649227
+   },
+   "presents": []
+  },
+  {
+   "attendu": {
+    "AddedFireDamage1": 0.006146281499692686,
+    "AddedFireDamage2": 0.006146281499692686,
+    "AddedFireDamage3": 0.006146281499692686,
+    "AddedFireDamage4": 0.006146281499692686,
+    "AddedLightningDamage1": 0.006146281499692686,
+    "AddedLightningDamage2": 0.006146281499692686,
+    "AddedLightningDamage3": 0.006146281499692686,
+    "AddedLightningDamage4": 0.006146281499692686,
+    "AddedPhysicalDamage1": 0.012292562999385371,
+    "AddedPhysicalDamage2": 0.012292562999385371,
+    "AddedPhysicalDamage3": 0.012292562999385371,
+    "AddedPhysicalDamage4": 0.012292562999385371,
+    "ColdResist1": 0.012292562999385371,
+    "ColdResist2": 0.012292562999385371,
+    "ColdResist3": 0.012292562999385371,
+    "ColdResist4": 0.012292562999385371,
+    "CriticalMultiplier1": 0.012292562999385371,
+    "CriticalMultiplier2": 0.012292562999385371,
+    "CriticalMultiplier3": 0.012292562999385371,
+    "CriticalMultiplier4": 0.006146281499692686,
+    "Dexterity1": 0.012292562999385371,
+    "Dexterity2": 0.012292562999385371,
+    "Dexterity3": 0.012292562999385371,
+    "Dexterity4": 0.012292562999385371,
+    "Dexterity5": 0.012292562999385371,
+    "EvasionGrantsDeflection1": 0.012292562999385371,
+    "EvasionGrantsDeflection2": 0.012292562999385371,
+    "EvasionGrantsDeflection3": 0.012292562999385371,
+    "FireResist1": 0.012292562999385371,
+    "FireResist2": 0.012292562999385371,
+    "FireResist3": 0.012292562999385371,
+    "FireResist4": 0.012292562999385371,
+    "GlobalMeleeSkillGemLevel1": 0.006146281499692686,
+    "GlobalMeleeSkillGemLevel2": 0.003073140749846343,
+    "IncreasedAccuracy1": 0.009834050399508297,
+    "IncreasedAccuracy2": 0.009834050399508297,
+    "IncreasedAccuracy3": 0.009834050399508297,
+    "IncreasedAccuracy4": 0.009834050399508297,
+    "IncreasedAccuracy5": 0.009834050399508297,
+    "IncreasedAttackSpeed1": 0.006146281499692686,
+    "IncreasedAttackSpeed2": 0.006146281499692686,
+    "IncreasedAttackSpeed3": 0.006146281499692686,
+    "IncreasedLife1": 0.012292562999385371,
+    "IncreasedLife2": 0.012292562999385371,
+    "IncreasedLife3": 0.012292562999385371,
+    "IncreasedLife4": 0.012292562999385371,
+    "IncreasedLife5": 0.012292562999385371,
+    "IncreasedLife6": 0.012292562999385371,
+    "IncreasedMana1": 0.012292562999385371,
+    "IncreasedMana2": 0.012292562999385371,
+    "IncreasedMana3": 0.012292562999385371,
+    "IncreasedMana4": 0.012292562999385371,
+    "IncreasedMana5": 0.012292562999385371,
+    "IncreasedMana6": 0.012292562999385371,
+    "ItemFoundRarityIncrease1": 0.012292562999385371,
+    "ItemFoundRarityIncrease2": 0.012292562999385371,
+    "ItemFoundRarityIncrease3": 0.012292562999385371,
+    "LifeGainPerTarget1": 0.012292562999385371,
+    "LifeGainPerTarget2": 0.012292562999385371,
+    "LifeGainPerTarget3": 0.012292562999385371,
+    "LifeGainPerTarget4": 0.012292562999385371,
+    "LifeGainedFromEnemyDeath1": 0.00921942224953903,
+    "LifeGainedFromEnemyDeath2": 0.00921942224953903,
+    "LifeGainedFromEnemyDeath3": 0.00921942224953903,
+    "LifeGainedFromEnemyDeath4": 0.00921942224953903,
+    "LifeGainedFromEnemyDeath5": 0.00921942224953903,
+    "LifeLeech2": 0.012292562999385371,
+    "LifeLeech3": 0.012292562999385371,
+    "LightningResist1": 0.012292562999385371,
+    "LightningResist2": 0.012292562999385371,
+    "LightningResist3": 0.012292562999385371,
+    "LightningResist4": 0.012292562999385371,
+    "LocalIncreasedEvasionAndLife1": 0.012292562999385371,
+    "LocalIncreasedEvasionAndLife2": 0.012292562999385371,
+    "LocalIncreasedEvasionAndLife3": 0.012292562999385371,
+    "LocalIncreasedEvasionRating1": 0.012292562999385371,
+    "LocalIncreasedEvasionRating2": 0.012292562999385371,
+    "LocalIncreasedEvasionRating3": 0.012292562999385371,
+    "LocalIncreasedEvasionRating4": 0.012292562999385371,
+    "LocalIncreasedEvasionRating5": 0.012292562999385371,
+    "LocalIncreasedEvasionRatingPercent1": 0.012292562999385371,
+    "LocalIncreasedEvasionRatingPercent2": 0.012292562999385371,
+    "LocalIncreasedEvasionRatingPercent3": 0.012292562999385371,
+    "ManaGainedFromEnemyDeath1": 0.00921942224953903,
+    "ManaGainedFromEnemyDeath2": 0.00921942224953903,
+    "ManaGainedFromEnemyDeath3": 0.00921942224953903,
+    "ManaGainedFromEnemyDeath4": 0.00921942224953903,
+    "ManaGainedFromEnemyDeath5": 0.00921942224953903,
+    "ManaLeech2": 0.012292562999385371,
+    "ManaLeech3": 0.012292562999385371,
+    "ReducedLocalAttributeRequirements1": 0.008604794099569761,
+    "ReducedLocalAttributeRequirements2": 0.008604794099569761,
+    "ReducedLocalAttributeRequirements3": 0.008604794099569761
+   },
+   "presents": [
+    "AddedColdDamage1",
+    "ChaosResist1"
+   ]
+  },
+  {
+   "attendu": {
+    "ChaosResist1": 0.005307855626326964,
+    "ChaosResist2": 0.005307855626326964,
+    "ChaosResist3": 0.005307855626326964,
+    "ColdResist1": 0.021231422505307854,
+    "ColdResist2": 0.021231422505307854,
+    "ColdResist3": 0.021231422505307854,
+    "ColdResist4": 0.021231422505307854,
+    "CriticalMultiplier1": 0.021231422505307854,
+    "CriticalMultiplier2": 0.021231422505307854,
+    "CriticalMultiplier3": 0.021231422505307854,
+    "CriticalMultiplier4": 0.010615711252653927,
+    "Dexterity1": 0.021231422505307854,
+    "Dexterity2": 0.021231422505307854,
+    "Dexterity3": 0.021231422505307854,
+    "Dexterity4": 0.021231422505307854,
+    "Dexterity5": 0.021231422505307854,
+    "EvasionGrantsDeflection1": 0.021231422505307854,
+    "EvasionGrantsDeflection2": 0.021231422505307854,
+    "EvasionGrantsDeflection3": 0.021231422505307854,
+    "FireResist1": 0.021231422505307854,
+    "FireResist2": 0.021231422505307854,
+    "FireResist3": 0.021231422505307854,
+    "FireResist4": 0.021231422505307854,
+    "GlobalMeleeSkillGemLevel1": 0.010615711252653927,
+    "GlobalMeleeSkillGemLevel2": 0.005307855626326964,
+    "IncreasedAttackSpeed1": 0.010615711252653927,
+    "IncreasedAttackSpeed2": 0.010615711252653927,
+    "IncreasedAttackSpeed3": 0.010615711252653927,
+    "ItemFoundRarityIncrease1": 0.021231422505307854,
+    "ItemFoundRarityIncrease2": 0.021231422505307854,
+    "ItemFoundRarityIncrease3": 0.021231422505307854,
+    "LifeGainPerTarget1": 0.021231422505307854,
+    "LifeGainPerTarget2": 0.021231422505307854,
+    "LifeGainPerTarget3": 0.021231422505307854,
+    "LifeGainPerTarget4": 0.021231422505307854,
+    "LifeGainedFromEnemyDeath1": 0.01592356687898089,
+    "LifeGainedFromEnemyDeath2": 0.01592356687898089,
+    "LifeGainedFromEnemyDeath3": 0.01592356687898089,
+    "LifeGainedFromEnemyDeath4": 0.01592356687898089,
+    "LifeGainedFromEnemyDeath5": 0.01592356687898089,
+    "LifeLeech2": 0.021231422505307854,
+    "LifeLeech3": 0.021231422505307854,
+    "LightningResist1": 0.021231422505307854,
+    "LightningResist2": 0.021231422505307854,
+    "LightningResist3": 0.021231422505307854,
+    "LightningResist4": 0.021231422505307854,
+    "ManaGainedFromEnemyDeath1": 0.01592356687898089,
+    "ManaGainedFromEnemyDeath2": 0.01592356687898089,
+    "ManaGainedFromEnemyDeath3": 0.01592356687898089,
+    "ManaGainedFromEnemyDeath4": 0.01592356687898089,
+    "ManaGainedFromEnemyDeath5": 0.01592356687898089,
+    "ManaLeech2": 0.021231422505307854,
+    "ManaLeech3": 0.021231422505307854,
+    "ReducedLocalAttributeRequirements1": 0.014861995753715499,
+    "ReducedLocalAttributeRequirements2": 0.014861995753715499,
+    "ReducedLocalAttributeRequirements3": 0.014861995753715499
+   },
+   "presents": [
+    "AddedColdDamage1",
+    "AddedFireDamage1",
+    "AddedLightningDamage1"
+   ]
+  }
+ ],
+ "ilvl": 45,
+ "mods": {
+  "mods": [
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdDamage",
+    "groupes": [
+     "ColdDamage"
+    ],
+    "id": "AddedColdDamage1",
+    "niveau": 1,
+    "nom": "Frosted",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_cold_damage",
+      "max": 1,
+      "min": 1
+     },
+     {
+      "id": "attack_maximum_added_cold_damage",
+      "max": 3,
+      "min": 2
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "cold",
+     "attack"
+    ],
+    "texte": "Adds 1 to (2-3) Cold damage to Attacks",
+    "tirable": true,
+    "type": "ColdDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdDamage",
+    "groupes": [
+     "ColdDamage"
+    ],
+    "id": "AddedColdDamage2",
+    "niveau": 8,
+    "nom": "Chilled",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_cold_damage",
+      "max": 4,
+      "min": 3
+     },
+     {
+      "id": "attack_maximum_added_cold_damage",
+      "max": 8,
+      "min": 5
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "cold",
+     "attack"
+    ],
+    "texte": "Adds (3-4) to (5-8) Cold damage to Attacks",
+    "tirable": true,
+    "type": "ColdDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdDamage",
+    "groupes": [
+     "ColdDamage"
+    ],
+    "id": "AddedColdDamage3",
+    "niveau": 16,
+    "nom": "Icy",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_cold_damage",
+      "max": 6,
+      "min": 5
+     },
+     {
+      "id": "attack_maximum_added_cold_damage",
+      "max": 11,
+      "min": 9
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "cold",
+     "attack"
+    ],
+    "texte": "Adds (5-6) to (9-11) Cold damage to Attacks",
+    "tirable": true,
+    "type": "ColdDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdDamage",
+    "groupes": [
+     "ColdDamage"
+    ],
+    "id": "AddedColdDamage4",
+    "niveau": 33,
+    "nom": "Frigid",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_cold_damage",
+      "max": 8,
+      "min": 7
+     },
+     {
+      "id": "attack_maximum_added_cold_damage",
+      "max": 14,
+      "min": 12
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "cold",
+     "attack"
+    ],
+    "texte": "Adds (7-8) to (12-14) Cold damage to Attacks",
+    "tirable": true,
+    "type": "ColdDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdDamage",
+    "groupes": [
+     "ColdDamage"
+    ],
+    "id": "AddedColdDamage5",
+    "niveau": 46,
+    "nom": "Freezing",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_cold_damage",
+      "max": 10,
+      "min": 9
+     },
+     {
+      "id": "attack_maximum_added_cold_damage",
+      "max": 17,
+      "min": 15
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "cold",
+     "attack"
+    ],
+    "texte": "Adds (9-10) to (15-17) Cold damage to Attacks",
+    "tirable": true,
+    "type": "ColdDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdDamage",
+    "groupes": [
+     "ColdDamage"
+    ],
+    "id": "AddedColdDamage6",
+    "niveau": 54,
+    "nom": "Frozen",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_cold_damage",
+      "max": 13,
+      "min": 11
+     },
+     {
+      "id": "attack_maximum_added_cold_damage",
+      "max": 21,
+      "min": 18
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "cold",
+     "attack"
+    ],
+    "texte": "Adds (11-13) to (18-21) Cold damage to Attacks",
+    "tirable": true,
+    "type": "ColdDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdDamage",
+    "groupes": [
+     "ColdDamage"
+    ],
+    "id": "AddedColdDamage7",
+    "niveau": 60,
+    "nom": "Glaciated",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_cold_damage",
+      "max": 15,
+      "min": 14
+     },
+     {
+      "id": "attack_maximum_added_cold_damage",
+      "max": 24,
+      "min": 22
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "cold",
+     "attack"
+    ],
+    "texte": "Adds (14-15) to (22-24) Cold damage to Attacks",
+    "tirable": true,
+    "type": "ColdDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdDamage",
+    "groupes": [
+     "ColdDamage"
+    ],
+    "id": "AddedColdDamage8",
+    "niveau": 65,
+    "nom": "Polar",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_cold_damage",
+      "max": 20,
+      "min": 16
+     },
+     {
+      "id": "attack_maximum_added_cold_damage",
+      "max": 31,
+      "min": 25
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "cold",
+     "attack"
+    ],
+    "texte": "Adds (16-20) to (25-31) Cold damage to Attacks",
+    "tirable": true,
+    "type": "ColdDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdDamage",
+    "groupes": [
+     "ColdDamage"
+    ],
+    "id": "AddedColdDamage9",
+    "niveau": 75,
+    "nom": "Entombing",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_cold_damage",
+      "max": 24,
+      "min": 21
+     },
+     {
+      "id": "attack_maximum_added_cold_damage",
+      "max": 37,
+      "min": 32
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "cold",
+     "attack"
+    ],
+    "texte": "Adds (21-24) to (32-37) Cold damage to Attacks",
+    "tirable": true,
+    "type": "ColdDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireDamage",
+    "groupes": [
+     "FireDamage"
+    ],
+    "id": "AddedFireDamage1",
+    "niveau": 1,
+    "nom": "Heated",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_fire_damage",
+      "max": 2,
+      "min": 1
+     },
+     {
+      "id": "attack_maximum_added_fire_damage",
+      "max": 3,
+      "min": 3
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "fire",
+     "attack"
+    ],
+    "texte": "Adds (1-2) to 3 Fire damage to Attacks",
+    "tirable": true,
+    "type": "FireDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireDamage",
+    "groupes": [
+     "FireDamage"
+    ],
+    "id": "AddedFireDamage2",
+    "niveau": 8,
+    "nom": "Smouldering",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_fire_damage",
+      "max": 5,
+      "min": 3
+     },
+     {
+      "id": "attack_maximum_added_fire_damage",
+      "max": 9,
+      "min": 6
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "fire",
+     "attack"
+    ],
+    "texte": "Adds (3-5) to (6-9) Fire damage to Attacks",
+    "tirable": true,
+    "type": "FireDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireDamage",
+    "groupes": [
+     "FireDamage"
+    ],
+    "id": "AddedFireDamage3",
+    "niveau": 16,
+    "nom": "Smoking",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_fire_damage",
+      "max": 8,
+      "min": 6
+     },
+     {
+      "id": "attack_maximum_added_fire_damage",
+      "max": 13,
+      "min": 10
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "fire",
+     "attack"
+    ],
+    "texte": "Adds (6-8) to (10-13) Fire damage to Attacks",
+    "tirable": true,
+    "type": "FireDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireDamage",
+    "groupes": [
+     "FireDamage"
+    ],
+    "id": "AddedFireDamage4",
+    "niveau": 33,
+    "nom": "Burning",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_fire_damage",
+      "max": 11,
+      "min": 9
+     },
+     {
+      "id": "attack_maximum_added_fire_damage",
+      "max": 17,
+      "min": 14
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "fire",
+     "attack"
+    ],
+    "texte": "Adds (9-11) to (14-17) Fire damage to Attacks",
+    "tirable": true,
+    "type": "FireDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireDamage",
+    "groupes": [
+     "FireDamage"
+    ],
+    "id": "AddedFireDamage5",
+    "niveau": 46,
+    "nom": "Flaming",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_fire_damage",
+      "max": 13,
+      "min": 12
+     },
+     {
+      "id": "attack_maximum_added_fire_damage",
+      "max": 20,
+      "min": 18
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "fire",
+     "attack"
+    ],
+    "texte": "Adds (12-13) to (18-20) Fire damage to Attacks",
+    "tirable": true,
+    "type": "FireDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireDamage",
+    "groupes": [
+     "FireDamage"
+    ],
+    "id": "AddedFireDamage6",
+    "niveau": 54,
+    "nom": "Scorching",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_fire_damage",
+      "max": 16,
+      "min": 11
+     },
+     {
+      "id": "attack_maximum_added_fire_damage",
+      "max": 26,
+      "min": 21
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "fire",
+     "attack"
+    ],
+    "texte": "Adds (11-16) to (21-26) Fire damage to Attacks",
+    "tirable": true,
+    "type": "FireDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireDamage",
+    "groupes": [
+     "FireDamage"
+    ],
+    "id": "AddedFireDamage7",
+    "niveau": 60,
+    "nom": "Incinerating",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_fire_damage",
+      "max": 19,
+      "min": 13
+     },
+     {
+      "id": "attack_maximum_added_fire_damage",
+      "max": 32,
+      "min": 27
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "fire",
+     "attack"
+    ],
+    "texte": "Adds (13-19) to (27-32) Fire damage to Attacks",
+    "tirable": true,
+    "type": "FireDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireDamage",
+    "groupes": [
+     "FireDamage"
+    ],
+    "id": "AddedFireDamage8",
+    "niveau": 65,
+    "nom": "Blasting",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_fire_damage",
+      "max": 24,
+      "min": 20
+     },
+     {
+      "id": "attack_maximum_added_fire_damage",
+      "max": 36,
+      "min": 33
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "fire",
+     "attack"
+    ],
+    "texte": "Adds (20-24) to (33-36) Fire damage to Attacks",
+    "tirable": true,
+    "type": "FireDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireDamage",
+    "groupes": [
+     "FireDamage"
+    ],
+    "id": "AddedFireDamage9",
+    "niveau": 75,
+    "nom": "Cremating",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_fire_damage",
+      "max": 29,
+      "min": 25
+     },
+     {
+      "id": "attack_maximum_added_fire_damage",
+      "max": 45,
+      "min": 37
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "fire",
+     "attack"
+    ],
+    "texte": "Adds (25-29) to (37-45) Fire damage to Attacks",
+    "tirable": true,
+    "type": "FireDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningDamage",
+    "groupes": [
+     "LightningDamage"
+    ],
+    "id": "AddedLightningDamage1",
+    "niveau": 1,
+    "nom": "Humming",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_lightning_damage",
+      "max": 1,
+      "min": 1
+     },
+     {
+      "id": "attack_maximum_added_lightning_damage",
+      "max": 6,
+      "min": 4
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "lightning",
+     "attack"
+    ],
+    "texte": "Adds 1 to (4-6) Lightning damage to Attacks",
+    "tirable": true,
+    "type": "LightningDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningDamage",
+    "groupes": [
+     "LightningDamage"
+    ],
+    "id": "AddedLightningDamage2",
+    "niveau": 8,
+    "nom": "Buzzing",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_lightning_damage",
+      "max": 1,
+      "min": 1
+     },
+     {
+      "id": "attack_maximum_added_lightning_damage",
+      "max": 15,
+      "min": 10
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "lightning",
+     "attack"
+    ],
+    "texte": "Adds 1 to (10-15) Lightning damage to Attacks",
+    "tirable": true,
+    "type": "LightningDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningDamage",
+    "groupes": [
+     "LightningDamage"
+    ],
+    "id": "AddedLightningDamage3",
+    "niveau": 16,
+    "nom": "Snapping",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_lightning_damage",
+      "max": 1,
+      "min": 1
+     },
+     {
+      "id": "attack_maximum_added_lightning_damage",
+      "max": 22,
+      "min": 16
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "lightning",
+     "attack"
+    ],
+    "texte": "Adds 1 to (16-22) Lightning damage to Attacks",
+    "tirable": true,
+    "type": "LightningDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningDamage",
+    "groupes": [
+     "LightningDamage"
+    ],
+    "id": "AddedLightningDamage4",
+    "niveau": 33,
+    "nom": "Crackling",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_lightning_damage",
+      "max": 1,
+      "min": 1
+     },
+     {
+      "id": "attack_maximum_added_lightning_damage",
+      "max": 27,
+      "min": 23
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "lightning",
+     "attack"
+    ],
+    "texte": "Adds 1 to (23-27) Lightning damage to Attacks",
+    "tirable": true,
+    "type": "LightningDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningDamage",
+    "groupes": [
+     "LightningDamage"
+    ],
+    "id": "AddedLightningDamage5",
+    "niveau": 46,
+    "nom": "Sparking",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_lightning_damage",
+      "max": 1,
+      "min": 1
+     },
+     {
+      "id": "attack_maximum_added_lightning_damage",
+      "max": 32,
+      "min": 28
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "lightning",
+     "attack"
+    ],
+    "texte": "Adds 1 to (28-32) Lightning damage to Attacks",
+    "tirable": true,
+    "type": "LightningDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningDamage",
+    "groupes": [
+     "LightningDamage"
+    ],
+    "id": "AddedLightningDamage6",
+    "niveau": 54,
+    "nom": "Arcing",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_lightning_damage",
+      "max": 2,
+      "min": 1
+     },
+     {
+      "id": "attack_maximum_added_lightning_damage",
+      "max": 40,
+      "min": 33
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "lightning",
+     "attack"
+    ],
+    "texte": "Adds (1-2) to (33-40) Lightning damage to Attacks",
+    "tirable": true,
+    "type": "LightningDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningDamage",
+    "groupes": [
+     "LightningDamage"
+    ],
+    "id": "AddedLightningDamage7",
+    "niveau": 60,
+    "nom": "Shocking",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_lightning_damage",
+      "max": 2,
+      "min": 1
+     },
+     {
+      "id": "attack_maximum_added_lightning_damage",
+      "max": 47,
+      "min": 41
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "lightning",
+     "attack"
+    ],
+    "texte": "Adds (1-2) to (41-47) Lightning damage to Attacks",
+    "tirable": true,
+    "type": "LightningDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningDamage",
+    "groupes": [
+     "LightningDamage"
+    ],
+    "id": "AddedLightningDamage8",
+    "niveau": 65,
+    "nom": "Discharging",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_lightning_damage",
+      "max": 3,
+      "min": 1
+     },
+     {
+      "id": "attack_maximum_added_lightning_damage",
+      "max": 59,
+      "min": 48
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "lightning",
+     "attack"
+    ],
+    "texte": "Adds (1-3) to (48-59) Lightning damage to Attacks",
+    "tirable": true,
+    "type": "LightningDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningDamage",
+    "groupes": [
+     "LightningDamage"
+    ],
+    "id": "AddedLightningDamage9",
+    "niveau": 75,
+    "nom": "Electrocuting",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_lightning_damage",
+      "max": 4,
+      "min": 1
+     },
+     {
+      "id": "attack_maximum_added_lightning_damage",
+      "max": 71,
+      "min": 60
+     }
+    ],
+    "tags": [
+     "elemental_damage",
+     "damage",
+     "elemental",
+     "lightning",
+     "attack"
+    ],
+    "texte": "Adds (1-4) to (60-71) Lightning damage to Attacks",
+    "tirable": true,
+    "type": "LightningDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "PhysicalDamage",
+    "groupes": [
+     "PhysicalDamage"
+    ],
+    "id": "AddedPhysicalDamage1",
+    "niveau": 1,
+    "nom": "Glinting",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_physical_damage",
+      "max": 2,
+      "min": 1
+     },
+     {
+      "id": "attack_maximum_added_physical_damage",
+      "max": 3,
+      "min": 3
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical",
+     "attack"
+    ],
+    "texte": "Adds (1-2) to 3 Physical Damage to Attacks",
+    "tirable": true,
+    "type": "PhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "PhysicalDamage",
+    "groupes": [
+     "PhysicalDamage"
+    ],
+    "id": "AddedPhysicalDamage2",
+    "niveau": 8,
+    "nom": "Burnished",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_physical_damage",
+      "max": 3,
+      "min": 2
+     },
+     {
+      "id": "attack_maximum_added_physical_damage",
+      "max": 6,
+      "min": 4
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical",
+     "attack"
+    ],
+    "texte": "Adds (2-3) to (4-6) Physical Damage to Attacks",
+    "tirable": true,
+    "type": "PhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "PhysicalDamage",
+    "groupes": [
+     "PhysicalDamage"
+    ],
+    "id": "AddedPhysicalDamage3",
+    "niveau": 16,
+    "nom": "Polished",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_physical_damage",
+      "max": 4,
+      "min": 2
+     },
+     {
+      "id": "attack_maximum_added_physical_damage",
+      "max": 8,
+      "min": 5
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical",
+     "attack"
+    ],
+    "texte": "Adds (2-4) to (5-8) Physical Damage to Attacks",
+    "tirable": true,
+    "type": "PhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "PhysicalDamage",
+    "groupes": [
+     "PhysicalDamage"
+    ],
+    "id": "AddedPhysicalDamage4",
+    "niveau": 33,
+    "nom": "Honed",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_physical_damage",
+      "max": 6,
+      "min": 4
+     },
+     {
+      "id": "attack_maximum_added_physical_damage",
+      "max": 11,
+      "min": 8
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical",
+     "attack"
+    ],
+    "texte": "Adds (4-6) to (8-11) Physical Damage to Attacks",
+    "tirable": true,
+    "type": "PhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "PhysicalDamage",
+    "groupes": [
+     "PhysicalDamage"
+    ],
+    "id": "AddedPhysicalDamage5",
+    "niveau": 46,
+    "nom": "Gleaming",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_physical_damage",
+      "max": 7,
+      "min": 5
+     },
+     {
+      "id": "attack_maximum_added_physical_damage",
+      "max": 13,
+      "min": 9
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical",
+     "attack"
+    ],
+    "texte": "Adds (5-7) to (9-13) Physical Damage to Attacks",
+    "tirable": true,
+    "type": "PhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "PhysicalDamage",
+    "groupes": [
+     "PhysicalDamage"
+    ],
+    "id": "AddedPhysicalDamage6",
+    "niveau": 54,
+    "nom": "Annealed",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_physical_damage",
+      "max": 10,
+      "min": 6
+     },
+     {
+      "id": "attack_maximum_added_physical_damage",
+      "max": 17,
+      "min": 12
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical",
+     "attack"
+    ],
+    "texte": "Adds (6-10) to (12-17) Physical Damage to Attacks",
+    "tirable": true,
+    "type": "PhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "PhysicalDamage",
+    "groupes": [
+     "PhysicalDamage"
+    ],
+    "id": "AddedPhysicalDamage7",
+    "niveau": 60,
+    "nom": "Razor-sharp",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_physical_damage",
+      "max": 11,
+      "min": 7
+     },
+     {
+      "id": "attack_maximum_added_physical_damage",
+      "max": 20,
+      "min": 14
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical",
+     "attack"
+    ],
+    "texte": "Adds (7-11) to (14-20) Physical Damage to Attacks",
+    "tirable": true,
+    "type": "PhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "PhysicalDamage",
+    "groupes": [
+     "PhysicalDamage"
+    ],
+    "id": "AddedPhysicalDamage8",
+    "niveau": 65,
+    "nom": "Tempered",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_physical_damage",
+      "max": 15,
+      "min": 10
+     },
+     {
+      "id": "attack_maximum_added_physical_damage",
+      "max": 26,
+      "min": 18
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical",
+     "attack"
+    ],
+    "texte": "Adds (10-15) to (18-26) Physical Damage to Attacks",
+    "tirable": true,
+    "type": "PhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "PhysicalDamage",
+    "groupes": [
+     "PhysicalDamage"
+    ],
+    "id": "AddedPhysicalDamage9",
+    "niveau": 75,
+    "nom": "Flaring",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_minimum_added_physical_damage",
+      "max": 19,
+      "min": 12
+     },
+     {
+      "id": "attack_maximum_added_physical_damage",
+      "max": 32,
+      "min": 22
+     }
+    ],
+    "tags": [
+     "physical_damage",
+     "damage",
+     "physical",
+     "attack"
+    ],
+    "texte": "Adds (12-19) to (22-32) Physical Damage to Attacks",
+    "tirable": true,
+    "type": "PhysicalDamage"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ChaosResistance",
+    "groupes": [
+     "ChaosResistance"
+    ],
+    "id": "ChaosResist1",
+    "niveau": 16,
+    "nom": "of the Lost",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_chaos_damage_resistance_%",
+      "max": 7,
+      "min": 4
+     }
+    ],
+    "tags": [
+     "chaos_resistance",
+     "chaos",
+     "resistance"
+    ],
+    "texte": "+(4-7)% to Chaos Resistance",
+    "tirable": true,
+    "type": "ChaosResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ChaosResistance",
+    "groupes": [
+     "ChaosResistance"
+    ],
+    "id": "ChaosResist2",
+    "niveau": 30,
+    "nom": "of Banishment",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_chaos_damage_resistance_%",
+      "max": 11,
+      "min": 8
+     }
+    ],
+    "tags": [
+     "chaos_resistance",
+     "chaos",
+     "resistance"
+    ],
+    "texte": "+(8-11)% to Chaos Resistance",
+    "tirable": true,
+    "type": "ChaosResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ChaosResistance",
+    "groupes": [
+     "ChaosResistance"
+    ],
+    "id": "ChaosResist3",
+    "niveau": 44,
+    "nom": "of Eviction",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_chaos_damage_resistance_%",
+      "max": 15,
+      "min": 12
+     }
+    ],
+    "tags": [
+     "chaos_resistance",
+     "chaos",
+     "resistance"
+    ],
+    "texte": "+(12-15)% to Chaos Resistance",
+    "tirable": true,
+    "type": "ChaosResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ChaosResistance",
+    "groupes": [
+     "ChaosResistance"
+    ],
+    "id": "ChaosResist4",
+    "niveau": 56,
+    "nom": "of Expulsion",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_chaos_damage_resistance_%",
+      "max": 19,
+      "min": 16
+     }
+    ],
+    "tags": [
+     "chaos_resistance",
+     "chaos",
+     "resistance"
+    ],
+    "texte": "+(16-19)% to Chaos Resistance",
+    "tirable": true,
+    "type": "ChaosResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ChaosResistance",
+    "groupes": [
+     "ChaosResistance"
+    ],
+    "id": "ChaosResist5",
+    "niveau": 68,
+    "nom": "of Exile",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_chaos_damage_resistance_%",
+      "max": 23,
+      "min": 20
+     }
+    ],
+    "tags": [
+     "chaos_resistance",
+     "chaos",
+     "resistance"
+    ],
+    "texte": "+(20-23)% to Chaos Resistance",
+    "tirable": true,
+    "type": "ChaosResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ChaosResistance",
+    "groupes": [
+     "ChaosResistance"
+    ],
+    "id": "ChaosResist6",
+    "niveau": 81,
+    "nom": "of Bameth",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_chaos_damage_resistance_%",
+      "max": 27,
+      "min": 24
+     }
+    ],
+    "tags": [
+     "chaos_resistance",
+     "chaos",
+     "resistance"
+    ],
+    "texte": "+(24-27)% to Chaos Resistance",
+    "tirable": true,
+    "type": "ChaosResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist1",
+    "niveau": 1,
+    "nom": "of the Seal",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 10,
+      "min": 6
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(6-10)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist2",
+    "niveau": 14,
+    "nom": "of the Penguin",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 15,
+      "min": 11
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(11-15)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist3",
+    "niveau": 26,
+    "nom": "of the Narwhal",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 20,
+      "min": 16
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(16-20)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist4",
+    "niveau": 38,
+    "nom": "of the Yeti",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 25,
+      "min": 21
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(21-25)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist5",
+    "niveau": 50,
+    "nom": "of the Walrus",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 30,
+      "min": 26
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(26-30)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist6",
+    "niveau": 60,
+    "nom": "of the Polar Bear",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 35,
+      "min": 31
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(31-35)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist7",
+    "niveau": 71,
+    "nom": "of the Ice",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 40,
+      "min": 36
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(36-40)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ColdResistance",
+    "groupes": [
+     "ColdResistance"
+    ],
+    "id": "ColdResist8",
+    "niveau": 82,
+    "nom": "of Haast",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_cold_damage_resistance_%",
+      "max": 45,
+      "min": 41
+     }
+    ],
+    "tags": [
+     "cold_resistance",
+     "elemental_resistance",
+     "elemental",
+     "cold",
+     "resistance"
+    ],
+    "texte": "+(41-45)% to Cold Resistance",
+    "tirable": true,
+    "type": "ColdResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "CriticalStrikeMultiplier",
+    "groupes": [
+     "CriticalStrikeMultiplier"
+    ],
+    "id": "CriticalMultiplier1",
+    "niveau": 8,
+    "nom": "of Ire",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_critical_strike_multiplier_+",
+      "max": 14,
+      "min": 10
+     }
+    ],
+    "tags": [
+     "damage",
+     "critical"
+    ],
+    "texte": "(10-14)% increased Critical Damage Bonus",
+    "tirable": true,
+    "type": "CriticalStrikeMultiplier"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "CriticalStrikeMultiplier",
+    "groupes": [
+     "CriticalStrikeMultiplier"
+    ],
+    "id": "CriticalMultiplier2",
+    "niveau": 21,
+    "nom": "of Anger",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_critical_strike_multiplier_+",
+      "max": 19,
+      "min": 15
+     }
+    ],
+    "tags": [
+     "damage",
+     "critical"
+    ],
+    "texte": "(15-19)% increased Critical Damage Bonus",
+    "tirable": true,
+    "type": "CriticalStrikeMultiplier"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "CriticalStrikeMultiplier",
+    "groupes": [
+     "CriticalStrikeMultiplier"
+    ],
+    "id": "CriticalMultiplier3",
+    "niveau": 31,
+    "nom": "of Rage",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_critical_strike_multiplier_+",
+      "max": 24,
+      "min": 20
+     }
+    ],
+    "tags": [
+     "damage",
+     "critical"
+    ],
+    "texte": "(20-24)% increased Critical Damage Bonus",
+    "tirable": true,
+    "type": "CriticalStrikeMultiplier"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "CriticalStrikeMultiplier",
+    "groupes": [
+     "CriticalStrikeMultiplier"
+    ],
+    "id": "CriticalMultiplier4",
+    "niveau": 45,
+    "nom": "of Fury",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_critical_strike_multiplier_+",
+      "max": 29,
+      "min": 25
+     }
+    ],
+    "tags": [
+     "damage",
+     "critical"
+    ],
+    "texte": "(25-29)% increased Critical Damage Bonus",
+    "tirable": true,
+    "type": "CriticalStrikeMultiplier"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "CriticalStrikeMultiplier",
+    "groupes": [
+     "CriticalStrikeMultiplier"
+    ],
+    "id": "CriticalMultiplier5",
+    "niveau": 59,
+    "nom": "of Ferocity",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_critical_strike_multiplier_+",
+      "max": 34,
+      "min": 30
+     }
+    ],
+    "tags": [
+     "damage",
+     "critical"
+    ],
+    "texte": "(30-34)% increased Critical Damage Bonus",
+    "tirable": true,
+    "type": "CriticalStrikeMultiplier"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Dexterity",
+    "groupes": [
+     "Dexterity"
+    ],
+    "id": "Dexterity1",
+    "niveau": 1,
+    "nom": "of the Mongoose",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "sword",
+      "weight": 1
+     },
+     {
+      "tag": "spear",
+      "weight": 1
+     },
+     {
+      "tag": "claw",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "bow",
+      "weight": 1
+     },
+     {
+      "tag": "crossbow",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_dexterity",
+      "max": 8,
+      "min": 5
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(5-8) to Dexterity",
+    "tirable": true,
+    "type": "Dexterity"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Dexterity",
+    "groupes": [
+     "Dexterity"
+    ],
+    "id": "Dexterity2",
+    "niveau": 11,
+    "nom": "of the Lynx",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "sword",
+      "weight": 1
+     },
+     {
+      "tag": "spear",
+      "weight": 1
+     },
+     {
+      "tag": "claw",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "bow",
+      "weight": 1
+     },
+     {
+      "tag": "crossbow",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_dexterity",
+      "max": 12,
+      "min": 9
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(9-12) to Dexterity",
+    "tirable": true,
+    "type": "Dexterity"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Dexterity",
+    "groupes": [
+     "Dexterity"
+    ],
+    "id": "Dexterity3",
+    "niveau": 22,
+    "nom": "of the Fox",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "sword",
+      "weight": 1
+     },
+     {
+      "tag": "spear",
+      "weight": 1
+     },
+     {
+      "tag": "claw",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "bow",
+      "weight": 1
+     },
+     {
+      "tag": "crossbow",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_dexterity",
+      "max": 16,
+      "min": 13
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(13-16) to Dexterity",
+    "tirable": true,
+    "type": "Dexterity"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Dexterity",
+    "groupes": [
+     "Dexterity"
+    ],
+    "id": "Dexterity4",
+    "niveau": 33,
+    "nom": "of the Falcon",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "sword",
+      "weight": 1
+     },
+     {
+      "tag": "spear",
+      "weight": 1
+     },
+     {
+      "tag": "claw",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "bow",
+      "weight": 1
+     },
+     {
+      "tag": "crossbow",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_dexterity",
+      "max": 20,
+      "min": 17
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(17-20) to Dexterity",
+    "tirable": true,
+    "type": "Dexterity"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Dexterity",
+    "groupes": [
+     "Dexterity"
+    ],
+    "id": "Dexterity5",
+    "niveau": 44,
+    "nom": "of the Panther",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "sword",
+      "weight": 1
+     },
+     {
+      "tag": "spear",
+      "weight": 1
+     },
+     {
+      "tag": "claw",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "bow",
+      "weight": 1
+     },
+     {
+      "tag": "crossbow",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_dexterity",
+      "max": 24,
+      "min": 21
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(21-24) to Dexterity",
+    "tirable": true,
+    "type": "Dexterity"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Dexterity",
+    "groupes": [
+     "Dexterity"
+    ],
+    "id": "Dexterity6",
+    "niveau": 55,
+    "nom": "of the Leopard",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "sword",
+      "weight": 1
+     },
+     {
+      "tag": "spear",
+      "weight": 1
+     },
+     {
+      "tag": "claw",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "bow",
+      "weight": 1
+     },
+     {
+      "tag": "crossbow",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_dexterity",
+      "max": 27,
+      "min": 25
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(25-27) to Dexterity",
+    "tirable": true,
+    "type": "Dexterity"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Dexterity",
+    "groupes": [
+     "Dexterity"
+    ],
+    "id": "Dexterity7",
+    "niveau": 66,
+    "nom": "of the Jaguar",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "sword",
+      "weight": 1
+     },
+     {
+      "tag": "spear",
+      "weight": 1
+     },
+     {
+      "tag": "claw",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "bow",
+      "weight": 1
+     },
+     {
+      "tag": "crossbow",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_dexterity",
+      "max": 30,
+      "min": 28
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(28-30) to Dexterity",
+    "tirable": true,
+    "type": "Dexterity"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Dexterity",
+    "groupes": [
+     "Dexterity"
+    ],
+    "id": "Dexterity8",
+    "niveau": 74,
+    "nom": "of the Phantom",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "sword",
+      "weight": 1
+     },
+     {
+      "tag": "spear",
+      "weight": 1
+     },
+     {
+      "tag": "claw",
+      "weight": 1
+     },
+     {
+      "tag": "warstaff",
+      "weight": 1
+     },
+     {
+      "tag": "dagger",
+      "weight": 1
+     },
+     {
+      "tag": "bow",
+      "weight": 1
+     },
+     {
+      "tag": "crossbow",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_dexterity",
+      "max": 33,
+      "min": 31
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(31-33) to Dexterity",
+    "tirable": true,
+    "type": "Dexterity"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "Dexterity",
+    "groupes": [
+     "Dexterity"
+    ],
+    "id": "Dexterity9",
+    "niveau": 81,
+    "nom": "of the Wind",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "additional_dexterity",
+      "max": 36,
+      "min": 34
+     }
+    ],
+    "tags": [
+     "attribute"
+    ],
+    "texte": "+(34-36) to Dexterity",
+    "tirable": true,
+    "type": "Dexterity"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "EvasionAppliesToDeflection",
+    "groupes": [
+     "EvasionAppliesToDeflection"
+    ],
+    "id": "EvasionGrantsDeflection1",
+    "niveau": 1,
+    "nom": "of Deflecting",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_deflection_rating_%_of_evasion_rating",
+      "max": 11,
+      "min": 8
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "Gain Deflection Rating equal to (8-11)% of Evasion Rating",
+    "tirable": true,
+    "type": "EvasionAppliesToDeflection"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "EvasionAppliesToDeflection",
+    "groupes": [
+     "EvasionAppliesToDeflection"
+    ],
+    "id": "EvasionGrantsDeflection2",
+    "niveau": 16,
+    "nom": "of Bending",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_deflection_rating_%_of_evasion_rating",
+      "max": 14,
+      "min": 12
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "Gain Deflection Rating equal to (12-14)% of Evasion Rating",
+    "tirable": true,
+    "type": "EvasionAppliesToDeflection"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "EvasionAppliesToDeflection",
+    "groupes": [
+     "EvasionAppliesToDeflection"
+    ],
+    "id": "EvasionGrantsDeflection3",
+    "niveau": 36,
+    "nom": "of Curvation",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_deflection_rating_%_of_evasion_rating",
+      "max": 17,
+      "min": 15
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "Gain Deflection Rating equal to (15-17)% of Evasion Rating",
+    "tirable": true,
+    "type": "EvasionAppliesToDeflection"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "EvasionAppliesToDeflection",
+    "groupes": [
+     "EvasionAppliesToDeflection"
+    ],
+    "id": "EvasionGrantsDeflection4",
+    "niveau": 48,
+    "nom": "of Diversion",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_deflection_rating_%_of_evasion_rating",
+      "max": 20,
+      "min": 18
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "Gain Deflection Rating equal to (18-20)% of Evasion Rating",
+    "tirable": true,
+    "type": "EvasionAppliesToDeflection"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "EvasionAppliesToDeflection",
+    "groupes": [
+     "EvasionAppliesToDeflection"
+    ],
+    "id": "EvasionGrantsDeflection5",
+    "niveau": 66,
+    "nom": "of Flexure",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_deflection_rating_%_of_evasion_rating",
+      "max": 23,
+      "min": 21
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "Gain Deflection Rating equal to (21-23)% of Evasion Rating",
+    "tirable": true,
+    "type": "EvasionAppliesToDeflection"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist1",
+    "niveau": 1,
+    "nom": "of the Whelpling",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 10,
+      "min": 6
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(6-10)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist2",
+    "niveau": 12,
+    "nom": "of the Salamander",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 15,
+      "min": 11
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(11-15)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist3",
+    "niveau": 24,
+    "nom": "of the Drake",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 20,
+      "min": 16
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(16-20)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist4",
+    "niveau": 36,
+    "nom": "of the Kiln",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 25,
+      "min": 21
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(21-25)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist5",
+    "niveau": 48,
+    "nom": "of the Furnace",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 30,
+      "min": 26
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(26-30)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist6",
+    "niveau": 60,
+    "nom": "of the Volcano",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 35,
+      "min": 31
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(31-35)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist7",
+    "niveau": 71,
+    "nom": "of Magma",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 40,
+      "min": 36
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(36-40)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "FireResistance",
+    "groupes": [
+     "FireResistance"
+    ],
+    "id": "FireResist8",
+    "niveau": 82,
+    "nom": "of Tzteosh",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_fire_damage_resistance_%",
+      "max": 45,
+      "min": 41
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "fire_resistance",
+     "elemental",
+     "fire",
+     "resistance"
+    ],
+    "texte": "+(41-45)% to Fire Resistance",
+    "tirable": true,
+    "type": "FireResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreaseSocketedGemLevel",
+    "groupes": [
+     "IncreaseSocketedGemLevel"
+    ],
+    "id": "GlobalMeleeSkillGemLevel1",
+    "niveau": 5,
+    "nom": "of Combat",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "melee_skill_gem_level_+",
+      "max": 1,
+      "min": 1
+     }
+    ],
+    "tags": [
+     "attack"
+    ],
+    "texte": "+1 to Level of all Melee Skills",
+    "tirable": true,
+    "type": "GlobalIncreaseMeleeSkillGemLevel"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreaseSocketedGemLevel",
+    "groupes": [
+     "IncreaseSocketedGemLevel"
+    ],
+    "id": "GlobalMeleeSkillGemLevel2",
+    "niveau": 41,
+    "nom": "of Dueling",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "melee_skill_gem_level_+",
+      "max": 2,
+      "min": 2
+     }
+    ],
+    "tags": [
+     "attack"
+    ],
+    "texte": "+2 to Level of all Melee Skills",
+    "tirable": true,
+    "type": "GlobalIncreaseMeleeSkillGemLevel"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedAccuracy",
+    "groupes": [
+     "IncreasedAccuracy"
+    ],
+    "id": "IncreasedAccuracy1",
+    "niveau": 1,
+    "nom": "Precise",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "accuracy_rating",
+      "max": 32,
+      "min": 11
+     }
+    ],
+    "tags": [
+     "attack"
+    ],
+    "texte": "+(11-32) to Accuracy Rating",
+    "tirable": true,
+    "type": "IncreasedAccuracy"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedAccuracy",
+    "groupes": [
+     "IncreasedAccuracy"
+    ],
+    "id": "IncreasedAccuracy2",
+    "niveau": 11,
+    "nom": "Reliable",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "accuracy_rating",
+      "max": 60,
+      "min": 33
+     }
+    ],
+    "tags": [
+     "attack"
+    ],
+    "texte": "+(33-60) to Accuracy Rating",
+    "tirable": true,
+    "type": "IncreasedAccuracy"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedAccuracy",
+    "groupes": [
+     "IncreasedAccuracy"
+    ],
+    "id": "IncreasedAccuracy3",
+    "niveau": 18,
+    "nom": "Focused",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "accuracy_rating",
+      "max": 84,
+      "min": 61
+     }
+    ],
+    "tags": [
+     "attack"
+    ],
+    "texte": "+(61-84) to Accuracy Rating",
+    "tirable": true,
+    "type": "IncreasedAccuracy"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedAccuracy",
+    "groupes": [
+     "IncreasedAccuracy"
+    ],
+    "id": "IncreasedAccuracy4",
+    "niveau": 26,
+    "nom": "Deliberate",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "accuracy_rating",
+      "max": 123,
+      "min": 85
+     }
+    ],
+    "tags": [
+     "attack"
+    ],
+    "texte": "+(85-123) to Accuracy Rating",
+    "tirable": true,
+    "type": "IncreasedAccuracy"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedAccuracy",
+    "groupes": [
+     "IncreasedAccuracy"
+    ],
+    "id": "IncreasedAccuracy5",
+    "niveau": 36,
+    "nom": "Consistent",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "accuracy_rating",
+      "max": 167,
+      "min": 124
+     }
+    ],
+    "tags": [
+     "attack"
+    ],
+    "texte": "+(124-167) to Accuracy Rating",
+    "tirable": true,
+    "type": "IncreasedAccuracy"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedAccuracy",
+    "groupes": [
+     "IncreasedAccuracy"
+    ],
+    "id": "IncreasedAccuracy6",
+    "niveau": 48,
+    "nom": "Steady",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "accuracy_rating",
+      "max": 236,
+      "min": 168
+     }
+    ],
+    "tags": [
+     "attack"
+    ],
+    "texte": "+(168-236) to Accuracy Rating",
+    "tirable": true,
+    "type": "IncreasedAccuracy"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedAccuracy",
+    "groupes": [
+     "IncreasedAccuracy"
+    ],
+    "id": "IncreasedAccuracy7",
+    "niveau": 58,
+    "nom": "Hunter's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "accuracy_rating",
+      "max": 346,
+      "min": 237
+     }
+    ],
+    "tags": [
+     "attack"
+    ],
+    "texte": "+(237-346) to Accuracy Rating",
+    "tirable": true,
+    "type": "IncreasedAccuracy"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedAccuracy",
+    "groupes": [
+     "IncreasedAccuracy"
+    ],
+    "id": "IncreasedAccuracy8",
+    "niveau": 67,
+    "nom": "Ranger's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "accuracy_rating",
+      "max": 450,
+      "min": 347
+     }
+    ],
+    "tags": [
+     "attack"
+    ],
+    "texte": "+(347-450) to Accuracy Rating",
+    "tirable": true,
+    "type": "IncreasedAccuracy"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedAccuracy",
+    "groupes": [
+     "IncreasedAccuracy"
+    ],
+    "id": "IncreasedAccuracy9",
+    "niveau": 76,
+    "nom": "Amazon's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "accuracy_rating",
+      "max": 550,
+      "min": 451
+     }
+    ],
+    "tags": [
+     "attack"
+    ],
+    "texte": "+(451-550) to Accuracy Rating",
+    "tirable": true,
+    "type": "IncreasedAccuracy"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedAttackSpeed",
+    "groupes": [
+     "IncreasedAttackSpeed"
+    ],
+    "id": "IncreasedAttackSpeed1",
+    "niveau": 1,
+    "nom": "of Skill",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_speed_+%",
+      "max": 7,
+      "min": 5
+     }
+    ],
+    "tags": [
+     "attack",
+     "speed"
+    ],
+    "texte": "(5-7)% increased Attack Speed",
+    "tirable": true,
+    "type": "IncreasedAttackSpeed"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedAttackSpeed",
+    "groupes": [
+     "IncreasedAttackSpeed"
+    ],
+    "id": "IncreasedAttackSpeed2",
+    "niveau": 22,
+    "nom": "of Ease",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_speed_+%",
+      "max": 10,
+      "min": 8
+     }
+    ],
+    "tags": [
+     "attack",
+     "speed"
+    ],
+    "texte": "(8-10)% increased Attack Speed",
+    "tirable": true,
+    "type": "IncreasedAttackSpeed"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedAttackSpeed",
+    "groupes": [
+     "IncreasedAttackSpeed"
+    ],
+    "id": "IncreasedAttackSpeed3",
+    "niveau": 37,
+    "nom": "of Mastery",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_speed_+%",
+      "max": 13,
+      "min": 11
+     }
+    ],
+    "tags": [
+     "attack",
+     "speed"
+    ],
+    "texte": "(11-13)% increased Attack Speed",
+    "tirable": true,
+    "type": "IncreasedAttackSpeed"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedAttackSpeed",
+    "groupes": [
+     "IncreasedAttackSpeed"
+    ],
+    "id": "IncreasedAttackSpeed4",
+    "niveau": 60,
+    "nom": "of Renown",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "attack_speed_+%",
+      "max": 16,
+      "min": 14
+     }
+    ],
+    "tags": [
+     "attack",
+     "speed"
+    ],
+    "texte": "(14-16)% increased Attack Speed",
+    "tirable": true,
+    "type": "IncreasedAttackSpeed"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife1",
+    "niveau": 1,
+    "nom": "Hale",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 19,
+      "min": 10
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(10-19) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife2",
+    "niveau": 6,
+    "nom": "Healthy",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 29,
+      "min": 20
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(20-29) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife3",
+    "niveau": 16,
+    "nom": "Sanguine",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 39,
+      "min": 30
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(30-39) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife4",
+    "niveau": 24,
+    "nom": "Stalwart",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 59,
+      "min": 40
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(40-59) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife5",
+    "niveau": 33,
+    "nom": "Stout",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 69,
+      "min": 60
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(60-69) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife6",
+    "niveau": 38,
+    "nom": "Robust",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 84,
+      "min": 70
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(70-84) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife7",
+    "niveau": 46,
+    "nom": "Rotund",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 99,
+      "min": 85
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(85-99) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife8",
+    "niveau": 54,
+    "nom": "Virile",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 119,
+      "min": 100
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(100-119) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedLife",
+    "groupes": [
+     "IncreasedLife"
+    ],
+    "id": "IncreasedLife9",
+    "niveau": 60,
+    "nom": "Athlete's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_life",
+      "max": 149,
+      "min": 120
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "+(120-149) to maximum Life",
+    "tirable": true,
+    "type": "IncreasedLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedMana",
+    "groupes": [
+     "IncreasedMana"
+    ],
+    "id": "IncreasedMana1",
+    "niveau": 1,
+    "nom": "Beryl",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_mana",
+      "max": 14,
+      "min": 10
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "+(10-14) to maximum Mana",
+    "tirable": true,
+    "type": "IncreasedMana"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedMana",
+    "groupes": [
+     "IncreasedMana"
+    ],
+    "id": "IncreasedMana2",
+    "niveau": 6,
+    "nom": "Cobalt",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_mana",
+      "max": 24,
+      "min": 15
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "+(15-24) to maximum Mana",
+    "tirable": true,
+    "type": "IncreasedMana"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedMana",
+    "groupes": [
+     "IncreasedMana"
+    ],
+    "id": "IncreasedMana3",
+    "niveau": 16,
+    "nom": "Azure",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_mana",
+      "max": 34,
+      "min": 25
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "+(25-34) to maximum Mana",
+    "tirable": true,
+    "type": "IncreasedMana"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedMana",
+    "groupes": [
+     "IncreasedMana"
+    ],
+    "id": "IncreasedMana4",
+    "niveau": 25,
+    "nom": "Teal",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_mana",
+      "max": 54,
+      "min": 35
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "+(35-54) to maximum Mana",
+    "tirable": true,
+    "type": "IncreasedMana"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedMana",
+    "groupes": [
+     "IncreasedMana"
+    ],
+    "id": "IncreasedMana5",
+    "niveau": 33,
+    "nom": "Cerulean",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_mana",
+      "max": 64,
+      "min": 55
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "+(55-64) to maximum Mana",
+    "tirable": true,
+    "type": "IncreasedMana"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedMana",
+    "groupes": [
+     "IncreasedMana"
+    ],
+    "id": "IncreasedMana6",
+    "niveau": 38,
+    "nom": "Aqua",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_mana",
+      "max": 79,
+      "min": 65
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "+(65-79) to maximum Mana",
+    "tirable": true,
+    "type": "IncreasedMana"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedMana",
+    "groupes": [
+     "IncreasedMana"
+    ],
+    "id": "IncreasedMana7",
+    "niveau": 46,
+    "nom": "Opalescent",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_mana",
+      "max": 89,
+      "min": 80
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "+(80-89) to maximum Mana",
+    "tirable": true,
+    "type": "IncreasedMana"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedMana",
+    "groupes": [
+     "IncreasedMana"
+    ],
+    "id": "IncreasedMana8",
+    "niveau": 54,
+    "nom": "Gentian",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_mana",
+      "max": 104,
+      "min": 90
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "+(90-104) to maximum Mana",
+    "tirable": true,
+    "type": "IncreasedMana"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "IncreasedMana",
+    "groupes": [
+     "IncreasedMana"
+    ],
+    "id": "IncreasedMana9",
+    "niveau": 60,
+    "nom": "Chalybeous",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_maximum_mana",
+      "max": 124,
+      "min": 105
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "+(105-124) to maximum Mana",
+    "tirable": true,
+    "type": "IncreasedMana"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ItemFoundRarityIncrease",
+    "groupes": [
+     "ItemFoundRarityIncrease"
+    ],
+    "id": "ItemFoundRarityIncrease1",
+    "niveau": 3,
+    "nom": "of Plunder",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_item_found_rarity_+%",
+      "max": 10,
+      "min": 6
+     }
+    ],
+    "tags": [
+     "drop"
+    ],
+    "texte": "(6-10)% increased Rarity of Items found",
+    "tirable": true,
+    "type": "ItemFoundRarityIncrease"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ItemFoundRarityIncrease",
+    "groupes": [
+     "ItemFoundRarityIncrease"
+    ],
+    "id": "ItemFoundRarityIncrease2",
+    "niveau": 24,
+    "nom": "of Raiding",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_item_found_rarity_+%",
+      "max": 14,
+      "min": 11
+     }
+    ],
+    "tags": [
+     "drop"
+    ],
+    "texte": "(11-14)% increased Rarity of Items found",
+    "tirable": true,
+    "type": "ItemFoundRarityIncrease"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ItemFoundRarityIncrease",
+    "groupes": [
+     "ItemFoundRarityIncrease"
+    ],
+    "id": "ItemFoundRarityIncrease3",
+    "niveau": 40,
+    "nom": "of Archaeology",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_item_found_rarity_+%",
+      "max": 18,
+      "min": 15
+     }
+    ],
+    "tags": [
+     "drop"
+    ],
+    "texte": "(15-18)% increased Rarity of Items found",
+    "tirable": true,
+    "type": "ItemFoundRarityIncrease"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeGainPerTarget",
+    "groupes": [
+     "LifeGainPerTarget"
+    ],
+    "id": "LifeGainPerTarget1",
+    "niveau": 8,
+    "nom": "of Rejuvenation",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_gain_per_target",
+      "max": 2,
+      "min": 2
+     }
+    ],
+    "tags": [
+     "resource",
+     "life",
+     "attack"
+    ],
+    "texte": "Gain 2 Life per Enemy Hit with Attacks",
+    "tirable": true,
+    "type": "LifeGainPerTarget"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeGainPerTarget",
+    "groupes": [
+     "LifeGainPerTarget"
+    ],
+    "id": "LifeGainPerTarget2",
+    "niveau": 20,
+    "nom": "of Restoration",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_gain_per_target",
+      "max": 3,
+      "min": 3
+     }
+    ],
+    "tags": [
+     "resource",
+     "life",
+     "attack"
+    ],
+    "texte": "Gain 3 Life per Enemy Hit with Attacks",
+    "tirable": true,
+    "type": "LifeGainPerTarget"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeGainPerTarget",
+    "groupes": [
+     "LifeGainPerTarget"
+    ],
+    "id": "LifeGainPerTarget3",
+    "niveau": 30,
+    "nom": "of Regrowth",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_gain_per_target",
+      "max": 4,
+      "min": 4
+     }
+    ],
+    "tags": [
+     "resource",
+     "life",
+     "attack"
+    ],
+    "texte": "Gain 4 Life per Enemy Hit with Attacks",
+    "tirable": true,
+    "type": "LifeGainPerTarget"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeGainPerTarget",
+    "groupes": [
+     "LifeGainPerTarget"
+    ],
+    "id": "LifeGainPerTarget4",
+    "niveau": 40,
+    "nom": "of Nourishment",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_gain_per_target",
+      "max": 5,
+      "min": 5
+     }
+    ],
+    "tags": [
+     "resource",
+     "life",
+     "attack"
+    ],
+    "texte": "Gain 5 Life per Enemy Hit with Attacks",
+    "tirable": true,
+    "type": "LifeGainPerTarget"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeGainedFromEnemyDeath",
+    "groupes": [
+     "LifeGainedFromEnemyDeath"
+    ],
+    "id": "LifeGainedFromEnemyDeath1",
+    "niveau": 1,
+    "nom": "of Success",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_gained_on_enemy_death",
+      "max": 6,
+      "min": 4
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "Gain (4-6) Life per enemy killed",
+    "tirable": true,
+    "type": "LifeGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeGainedFromEnemyDeath",
+    "groupes": [
+     "LifeGainedFromEnemyDeath"
+    ],
+    "id": "LifeGainedFromEnemyDeath2",
+    "niveau": 11,
+    "nom": "of Victory",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_gained_on_enemy_death",
+      "max": 9,
+      "min": 7
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "Gain (7-9) Life per enemy killed",
+    "tirable": true,
+    "type": "LifeGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeGainedFromEnemyDeath",
+    "groupes": [
+     "LifeGainedFromEnemyDeath"
+    ],
+    "id": "LifeGainedFromEnemyDeath3",
+    "niveau": 22,
+    "nom": "of Triumph",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_gained_on_enemy_death",
+      "max": 18,
+      "min": 10
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "Gain (10-18) Life per enemy killed",
+    "tirable": true,
+    "type": "LifeGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeGainedFromEnemyDeath",
+    "groupes": [
+     "LifeGainedFromEnemyDeath"
+    ],
+    "id": "LifeGainedFromEnemyDeath4",
+    "niveau": 33,
+    "nom": "of Conquest",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_gained_on_enemy_death",
+      "max": 28,
+      "min": 19
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "Gain (19-28) Life per enemy killed",
+    "tirable": true,
+    "type": "LifeGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeGainedFromEnemyDeath",
+    "groupes": [
+     "LifeGainedFromEnemyDeath"
+    ],
+    "id": "LifeGainedFromEnemyDeath5",
+    "niveau": 44,
+    "nom": "of Vanquishing",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_gained_on_enemy_death",
+      "max": 40,
+      "min": 29
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "Gain (29-40) Life per enemy killed",
+    "tirable": true,
+    "type": "LifeGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeGainedFromEnemyDeath",
+    "groupes": [
+     "LifeGainedFromEnemyDeath"
+    ],
+    "id": "LifeGainedFromEnemyDeath6",
+    "niveau": 55,
+    "nom": "of Valour",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_gained_on_enemy_death",
+      "max": 53,
+      "min": 41
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "Gain (41-53) Life per enemy killed",
+    "tirable": true,
+    "type": "LifeGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeGainedFromEnemyDeath",
+    "groupes": [
+     "LifeGainedFromEnemyDeath"
+    ],
+    "id": "LifeGainedFromEnemyDeath7",
+    "niveau": 66,
+    "nom": "of Glory",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_gained_on_enemy_death",
+      "max": 68,
+      "min": 54
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "Gain (54-68) Life per enemy killed",
+    "tirable": true,
+    "type": "LifeGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeGainedFromEnemyDeath",
+    "groupes": [
+     "LifeGainedFromEnemyDeath"
+    ],
+    "id": "LifeGainedFromEnemyDeath8",
+    "niveau": 77,
+    "nom": "of Legend",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_gained_on_enemy_death",
+      "max": 84,
+      "min": 69
+     }
+    ],
+    "tags": [
+     "resource",
+     "life"
+    ],
+    "texte": "Gain (69-84) Life per enemy killed",
+    "tirable": true,
+    "type": "LifeGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeLeech",
+    "groupes": [
+     "LifeLeech"
+    ],
+    "id": "LifeLeech2",
+    "niveau": 21,
+    "nom": "of the Locust",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_leech_from_physical_attack_damage_permyriad",
+      "max": 690,
+      "min": 600
+     }
+    ],
+    "tags": [
+     "resource",
+     "life",
+     "physical",
+     "attack"
+    ],
+    "texte": "Leech (6-6.9)% of Physical Attack Damage as Life",
+    "tirable": true,
+    "type": "LifeLeechPermyriad"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeLeech",
+    "groupes": [
+     "LifeLeech"
+    ],
+    "id": "LifeLeech3",
+    "niveau": 38,
+    "nom": "of the Remora",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_leech_from_physical_attack_damage_permyriad",
+      "max": 790,
+      "min": 700
+     }
+    ],
+    "tags": [
+     "resource",
+     "life",
+     "physical",
+     "attack"
+    ],
+    "texte": "Leech (7-7.9)% of Physical Attack Damage as Life",
+    "tirable": true,
+    "type": "LifeLeechPermyriad"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeLeech",
+    "groupes": [
+     "LifeLeech"
+    ],
+    "id": "LifeLeech4",
+    "niveau": 54,
+    "nom": "of the Lamprey",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_leech_from_physical_attack_damage_permyriad",
+      "max": 890,
+      "min": 800
+     }
+    ],
+    "tags": [
+     "resource",
+     "life",
+     "physical",
+     "attack"
+    ],
+    "texte": "Leech (8-8.9)% of Physical Attack Damage as Life",
+    "tirable": true,
+    "type": "LifeLeechPermyriad"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LifeLeech",
+    "groupes": [
+     "LifeLeech"
+    ],
+    "id": "LifeLeech5",
+    "niveau": 65,
+    "nom": "of the Vampire",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_life_leech_from_physical_attack_damage_permyriad",
+      "max": 990,
+      "min": 900
+     }
+    ],
+    "tags": [
+     "resource",
+     "life",
+     "physical",
+     "attack"
+    ],
+    "texte": "Leech (9-9.9)% of Physical Attack Damage as Life",
+    "tirable": true,
+    "type": "LifeLeechPermyriad"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist1",
+    "niveau": 1,
+    "nom": "of the Cloud",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 10,
+      "min": 6
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(6-10)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist2",
+    "niveau": 13,
+    "nom": "of the Squall",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 15,
+      "min": 11
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(11-15)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist3",
+    "niveau": 25,
+    "nom": "of the Storm",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 20,
+      "min": 16
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(16-20)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist4",
+    "niveau": 37,
+    "nom": "of the Thunderhead",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 25,
+      "min": 21
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(21-25)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist5",
+    "niveau": 49,
+    "nom": "of the Tempest",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 30,
+      "min": 26
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(26-30)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist6",
+    "niveau": 60,
+    "nom": "of the Maelstrom",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 35,
+      "min": 31
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(31-35)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist7",
+    "niveau": 71,
+    "nom": "of the Lightning",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 40,
+      "min": 36
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(36-40)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LightningResistance",
+    "groupes": [
+     "LightningResistance"
+    ],
+    "id": "LightningResist8",
+    "niveau": 82,
+    "nom": "of Ephij",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "armour",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "amulet",
+      "weight": 1
+     },
+     {
+      "tag": "belt",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_lightning_damage_resistance_%",
+      "max": 45,
+      "min": 41
+     }
+    ],
+    "tags": [
+     "elemental_resistance",
+     "lightning_resistance",
+     "elemental",
+     "lightning",
+     "resistance"
+    ],
+    "texte": "+(41-45)% to Lightning Resistance",
+    "tirable": true,
+    "type": "LightningResistance"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndLife",
+    "groupes": [
+     "BaseLocalDefencesAndLife"
+    ],
+    "id": "LocalIncreasedEvasionAndLife1",
+    "niveau": 8,
+    "nom": "Flea's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_evasion_rating_+%",
+      "max": 13,
+      "min": 6
+     },
+     {
+      "id": "base_maximum_life",
+      "max": 10,
+      "min": 7
+     }
+    ],
+    "tags": [
+     "defences",
+     "resource",
+     "life",
+     "evasion"
+    ],
+    "texte": "(6-13)% increased Evasion Rating\n+(7-10) to maximum Life",
+    "tirable": true,
+    "type": "LocalIncreasedEvasionAndLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndLife",
+    "groupes": [
+     "BaseLocalDefencesAndLife"
+    ],
+    "id": "LocalIncreasedEvasionAndLife2",
+    "niveau": 16,
+    "nom": "Fawn's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_evasion_rating_+%",
+      "max": 20,
+      "min": 14
+     },
+     {
+      "id": "base_maximum_life",
+      "max": 19,
+      "min": 11
+     }
+    ],
+    "tags": [
+     "defences",
+     "resource",
+     "life",
+     "evasion"
+    ],
+    "texte": "(14-20)% increased Evasion Rating\n+(11-19) to maximum Life",
+    "tirable": true,
+    "type": "LocalIncreasedEvasionAndLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndLife",
+    "groupes": [
+     "BaseLocalDefencesAndLife"
+    ],
+    "id": "LocalIncreasedEvasionAndLife3",
+    "niveau": 33,
+    "nom": "Mouflon's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_evasion_rating_+%",
+      "max": 26,
+      "min": 21
+     },
+     {
+      "id": "base_maximum_life",
+      "max": 25,
+      "min": 20
+     }
+    ],
+    "tags": [
+     "defences",
+     "resource",
+     "life",
+     "evasion"
+    ],
+    "texte": "(21-26)% increased Evasion Rating\n+(20-25) to maximum Life",
+    "tirable": true,
+    "type": "LocalIncreasedEvasionAndLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndLife",
+    "groupes": [
+     "BaseLocalDefencesAndLife"
+    ],
+    "id": "LocalIncreasedEvasionAndLife4",
+    "niveau": 46,
+    "nom": "Ram's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_evasion_rating_+%",
+      "max": 32,
+      "min": 27
+     },
+     {
+      "id": "base_maximum_life",
+      "max": 32,
+      "min": 26
+     }
+    ],
+    "tags": [
+     "defences",
+     "resource",
+     "life",
+     "evasion"
+    ],
+    "texte": "(27-32)% increased Evasion Rating\n+(26-32) to maximum Life",
+    "tirable": true,
+    "type": "LocalIncreasedEvasionAndLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndLife",
+    "groupes": [
+     "BaseLocalDefencesAndLife"
+    ],
+    "id": "LocalIncreasedEvasionAndLife5",
+    "niveau": 60,
+    "nom": "Ibex's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_evasion_rating_+%",
+      "max": 38,
+      "min": 33
+     },
+     {
+      "id": "base_maximum_life",
+      "max": 41,
+      "min": 33
+     }
+    ],
+    "tags": [
+     "defences",
+     "resource",
+     "life",
+     "evasion"
+    ],
+    "texte": "(33-38)% increased Evasion Rating\n+(33-41) to maximum Life",
+    "tirable": true,
+    "type": "LocalIncreasedEvasionAndLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefencesAndLife",
+    "groupes": [
+     "BaseLocalDefencesAndLife"
+    ],
+    "id": "LocalIncreasedEvasionAndLife6",
+    "niveau": 78,
+    "nom": "Stag's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "boots",
+      "weight": 0
+     },
+     {
+      "tag": "shield",
+      "weight": 0
+     },
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_evasion_rating_+%",
+      "max": 42,
+      "min": 39
+     },
+     {
+      "id": "base_maximum_life",
+      "max": 49,
+      "min": 42
+     }
+    ],
+    "tags": [
+     "defences",
+     "resource",
+     "life",
+     "evasion"
+    ],
+    "texte": "(39-42)% increased Evasion Rating\n+(42-49) to maximum Life",
+    "tirable": true,
+    "type": "LocalIncreasedEvasionAndLife"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEvasionRating1",
+    "niveau": 1,
+    "nom": "Agile",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_base_evasion_rating",
+      "max": 18,
+      "min": 11
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "+(11-18) to Evasion Rating",
+    "tirable": true,
+    "type": "LocalEvasionRating"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEvasionRating2",
+    "niveau": 8,
+    "nom": "Dancer's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_base_evasion_rating",
+      "max": 46,
+      "min": 19
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "+(19-46) to Evasion Rating",
+    "tirable": true,
+    "type": "LocalEvasionRating"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEvasionRating3",
+    "niveau": 16,
+    "nom": "Acrobat's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_base_evasion_rating",
+      "max": 66,
+      "min": 47
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "+(47-66) to Evasion Rating",
+    "tirable": true,
+    "type": "LocalEvasionRating"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEvasionRating4",
+    "niveau": 25,
+    "nom": "Fleet",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_base_evasion_rating",
+      "max": 87,
+      "min": 67
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "+(67-87) to Evasion Rating",
+    "tirable": true,
+    "type": "LocalEvasionRating"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEvasionRating5",
+    "niveau": 33,
+    "nom": "Blurred",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_base_evasion_rating",
+      "max": 116,
+      "min": 88
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "+(88-116) to Evasion Rating",
+    "tirable": true,
+    "type": "LocalEvasionRating"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEvasionRating6",
+    "niveau": 46,
+    "nom": "Phased",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_base_evasion_rating",
+      "max": 146,
+      "min": 117
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "+(117-146) to Evasion Rating",
+    "tirable": true,
+    "type": "LocalEvasionRating"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "BaseLocalDefences",
+    "groupes": [
+     "BaseLocalDefences"
+    ],
+    "id": "LocalIncreasedEvasionRating7_",
+    "niveau": 54,
+    "nom": "Vaporous",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "str_dex_int_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_base_evasion_rating",
+      "max": 176,
+      "min": 147
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "+(147-176) to Evasion Rating",
+    "tirable": true,
+    "type": "LocalEvasionRating"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEvasionRatingPercent1",
+    "niveau": 2,
+    "nom": "Shade's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_evasion_rating_+%",
+      "max": 26,
+      "min": 15
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "(15-26)% increased Evasion Rating",
+    "tirable": true,
+    "type": "LocalEvasionRatingIncreasePercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEvasionRatingPercent2",
+    "niveau": 16,
+    "nom": "Ghost's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_evasion_rating_+%",
+      "max": 42,
+      "min": 27
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "(27-42)% increased Evasion Rating",
+    "tirable": true,
+    "type": "LocalEvasionRatingIncreasePercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEvasionRatingPercent3",
+    "niveau": 33,
+    "nom": "Spectre's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_evasion_rating_+%",
+      "max": 55,
+      "min": 43
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "(43-55)% increased Evasion Rating",
+    "tirable": true,
+    "type": "LocalEvasionRatingIncreasePercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEvasionRatingPercent4",
+    "niveau": 46,
+    "nom": "Wraith's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_evasion_rating_+%",
+      "max": 67,
+      "min": 56
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "(56-67)% increased Evasion Rating",
+    "tirable": true,
+    "type": "LocalEvasionRatingIncreasePercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEvasionRatingPercent5",
+    "niveau": 54,
+    "nom": "Phantasm's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_evasion_rating_+%",
+      "max": 79,
+      "min": 68
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "(68-79)% increased Evasion Rating",
+    "tirable": true,
+    "type": "LocalEvasionRatingIncreasePercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEvasionRatingPercent6",
+    "niveau": 60,
+    "nom": "Nightmare's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_evasion_rating_+%",
+      "max": 91,
+      "min": 80
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "(80-91)% increased Evasion Rating",
+    "tirable": true,
+    "type": "LocalEvasionRatingIncreasePercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "DefencesPercent",
+    "groupes": [
+     "DefencesPercent"
+    ],
+    "id": "LocalIncreasedEvasionRatingPercent7",
+    "niveau": 65,
+    "nom": "Mirage's",
+    "slot": "prefix",
+    "spawn": [
+     {
+      "tag": "dex_armour",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_evasion_rating_+%",
+      "max": 100,
+      "min": 92
+     }
+    ],
+    "tags": [
+     "defences",
+     "evasion"
+    ],
+    "texte": "(92-100)% increased Evasion Rating",
+    "tirable": true,
+    "type": "LocalEvasionRatingIncreasePercent"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ManaGainedFromEnemyDeath",
+    "groupes": [
+     "ManaGainedFromEnemyDeath"
+    ],
+    "id": "ManaGainedFromEnemyDeath1",
+    "niveau": 1,
+    "nom": "of Absorption",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_mana_gained_on_enemy_death",
+      "max": 3,
+      "min": 2
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "Gain (2-3) Mana per enemy killed",
+    "tirable": true,
+    "type": "ManaGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ManaGainedFromEnemyDeath",
+    "groupes": [
+     "ManaGainedFromEnemyDeath"
+    ],
+    "id": "ManaGainedFromEnemyDeath2",
+    "niveau": 12,
+    "nom": "of Osmosis",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_mana_gained_on_enemy_death",
+      "max": 5,
+      "min": 4
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "Gain (4-5) Mana per enemy killed",
+    "tirable": true,
+    "type": "ManaGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ManaGainedFromEnemyDeath",
+    "groupes": [
+     "ManaGainedFromEnemyDeath"
+    ],
+    "id": "ManaGainedFromEnemyDeath3",
+    "niveau": 23,
+    "nom": "of Infusion",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_mana_gained_on_enemy_death",
+      "max": 9,
+      "min": 6
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "Gain (6-9) Mana per enemy killed",
+    "tirable": true,
+    "type": "ManaGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ManaGainedFromEnemyDeath",
+    "groupes": [
+     "ManaGainedFromEnemyDeath"
+    ],
+    "id": "ManaGainedFromEnemyDeath4",
+    "niveau": 34,
+    "nom": "of Enveloping",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_mana_gained_on_enemy_death",
+      "max": 14,
+      "min": 10
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "Gain (10-14) Mana per enemy killed",
+    "tirable": true,
+    "type": "ManaGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ManaGainedFromEnemyDeath",
+    "groupes": [
+     "ManaGainedFromEnemyDeath"
+    ],
+    "id": "ManaGainedFromEnemyDeath5",
+    "niveau": 45,
+    "nom": "of Consumption",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_mana_gained_on_enemy_death",
+      "max": 20,
+      "min": 15
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "Gain (15-20) Mana per enemy killed",
+    "tirable": true,
+    "type": "ManaGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ManaGainedFromEnemyDeath",
+    "groupes": [
+     "ManaGainedFromEnemyDeath"
+    ],
+    "id": "ManaGainedFromEnemyDeath6",
+    "niveau": 56,
+    "nom": "of Siphoning",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "quiver",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_mana_gained_on_enemy_death",
+      "max": 27,
+      "min": 21
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "Gain (21-27) Mana per enemy killed",
+    "tirable": true,
+    "type": "ManaGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ManaGainedFromEnemyDeath",
+    "groupes": [
+     "ManaGainedFromEnemyDeath"
+    ],
+    "id": "ManaGainedFromEnemyDeath7",
+    "niveau": 67,
+    "nom": "of Devouring",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_mana_gained_on_enemy_death",
+      "max": 35,
+      "min": 28
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "Gain (28-35) Mana per enemy killed",
+    "tirable": true,
+    "type": "ManaGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ManaGainedFromEnemyDeath",
+    "groupes": [
+     "ManaGainedFromEnemyDeath"
+    ],
+    "id": "ManaGainedFromEnemyDeath8",
+    "niveau": 78,
+    "nom": "of Assimilation",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "trap",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_mana_gained_on_enemy_death",
+      "max": 45,
+      "min": 36
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana"
+    ],
+    "texte": "Gain (36-45) Mana per enemy killed",
+    "tirable": true,
+    "type": "ManaGainedFromEnemyDeath"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ManaLeech",
+    "groupes": [
+     "ManaLeech"
+    ],
+    "id": "ManaLeech2",
+    "niveau": 21,
+    "nom": "of the Parched",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_mana_leech_from_physical_attack_damage_permyriad",
+      "max": 590,
+      "min": 500
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana",
+     "physical",
+     "attack"
+    ],
+    "texte": "Leech (5-5.9)% of Physical Attack Damage as Mana",
+    "tirable": true,
+    "type": "ManaLeechPermyriad"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ManaLeech",
+    "groupes": [
+     "ManaLeech"
+    ],
+    "id": "ManaLeech3",
+    "niveau": 38,
+    "nom": "of the Arid",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "ring",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_mana_leech_from_physical_attack_damage_permyriad",
+      "max": 690,
+      "min": 600
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana",
+     "physical",
+     "attack"
+    ],
+    "texte": "Leech (6-6.9)% of Physical Attack Damage as Mana",
+    "tirable": true,
+    "type": "ManaLeechPermyriad"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ManaLeech",
+    "groupes": [
+     "ManaLeech"
+    ],
+    "id": "ManaLeech4",
+    "niveau": 54,
+    "nom": "of the Drought",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_mana_leech_from_physical_attack_damage_permyriad",
+      "max": 790,
+      "min": 700
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana",
+     "physical",
+     "attack"
+    ],
+    "texte": "Leech (7-7.9)% of Physical Attack Damage as Mana",
+    "tirable": true,
+    "type": "ManaLeechPermyriad"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "ManaLeech",
+    "groupes": [
+     "ManaLeech"
+    ],
+    "id": "ManaLeech5",
+    "niveau": 65,
+    "nom": "of the Desperate",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "base_mana_leech_from_physical_attack_damage_permyriad",
+      "max": 890,
+      "min": 800
+     }
+    ],
+    "tags": [
+     "resource",
+     "mana",
+     "physical",
+     "attack"
+    ],
+    "texte": "Leech (8-8.9)% of Physical Attack Damage as Mana",
+    "tirable": true,
+    "type": "ManaLeechPermyriad"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LocalAttributeRequirements",
+    "groupes": [
+     "LocalAttributeRequirements"
+    ],
+    "id": "ReducedLocalAttributeRequirements1",
+    "niveau": 24,
+    "nom": "of the Worthy",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_attribute_requirements_+%",
+      "max": -15,
+      "min": -15
+     }
+    ],
+    "tags": [],
+    "texte": "15% reduced Attribute Requirements",
+    "tirable": true,
+    "type": "LocalAttributeRequirements"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LocalAttributeRequirements",
+    "groupes": [
+     "LocalAttributeRequirements"
+    ],
+    "id": "ReducedLocalAttributeRequirements2",
+    "niveau": 32,
+    "nom": "of the Apt",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_attribute_requirements_+%",
+      "max": -20,
+      "min": -20
+     }
+    ],
+    "tags": [],
+    "texte": "20% reduced Attribute Requirements",
+    "tirable": true,
+    "type": "LocalAttributeRequirements"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LocalAttributeRequirements",
+    "groupes": [
+     "LocalAttributeRequirements"
+    ],
+    "id": "ReducedLocalAttributeRequirements3",
+    "niveau": 40,
+    "nom": "of the Talented",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_attribute_requirements_+%",
+      "max": -25,
+      "min": -25
+     }
+    ],
+    "tags": [],
+    "texte": "25% reduced Attribute Requirements",
+    "tirable": true,
+    "type": "LocalAttributeRequirements"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LocalAttributeRequirements",
+    "groupes": [
+     "LocalAttributeRequirements"
+    ],
+    "id": "ReducedLocalAttributeRequirements4",
+    "niveau": 52,
+    "nom": "of the Skilled",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_attribute_requirements_+%",
+      "max": -30,
+      "min": -30
+     }
+    ],
+    "tags": [],
+    "texte": "30% reduced Attribute Requirements",
+    "tirable": true,
+    "type": "LocalAttributeRequirements"
+   },
+   {
+    "domaine": "item",
+    "essence_seulement": false,
+    "groupe": "LocalAttributeRequirements",
+    "groupes": [
+     "LocalAttributeRequirements"
+    ],
+    "id": "ReducedLocalAttributeRequirements5",
+    "niveau": 60,
+    "nom": "of the Proficient",
+    "slot": "suffix",
+    "spawn": [
+     {
+      "tag": "weapon",
+      "weight": 1
+     },
+     {
+      "tag": "wand",
+      "weight": 1
+     },
+     {
+      "tag": "staff",
+      "weight": 1
+     },
+     {
+      "tag": "sceptre",
+      "weight": 1
+     },
+     {
+      "tag": "body_armour",
+      "weight": 1
+     },
+     {
+      "tag": "helmet",
+      "weight": 1
+     },
+     {
+      "tag": "shield",
+      "weight": 1
+     },
+     {
+      "tag": "focus",
+      "weight": 1
+     },
+     {
+      "tag": "gloves",
+      "weight": 1
+     },
+     {
+      "tag": "boots",
+      "weight": 1
+     },
+     {
+      "tag": "default",
+      "weight": 0
+     }
+    ],
+    "stats": [
+     {
+      "id": "local_attribute_requirements_+%",
+      "max": -35,
+      "min": -35
+     }
+    ],
+    "tags": [],
+    "texte": "35% reduced Attribute Requirements",
+    "tirable": true,
+    "type": "LocalAttributeRequirements"
+   }
+  ],
+  "schema": 1
+ },
+ "note": "Généré par tools/theorycraft/fixture_forge.py ; poids poe2db (estimations Krakenbul, CC BY-NC-SA 3.0, voir tools/theorycraft/donnees/LICENCE-poids-poe2db.md).",
+ "releve": {
+  "date_releve": "2026-11-05",
+  "licence": "CC BY-NC-SA 3.0",
+  "pages": {
+   "Gloves_dex": {
+    "inconnus": [],
+    "poids": {
+     "AddedColdDamage1": 500,
+     "AddedColdDamage2": 500,
+     "AddedColdDamage3": 500,
+     "AddedColdDamage4": 500,
+     "AddedColdDamage5": 500,
+     "AddedColdDamage6": 500,
+     "AddedColdDamage7": 400,
+     "AddedColdDamage8": 300,
+     "AddedColdDamage9": 200,
+     "AddedFireDamage1": 500,
+     "AddedFireDamage2": 500,
+     "AddedFireDamage3": 500,
+     "AddedFireDamage4": 500,
+     "AddedFireDamage5": 500,
+     "AddedFireDamage6": 500,
+     "AddedFireDamage7": 400,
+     "AddedFireDamage8": 300,
+     "AddedFireDamage9": 200,
+     "AddedLightningDamage1": 500,
+     "AddedLightningDamage2": 500,
+     "AddedLightningDamage3": 500,
+     "AddedLightningDamage4": 500,
+     "AddedLightningDamage5": 500,
+     "AddedLightningDamage6": 500,
+     "AddedLightningDamage7": 400,
+     "AddedLightningDamage8": 300,
+     "AddedLightningDamage9": 200,
+     "AddedPhysicalDamage1": 1000,
+     "AddedPhysicalDamage2": 1000,
+     "AddedPhysicalDamage3": 1000,
+     "AddedPhysicalDamage4": 1000,
+     "AddedPhysicalDamage5": 1000,
+     "AddedPhysicalDamage6": 1000,
+     "AddedPhysicalDamage7": 800,
+     "AddedPhysicalDamage8": 600,
+     "AddedPhysicalDamage9": 400,
+     "ChaosResist1": 250,
+     "ChaosResist2": 250,
+     "ChaosResist3": 250,
+     "ChaosResist4": 250,
+     "ChaosResist5": 250,
+     "ChaosResist6": 250,
+     "ColdResist1": 1000,
+     "ColdResist2": 1000,
+     "ColdResist3": 1000,
+     "ColdResist4": 1000,
+     "ColdResist5": 1000,
+     "ColdResist6": 1000,
+     "ColdResist7": 1000,
+     "ColdResist8": 1000,
+     "CriticalMultiplier1": 1000,
+     "CriticalMultiplier2": 1000,
+     "CriticalMultiplier3": 1000,
+     "CriticalMultiplier4": 500,
+     "CriticalMultiplier5": 250,
+     "Dexterity1": 1000,
+     "Dexterity2": 1000,
+     "Dexterity3": 1000,
+     "Dexterity4": 1000,
+     "Dexterity5": 1000,
+     "Dexterity6": 1000,
+     "Dexterity7": 1000,
+     "Dexterity8": 1000,
+     "Dexterity9": 1000,
+     "EvasionGrantsDeflection1": 1000,
+     "EvasionGrantsDeflection2": 1000,
+     "EvasionGrantsDeflection3": 1000,
+     "EvasionGrantsDeflection4": 1000,
+     "EvasionGrantsDeflection5": 1000,
+     "FireResist1": 1000,
+     "FireResist2": 1000,
+     "FireResist3": 1000,
+     "FireResist4": 1000,
+     "FireResist5": 1000,
+     "FireResist6": 1000,
+     "FireResist7": 1000,
+     "FireResist8": 1000,
+     "GlobalMeleeSkillGemLevel1": 500,
+     "GlobalMeleeSkillGemLevel2": 250,
+     "IncreasedAccuracy1": 800,
+     "IncreasedAccuracy2": 800,
+     "IncreasedAccuracy3": 800,
+     "IncreasedAccuracy4": 800,
+     "IncreasedAccuracy5": 800,
+     "IncreasedAccuracy6": 800,
+     "IncreasedAccuracy7": 800,
+     "IncreasedAccuracy8": 400,
+     "IncreasedAccuracy9": 200,
+     "IncreasedAttackSpeed1": 500,
+     "IncreasedAttackSpeed2": 500,
+     "IncreasedAttackSpeed3": 500,
+     "IncreasedAttackSpeed4": 500,
+     "IncreasedLife1": 1000,
+     "IncreasedLife2": 1000,
+     "IncreasedLife3": 1000,
+     "IncreasedLife4": 1000,
+     "IncreasedLife5": 1000,
+     "IncreasedLife6": 1000,
+     "IncreasedLife7": 1000,
+     "IncreasedLife8": 1000,
+     "IncreasedLife9": 1000,
+     "IncreasedMana1": 1000,
+     "IncreasedMana2": 1000,
+     "IncreasedMana3": 1000,
+     "IncreasedMana4": 1000,
+     "IncreasedMana5": 1000,
+     "IncreasedMana6": 1000,
+     "IncreasedMana7": 1000,
+     "IncreasedMana8": 1000,
+     "IncreasedMana9": 1000,
+     "ItemFoundRarityIncrease1": 1000,
+     "ItemFoundRarityIncrease2": 1000,
+     "ItemFoundRarityIncrease3": 1000,
+     "LifeGainPerTarget1": 1000,
+     "LifeGainPerTarget2": 1000,
+     "LifeGainPerTarget3": 1000,
+     "LifeGainPerTarget4": 1000,
+     "LifeGainedFromEnemyDeath1": 750,
+     "LifeGainedFromEnemyDeath2": 750,
+     "LifeGainedFromEnemyDeath3": 750,
+     "LifeGainedFromEnemyDeath4": 750,
+     "LifeGainedFromEnemyDeath5": 750,
+     "LifeGainedFromEnemyDeath6": 750,
+     "LifeGainedFromEnemyDeath7": 750,
+     "LifeGainedFromEnemyDeath8": 750,
+     "LifeLeech2": 1000,
+     "LifeLeech3": 1000,
+     "LifeLeech4": 1000,
+     "LifeLeech5": 1000,
+     "LightningResist1": 1000,
+     "LightningResist2": 1000,
+     "LightningResist3": 1000,
+     "LightningResist4": 1000,
+     "LightningResist5": 1000,
+     "LightningResist6": 1000,
+     "LightningResist7": 1000,
+     "LightningResist8": 1000,
+     "LocalIncreasedEvasionAndLife1": 1000,
+     "LocalIncreasedEvasionAndLife2": 1000,
+     "LocalIncreasedEvasionAndLife3": 1000,
+     "LocalIncreasedEvasionAndLife4": 1000,
+     "LocalIncreasedEvasionAndLife5": 1000,
+     "LocalIncreasedEvasionAndLife6": 1000,
+     "LocalIncreasedEvasionRating1": 1000,
+     "LocalIncreasedEvasionRating2": 1000,
+     "LocalIncreasedEvasionRating3": 1000,
+     "LocalIncreasedEvasionRating4": 1000,
+     "LocalIncreasedEvasionRating5": 1000,
+     "LocalIncreasedEvasionRating6": 1000,
+     "LocalIncreasedEvasionRating7_": 1000,
+     "LocalIncreasedEvasionRatingPercent1": 1000,
+     "LocalIncreasedEvasionRatingPercent2": 1000,
+     "LocalIncreasedEvasionRatingPercent3": 1000,
+     "LocalIncreasedEvasionRatingPercent4": 1000,
+     "LocalIncreasedEvasionRatingPercent5": 1000,
+     "LocalIncreasedEvasionRatingPercent6": 1000,
+     "LocalIncreasedEvasionRatingPercent7": 1000,
+     "ManaGainedFromEnemyDeath1": 750,
+     "ManaGainedFromEnemyDeath2": 750,
+     "ManaGainedFromEnemyDeath3": 750,
+     "ManaGainedFromEnemyDeath4": 750,
+     "ManaGainedFromEnemyDeath5": 750,
+     "ManaGainedFromEnemyDeath6": 750,
+     "ManaGainedFromEnemyDeath7": 750,
+     "ManaGainedFromEnemyDeath8": 750,
+     "ManaLeech2": 1000,
+     "ManaLeech3": 1000,
+     "ManaLeech4": 1000,
+     "ManaLeech5": 1000,
+     "ReducedLocalAttributeRequirements1": 700,
+     "ReducedLocalAttributeRequirements2": 700,
+     "ReducedLocalAttributeRequirements3": 700,
+     "ReducedLocalAttributeRequirements4": 700,
+     "ReducedLocalAttributeRequirements5": 700
+    }
+   }
+  },
+  "repoe_version": "0.5.5.5",
+  "source": "poe2db.tw (https://poe2db.tw/us/weightings), poids estimés par Krakenbul (Prohibited Library)"
+ }
+}
