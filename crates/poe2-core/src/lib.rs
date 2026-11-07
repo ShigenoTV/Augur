@@ -9,6 +9,8 @@
 //!   de `Client.txt` : parties de map, répartition du temps, maps par heure.
 //! - [`comparaison`] compare un objet copié à l'équipement du personnage
 //!   (DPS de Lightning Bolt et Arc avant / après).
+//! - [`forge`] (Forge) : moteur de craft exact (tirages pondérés, monnaies,
+//!   Omens) et simulation de Monte-Carlo.
 //! - [`pob`] lit un code d'export Path of Building PoE 2 (personnage du joueur).
 //!
 //! Le crate ne fait aucune entrée-sortie réseau et ne lit jamais la mémoire du
@@ -18,6 +20,7 @@
 
 pub mod calc;
 pub mod comparaison;
+pub mod forge;
 pub mod ledger;
 pub mod parser;
 pub mod pob;

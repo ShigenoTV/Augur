@@ -1,0 +1,635 @@
+use super::{moteur::*, objectif::*};
+use rand::{SeedableRng, rngs::SmallRng};
+use rayon::prelude::*;
+use serde::Serialize;
+
+/// Simulation « bac à sable » : applique `currency` en boucle depuis `start` jusqu'au succès,
+/// à l'inapplicabilité ou à `max_orbs`.
+pub struct SimSpec {
+    pub start: ItemState,
+    pub currency: Currency,
+    pub goal: Goal,
+    pub max_orbs: u32,
+    pub base_cost: f64,
+}
+
+pub struct SimConfig {
+    pub trials: u64,
+    pub seed: u64,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SimResult {
+    pub trials: u64,
+    pub successes: u64,
+    pub p_hat: f64,
+    pub ci95: (f64, f64),
+    pub mean_orbs_all: f64,
+    pub mean_orbs_on_success: Option<f64>,
+    pub cost_per_success: Option<f64>,
+}
+
+#[derive(Default, Clone, Copy)]
+struct Acc {
+    trials: u64,
+    successes: u64,
+    orbs_all: u64,
+    orbs_succ: u64,
+}
+impl Acc {
+    fn merge(self, o: Self) -> Self {
+        Self {
+            trials: self.trials + o.trials,
+            successes: self.successes + o.successes,
+            orbs_all: self.orbs_all + o.orbs_all,
+            orbs_succ: self.orbs_succ + o.orbs_succ,
+        }
+    }
+}
+
+fn run_trial(pool: &AffixPool, spec: &SimSpec, rng: &mut SmallRng) -> (bool, u32) {
+    let mut item = spec.start;
+    if spec.goal.is_met(&item) {
+        return (true, 0);
+    }
+    for n in 1..=spec.max_orbs {
+        if pool.apply(&mut item, &spec.currency, rng) == Outcome::NotApplicable {
+            return (false, n - 1);
+        }
+        if spec.goal.is_met(&item) {
+            return (true, n);
+        }
+    }
+    (false, spec.max_orbs)
+}
+
+/// Intervalle de Wilson 95 % (robuste près de 0 ou 1).
+pub fn wilson95(k: f64, n: f64) -> (f64, f64) {
+    let z = 1.959_964;
+    let p = k / n;
+    let d = 1.0 + z * z / n;
+    let c = p + z * z / (2.0 * n);
+    let m = z * ((p * (1.0 - p) + z * z / (4.0 * n)) / n).sqrt();
+    (((c - m) / d).max(0.0), ((c + m) / d).min(1.0))
+}
+
+/// Une graine par *chunk* (pas par thread) : résultat déterministe quel que soit le nombre de threads.
+/// `on_progress(done, total) -> bool` : renvoyer `false` annule le calcul (`None`).
+pub fn simulate(
+    pool: &AffixPool,
+    spec: &SimSpec,
+    cfg: &SimConfig,
+    mut on_progress: impl FnMut(u64, u64) -> bool,
+) -> Option<SimResult> {
+    const CHUNK: u64 = 1024;
+    const BATCH_CHUNKS: u64 = 64;
+    let total_chunks = cfg.trials.div_ceil(CHUNK);
+    let mut acc = Acc::default();
+    let mut c0 = 0u64;
+    while c0 < total_chunks {
+        let c1 = (c0 + BATCH_CHUNKS).min(total_chunks);
+        let part = (c0..c1)
+            .into_par_iter()
+            .map(|c| {
+                let first = c * CHUNK;
+                let n = CHUNK.min(cfg.trials - first);
+                let mut rng = SmallRng::seed_from_u64(
+                    cfg.seed.wrapping_add(c.wrapping_mul(0x9E37_79B9_7F4A_7C15)),
+                );
+                let mut a = Acc::default();
+                for _ in 0..n {
+                    let (ok, orbs) = run_trial(pool, spec, &mut rng);
+                    a.trials += 1;
+                    a.orbs_all += orbs as u64;
+                    if ok {
+                        a.successes += 1;
+                        a.orbs_succ += orbs as u64;
+                    }
+                }
+                a
+            })
+            .reduce(Acc::default, Acc::merge);
+        acc = acc.merge(part);
+        c0 = c1;
+        if !on_progress(acc.trials, cfg.trials) {
+            return None;
+        }
+    }
+    let (n, k) = (acc.trials as f64, acc.successes as f64);
+    let unit = spec.currency.unit_cost;
+    Some(SimResult {
+        trials: acc.trials,
+        successes: acc.successes,
+        p_hat: k / n,
+        ci95: wilson95(k, n),
+        mean_orbs_all: acc.orbs_all as f64 / n,
+        mean_orbs_on_success: (acc.successes > 0).then(|| acc.orbs_succ as f64 / k),
+        cost_per_success: (acc.successes > 0)
+            .then(|| (acc.orbs_all as f64 * unit + n * spec.base_cost) / k),
+    })
+}
+
+#[cfg(test)]
+pub(crate) mod tests {
+    use super::*;
+
+    pub fn aff(id: &str, group: GroupId, slot: Slot, w: u32) -> Affix {
+        Affix {
+            id: id.into(),
+            name: id.into(),
+            family: id.into(),
+            family_id: 0,
+            text: id.into(),
+            group,
+            slot,
+            tier: 1,
+            req_ilvl: 1,
+            weight: w,
+            tags: 0,
+            desecrated: false,
+            cap_shift: (0, 0),
+        }
+    }
+    pub fn cur(kind: CurrencyKind) -> Currency {
+        Currency {
+            id: format!("{kind:?}"),
+            label: format!("{kind:?}"),
+            kind,
+            min_mod_level: 0,
+            add_slot: None,
+            remove_slot: None,
+            target: None,
+            alt_target: None,
+            require_tag: None,
+            remove_desecrated_only: false,
+            remove_lowest_level: false,
+            requires_rare: false,
+            unit_cost: 1.0,
+        }
+    }
+
+    #[test]
+    fn transmute_matches_analytic_probability() {
+        // A(préfixe)=100, B(préfixe)=300, C(suffixe)=600 => P(A) = 0,10
+        let pool = AffixPool::new(vec![
+            aff("A", 1, Slot::Prefix, 100),
+            aff("B", 2, Slot::Prefix, 300),
+            aff("C", 3, Slot::Suffix, 600),
+        ]);
+        let spec = SimSpec {
+            start: ItemState::new(Rarity::Normal, 80),
+            currency: cur(CurrencyKind::Transmute),
+            goal: Goal::new(
+                &pool,
+                &[WantedAffix {
+                    group: 1,
+                    family: 0,
+                    max_tier: 1,
+                }],
+            )
+            .unwrap(),
+            max_orbs: 1,
+            base_cost: 0.0,
+        };
+        let n = 200_000u64;
+        let r = simulate(
+            &pool,
+            &spec,
+            &SimConfig {
+                trials: n,
+                seed: 42,
+            },
+            |_, _| true,
+        )
+        .unwrap();
+        let sigma = (0.1f64 * 0.9 / n as f64).sqrt();
+        assert!((r.p_hat - 0.1).abs() < 4.0 * sigma, "p_hat = {}", r.p_hat);
+    }
+
+    #[test]
+    fn deterministic_for_a_seed() {
+        let pool = AffixPool::new(vec![
+            aff("A", 1, Slot::Prefix, 100),
+            aff("B", 2, Slot::Prefix, 300),
+        ]);
+        let mk = || SimSpec {
+            start: ItemState::new(Rarity::Normal, 80),
+            currency: cur(CurrencyKind::Transmute),
+            goal: Goal::new(
+                &pool,
+                &[WantedAffix {
+                    group: 1,
+                    family: 0,
+                    max_tier: 1,
+                }],
+            )
+            .unwrap(),
+            max_orbs: 1,
+            base_cost: 0.0,
+        };
+        let a = simulate(
+            &pool,
+            &mk(),
+            &SimConfig {
+                trials: 50_000,
+                seed: 7,
+            },
+            |_, _| true,
+        )
+        .unwrap();
+        let b = simulate(
+            &pool,
+            &mk(),
+            &SimConfig {
+                trials: 50_000,
+                seed: 7,
+            },
+            |_, _| true,
+        )
+        .unwrap();
+        assert_eq!(a.successes, b.successes);
+    }
+
+    #[test]
+    fn caps_and_groups_are_respected() {
+        // 4 groupes de préfixes seulement : un Alchemy ne peut jamais dépasser 3 préfixes.
+        let pool = AffixPool::new(
+            (0..4)
+                .map(|i| aff("P", i, Slot::Prefix, 100))
+                .chain((10..14).map(|i| aff("S", i, Slot::Suffix, 100)))
+                .collect(),
+        );
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(1);
+        for _ in 0..500 {
+            let mut it = ItemState::new(Rarity::Normal, 80);
+            assert_eq!(
+                pool.apply(&mut it, &cur(CurrencyKind::Alchemy), &mut rng),
+                Outcome::Applied
+            );
+            assert_eq!(it.len(), 4);
+            assert!(pool.count(&it, Slot::Prefix) <= 3 && pool.count(&it, Slot::Suffix) <= 3);
+            let mut gs: Vec<_> = it
+                .mods()
+                .iter()
+                .map(|m| pool.affixes[m.idx as usize].group)
+                .collect();
+            gs.sort();
+            gs.dedup();
+            assert_eq!(gs.len(), 4, "groupes dupliqués");
+        }
+    }
+
+    /// Potent Liquid Contempt : slot tiré à 50/50, puis le préfixe « +1 Suffix Modifier allowed » OU le
+    /// suffixe « +1 Prefix Modifier allowed » remplace un affixe non fracturé de ce slot. Avec le préfixe, le
+    /// joyau 2/2 accepte un 3e suffixe ; une fois ce préfixe retiré, les 3 suffixes restent mais aucun
+    /// nouveau ne rentre.
+    #[test]
+    fn contempt_adds_one_of_two_cap_shifting_mods() {
+        let mut affixes: Vec<Affix> = (0..6)
+            .map(|i| aff("P", i, Slot::Prefix, 100))
+            .chain((10..16).map(|i| aff("S", i, Slot::Suffix, 100)))
+            .collect();
+        let plus_suffix = affixes.len() as AffixIdx;
+        affixes.push(Affix {
+            cap_shift: (0, 1),
+            ..aff("+1 Suffix", 50, Slot::Prefix, 0)
+        });
+        let plus_prefix = affixes.len() as AffixIdx;
+        affixes.push(Affix {
+            cap_shift: (1, 0),
+            ..aff("+1 Prefix", 50, Slot::Suffix, 0)
+        });
+        let jewel = AffixPool {
+            affixes,
+            rare_cap: (2, 2),
+            ..AffixPool::default()
+        };
+        let contempt = Currency {
+            target: Some(plus_suffix),
+            alt_target: Some(plus_prefix),
+            requires_rare: true,
+            ..cur(CurrencyKind::Essence)
+        };
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(11);
+
+        // joyau plein (2 + 2, un préfixe fracturé) : le mod ajouté remplace toujours un affixe de son slot
+        let mut got_suffix_room = 0;
+        for _ in 0..4000 {
+            let mut it = ItemState::new(Rarity::Rare, 80);
+            it.push(Mod {
+                idx: 0,
+                fractured: true,
+                crafted: false,
+            });
+            for idx in [1, 6, 7] {
+                it.push(Mod {
+                    idx,
+                    fractured: false,
+                    crafted: false,
+                });
+            }
+            assert_eq!(jewel.apply(&mut it, &contempt, &mut rng), Outcome::Applied);
+            let has = |i: AffixIdx| it.mods().iter().any(|m| m.idx == i);
+            assert!(has(plus_suffix) != has(plus_prefix));
+            assert!(has(0), "l'affixe fracturé reste");
+            assert_eq!(
+                (
+                    jewel.count(&it, Slot::Prefix),
+                    jewel.count(&it, Slot::Suffix)
+                ),
+                (2, 2)
+            );
+            got_suffix_room += has(plus_suffix) as u32;
+        }
+        assert!(
+            (1800..2200).contains(&got_suffix_room),
+            "50/50 attendu, {got_suffix_room}/4000"
+        );
+
+        // préfixe « +1 Suffix » : 3 suffixes, puis Annulation du préfixe (Omen Sinistral) : 3 suffixes gardés
+        let mut it = ItemState::new(Rarity::Rare, 80);
+        it.push(Mod {
+            idx: plus_suffix,
+            fractured: false,
+            crafted: false,
+        });
+        let dextral = Currency {
+            add_slot: Some(Slot::Suffix),
+            ..cur(CurrencyKind::Exalt)
+        };
+        for _ in 0..3 {
+            assert_eq!(jewel.apply(&mut it, &dextral, &mut rng), Outcome::Applied);
+        }
+        assert_eq!(
+            (
+                jewel.count(&it, Slot::Prefix),
+                jewel.count(&it, Slot::Suffix),
+                jewel.cap_of(&it)
+            ),
+            (1, 3, (2, 3))
+        );
+        jewel.apply(&mut it, &dextral, &mut rng);
+        assert_eq!(jewel.count(&it, Slot::Suffix), 3, "pas de 4e suffixe");
+        let sinistral = Currency {
+            remove_slot: Some(Slot::Prefix),
+            ..cur(CurrencyKind::Annul)
+        };
+        assert_eq!(jewel.apply(&mut it, &sinistral, &mut rng), Outcome::Applied);
+        assert_eq!(
+            (
+                jewel.count(&it, Slot::Prefix),
+                jewel.count(&it, Slot::Suffix),
+                jewel.cap_of(&it)
+            ),
+            (0, 3, (2, 2))
+        );
+        jewel.apply(&mut it, &dextral, &mut rng);
+        assert_eq!(
+            jewel.count(&it, Slot::Suffix),
+            3,
+            "plus de place de suffixe"
+        );
+        assert_eq!(
+            jewel.apply(&mut it, &cur(CurrencyKind::Exalt), &mut rng),
+            Outcome::Applied
+        );
+        assert_eq!(
+            (
+                jewel.count(&it, Slot::Prefix),
+                jewel.count(&it, Slot::Suffix)
+            ),
+            (1, 3),
+            "un préfixe rentre encore"
+        );
+    }
+
+    /// Joyau (plafond Rare 2/2) : un Alchemy remplit l'objet (4 affixes), l'Exalt n'a plus de place ; le
+    /// Magique reste à 1/1.
+    #[test]
+    fn jewel_rare_cap_is_two_prefixes_two_suffixes() {
+        let affixes: Vec<Affix> = (0..6)
+            .map(|i| aff("P", i, Slot::Prefix, 100))
+            .chain((10..16).map(|i| aff("S", i, Slot::Suffix, 100)))
+            .collect();
+        let jewel = AffixPool {
+            affixes,
+            rare_cap: (2, 2),
+            ..AffixPool::default()
+        };
+        assert_eq!(
+            (jewel.cap(Rarity::Rare), jewel.cap(Rarity::Magic)),
+            ((2, 2), (1, 1))
+        );
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(3);
+        for _ in 0..200 {
+            let mut it = ItemState::new(Rarity::Normal, 80);
+            jewel.apply(&mut it, &cur(CurrencyKind::Alchemy), &mut rng);
+            assert_eq!(
+                (
+                    jewel.count(&it, Slot::Prefix),
+                    jewel.count(&it, Slot::Suffix)
+                ),
+                (2, 2)
+            );
+            assert_eq!(
+                jewel.apply(&mut it, &cur(CurrencyKind::Exalt), &mut rng),
+                Outcome::NotApplicable
+            );
+        }
+    }
+
+    /// Plafond propre à la base (Penumbra : +2 préfixes / -2 suffixes, Absent : -1 / -1) : le tirage, l'Exalt
+    /// et l'Augmentation suivent le plafond décalé, jamais le 3/3 de la rareté seule.
+    #[test]
+    fn base_cap_delta_shifts_prefix_and_suffix_limits() {
+        let affixes: Vec<Affix> = (0..6)
+            .map(|i| aff("P", i, Slot::Prefix, 100))
+            .chain((10..16).map(|i| aff("S", i, Slot::Suffix, 100)))
+            .collect();
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+
+        let penumbra = AffixPool {
+            affixes: affixes.clone(),
+            cap_delta: (2, -2),
+            ..AffixPool::default()
+        };
+        assert_eq!(penumbra.cap(Rarity::Rare), (5, 1));
+        for _ in 0..200 {
+            let mut it = ItemState::new(Rarity::Normal, 80);
+            penumbra.apply(&mut it, &cur(CurrencyKind::Alchemy), &mut rng);
+            while penumbra.apply(&mut it, &cur(CurrencyKind::Exalt), &mut rng) == Outcome::Applied {
+            }
+            assert_eq!(
+                (
+                    penumbra.count(&it, Slot::Prefix),
+                    penumbra.count(&it, Slot::Suffix)
+                ),
+                (5, 1)
+            );
+        }
+
+        let absent = AffixPool {
+            affixes: affixes.clone(),
+            cap_delta: (-1, -1),
+            ..AffixPool::default()
+        };
+        let mut it = ItemState::new(Rarity::Normal, 80);
+        absent.apply(&mut it, &cur(CurrencyKind::Alchemy), &mut rng);
+        assert_eq!(
+            it.len(),
+            4,
+            "Absent Amulet : 2 préfixes + 2 suffixes, un Alchemy remplit l'objet"
+        );
+        assert_eq!(
+            absent.apply(&mut it, &cur(CurrencyKind::Exalt), &mut rng),
+            Outcome::NotApplicable
+        );
+
+        // Dusk (+1 / -1) : un objet Magique n'a plus de place de suffixe, deux préfixes possibles
+        let dusk = AffixPool {
+            affixes,
+            cap_delta: (1, -1),
+            ..AffixPool::default()
+        };
+        for _ in 0..200 {
+            let mut it = ItemState::new(Rarity::Normal, 80);
+            dusk.apply(&mut it, &cur(CurrencyKind::Transmute), &mut rng);
+            assert_eq!(
+                dusk.apply(&mut it, &cur(CurrencyKind::Augment), &mut rng),
+                Outcome::Applied
+            );
+            assert_eq!(
+                (dusk.count(&it, Slot::Prefix), dusk.count(&it, Slot::Suffix)),
+                (2, 0)
+            );
+        }
+    }
+
+    #[test]
+    fn fractured_mod_is_never_removed() {
+        let pool = AffixPool::new(
+            (0..3)
+                .map(|i| aff("P", i, Slot::Prefix, 100))
+                .chain((10..13).map(|i| aff("S", i, Slot::Suffix, 100)))
+                .collect(),
+        );
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(3);
+        for _ in 0..300 {
+            let mut it = ItemState::new(Rarity::Rare, 80);
+            for i in [0u16, 1, 3, 4] {
+                it.push(Mod {
+                    idx: i,
+                    fractured: false,
+                    crafted: false,
+                });
+            }
+            it.set_fractured(0);
+            let keep = it.mods()[0].idx;
+            pool.apply(&mut it, &cur(CurrencyKind::Annul), &mut rng);
+            pool.apply(&mut it, &cur(CurrencyKind::Chaos), &mut rng);
+            assert!(it.mods().iter().any(|m| m.idx == keep && m.fractured));
+        }
+    }
+
+    #[test]
+    fn whittling_removes_the_lowest_level_held_affix() {
+        let mut affixes = vec![
+            aff("A", 0, Slot::Prefix, 100),
+            aff("B", 1, Slot::Prefix, 100),
+            aff("C", 2, Slot::Prefix, 100),
+        ];
+        affixes[0].req_ilvl = 40;
+        affixes[1].req_ilvl = 10; // le plus bas : celui-là doit toujours partir
+        affixes[2].req_ilvl = 70;
+        let pool = AffixPool::new(affixes);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(9);
+        for _ in 0..200 {
+            let mut it = ItemState::new(Rarity::Rare, 80);
+            for i in [0u16, 1, 2] {
+                it.push(Mod {
+                    idx: i,
+                    fractured: false,
+                    crafted: false,
+                });
+            }
+            // isolé du réajout de Chaos : on teste directement la sélection du retrait
+            assert!(pool.remove_random(&mut it, None, false, true, &mut rng));
+            assert!(
+                !it.mods().iter().any(|m| m.idx == 1),
+                "le mod du niveau le plus bas (idx 1) doit toujours être retiré"
+            );
+            assert_eq!(it.len(), 2);
+        }
+    }
+
+    #[test]
+    fn omen_of_light_only_removes_desecrated_affixes() {
+        let mut affixes = vec![
+            aff("A", 0, Slot::Prefix, 100),
+            aff("B", 1, Slot::Prefix, 100),
+        ];
+        affixes[1].desecrated = true; // seul candidat valide pour l'Omen of Light
+        let pool = AffixPool::new(affixes);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(11);
+        for _ in 0..200 {
+            let mut it = ItemState::new(Rarity::Rare, 80);
+            it.push(Mod {
+                idx: 0,
+                fractured: false,
+                crafted: false,
+            }); // normal, jamais ciblé
+            it.push(Mod {
+                idx: 1,
+                fractured: false,
+                crafted: false,
+            }); // desecrated, seul retirable
+            let light = Currency {
+                remove_desecrated_only: true,
+                ..cur(CurrencyKind::Annul)
+            };
+            assert_eq!(pool.apply(&mut it, &light, &mut rng), Outcome::Applied);
+            assert!(
+                it.mods().iter().any(|m| m.idx == 0),
+                "le mod normal ne doit jamais être retiré par Omen of Light"
+            );
+            assert!(
+                !it.mods().iter().any(|m| m.idx == 1),
+                "le mod desecrated doit avoir été retiré"
+            );
+        }
+    }
+
+    #[test]
+    fn ancient_bone_never_draws_a_desecrated_mod_below_level_40() {
+        // os Ancient : « Minimum Modifier Level 40 » (poe2db) ; le mod de niveau 20 ne doit jamais sortir
+        let mut affixes = vec![
+            aff("P", 0, Slot::Prefix, 100),
+            aff("Low", 1, Slot::Suffix, 1000),
+            aff("High", 2, Slot::Suffix, 1),
+        ];
+        affixes[1].desecrated = true;
+        affixes[1].req_ilvl = 20;
+        affixes[2].desecrated = true;
+        affixes[2].req_ilvl = 60;
+        let pool = AffixPool::new(affixes);
+        let ancient = Currency {
+            min_mod_level: 40,
+            ..cur(CurrencyKind::Desecrate)
+        };
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(5);
+        for _ in 0..300 {
+            let mut it = ItemState::new(Rarity::Rare, 80);
+            it.push(Mod {
+                idx: 0,
+                fractured: false,
+                crafted: false,
+            });
+            assert_eq!(pool.apply(&mut it, &ancient, &mut rng), Outcome::Applied);
+            assert!(
+                it.mods().iter().any(|m| m.idx == 2),
+                "seul le mod de niveau 60 est tirable"
+            );
+        }
+    }
+}
