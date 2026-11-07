@@ -158,3 +158,57 @@ pub fn copy_measure_export(
             )
         })
 }
+
+fn internal(message: String) -> AppError {
+    app_error(crate::contracts::ErrorCode::Internal, message)
+}
+
+#[tauri::command]
+pub fn get_ledger_status(
+    state: State<'_, crate::ledger::LedgerState>,
+) -> crate::ledger::LedgerStatus {
+    state.status()
+}
+
+/// Démarre une session Atlas Ledger (sans effet si une session est en cours).
+#[tauri::command]
+pub fn start_ledger_session(app: AppHandle) -> crate::ledger::LedgerStatus {
+    crate::ledger::start(&app)
+}
+
+/// Arrête la session et l'enregistre dans l'historique local.
+#[tauri::command]
+pub fn stop_ledger_session(app: AppHandle) -> Result<crate::ledger::LedgerStatus, AppError> {
+    crate::ledger::stop(&app).map_err(internal)
+}
+
+/// Étiquette la session en cours (`id` nul) ou une session de l'historique.
+#[tauri::command]
+pub fn set_ledger_strategy(
+    app: AppHandle,
+    id: Option<i64>,
+    strategy: crate::ledger_store::Strategy,
+) -> Result<crate::ledger::LedgerStatus, AppError> {
+    crate::ledger::set_strategy(&app, id, strategy).map_err(internal)
+}
+
+#[tauri::command]
+pub fn list_ledger_sessions(
+    app: AppHandle,
+    limit: u32,
+) -> Result<Vec<crate::ledger_store::SessionRow>, AppError> {
+    crate::ledger::history(&app, limit).map_err(internal)
+}
+
+#[tauri::command]
+pub fn get_ledger_session(
+    app: AppHandle,
+    id: i64,
+) -> Result<crate::ledger_store::StoredSession, AppError> {
+    crate::ledger::session(&app, id).map_err(internal)
+}
+
+#[tauri::command]
+pub fn delete_ledger_session(app: AppHandle, id: i64) -> Result<(), AppError> {
+    crate::ledger::delete(&app, id).map_err(internal)
+}
