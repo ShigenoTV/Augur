@@ -16,6 +16,7 @@ mod client_log;
 mod clipboard;
 mod commands;
 pub mod contracts;
+mod evaluation;
 mod game_window;
 pub mod item_text;
 mod ledger;
@@ -98,6 +99,8 @@ pub fn run() {
             commands::get_ledger_session,
             commands::delete_ledger_session,
             commands::get_character,
+            commands::evaluate_item,
+            commands::estimate_price,
             commands::import_pob_code,
             commands::clear_character,
         ])

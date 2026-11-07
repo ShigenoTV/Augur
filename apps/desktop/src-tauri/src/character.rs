@@ -7,6 +7,7 @@
 use std::path::PathBuf;
 use std::sync::Mutex;
 
+use poe2_core::comparaison::competence_comparee;
 use poe2_core::pob::{self, BuildPob};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
@@ -16,12 +17,6 @@ use crate::time::rfc3339_now;
 
 /// Événement émis à chaque import ou suppression (charge : `Option<CharacterInfo>`).
 pub const EVENT_CHANGED: &str = "augur://character-changed";
-
-/// Compétences dont Augur sait calculer le DPS (archétypes vérifiés).
-pub const COMPETENCES_SUPPORTEES: &[(&str, &str)] = &[
-    ("LightningBoltPlayer", "Lightning Bolt"),
-    ("ArcPlayer", "Arc"),
-];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -69,30 +64,6 @@ fn fichier(app: &AppHandle) -> Option<PathBuf> {
         .app_data_dir()
         .ok()
         .map(|d| d.join("personnage.json"))
-}
-
-/// Groupe et gemme comparés : la compétence principale du build si c'est un
-/// archétype vérifié, sinon le premier groupe actif qui en contient un,
-/// sinon la compétence principale telle quelle.
-pub fn competence_comparee(build: &BuildPob) -> Option<(usize, &pob::GemmePob, bool)> {
-    let supportee = |g: &pob::GemmePob| {
-        COMPETENCES_SUPPORTEES
-            .iter()
-            .any(|(id, _)| *id == g.skill_id)
-    };
-    let principale = build.groupe_principal.zip(build.competence_principale());
-    if let Some((i, g)) = principale
-        && supportee(g)
-    {
-        return Some((i, g, true));
-    }
-    build
-        .groupes
-        .iter()
-        .enumerate()
-        .filter(|(_, gr)| gr.actif)
-        .find_map(|(i, gr)| gr.actives().find(|g| supportee(g)).map(|g| (i, g, true)))
-        .or(principale.map(|(i, g)| (i, g, false)))
 }
 
 /// Résumé d'un build importé.
@@ -158,7 +129,6 @@ impl CharacterState {
     }
 
     /// Exécute `f` sur le build chargé (pour le moteur de calcul).
-    #[allow(dead_code)]
     pub fn with_build<T>(&self, f: impl FnOnce(&BuildPob) -> T) -> Option<T> {
         self.lock().as_ref().map(|c| f(&c.build))
     }

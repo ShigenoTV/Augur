@@ -260,7 +260,7 @@ pub fn lire_xml(xml: &str) -> Result<BuildPob, ErreurPob> {
         groupes,
         groupe_principal,
         gemme_principale,
-        objets: lire_objets(racine),
+        objets: lire_objets(racine, &passifs),
         passifs,
         version_arbre,
     })
@@ -317,16 +317,18 @@ fn lire_competences(racine: roxmltree::Node) -> (Vec<GroupePob>, Vec<usize>) {
     (groupes, principales)
 }
 
-/// Passifs du spec actif.
-fn lire_arbre(racine: roxmltree::Node) -> (Vec<u32>, Option<String>) {
-    let Some(tree) = enfants(racine, "Tree").next() else {
-        return (Vec::new(), None);
-    };
+/// Spec actif de l'arbre.
+fn spec_actif<'a, 'i>(racine: roxmltree::Node<'a, 'i>) -> Option<roxmltree::Node<'a, 'i>> {
+    let tree = enfants(racine, "Tree").next()?;
     let actif: usize = attr_u32(tree, "activeSpec").unwrap_or(1).max(1) as usize;
-    let Some(spec) = enfants(tree, "Spec")
+    enfants(tree, "Spec")
         .nth(actif - 1)
         .or_else(|| enfants(tree, "Spec").next())
-    else {
+}
+
+/// Passifs du spec actif.
+fn lire_arbre(racine: roxmltree::Node) -> (Vec<u32>, Option<String>) {
+    let Some(spec) = spec_actif(racine) else {
         return (Vec::new(), None);
     };
     let passifs = spec
@@ -338,39 +340,60 @@ fn lire_arbre(racine: roxmltree::Node) -> (Vec<u32>, Option<String>) {
     (passifs, spec.attribute("treeVersion").map(str::to_string))
 }
 
-/// Objets équipés dans le set d'objets actif (emplacements vides ignorés).
-fn lire_objets(racine: roxmltree::Node) -> Vec<ObjetPob> {
+/// Texte d'un <Item> : le premier nœud texte ; les <ModRange> suivent.
+fn texte_item(item: roxmltree::Node) -> String {
+    let texte: String = item
+        .children()
+        .filter(|c| c.is_text())
+        .filter_map(|c| c.text())
+        .collect::<Vec<_>>()
+        .join("\n");
+    texte
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// Objets équipés dans le set d'objets actif (emplacements vides ignorés),
+/// plus les joyaux sertis dans l'arbre (« Jewel <nœud> »).
+fn lire_objets(racine: roxmltree::Node, passifs: &[u32]) -> Vec<ObjetPob> {
     let Some(items) = enfants(racine, "Items").next() else {
         return Vec::new();
     };
-    let set_actif = items.attribute("activeItemSet").unwrap_or("1");
-    let Some(set) = enfants(items, "ItemSet")
-        .find(|s| s.attribute("id") == Some(set_actif))
-        .or_else(|| enfants(items, "ItemSet").next())
-    else {
-        return Vec::new();
+    let item = |id: &str| {
+        enfants(items, "Item")
+            .find(|i| i.attribute("id") == Some(id))
+            .map(texte_item)
     };
-    let mut objets: Vec<ObjetPob> = enfants(set, "Slot")
+    let set_actif = items.attribute("activeItemSet").unwrap_or("1");
+    let set = enfants(items, "ItemSet")
+        .find(|s| s.attribute("id") == Some(set_actif))
+        .or_else(|| enfants(items, "ItemSet").next());
+    let mut objets: Vec<ObjetPob> = set
+        .into_iter()
+        .flat_map(|set| enfants(set, "Slot"))
         .filter_map(|slot| {
             let id = slot.attribute("itemId").filter(|i| *i != "0")?;
             let emplacement = slot.attribute("name")?.to_string();
-            let item = enfants(items, "Item").find(|i| i.attribute("id") == Some(id))?;
-            // Le texte de l'objet est le premier nœud texte ; les <ModRange> suivent.
-            let texte: String = item
-                .children()
-                .filter(|c| c.is_text())
-                .filter_map(|c| c.text())
-                .collect::<Vec<_>>()
-                .join("\n");
-            let texte = texte
-                .lines()
-                .map(str::trim)
-                .filter(|l| !l.is_empty())
-                .collect::<Vec<_>>()
-                .join("\n");
-            Some(entete_objet(emplacement, texte))
+            Some(entete_objet(emplacement, item(id)?))
         })
         .collect();
+    if let Some(spec) = spec_actif(racine) {
+        for socket in enfants(spec, "Sockets").flat_map(|s| enfants(s, "Socket")) {
+            let (Some(noeud), Some(id)) = (attr_u32(socket, "nodeId"), socket.attribute("itemId"))
+            else {
+                continue;
+            };
+            if id == "0" || !passifs.contains(&noeud) {
+                continue;
+            }
+            if let Some(texte) = item(id) {
+                objets.push(entete_objet(format!("Jewel {noeud}"), texte));
+            }
+        }
+    }
     objets.sort_by(|a, b| a.emplacement.cmp(&b.emplacement));
     objets
 }
@@ -409,7 +432,9 @@ mod tests {
   </Build>
   <Tree activeSpec="2">
     <Spec nodes="1,2,3" treeVersion="0_3"/>
-    <Spec nodes="47359, 18348,29240" treeVersion="0_4"/>
+    <Spec nodes="47359, 18348,29240" treeVersion="0_4">
+      <Sockets><Socket nodeId="18348" itemId="3"/><Socket nodeId="999" itemId="2"/></Sockets>
+    </Spec>
   </Tree>
   <Skills activeSkillSet="1">
     <SkillSet id="1">
@@ -439,6 +464,13 @@ Implicits: 0
       Rarity: MAGIC
 Sapphire Ring of the Hare
 +20% to Cold Resistance
+    </Item>
+    <Item id="3">
+      Rarity: RARE
+Storm Eye
+Sapphire
+Implicits: 0
+12% increased Lightning Damage
     </Item>
     <ItemSet id="1">
       <Slot name="Weapon 1" itemId="1"/>
@@ -472,7 +504,11 @@ Sapphire Ring of the Hare
             .map(|g| g.nom.as_str())
             .collect();
         assert_eq!(supports, vec!["Zenith II"]);
-        assert_eq!(b.objets.len(), 2);
+        assert_eq!(b.objets.len(), 3);
+        assert_eq!(
+            b.objet("Jewel 18348").unwrap().nom.as_deref(),
+            Some("Storm Eye")
+        );
         let arme = b.objet("Weapon 1").unwrap();
         assert_eq!(arme.nom.as_deref(), Some("Vengeance Song"));
         assert_eq!(arme.base.as_deref(), Some("Dueling Wand"));

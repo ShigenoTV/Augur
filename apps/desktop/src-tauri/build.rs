@@ -27,6 +27,8 @@ fn main() {
             "get_ledger_session",
             "delete_ledger_session",
             "get_character",
+            "evaluate_item",
+            "estimate_price",
             "import_pob_code",
             "clear_character",
         ]),

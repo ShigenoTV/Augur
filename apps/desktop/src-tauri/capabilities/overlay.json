@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "overlay",
-  "description": "Overlay en jeu : écoute des événements, lecture de l'objet copié, fermeture et dimensionnement de sa propre fenêtre. Aucun accès fichier, shell ni réseau.",
+  "description": "Overlay en jeu : écoute des événements, lecture de l'objet copié, comparaison au personnage importé (calcul local), fermeture et dimensionnement de sa propre fenêtre. Aucun accès fichier, shell ni réseau.",
   "windows": ["overlay"],
   "permissions": [
     "core:event:allow-listen",
@@ -11,6 +11,8 @@
     "allow-hide-overlay",
     "allow-fit-overlay",
     "allow-open-main-window",
-    "allow-get-measure-status"
+    "allow-get-measure-status",
+    "allow-evaluate-item",
+    "allow-estimate-price"
   ]
 }

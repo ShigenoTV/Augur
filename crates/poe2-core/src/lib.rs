@@ -7,6 +7,8 @@
 //!   avec une trace de calcul complète pour chaque valeur produite.
 //! - [`ledger`] (Atlas Ledger) suit les sessions de farm à partir des lignes
 //!   de `Client.txt` : parties de map, répartition du temps, maps par heure.
+//! - [`comparaison`] compare un objet copié à l'équipement du personnage
+//!   (DPS de Lightning Bolt et Arc avant / après).
 //! - [`pob`] lit un code d'export Path of Building PoE 2 (personnage du joueur).
 //!
 //! Le crate ne fait aucune entrée-sortie réseau et ne lit jamais la mémoire du
@@ -15,6 +17,7 @@
 #![forbid(unsafe_code)]
 
 pub mod calc;
+pub mod comparaison;
 pub mod ledger;
 pub mod parser;
 pub mod pob;

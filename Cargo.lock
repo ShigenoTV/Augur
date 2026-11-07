@@ -2785,6 +2785,7 @@ dependencies = [
  "base64 0.22.1",
  "flate2",
  "proptest",
+ "regex",
  "roxmltree",
  "serde",
  "serde_json",

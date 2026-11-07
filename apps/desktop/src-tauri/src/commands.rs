@@ -238,3 +238,23 @@ pub fn import_pob_code(
 pub fn clear_character(app: AppHandle) -> Result<(), AppError> {
     crate::character::clear(&app).map_err(internal)
 }
+
+/// Gain de DPS de l'objet pour le personnage importé (calcul local).
+#[tauri::command]
+pub fn evaluate_item(
+    character: State<'_, crate::character::CharacterState>,
+    item: ParsedItem,
+) -> Result<crate::contracts::ItemDelta, AppError> {
+    character
+        .with_build(|b| crate::evaluation::evaluate(Some(b), &item))
+        .unwrap_or_else(|| crate::evaluation::evaluate(None, &item))
+}
+
+/// Prix estimé : pas encore disponible (recherche de trade au sprint 3).
+#[tauri::command]
+pub fn estimate_price(_item: ParsedItem) -> Result<crate::contracts::PriceEstimate, AppError> {
+    Err(app_error(
+        crate::contracts::ErrorCode::FeatureDisabled,
+        "L'estimation de prix arrive dans une prochaine version.",
+    ))
+}

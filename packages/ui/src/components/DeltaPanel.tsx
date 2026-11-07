@@ -142,7 +142,10 @@ export function DeltaPanel({ delta, price, exaltedPerDivine }: DeltaPanelProps) 
 
       <dl className="space-y-1">
         <StatRow label="DPS total" delta={delta.dps} kind="relative" emphasis />
-        <StatRow label="EHP" delta={delta.ehp} kind="relative" emphasis />
+        {/* EHP à zéro des deux côtés : pas encore calculé, la ligne serait trompeuse. */}
+        {(delta.ehp.before !== 0 || delta.ehp.after !== 0) && (
+          <StatRow label="EHP" delta={delta.ehp} kind="relative" emphasis />
+        )}
         {delta.resistances.map((r) => (
           <StatRow key={r.element} label={elementLabel(r.element)} delta={r} kind="points" cap={r.cap} />
         ))}
