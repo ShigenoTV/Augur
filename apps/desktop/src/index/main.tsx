@@ -14,6 +14,7 @@ import { createRoot } from "react-dom/client";
 import { commands, isAppError, isTauri, on, type ClientLogStatus, type Settings } from "../bridge";
 import { ClientLogCard } from "./ClientLogCard";
 import { summarizeClientLog } from "./clientLog";
+import { LedgerCard } from "./LedgerCard";
 import { MeasureCard } from "./MeasureCard";
 import { useUpdates } from "./useUpdates";
 
@@ -143,6 +144,10 @@ function App() {
           </p>
         </Card>
       </div>
+
+      <Card title="Atlas Ledger">
+        <LedgerCard />
+      </Card>
 
       <Card title="Session de mesures">
         <MeasureCard />
