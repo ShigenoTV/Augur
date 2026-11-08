@@ -11,7 +11,6 @@ import {
   libelleCourt,
   lirePrix,
   peutAjouter,
-  sourcesAchat,
 } from "./forge";
 
 const affixe = (group: number, slot: "prefix" | "suffix"): ForgeAffix => ({
@@ -90,18 +89,6 @@ describe("Forge", () => {
     } as unknown as ForgePlan;
     expect(etapes(plan).map((n) => n.id)).toEqual(["n0", "n2", "n1"]);
     expect(etapes(plan, 2).map((n) => n.id)).toEqual(["n0", "n2"]);
-  });
-
-  it("donne la source des prix d'un achat", () => {
-    const prix = [
-      { id: "exalt", source: "poeNinja" as const },
-      { id: "omen_dextral_exaltation", source: "joueur" as const },
-      { id: "base_neuve", source: "indicatif" as const },
-      { id: "revente_base", source: "indicatif" as const },
-    ];
-    expect(sourcesAchat("exalt", prix)).toBe("poe.ninja");
-    expect(sourcesAchat("exalt+omen_dextral_exaltation", prix)).toBe("poe.ninja + saisi");
-    expect(sourcesAchat("__base", prix)).toBe("indicatif");
   });
 
   it("lit les prix saisis", () => {

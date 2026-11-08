@@ -5,7 +5,7 @@ Générées par des scripts de `tools/gamedata/`, jamais modifiées à la main.
 | Fichier | Contenu | Source |
 |---|---|---|
 | `gemmes.json` | Lightning Bolt et Arc par niveau (dégâts, chaînes, temps d'incantation, critique, infusion) ; texte des effets de chaque support | RePoE PoE 2, `skills.json` (https://repoe-fork.github.io/poe2/) |
-| `forge.json.gz` | Forge (`poe2-core::forge::atelier`) : mods d'objets tirables (hors Essence), bases, et relevé de poids de mods poe2db | RePoE PoE 2 (`mods.json`, `base_items.json`) ; **poids : PoE2DB / Krakenbul, CC BY-NC-SA 3.0** (voir ci-dessous) |
+| `forge.json.gz` | Forge (`poe2-core::forge::atelier`) : mods d'objets tirables (hors Essence), bases, et relevé de poids de mods poe2db, complété par Craft of Exile | RePoE PoE 2 (`mods.json`, `base_items.json`) ; **poids : PoE2DB / Krakenbul, CC BY-NC-SA 3.0**, complément Craft of Exile (voir ci-dessous) |
 | `arbre.json` | Texte des stats de chaque passif, version d'arbre `0_5` | Path of Building Community PoE 2, `src/TreeData/0_5/tree.json` |
 
 Régénérer après un patch du jeu :
@@ -21,7 +21,8 @@ Régénérer `forge.json.gz` (tables produites par `tools/gamedata/import_repoe.
 
 ```sh
 python tools/gamedata/forge_data.py --tables var/gamedata/tables \
-    --poids tools/theorycraft/donnees/poids-poe2db.json --out crates/poe2-core/data/forge.json.gz
+    --poids tools/theorycraft/donnees/poids-poe2db.json \
+    --complement tools/theorycraft/donnees/poids-coe.json --out crates/poe2-core/data/forge.json.gz
 ```
 
 ## Attribution
@@ -32,7 +33,11 @@ estimations de **Krakenbul** (Discord *Prohibited Library*), publiées par **PoE
 (https://creativecommons.org/licenses/by-nc-sa/3.0/). Pas d'utilisation commerciale ; une version modifiée se
 partage sous la même licence. Détail et modifications :
 [`tools/theorycraft/donnees/LICENCE-poids-poe2db.md`](../../../tools/theorycraft/donnees/LICENCE-poids-poe2db.md).
-Augur affiche cette attribution avec chaque plan de Forge.
+L'appli n'affiche pas les sources (choix de Max, 08/11/2026) : l'attribution est dans le dépôt.
+
+Les poids des mods que PoE2DB n'a pas mesurés viennent de **Craft of Exile**
+(https://www.craftofexile.com/?game=poe2, mêmes estimations de Krakenbul), données tierces copiées avec leur
+attribution : [`tools/theorycraft/donnees/LICENCE-poids-coe.md`](../../../tools/theorycraft/donnees/LICENCE-poids-coe.md).
 
 Les données de l'arbre passif viennent du projet Path of Building Community
 (PoE 2), distribué sous licence MIT (texte complet ci-dessous) :

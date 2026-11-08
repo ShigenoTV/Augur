@@ -2,7 +2,8 @@ import "@augur/ui/styles.css";
 import { CopilotOverlay, fixtures, type CopilotView } from "@augur/ui";
 import { StrictMode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { commands, isTauri, on } from "../bridge";
+import { commands, isAppError, isTauri, on } from "../bridge";
+import { ForgeTipPanel, type ForgeView } from "./ForgeTipPanel";
 import { EVALUATING_DELAY_MS, runCopilot } from "./copilot";
 
 function Overlay() {
@@ -12,6 +13,8 @@ function Overlay() {
   const panel = useRef<HTMLDivElement>(null);
   const run = useRef(0);
   const [measuring, setMeasuring] = useState(false);
+  // Plan Forge suivi : l'objet copié est celui du craft en cours.
+  const [forge, setForge] = useState<ForgeView | null>(null);
 
   useEffect(() => {
     if (!isTauri()) return;
@@ -31,27 +34,47 @@ function Overlay() {
         const emit = (v: CopilotView) => {
           if (run.current === id) setView(v);
         };
-        // L'état « analyse » n'apparaît que si le calcul dépasse 150 ms.
-        const slow = setTimeout(() => emit({ status: "evaluating" }), EVALUATING_DELAY_MS);
-        void runCopilot(
-          item,
-          {
-            overlayState: commands.getOverlayState,
-            evaluate: commands.evaluateItem,
-            price: commands.estimatePrice,
-          },
-          (v) => {
-            clearTimeout(slow);
-            emit(v);
-          },
-        );
+        const startCopilot = () => {
+          // L'état « analyse » n'apparaît que si le calcul dépasse 150 ms.
+          const slow = setTimeout(() => emit({ status: "evaluating" }), EVALUATING_DELAY_MS);
+          void runCopilot(
+            item,
+            {
+              overlayState: commands.getOverlayState,
+              evaluate: commands.evaluateItem,
+              price: commands.estimatePrice,
+            },
+            (v) => {
+              clearTimeout(slow);
+              emit(v);
+            },
+          );
+        };
+        // Un plan Forge suivi passe d'abord : l'objet copié peut être le craft en cours.
+        setForge(null);
+        void commands
+          .getForgeAdvice()
+          .then((tip) => {
+            if (run.current !== id) return;
+            if (!tip) return startCopilot();
+            setView({ status: "hidden" });
+            setForge({ status: "tip", tip });
+          })
+          .catch((error: unknown) => {
+            if (run.current !== id) return;
+            if (!isAppError(error)) return startCopilot();
+            setView({ status: "hidden" });
+            setForge({ status: "error", error });
+          });
       }),
       on.itemUnrecognized((error) => {
         run.current++;
+        setForge(null);
         setView({ status: "unrecognized", error });
       }),
       on.overlayHidden(() => {
         run.current++;
+        setForge(null);
         setView({ status: "hidden" });
       }),
       on.upgradeSearchRequested(() => {
@@ -75,13 +98,17 @@ function Overlay() {
 
   return (
     <div ref={panel} className="inline-block">
-      {measuring && view.status !== "hidden" && (
+      {measuring && (view.status !== "hidden" || forge) && (
         <p className="mb-1 flex items-center gap-1.5 text-[11px] text-text-subtle">
           <span className="inline-block size-1.5 rounded-full bg-signal-loss" aria-hidden />
           Mesures en cours : objet enregistré
         </p>
       )}
-      <CopilotOverlay state={view} onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)} />
+      {forge ? (
+        <ForgeTipPanel view={forge} onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)} />
+      ) : (
+        <CopilotOverlay state={view} onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)} />
+      )}
     </div>
   );
 }

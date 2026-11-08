@@ -39,6 +39,9 @@ fn main() {
             "get_forge_affixes",
             "get_forge_catalogue",
             "plan_forge_craft",
+            "get_forge_advice",
+            "get_forge_tracking",
+            "stop_forge_tracking",
         ]),
     ))
     .expect("échec du build Tauri");

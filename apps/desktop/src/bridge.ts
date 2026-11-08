@@ -233,6 +233,36 @@ export type ForgePlanResult = {
   attribution: ForgeAttribution;
 };
 
+export type ForgeAdviceOutcome = { label: string; probability: number; kind: "success" | "failure"; costToGo: number | null };
+export type ForgeAdvice = {
+  stateKey: string;
+  state: ForgeItemSummary;
+  goalReached: boolean;
+  costToGo: number | null;
+  action: ForgeActionInfo | null;
+  repeat: ForgeRepeat | null;
+  outcomes: ForgeAdviceOutcome[];
+};
+/** Objet copié en jeu suivi sur le plan Forge actif (crates/poe2-core/src/forge/suivi.rs). */
+export type ForgeReadMod = {
+  texte: string;
+  slot: ForgeSlot;
+  voulu: number | null;
+  tierTropBas: boolean;
+  reconnu: boolean;
+  fracture: boolean;
+};
+export type ForgeTip = {
+  baseNom: string;
+  labels: string[];
+  coutPlan: number;
+  mods: ForgeReadMod[];
+  ilvlObjet: number | null;
+  ilvlPlan: number;
+  conseil: ForgeAdvice;
+};
+export type ForgeTracking = { baseNom: string; ilvl: number; labels: string[] };
+
 export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
@@ -273,6 +303,9 @@ export const commands = {
   getForgeAffixes: (baseId: string, ilvl: number) => invoke<ForgeAffixes>("get_forge_affixes", { baseId, ilvl }),
   getForgeCatalogue: () => invoke<ForgeCatalogueEntry[]>("get_forge_catalogue"),
   planForgeCraft: (demande: ForgePlanRequest) => invoke<ForgePlanResult>("plan_forge_craft", { demande }),
+  getForgeAdvice: () => invoke<ForgeTip | null>("get_forge_advice"),
+  getForgeTracking: () => invoke<ForgeTracking | null>("get_forge_tracking"),
+  stopForgeTracking: () => invoke<void>("stop_forge_tracking"),
   getForgePrices: () => invoke<ForgePrices>("get_forge_prices"),
   setForgePrices: (prix: Record<string, number>) => invoke<ForgePrices>("set_forge_prices", { prix }),
   resetForgePrices: () => invoke<ForgePrices>("reset_forge_prices"),

@@ -8,8 +8,7 @@
 
 use super::catalogue::{MONNAIES, OMENS, actions, id_combinee};
 use super::donnees::{
-    BaseTable, ErreurPool, PoolBase, RelevePoids, SansPoids, TableBases, TableMods,
-    construire_pool, page_poe2db,
+    BaseTable, ErreurPool, PoolBase, RelevePoids, SansPoids, TableBases, TableMods, construire_pool,
 };
 use super::moteur::{GroupId, ItemState, Rarity, Slot};
 use super::objectif::{Goal, WantedAffix};
@@ -18,6 +17,7 @@ use super::solveur::{
     CraftPlan, GoalItem, MacroState, Model, PlanConfig, PlanInputs, SolveConfig, build_plan, solve,
     verify_policy,
 };
+use super::suivi::PlanActif;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::Read;
@@ -90,6 +90,9 @@ pub struct Attribution {
     pub licence: String,
     pub date_releve: String,
     pub repoe_version: String,
+    /// Source du complément Craft of Exile (poids des mods que poe2db n'a pas mesurés).
+    pub complement: Option<String>,
+    pub date_complement: Option<String>,
 }
 
 fn attribution(d: &DonneesForge) -> Attribution {
@@ -98,6 +101,8 @@ fn attribution(d: &DonneesForge) -> Attribution {
         licence: d.releve.licence.clone(),
         date_releve: d.releve.date_releve.clone(),
         repoe_version: d.repoe_version.clone(),
+        complement: d.releve.complement.as_ref().map(|c| c.source.clone()),
+        date_complement: d.releve.complement.as_ref().map(|c| c.date_releve.clone()),
     }
 }
 
@@ -113,22 +118,33 @@ pub struct BaseForge {
     pub page: String,
 }
 
-/// Bases dont la page poe2db porte des poids (les autres ne sont pas calculables), triées par
+/// Bases écartées malgré des poids : leur pool ne correspond pas à celui de Craft of Exile (contrôle
+/// du 08/11/2026). Energy Blade est créée par une compétence et existe en deux classes ; Craft of
+/// Exile donne à Grasping Mail des mods de bijou que les tables du jeu ne lui autorisent pas.
+fn ecartee(nom: &str) -> bool {
+    nom.starts_with("[DNT]") || nom == "Energy Blade" || nom.ends_with("Grasping Mail")
+}
+
+/// Bases calculables (tous leurs mods ont un poids, chez poe2db ou en complément), triées par
 /// classe puis niveau d'apparition.
 pub fn bases() -> Result<Vec<BaseForge>, ErreurAtelier> {
+    static BASES: OnceLock<Vec<BaseForge>> = OnceLock::new();
     let d = donnees()?;
+    Ok(BASES.get_or_init(|| calculables(d)).clone())
+}
+
+fn calculables(d: &DonneesForge) -> Vec<BaseForge> {
     let mut v: Vec<BaseForge> = d
         .bases
         .bases
         .iter()
+        .filter(|b| !ecartee(&b.nom))
         .filter_map(|b| {
-            let page = page_poe2db(b)?;
-            let poids = d
-                .releve
-                .pages
-                .get(&page)
-                .is_some_and(|p| !p.poids.is_empty());
-            poids.then(|| BaseForge {
+            let page = d.releve.page_de(b)?;
+            let complete = d.releve.page_utilisable(&page)
+                && construire_pool(&d.mods, b, 100, &d.releve)
+                    .is_ok_and(|pb| pb.sans_poids.is_empty());
+            complete.then(|| BaseForge {
                 id: b.id.clone(),
                 nom: b.nom.clone(),
                 classe: b.classe.clone(),
@@ -138,7 +154,7 @@ pub fn bases() -> Result<Vec<BaseForge>, ErreurAtelier> {
         })
         .collect();
     v.sort_by(|a, b| (&a.classe, a.niveau_drop, &a.nom).cmp(&(&b.classe, b.niveau_drop, &b.nom)));
-    Ok(v)
+    v
 }
 
 fn base<'a>(d: &'a DonneesForge, id: &str) -> Result<&'a BaseTable, ErreurAtelier> {
@@ -194,6 +210,8 @@ pub struct AffixesBase {
     pub affixes: Vec<GroupeAffixe>,
     /// Mods éligibles écartés faute de poids : les probabilités sont alors incomplètes.
     pub sans_poids: Vec<SansPoids>,
+    /// Poids venus du complément Craft of Exile.
+    pub poids_complement: usize,
     pub attribution: Attribution,
 }
 
@@ -255,6 +273,7 @@ pub fn affixes(base_id: &str, ilvl: u32) -> Result<AffixesBase, ErreurAtelier> {
         page: pb.page.clone(),
         affixes,
         sans_poids: pb.sans_poids,
+        poids_complement: pb.poids_complement,
         attribution: attribution(d),
     })
 }
@@ -315,6 +334,8 @@ pub struct ResultatPlan {
     /// Faux si des mods sans poids ont été écartés du pool : coût sous-estimé ou surestimé.
     pub complet: bool,
     pub sans_poids: usize,
+    /// Poids venus du complément Craft of Exile.
+    pub poids_complement: usize,
     pub prix: Vec<PrixUtilise>,
     pub ligue: Option<String>,
     pub attribution: Attribution,
@@ -357,11 +378,13 @@ fn source_des_prix(table: &TablePrix) -> String {
 }
 
 /// Calcule le plan de craft optimal depuis une base neuve, avec les prix effectifs de `table`.
+/// Rend aussi le plan « actif », que l'overlay suit sur l'objet en cours de craft
+/// ([`super::suivi`]).
 pub fn planifier(
     demande: &DemandePlan,
     table: &TablePrix,
     annuler: &AtomicBool,
-) -> Result<ResultatPlan, ErreurAtelier> {
+) -> Result<(ResultatPlan, PlanActif), ErreurAtelier> {
     let (d, pb) = pool(&demande.base_id, demande.ilvl)?;
     let ilvl = u8::try_from(demande.ilvl).map_err(|_| ErreurAtelier::Niveau(demande.ilvl))?;
     let pool = Arc::new(pb.pool.clone());
@@ -390,6 +413,7 @@ pub fn planifier(
         })
         .collect();
 
+    let labels: Vec<String> = goal_items.iter().map(|g| g.label.clone()).collect();
     let model = Model::new(pool, goal, ilvl, acts, prix_base, revente);
     let depart = MacroState::empty(Rarity::Normal);
     let sol = solve(&model, &[depart], &SolveConfig::default(), annuler)
@@ -438,14 +462,26 @@ pub fn planifier(
         })
         .collect();
 
-    Ok(ResultatPlan {
-        plan,
+    let resultat = ResultatPlan {
         complet: pb.complet(),
         sans_poids: pb.sans_poids.len(),
+        poids_complement: pb.poids_complement,
         prix,
         ligue: table.marche.as_ref().map(|m| m.ligue.clone()),
         attribution: attribution(d),
-    })
+        plan,
+    };
+    let base_nom = base(d, &demande.base_id)?.nom.clone();
+    let actif = PlanActif {
+        base_id: demande.base_id.clone(),
+        base_nom,
+        ilvl,
+        labels,
+        expected_cost: resultat.plan.expected_cost,
+        model,
+        sol,
+    };
+    Ok((resultat, actif))
 }
 
 #[cfg(test)]
@@ -460,8 +496,9 @@ mod tests {
         let b = bases().unwrap();
         assert!(b.len() > 100, "{} bases", b.len());
         assert!(b.iter().any(|b| b.nom == "Suede Bracers"));
-        // pas de page de poids pour les dagues : base absente
-        assert!(!b.iter().any(|b| b.classe == "Dagger"));
+        // dagues complétées par Craft of Exile ; bases [DNT] et à pool douteux écartées
+        assert!(b.iter().any(|b| b.classe == "Dagger"));
+        assert!(!b.iter().any(|b| ecartee(&b.nom)));
         assert_eq!(catalogue().len(), 26);
     }
 
@@ -527,7 +564,9 @@ mod tests {
             voulus: vec![voulu("maximum Life"), voulu("Fire Resistance")],
             exclues: vec![],
         };
-        let r = planifier(&demande, &TablePrix::indicative(), &AtomicBool::new(false)).unwrap();
+        let (r, actif) =
+            planifier(&demande, &TablePrix::indicative(), &AtomicBool::new(false)).unwrap();
+        assert_eq!(actif.base_nom, "Suede Bracers");
         assert!(r.complet);
         assert!(r.plan.expected_cost.is_finite() && r.plan.expected_cost > 0.0);
         let mc = r.plan.mc.as_ref().unwrap();

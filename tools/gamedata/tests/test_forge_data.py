@@ -72,3 +72,13 @@ def test_sortie_deterministe(tmp_path: Path):
     fd.ecrire(d, b)
     assert a.read_bytes() == b.read_bytes()
     assert json.loads(gzip.decompress(a.read_bytes())) == d
+
+
+def test_complement_dans_le_releve():
+    mods = {"schema": 1, "mods": [_mod("A")]}
+    bases = {"schema": 1, "bases": []}
+    complement = {"source": "Craft of Exile", "pages": {"Daggers": {"poids": {"A": 500}}}}
+    d = fd.construire(mods, bases, {"pages": {}}, {"version_repoe": "x"}, complement)
+    assert d["releve"]["complement"]["pages"]["Daggers"]["poids"] == {"A": 500}
+    sans = fd.construire(mods, bases, {"pages": {}}, {"version_repoe": "x"})
+    assert "complement" not in sans["releve"]

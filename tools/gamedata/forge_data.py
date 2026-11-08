@@ -6,7 +6,9 @@ Réunit dans un seul fichier compressé :
 - les mods tirables du domaine `item` (hors Essence) de `tables/mods.json` ;
 - les bases de `tables/bases.json` ;
 - le relevé de poids poe2db de `tools/theorycraft/donnees/poids-poe2db.json` (estimations de
-  Krakenbul, CC BY-NC-SA 3.0 : l'attribution suit ces données, voir `data/README.md`).
+  Krakenbul, CC BY-NC-SA 3.0 : l'attribution suit ces données, voir `data/README.md`) ;
+- en complément (`--complement`), les poids Craft of Exile des mods que poe2db n'a pas mesurés
+  (`tools/theorycraft/donnees/poids-coe.json`, voir `LICENCE-poids-coe.md`).
 
 Seuls les champs lus par `poe2_core::forge::donnees` sont gardés. La sortie est déterministe
 (JSON canonique, gzip sans date) : deux exécutions sur les mêmes entrées donnent les mêmes octets.
@@ -15,6 +17,7 @@ Utilisation :
 
     python tools/gamedata/forge_data.py --tables var/gamedata/tables \\
         --poids tools/theorycraft/donnees/poids-poe2db.json \\
+        --complement tools/theorycraft/donnees/poids-coe.json \\
         --out crates/poe2-core/data/forge.json.gz
 
 Python 3.11+, bibliothèque standard seulement.
@@ -44,7 +47,9 @@ CHAMPS_MOD = (
 CHAMPS_BASE = ("id", "nom", "classe", "tags", "niveau_drop")
 
 
-def construire(mods: dict, bases: dict, releve: dict, source: dict) -> dict:
+def construire(
+    mods: dict, bases: dict, releve: dict, source: dict, complement: dict | None = None
+) -> dict:
     garde = [
         {k: m[k] for k in CHAMPS_MOD if k in m}
         for m in mods["mods"]
@@ -66,7 +71,7 @@ def construire(mods: dict, bases: dict, releve: dict, source: dict) -> dict:
                 key=lambda b: b["id"],
             ),
         },
-        "releve": releve,
+        "releve": {**releve, "complement": complement} if complement else releve,
     }
 
 
@@ -88,6 +93,11 @@ def principal(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--tables", type=Path, required=True)
     p.add_argument("--poids", type=Path, required=True)
+    p.add_argument(
+        "--complement",
+        type=Path,
+        help="poids Craft of Exile des mods sans poids poe2db (tools/theorycraft/donnees/poids-coe.json)",
+    )
     p.add_argument("--out", type=Path, required=True)
     a = p.parse_args(argv)
     lire = lambda chemin: json.loads(chemin.read_text(encoding="utf-8"))
@@ -96,6 +106,7 @@ def principal(argv: list[str] | None = None) -> int:
         lire(a.tables / "bases.json"),
         lire(a.poids),
         lire(a.tables / "source.json"),
+        lire(a.complement) if a.complement else None,
     )
     ecrire(donnees, a.out)
     print(

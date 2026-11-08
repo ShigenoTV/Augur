@@ -11,11 +11,11 @@ import {
   type ForgePlanResult,
   type ForgePrices,
   type ForgeSlot,
+  type ForgeTracking,
   type ForgeWanted,
 } from "../bridge";
 import {
   SLOT_LABEL,
-  SOURCE_LABEL,
   basesParClasse,
   cleAffixe,
   dateReleve,
@@ -25,7 +25,6 @@ import {
   formatEx,
   formatPercent,
   libelleCourt,
-  sourcesAchat,
   lirePrix,
   peutAjouter,
 } from "./forge";
@@ -196,11 +195,7 @@ function PriceTable({
               <span className="min-w-0 flex-1 truncate text-text-muted" title={e.nom}>
                 {e.nom}
               </span>
-              <span
-                className={`text-[10px] uppercase ${source === "joueur" ? "text-accent" : source === "poeNinja" ? "text-signal-info" : "text-text-subtle"}`}
-              >
-                {SOURCE_LABEL[source]}
-              </span>
+              {source === "joueur" && <span className="text-[10px] uppercase text-accent">corrigé</span>}
               <input
                 value={v ?? ""}
                 placeholder={formatEx(prices.prix[e.id]).replace(" ex", "")}
@@ -241,16 +236,11 @@ function PriceTable({
   );
 }
 
-/** Résultat d'un calcul : coût espéré, quantiles, étapes du plan, achats et sources. */
+/** Résultat d'un calcul : coût espéré, quantiles, étapes du plan et achats. */
 function PlanView({ result }: { result: ForgePlanResult }) {
   const { plan } = result;
   const labels = plan.goal.map((g) => libelleCourt(g.label));
   const mc = plan.mc;
-  const sources = result.prix.reduce<Record<string, number>>((acc, p) => {
-    acc[p.source] = (acc[p.source] ?? 0) + 1;
-    return acc;
-  }, {});
-  const sourceLigne = (id: string) => sourcesAchat(id, result.prix);
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-2">
@@ -299,10 +289,7 @@ function PlanView({ result }: { result: ForgePlanResult }) {
             <tbody>
               {plan.shopping.map((s) => (
                 <tr key={s.id} className="border-t border-ink-800">
-                  <td className="py-1 pr-2 text-text-muted">
-                    {s.label}
-                    <span className="block text-[10px] uppercase text-text-subtle">{sourceLigne(s.id)}</span>
-                  </td>
+                  <td className="py-1 pr-2 text-text-muted">{s.label}</td>
                   <td className="whitespace-nowrap py-1 pr-2 text-right font-mono text-text-subtle">×{formatCount(s.expectedCount)}</td>
                   <td className="whitespace-nowrap py-1 text-right font-mono text-text-primary">{formatEx(s.expectedCost)}</td>
                 </tr>
@@ -312,26 +299,18 @@ function PlanView({ result }: { result: ForgePlanResult }) {
         </div>
       </div>
 
-      <div className="space-y-1 text-[11px] text-text-subtle">
-        <p>
-          Prix des achats : {Object.entries(sources).map(([s, n]) => `${n} ${SOURCE_LABEL[s as keyof typeof SOURCE_LABEL]}`).join(", ")}
-          {result.ligue && sources.poeNinja ? ` (ligue ${result.ligue})` : ""}. Corrige-les dans l'onglet Prix.
-        </p>
-        <p>
-          Probabilités : poids <span className="text-text-muted">estimés</span> par {result.attribution.source}, licence{" "}
-          {result.attribution.licence}, relevé du {result.attribution.dateReleve} ; mods et paliers{" "}
-          <span className="text-text-muted">extraits</span> des fichiers du jeu (RePoE {result.attribution.repoeVersion}).
-          Calcul : {formatCount(plan.solver.states)} états, {plan.solver.millis} ms
-          {mc ? `, vérifié sur ${formatCount(mc.trials)} crafts simulés (moyenne ${formatEx(mc.meanCost)})` : ""}.
-        </p>
-      </div>
+      <p className="text-[11px] text-text-subtle">
+        Calcul : {formatCount(plan.solver.states)} états, {plan.solver.millis} ms
+        {mc ? `, vérifié sur ${formatCount(mc.trials)} crafts simulés (moyenne ${formatEx(mc.meanCost)})` : ""}. Corrige les
+        prix dans l'onglet Prix.
+      </p>
     </div>
   );
 }
 
 /**
  * Forge : choisir une base et un objectif, obtenir la stratégie au meilleur coût espéré (solveur
- * exact du cœur Rust) avec ses quantiles, ses achats et la source de chaque prix.
+ * exact du cœur Rust) avec ses quantiles et ses achats.
  */
 export function ForgeCard() {
   const [bases, setBases] = useState<ForgeBase[]>([]);
@@ -347,12 +326,14 @@ export function ForgeCard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [onglet, setOnglet] = useState<"plan" | "prix">("plan");
+  const [suivi, setSuivi] = useState<ForgeTracking | null>(null);
 
   useEffect(() => {
     if (!isTauri()) return;
     void commands.getForgeBases().then(setBases).catch((e) => setError(message(e)));
     void commands.getForgeCatalogue().then(setCatalogue).catch(() => undefined);
     void commands.getForgePrices().then(setPrices).catch(() => undefined);
+    void commands.getForgeTracking().then(setSuivi).catch(() => undefined);
   }, []);
 
   const classes = useMemo(() => basesParClasse(bases), [bases]);
@@ -395,6 +376,7 @@ export function ForgeCard() {
     setResult(null);
     try {
       setResult(await commands.planForgeCraft({ baseId, ilvl, voulus, exclues }));
+      setSuivi(await commands.getForgeTracking());
     } catch (err) {
       setError(message(err));
     } finally {
@@ -421,6 +403,23 @@ export function ForgeCard() {
           </button>
         ))}
       </div>
+
+      {suivi && (
+        <div className="flex flex-wrap items-center gap-2 rounded-chip border border-ink-700 bg-ink-950 px-3 py-2 text-xs">
+          <span className="text-text-muted">
+            L'overlay suit le plan <span className="text-text-primary">{suivi.baseNom}</span> (niv. {suivi.ilvl} :{" "}
+            {suivi.labels.map(libelleCourt).join(", ")}). En jeu, <span className="font-mono">Ctrl+Alt+C</span> sur l'objet
+            en cours de craft affiche la prochaine étape.
+          </span>
+          <button
+            type="button"
+            onClick={() => void commands.stopForgeTracking().then(() => setSuivi(null))}
+            className="ml-auto rounded-chip border border-ink-600 px-2 py-0.5 text-text-primary hover:bg-ink-800"
+          >
+            Arrêter le suivi
+          </button>
+        </div>
+      )}
 
       {onglet === "prix" ? (
         <PriceTable
@@ -495,7 +494,7 @@ export function ForgeCard() {
               </div>
               {affixes.sansPoids.length > 0 && (
                 <p className="text-xs text-signal-warn">
-                  {affixes.sansPoids.length} mod(s) éligibles sans poids connu chez poe2db : ils sont écartés, les
+                  {affixes.sansPoids.length} mod(s) éligibles sans poids connu : ils sont écartés, les
                   probabilités sont approximatives.
                 </p>
               )}

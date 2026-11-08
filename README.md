@@ -38,6 +38,7 @@ Augur est une application **Windows** d'outils tiers pour **Path of Exile 2**. E
 ## Données de tiers
 
 - Poids de mods PoE 2 : estimations de Krakenbul (Prohibited Library), publiées par [PoE2DB](https://poe2db.tw/us/weightings), sous licence **CC BY-NC-SA 3.0** (pas d'usage commercial). Fichier et attribution : [tools/theorycraft/donnees/](tools/theorycraft/donnees/LICENCE-poids-poe2db.md). Le relevé est embarqué dans l'appli pour Forge ([crates/poe2-core/data/](crates/poe2-core/data/README.md)), et des extraits servent de cas de test ([crates/poe2-core/tests/donnees/forge/](crates/poe2-core/tests/donnees/forge/README.md)), sous la même licence.
+- Poids complémentaires : pour les mods que PoE2DB n'a pas mesurés, poids publiés par [Craft of Exile](https://www.craftofexile.com/?game=poe2) (mêmes estimations de Krakenbul), copiés avec leur attribution : [tools/theorycraft/donnees/LICENCE-poids-coe.md](tools/theorycraft/donnees/LICENCE-poids-coe.md).
 
 ---
 

@@ -39,6 +39,8 @@
     "allow-get-forge-bases",
     "allow-get-forge-affixes",
     "allow-get-forge-catalogue",
-    "allow-plan-forge-craft"
+    "allow-plan-forge-craft",
+    "allow-get-forge-tracking",
+    "allow-stop-forge-tracking"
   ]
 }

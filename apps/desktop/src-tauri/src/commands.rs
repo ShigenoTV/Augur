@@ -318,3 +318,26 @@ pub async fn plan_forge_craft(
 ) -> Result<poe2_core::forge::atelier::ResultatPlan, AppError> {
     planner.plan(demande, prices.get()).await
 }
+
+#[tauri::command]
+pub fn get_forge_advice(
+    state: State<'_, crate::AppState>,
+    planner: State<'_, crate::forge::ForgePlanner>,
+) -> Result<Option<poe2_core::forge::suivi::ConseilForge>, AppError> {
+    match state.last_text() {
+        Some(text) => planner.conseil(&text),
+        None => Ok(None),
+    }
+}
+
+#[tauri::command]
+pub fn get_forge_tracking(
+    planner: State<'_, crate::forge::ForgePlanner>,
+) -> Option<crate::forge::Suivi> {
+    planner.suivi()
+}
+
+#[tauri::command]
+pub fn stop_forge_tracking(planner: State<'_, crate::forge::ForgePlanner>) {
+    planner.arreter();
+}

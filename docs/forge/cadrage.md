@@ -13,9 +13,10 @@ craft donné, **quelle stratégie a le meilleur coût espéré, et vaut-il mieux
 | poe2-craft-assistant, `craft-solver` (reverse-crafting : MDP sur un état abstrait, coût espéré, P90, vérification Monte-Carlo sur le moteur exact) | **oui** | `poe2-core::forge` (PR 3) |
 | Tables RePoE d'Augur (`tools/gamedata/import_repoe.py`, PR #29) : mods par palier, groupes d'exclusion, niveaux, bases | oui | éligibilité d'un mod sur une base |
 | Poids poe2db (estimations Krakenbul, CC BY-NC-SA 3.0, PR #40) : 59 pages, 6 434 poids, 1 961 mods « inconnus » | oui, **avec l'attribution** | poids des tirages |
+| Poids Craft of Exile (mêmes estimations, données de l'émulateur 0.5.5.5) : 3 347 poids de mods absents de poe2db, 51 pages ; les 6 434 poids communs sont identiques | oui, **seulement là où poe2db n'a rien**, avec l'attribution (décision de Max, 08/11) | poids des tirages |
 | Calculateur `tools/theorycraft/craft_proba.py` (PR #39) | sert de **référence** : le moteur Rust doit redonner ses probabilités | tests croisés (PR 2) |
 | Parseur Ctrl+Alt+C d'Augur (`poe2-core::parser`) | oui | lire la base en cours de craft (PR 6) |
-| Jeu de données de poe2-craft-assistant (`data/poe2/dataset.json`) | **non** : ses poids viennent de Craft of Exile, données tierces non redistribuables | — |
+| Jeu de données de poe2-craft-assistant (`data/poe2/dataset.json`) | non : remplacé par le relevé direct de Craft of Exile ci-dessus | — |
 | Prix poe.ninja de poe2-craft-assistant (`craft-api`, `prices.rs`) | **oui** (accord de Max le 07/11), extraction et règles de cadence reprises | `forge::ninja` |
 | Interface React Flow de poe2-craft-assistant | non : l'interface d'Augur a son propre style (React 19 + Tailwind) | — |
 
@@ -31,16 +32,21 @@ clippy en édition 2024.
 - **Chaque probabilité porte sa source** (plan fondateur, risque principal) : `extraite` (fichiers du jeu, RePoE),
   `estimée` (poe2db / Krakenbul), `supposée` (règle de mécanique non mesurée).
 - Bases sans poids chez poe2db au 05/11 : griffes, dagues, épées et haches à une et deux mains, fléaux, pièges, joyaux,
-  charmes, flacons, armures de corps force/dextérité/intelligence. Forge les affiche « non supportées » tant qu'aucune
-  source n'existe.
+  charmes, flacons, armures force/dextérité/intelligence. Depuis le 08/11, Craft of Exile complète les armes et les
+  armures ; restent sans poids (aucune source) : joyaux, charmes, flacons, pièges, mods désacralisés.
+- Une base n'est proposée que si **tous** ses mods ont un poids. Contrôle du 08/11 (`tools/theorycraft/coe_controle.py`) :
+  1 714 bases × 4 niveaux d'objet, 6 856 pools identiques à Craft of Exile. Écartées : bases `[DNT]` (pas en jeu),
+  Energy Blade (créée par une compétence), Grasping Mail (Craft of Exile lui donne des mods de bijou que les tables du
+  jeu refusent). Une base qui a sa propre page de poids (Trarthan Cannon, arbalète à grenades) l'utilise au lieu de
+  celle de sa classe.
 - Page poe2db d'une base : classe au pluriel (`Rings`, `Quarterstaves` pour les bâtons de guerre…), suivie des
   attributs pour les armures (`Body_Armours_int`, `Shields_str_dex`). Pas de page pour les armures force /
   dextérité / intelligence hors armures de corps, ni pour les quelques bases d'armure sans attribut.
 - Limites du pool actuel : pas de mods désacralisés (aucun poids chez poe2db, la Désécration n'est donc pas
   calculable) ; plafond de la base fixé à 3 préfixes / 3 suffixes (les implicites « +1 Prefix Modifier allowed »
   ne sont pas encore extraits des tables) ; joyaux non traités (pas de bases de joyaux dans les tables).
-- L'attribution CC BY-NC-SA des poids suit les données partout où elles vont (paquet de données, appli, écran « À
-  propos »). Le dépôt reste sans licence.
+- L'attribution des poids suit les données dans le dépôt (`LICENCE-poids-poe2db.md`, `LICENCE-poids-coe.md`). L'appli
+  n'affiche pas les sources (choix de Max, 08/11). Le dépôt reste sans licence.
 
 ## Prix
 
@@ -76,9 +82,15 @@ une source de prix d'objets (même blocage OAuth).
    `get_forge_affixes` / `get_forge_catalogue` / `plan_forge_craft`) : données embarquées
    (`data/forge.json.gz`, `tools/gamedata/forge_data.py`), choix de la base, du niveau d'objet, des affixes voulus
    et des monnaies autorisées ; coût espéré, P50 / P90 sur 4 000 crafts simulés par le moteur exact, que faire
-   selon l'état de l'objet, achats moyens, sources des prix et des poids ; onglet Prix (corrections, relevé
-   poe.ninja, ligue). Seules les bases dont la page poe2db porte des poids sont proposées.
-6. **Overlay** : Ctrl+Alt+C sur l'objet en cours de craft, l'overlay affiche la prochaine étape du plan.
+   selon l'état de l'objet, achats moyens ; onglet Prix (corrections, relevé
+   poe.ninja, ligue). Seules les bases dont tous les mods ont un poids sont proposées.
+6. **Overlay** (`forge::suivi`, commandes `get_forge_advice` / `get_forge_tracking` / `stop_forge_tracking`) : le
+   dernier plan calculé est suivi (en mémoire, jusqu'au prochain calcul ou à « Arrêter le suivi »). Ctrl+Alt+C sur un
+   objet de la même base : chaque mod est retrouvé dans le pool (côté et nom de l'en-tête avancé, puis texte sans les
+   nombres, puis tier), l'objet est projeté sur l'état du solveur et l'overlay affiche la prochaine étape, le coût
+   restant et les résultats possibles du prochain essai. Un mod introuvable (sans poids, désacralisé, artisanal)
+   compte comme mauvais mod. Une copie simple (Ctrl+C) est refusée : elle ne dit pas quels mods sont des
+   préfixes. Un objet d'une autre base passe à Upgrade Copilot.
 
 Hors périmètre pour l'instant : « craftez ou achetez » (pas de prix d'objets), boucle de validation communautaire.
 
