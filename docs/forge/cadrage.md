@@ -105,3 +105,14 @@ Les règles du moteur sont celles de poe2-craft-assistant (jeu 0.5). À revérif
 | F-03 | Alchemy sur un objet Magique repart de zéro (4 mods, patch 0.3.1). | poe2wiki, Orb of Alchemy. |
 | F-04 | Os Ancient : niveau de mod 40 minimum pour la Désécration. | poe2db, Ancient bones. |
 | F-05 | Les poids poe2db sont ceux du jeu actuel (relevé du 05/11, RePoE 0.5.5.5). | Nouveau relevé à chaque patch. |
+
+Contrôle du 08/11 avec le code de l'émulateur de Craft of Exile (référence de Max) : F-01 à F-04 concordent
+(Chaos : retrait puis ajout ; Alchemy : 4 mods ; Désécration Ancient : niveau 40). Trois écarts corrigés :
+
+- niveau de mod minimum des Transmutation et Augmentation **Greater 44 / Perfect 70** (35 / 50 restent pour
+  Regal, Exalted et Chaos) ;
+- sous le niveau minimum, un tier n'est écarté que si sa famille a un tier accessible plus haut : le meilleur
+  tier accessible d'une famille reste toujours tirable (avant : la famille entière était écartée) ;
+- Omen de Whittling : à égalité de niveau, le mod retiré est tiré au hasard.
+
+`tools/theorycraft/coe_controle.py` vérifie aussi, base par base, les mods écartés par chaque niveau minimum.

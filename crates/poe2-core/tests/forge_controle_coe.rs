@@ -23,7 +23,22 @@ fn exporter_pools() {
                 .filter(|a| !a.desecrated)
                 .map(|a| (a.id.clone(), format!("{:?}", a.slot), a.weight))
                 .collect();
-            let ligne = serde_json::json!({"nom": b.nom, "ilvl": ilvl, "mods": mods});
+            // mods écartés par le niveau minimum des monnaies Greater / Perfect
+            let mut ecartes = serde_json::Map::new();
+            for min in [35u8, 44, 50, 70] {
+                let masque = pb.pool.sous_niveau_min(ilvl as u8, min);
+                let ids: Vec<_> = pb
+                    .pool
+                    .affixes
+                    .iter()
+                    .zip(masque)
+                    .filter(|(a, m)| *m && !a.desecrated)
+                    .map(|(a, _)| a.id.clone())
+                    .collect();
+                ecartes.insert(min.to_string(), ids.into());
+            }
+            let ligne =
+                serde_json::json!({"nom": b.nom, "ilvl": ilvl, "mods": mods, "ecartes": ecartes});
             writeln!(f, "{ligne}").unwrap();
         }
     }

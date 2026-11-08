@@ -75,3 +75,20 @@ def test_controle_identique_et_ecart():
     assert "Cast" in e
     (e,) = k.controler(COE, LANGUE, [dict(ok, nom="Base inconnue")])
     assert "absente" in e
+
+
+def test_ecartes_par_niveau_minimum():
+    coe = {
+        "mods": {
+            "entries": [
+                {"id": 1, "key": "Bas", "group": 1, "minlvl": 10},
+                {"id": 2, "key": "Haut", "group": 1, "minlvl": 60},
+                {"id": 3, "key": "Seul", "group": 2, "minlvl": 20},
+            ]
+        },
+        "classmods": {"7": {"1": 100, "2": 100, "3": 100}},
+    }
+    # Bas a un tier accessible plus haut : écarté ; Seul est le meilleur tier de son groupe : gardé
+    assert k.ecartes_coe(coe, 7, 80, 35) == {"Bas"}
+    # à l'ilvl 50, Haut (niv. 60) est inaccessible : Bas redevient le meilleur tier
+    assert k.ecartes_coe(coe, 7, 50, 35) == set()

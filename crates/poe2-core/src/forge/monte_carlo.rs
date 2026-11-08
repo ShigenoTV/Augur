@@ -601,12 +601,43 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn minimum_level_keeps_the_best_tier_of_a_low_family() {
+        // Craft of Exile : sous le niveau minimum, un tier n'est écarté que si sa famille a un tier
+        // accessible plus haut. Famille 1 : tiers 10 et 60 ; famille 2 : un seul tier, de niveau 20.
+        let mut affixes = vec![
+            aff("Bas", 1, Slot::Prefix, 100),
+            aff("Haut", 1, Slot::Prefix, 100),
+            aff("Seul", 2, Slot::Prefix, 100),
+        ];
+        affixes[0].req_ilvl = 10;
+        affixes[1].req_ilvl = 60;
+        affixes[2].req_ilvl = 20;
+        let pool = AffixPool::new(affixes);
+        assert_eq!(pool.sous_niveau_min(80, 35), [true, false, false]);
+        // à l'ilvl 50, le tier 60 n'est pas accessible : le tier 10 devient le meilleur de sa famille
+        assert_eq!(pool.sous_niveau_min(50, 35), [false, false, false]);
+        assert_eq!(pool.sous_niveau_min(80, 0), [false, false, false]);
+        let item = ItemState::new(Rarity::Rare, 80);
+        let f = DrawFilter {
+            min_mod_level: 35,
+            ..Default::default()
+        };
+        let d: Vec<AffixIdx> = pool
+            .distribution(&item, &f)
+            .into_iter()
+            .map(|(i, _)| i)
+            .collect();
+        assert_eq!(d, [1, 2]);
+    }
+
+    #[test]
     fn ancient_bone_never_draws_a_desecrated_mod_below_level_40() {
-        // os Ancient : « Minimum Modifier Level 40 » (poe2db) ; le mod de niveau 20 ne doit jamais sortir
+        // os Ancient : « Minimum Modifier Level 40 » (poe2db) ; le tier de niveau 20 ne doit jamais sortir,
+        // car sa famille a un tier accessible plus haut (niveau 60)
         let mut affixes = vec![
             aff("P", 0, Slot::Prefix, 100),
             aff("Low", 1, Slot::Suffix, 1000),
-            aff("High", 2, Slot::Suffix, 1),
+            aff("High", 1, Slot::Suffix, 1),
         ];
         affixes[1].desecrated = true;
         affixes[1].req_ilvl = 20;
