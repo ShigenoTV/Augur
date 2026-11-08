@@ -42,27 +42,29 @@ pub struct DonneesForge {
     pub mods: TableMods,
     pub bases: TableBases,
     pub releve: RelevePoids,
-    /// Essences et leur mod garanti par classe d'objet (Craft of Exile, `essences-coe.json`).
+    /// Essences et Alloys, et leurs mods possibles par classe d'objet (Craft of Exile,
+    /// `essences-coe.json`).
     #[serde(default)]
     pub essences: Vec<EssenceForge>,
 }
 
-/// Une Essence : mod garanti par classe d'objet (identifiant RePoE).
+/// Une Essence ou un Alloy : mods possibles par classe d'objet (identifiants RePoE). Plusieurs mods pour
+/// une classe : un seul est posé, tiré à chances égales parmi ceux sans conflit de groupe.
 #[derive(Clone, Debug, Deserialize)]
 pub struct EssenceForge {
     /// Identifiant poe.ninja, qui sert aussi de clé de prix.
     pub id: String,
     pub nom: String,
-    /// `lesser`, `normal`, `greater` (objet Magique, qui devient Rare) ; `perfect`, `corrupted` (objet
-    /// Rare : un mod retiré, puis le mod garanti posé).
+    /// `lesser`, `normal`, `greater` (objet Magique, qui devient Rare) ; `perfect`, `corrupted`,
+    /// `alloy` (objet Rare : un mod retiré, puis le mod garanti posé).
     #[serde(rename = "type")]
     pub genre: String,
-    pub cibles: BTreeMap<String, String>,
+    pub cibles: BTreeMap<String, Vec<String>>,
 }
 
 impl EssenceForge {
     pub fn sur_rare(&self) -> bool {
-        matches!(self.genre.as_str(), "perfect" | "corrupted")
+        matches!(self.genre.as_str(), "perfect" | "corrupted" | "alloy")
     }
 }
 
@@ -217,7 +219,9 @@ fn pool(id: &str, ilvl: u32) -> Result<(&'static DonneesForge, PoolBase), Erreur
     let cibles: Vec<&str> = d
         .essences
         .iter()
-        .filter_map(|e| e.cibles.get(&b.classe).map(String::as_str))
+        .filter_map(|e| e.cibles.get(&b.classe))
+        .flatten()
+        .map(String::as_str)
         .collect();
     Ok((
         d,
@@ -419,9 +423,10 @@ fn actives(exclues: &[String]) -> BTreeSet<String> {
     a
 }
 
-/// Essences utilisables sur la classe : un seul mod garanti, présent dans le pool, et un prix (relevé
-/// poe.ninja ou saisie ; jamais de prix inventé). Celles dont le mod garanti est hors objectif ne sont
-/// gardées que pour les [`MAX_ESSENCES_INUTILES`] moins chères de chaque côté.
+/// Essences et Alloys utilisables sur la classe : tous leurs mods possibles présents dans le pool, et un
+/// prix (relevé poe.ninja ou saisie ; jamais de prix inventé). Celles à un seul mod hors objectif ne
+/// sont gardées que pour les [`MAX_ESSENCES_INUTILES`] moins chères de chaque côté ; celles à plusieurs
+/// mods tous hors objectif sont écartées (elles ne servent pas le plan).
 fn actions_essences(
     essences: &[EssenceForge],
     classe: &str,
@@ -437,15 +442,26 @@ fn actions_essences(
         .iter()
         .filter(|e| !exclues.contains(&e.id))
         .filter_map(|e| {
-            let cible = e.cibles.get(classe)?;
-            let idx = pool.affixes.iter().position(|a| &a.id == cible)?;
+            let idx: Vec<u16> = e
+                .cibles
+                .get(classe)?
+                .iter()
+                .map(|cible| {
+                    let i = pool.affixes.iter().position(|a| &a.id == cible)?;
+                    u16::try_from(i).ok()
+                })
+                .collect::<Option<_>>()?;
+            let (&premier, autres) = idx.split_first()?;
             let prix = *table
                 .prix
                 .get(&e.id)
                 .filter(|p| p.is_finite() && **p >= 0.0)?;
-            let idx = u16::try_from(idx).ok()?;
-            let inutile = matches!(goal.classify(pool, idx), Class::Other)
-                .then(|| (pool.affixes[idx as usize].slot, e.sur_rare()));
+            let hors = |i: &u16| matches!(goal.classify(pool, *i), Class::Other);
+            if autres.iter().chain([&premier]).all(hors) && !autres.is_empty() {
+                return None;
+            }
+            let inutile = (autres.is_empty() && hors(&premier))
+                .then(|| (pool.affixes[premier as usize].slot, e.sur_rare()));
             let c = Currency {
                 id: e.id.clone(),
                 label: e.nom.clone(),
@@ -453,8 +469,9 @@ fn actions_essences(
                 min_mod_level: 0,
                 add_slot: None,
                 remove_slot: None,
-                target: Some(idx),
+                target: Some(premier),
                 alt_target: None,
+                more_targets: autres.to_vec(),
                 require_tag: None,
                 remove_desecrated_only: false,
                 remove_lowest_level: false,
@@ -643,10 +660,11 @@ mod tests {
         assert!(!b.iter().any(|b| ecartee(&b.nom)));
         assert!(!b.iter().any(|b| b.nom.contains("Fists of Stone")));
         assert_eq!(catalogue().len(), 26 + d.essences.len());
-        assert!(d.essences.len() > 60);
+        assert!(d.essences.len() > 90);
+        assert_eq!(d.essences.iter().filter(|e| e.genre == "alloy").count(), 13);
         // chaque mod garanti est dans les tables embarquées
         for e in &d.essences {
-            for m in e.cibles.values() {
+            for m in e.cibles.values().flatten() {
                 assert!(d.mods.mods.iter().any(|x| &x.id == m), "{} : {m}", e.id);
             }
         }
@@ -759,6 +777,222 @@ mod tests {
             ..demande
         };
         assert!(planifier(&exclues, &table, &annuler).is_err());
+    }
+
+    /// Plan sur une Essence ou un Alloy à prix saisi, dont l'objectif est un mod que seule elle pose ;
+    /// le moteur exact confirme le coût du solveur.
+    fn plan_par(classe: &str, ilvl: u32, texte: &str, id: &str, prix: f64) -> ResultatPlan {
+        let b = bases()
+            .unwrap()
+            .into_iter()
+            .find(|b| b.classe == classe)
+            .unwrap();
+        let a = affixes(&b.id, ilvl).unwrap();
+        let g = a
+            .affixes
+            .iter()
+            .find(|g| g.essence && g.libelle.contains(texte))
+            .unwrap_or_else(|| panic!("{texte} absent"));
+        let demande = DemandePlan {
+            base_id: b.id.clone(),
+            ilvl,
+            voulus: vec![WantedAffix {
+                group: g.group,
+                family: g.family,
+                max_tier: u8::MAX,
+            }],
+            exclues: vec![],
+        };
+        let mut table = TablePrix::indicative();
+        table.saisir(&[(id.to_string(), prix)].into()).unwrap();
+        let (r, _) = planifier(&demande, &table, &AtomicBool::new(false)).unwrap();
+        let achats: Vec<&str> = r.plan.shopping.iter().map(|s| s.id.as_str()).collect();
+        assert!(achats.contains(&id), "{achats:?}");
+        let mc = r.plan.mc.as_ref().unwrap();
+        assert!(
+            (mc.mean_cost - r.plan.expected_cost).abs() < 0.05 * r.plan.expected_cost,
+            "solveur {} / moteur {}",
+            r.plan.expected_cost,
+            mc.mean_cost
+        );
+        r
+    }
+
+    /// Amulette : le % de Force n'existe que par la Perfect Essence of the Infinite, qui pose % de Force,
+    /// de Dextérité ou d'Intelligence à chances égales (Craft of Exile) : environ trois Essences par succès.
+    #[test]
+    fn plan_avec_une_essence_a_plusieurs_mods() {
+        let r = plan_par(
+            "Amulet",
+            80,
+            "increased Strength",
+            "perfect-essence-of-the-infinite",
+            30.0,
+        );
+        let n: f64 = r
+            .plan
+            .shopping
+            .iter()
+            .filter(|s| s.id == "perfect-essence-of-the-infinite")
+            .map(|s| s.expected_count)
+            .sum();
+        assert!((2.5..4.0).contains(&n), "{n} Essences");
+    }
+
+    /// Anneau : le Runic Ward maximum n'existe que par le Runic Alloy (objet Rare : un mod retiré, puis
+    /// le mod posé).
+    #[test]
+    fn plan_avec_un_alloy() {
+        plan_par("Ring", 80, "Runic Ward", "runic-alloy", 20.0);
+    }
+
+    /// Mêmes tirages que l'émulateur de Craft of Exile (`poe2_essence`, 3 000 essais par cas le 08/11/2026,
+    /// relevés dans la PR) : mod posé à chances égales parmi les mods libres, mod retiré du côté du mod
+    /// posé quand ce côté est plein, sinon au hasard.
+    #[test]
+    fn memes_tirages_que_craft_of_exile() {
+        use crate::forge::moteur::{ItemState, Mod, Outcome};
+        use rand::SeedableRng;
+        let d = donnees().unwrap();
+        let essai = |base: &str, rarete, mods: &[&str], essence: &str| {
+            let b = bases()
+                .unwrap()
+                .into_iter()
+                .find(|b| b.nom == base)
+                .unwrap();
+            let (_, pb) = pool(&b.id, 80).unwrap();
+            let p = &pb.pool;
+            let idx = |id: &str| {
+                p.affixes
+                    .iter()
+                    .position(|a| a.id == id)
+                    .unwrap_or_else(|| panic!("{id} absent")) as u16
+            };
+            let e = d.essences.iter().find(|e| e.nom == essence).unwrap();
+            let cibles: Vec<u16> = e.cibles[&b.classe].iter().map(|c| idx(c)).collect();
+            let c = Currency {
+                id: e.id.clone(),
+                label: e.nom.clone(),
+                kind: CurrencyKind::Essence,
+                min_mod_level: 0,
+                add_slot: None,
+                remove_slot: None,
+                target: Some(cibles[0]),
+                alt_target: None,
+                more_targets: cibles[1..].to_vec(),
+                require_tag: None,
+                remove_desecrated_only: false,
+                remove_lowest_level: false,
+                requires_rare: e.sur_rare(),
+                unit_cost: 1.0,
+            };
+            let mut rng = rand::rngs::SmallRng::seed_from_u64(8);
+            let (mut poses, mut retires) = (BTreeMap::new(), BTreeMap::new());
+            for _ in 0..3000 {
+                let mut it = ItemState::new(rarete, 80);
+                for m in mods {
+                    it.push(Mod {
+                        idx: idx(m),
+                        fractured: false,
+                        crafted: false,
+                    });
+                }
+                assert_eq!(p.apply(&mut it, &c, &mut rng), Outcome::Applied);
+                let ids: Vec<&str> = it
+                    .mods()
+                    .iter()
+                    .map(|m| p.affixes[m.idx as usize].id.as_str())
+                    .collect();
+                let pose = it.mods().iter().find(|m| m.crafted).unwrap().idx;
+                *poses
+                    .entry(p.affixes[pose as usize].id.clone())
+                    .or_insert(0u32) += 1;
+                let parti = mods
+                    .iter()
+                    .find(|m| !ids.contains(m))
+                    .copied()
+                    .unwrap_or("-");
+                *retires.entry(parti.to_string()).or_insert(0u32) += 1;
+            }
+            (poses, retires)
+        };
+        // part de chaque issue : 1/k à ±5 points
+        let egal = |m: &BTreeMap<String, u32>, ids: &[&str]| {
+            assert_eq!(m.len(), ids.len(), "{m:?}");
+            for id in ids {
+                let f = f64::from(m[*id]) / 3000.0;
+                assert!((f - 1.0 / ids.len() as f64).abs() < 0.05, "{id} {f} {m:?}");
+            }
+        };
+        let (poses, retires) = essai(
+            "Shortsword",
+            Rarity::Magic,
+            &["LocalAddedPhysicalDamage1"],
+            "Essence of the Infinite",
+        );
+        egal(&poses, &["Strength4", "Dexterity4", "Intelligence4"]);
+        egal(&retires, &["-"]);
+        let (poses, _) = essai(
+            "Shortsword",
+            Rarity::Magic,
+            &["Strength1"],
+            "Essence of the Infinite",
+        );
+        egal(&poses, &["Dexterity4", "Intelligence4"]);
+        let pleins = [
+            "IncreasedLife1",
+            "FireResist1",
+            "ColdResist1",
+            "LightningResist1",
+        ];
+        let (poses, retires) = essai(
+            "Gold Amulet",
+            Rarity::Rare,
+            &pleins,
+            "Perfect Essence of the Infinite",
+        );
+        egal(
+            &poses,
+            &[
+                "EssencePercentStrength1",
+                "EssencePercentDexterity1",
+                "EssencePercentIntelligence1",
+            ],
+        );
+        egal(
+            &retires,
+            &["FireResist1", "ColdResist1", "LightningResist1"],
+        );
+        let (_, retires) = essai(
+            "Gold Amulet",
+            Rarity::Rare,
+            &["IncreasedLife1", "FireResist1"],
+            "Perfect Essence of the Infinite",
+        );
+        egal(&retires, &["IncreasedLife1", "FireResist1"]);
+        let (poses, retires) = essai(
+            "Iron Ring",
+            Rarity::Rare,
+            &[
+                "IncreasedLife1",
+                "IncreasedMana1",
+                "AddedFireDamage1",
+                "FireResist1",
+            ],
+            "Runic Alloy",
+        );
+        egal(&poses, &["AlloyMaximumRunicWard1"]);
+        egal(
+            &retires,
+            &["IncreasedLife1", "IncreasedMana1", "AddedFireDamage1"],
+        );
+        let (_, retires) = essai(
+            "Iron Ring",
+            Rarity::Rare,
+            &["IncreasedLife1", "FireResist1"],
+            "Runic Alloy",
+        );
+        egal(&retires, &["IncreasedLife1", "FireResist1"]);
     }
 
     #[test]

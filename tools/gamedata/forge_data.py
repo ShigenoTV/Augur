@@ -9,9 +9,9 @@ Réunit dans un seul fichier compressé :
   Krakenbul, CC BY-NC-SA 3.0 : l'attribution suit ces données, voir `data/README.md`) ;
 - en complément (`--complement`), les poids Craft of Exile des mods que poe2db n'a pas mesurés
   (`tools/theorycraft/donnees/poids-coe.json`, voir `LICENCE-poids-coe.md`) ;
-- avec `--essences`, le mod garanti de chaque Essence par classe d'objet
-  (`tools/theorycraft/donnees/essences-coe.json`, Craft of Exile). Les mods garantis sont gardés même
-  quand ils ne sont pas tirables (mods réservés aux Essences).
+- avec `--essences`, les mods possibles de chaque Essence et de chaque Alloy par classe d'objet
+  (`tools/theorycraft/donnees/essences-coe.json`, Craft of Exile). Ces mods sont gardés même quand ils
+  ne sont pas tirables (mods réservés aux Essences et aux Alloys).
 
 Seuls les champs lus par `poe2_core::forge::donnees` sont gardés. La sortie est déterministe
 (JSON canonique, gzip sans date) : deux exécutions sur les mêmes entrées donnent les mêmes octets.
@@ -60,7 +60,7 @@ def construire(
     essences: dict | None = None,
 ) -> dict:
     liste = essences["essences"] if essences else []
-    cibles = {m for e in liste for m in e["cibles"].values()}
+    cibles = {m for e in liste for ms in e["cibles"].values() for m in ms}
     connus = {m["id"] for m in mods["mods"]}
     if absents := sorted(cibles - connus):
         raise ValueError(f"mods garantis absents des tables : {', '.join(absents)}")

@@ -166,6 +166,11 @@ pub struct Currency {
     /// est tiré à 50/50, puis le mod remplace un affixe non fracturé de ce slot. `None` : seulement `target`.
     #[serde(default)]
     pub alt_target: Option<AffixIdx>,
+    /// Autres mods possibles d'une Essence ou d'un Alloy (Essence of the Infinite : Force, Dextérité ou
+    /// Intelligence) : le mod posé est tiré à chances égales entre `target` et ceux-ci, parmi ceux sans
+    /// conflit de groupe avec l'objet (émulateur de Craft of Exile). Vide : seulement `target`.
+    #[serde(default)]
+    pub more_targets: Vec<AffixIdx>,
     /// Omen « the Sovereign/Liege/Blackblooded » : restreint la Désécration à un sous-pool (Ulaman /
     /// Amanamu / Kurgal). Ignoré pour tout autre `CurrencyKind`.
     #[serde(default)]
@@ -178,7 +183,7 @@ pub struct Currency {
     #[serde(default)]
     pub remove_lowest_level: bool,
     /// `false` (Essence normale/Lesser/Greater) : Magique → Rare, ajoute l'affixe garanti.
-    /// `true` (Essence Perfect / Corrupted, Alloy Verisium) : objet déjà Rare, retire un mod (du côté
+    /// `true` (Essence Perfect / Corrupted, Alloy) : objet déjà Rare, retire un mod (du côté
     /// de l'affixe garanti si ce côté est plein, sinon au hasard) PUIS ajoute l'affixe garanti — jamais les deux comportements sur la même entrée, comme dans le vrai jeu.
     #[serde(default)]
     pub requires_rare: bool,
@@ -512,13 +517,25 @@ impl AffixPool {
                 };
                 // affixe garanti sans place ou en conflit de groupe : l'objet reste tel quel
                 let before = *item;
-                // un préfixe OU un suffixe (Potent Liquid Ferocity/Contempt) : le slot est tiré à 50/50, puis le
-                // mod remplace un affixe non fracturé de CE slot (règle donnée par Max) ; sinon retrait au hasard
-                let pick = match c.alt_target {
-                    Some(alt) if rng.random_bool(0.5) => alt,
-                    _ => target,
+                let groupe_pris = |item: &ItemState, t: AffixIdx| {
+                    let g = self.affixes[t as usize].group;
+                    item.mods()
+                        .iter()
+                        .any(|m| self.affixes[m.idx as usize].group == g)
                 };
-                if c.alt_target.is_some() {
+                let place = |item: &ItemState, t: AffixIdx| {
+                    let mut rare = *item;
+                    rare.rarity = Rarity::Rare;
+                    let (cap_p, cap_s) = self.cap_of(&rare);
+                    match self.affixes[t as usize].slot {
+                        Slot::Prefix => self.count(item, Slot::Prefix) < cap_p,
+                        Slot::Suffix => self.count(item, Slot::Suffix) < cap_s,
+                    }
+                };
+                let pick = if let Some(alt) = c.alt_target {
+                    // un préfixe OU un suffixe (Potent Liquid Ferocity/Contempt) : le slot est tiré à 50/50, puis le
+                    // mod remplace un affixe non fracturé de CE slot (règle donnée par Max)
+                    let pick = if rng.random_bool(0.5) { alt } else { target };
                     self.remove_random(
                         item,
                         Some(self.affixes[pick as usize].slot),
@@ -526,40 +543,46 @@ impl AffixPool {
                         false,
                         rng,
                     );
-                } else if c.requires_rare {
-                    // Essence Perfect / Corrupted (émulateur de Craft of Exile) : refusée si un mod du même
-                    // groupe est déjà là, AVANT tout retrait ; le mod retiré est pris du côté du mod garanti
-                    // si ce côté est plein, sinon au hasard parmi tous les mods
-                    let a = &self.affixes[pick as usize];
-                    if item
-                        .mods()
-                        .iter()
-                        .any(|m| self.affixes[m.idx as usize].group == a.group)
-                    {
-                        return Outcome::NotApplicable;
-                    }
-                    let (cap_p, cap_s) = self.cap_of(item);
-                    let plein = match a.slot {
-                        Slot::Prefix => self.count(item, Slot::Prefix) >= cap_p,
-                        Slot::Suffix => self.count(item, Slot::Suffix) >= cap_s,
+                    pick
+                } else {
+                    // Essence ou Alloy (émulateur de Craft of Exile, `poe2_essence`) : un mod tiré à chances
+                    // égales parmi les mods possibles sans conflit de groupe avec l'objet ; refusée si aucun
+                    let cands: Vec<AffixIdx> = std::iter::once(target)
+                        .chain(c.more_targets.iter().copied())
+                        .filter(|&t| !groupe_pris(item, t))
+                        .collect();
+                    let un_parmi = |v: &[AffixIdx], rng: &mut _| match v.len() {
+                        1 => v[0],
+                        n => v[Rng::random_range(rng, 0..n)],
                     };
-                    if !self.remove_random(item, plein.then_some(a.slot), false, false, rng) {
+                    if cands.is_empty() {
                         return Outcome::NotApplicable;
                     }
-                }
-                let mut rare = *item;
-                rare.rarity = Rarity::Rare;
-                let (cap_p, cap_s) = self.cap_of(&rare);
-                let a = &self.affixes[pick as usize];
-                let room = match a.slot {
-                    Slot::Prefix => self.count(item, Slot::Prefix) < cap_p,
-                    Slot::Suffix => self.count(item, Slot::Suffix) < cap_s,
+                    let mut pick = un_parmi(&cands, rng);
+                    if c.requires_rare {
+                        // Essence Perfect / Corrupted, Alloy : le mod retiré est pris du côté du mod tiré si ce
+                        // côté est plein, sinon au hasard parmi tous les mods
+                        let a = &self.affixes[pick as usize];
+                        let (cap_p, cap_s) = self.cap_of(item);
+                        let plein = match a.slot {
+                            Slot::Prefix => self.count(item, Slot::Prefix) >= cap_p,
+                            Slot::Suffix => self.count(item, Slot::Suffix) >= cap_s,
+                        };
+                        if !self.remove_random(item, plein.then_some(a.slot), false, false, rng) {
+                            return Outcome::NotApplicable;
+                        }
+                    }
+                    // côté du mod tiré sans place : nouveau tirage parmi les mods possibles qui en ont
+                    if !place(item, pick) && cands.len() > 1 {
+                        let ok: Vec<AffixIdx> =
+                            cands.iter().copied().filter(|&t| place(item, t)).collect();
+                        if !ok.is_empty() {
+                            pick = un_parmi(&ok, rng);
+                        }
+                    }
+                    pick
                 };
-                let held = item
-                    .mods()
-                    .iter()
-                    .any(|m| self.affixes[m.idx as usize].group == a.group);
-                if !room || held {
+                if !place(item, pick) || groupe_pris(item, pick) {
                     *item = before;
                     return Outcome::NotApplicable;
                 }

@@ -117,7 +117,7 @@ function AffixColumn({
               ) : (
                 <span
                   className="font-mono text-[11px] text-text-subtle"
-                  title={a.essence ? "Posé seulement par une Essence" : "Chance d'être le prochain mod de ce côté"}
+                  title={a.essence ? "Posé seulement par une Essence ou un Alloy" : "Chance d'être le prochain mod de ce côté"}
                 >
                   {a.essence ? "Essence" : formatPercent(a.part)}
                 </span>
@@ -228,7 +228,7 @@ function PriceTable({
       </div>
       <details className="text-xs">
         <summary className="cursor-pointer text-text-subtle">
-          Essences ({essences.filter((e) => prices.prix[e.id] !== undefined).length}/{essences.length} avec un prix)
+          Essences et Alloys ({essences.filter((e) => prices.prix[e.id] !== undefined).length}/{essences.length} avec un prix)
         </summary>
         <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-0.5 xl:grid-cols-3">{essences.map(ligne)}</div>
       </details>
@@ -255,7 +255,7 @@ function PriceTable({
       </div>
       <p className="text-xs text-text-subtle">
         Prix en Exalted Orbs. Ta saisie l'emporte sur poe.ninja, qui l'emporte sur les valeurs indicatives. La base neuve et sa
-        revente n'ont pas de cote : saisis-les. Une Essence sans prix n'est pas proposée dans les plans.
+        revente n'ont pas de cote : saisis-les. Une Essence ou un Alloy sans prix n'est pas proposé dans les plans.
       </p>
     </div>
   );
@@ -547,7 +547,7 @@ export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onRegla
 
   const monnaies = [
     ...catalogue.filter((c) => c.genre === "monnaie" || c.genre === "omen"),
-    { id: ESSENCES, nom: "Essences (avec un prix)", genre: "essence" as const },
+    { id: ESSENCES, nom: "Essences et Alloys (avec un prix)", genre: "essence" as const },
   ];
   return (
     <div className="space-y-4">

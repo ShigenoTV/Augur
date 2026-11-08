@@ -188,6 +188,7 @@ pub fn actions(
             remove_slot: None,
             target: None,
             alt_target: None,
+            more_targets: Vec::new(),
             require_tag: None,
             remove_desecrated_only: false,
             remove_lowest_level: false,
