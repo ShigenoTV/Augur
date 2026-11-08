@@ -113,6 +113,9 @@ pub fn run() {
             commands::get_forge_affixes,
             commands::get_forge_catalogue,
             commands::plan_forge_craft,
+            commands::get_forge_advice,
+            commands::get_forge_tracking,
+            commands::stop_forge_tracking,
         ])
         .setup(|app| {
             let handle = app.handle();

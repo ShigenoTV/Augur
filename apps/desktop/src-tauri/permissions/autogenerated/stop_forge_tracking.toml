@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-stop-forge-tracking"
+description = "Enables the stop_forge_tracking command without any pre-configured scope."
+commands.allow = ["stop_forge_tracking"]
+
+[[permission]]
+identifier = "deny-stop-forge-tracking"
+description = "Denies the stop_forge_tracking command without any pre-configured scope."
+commands.deny = ["stop_forge_tracking"]

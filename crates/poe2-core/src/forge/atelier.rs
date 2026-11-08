@@ -18,6 +18,7 @@ use super::solveur::{
     CraftPlan, GoalItem, MacroState, Model, PlanConfig, PlanInputs, SolveConfig, build_plan, solve,
     verify_policy,
 };
+use super::suivi::PlanActif;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::Read;
@@ -357,11 +358,13 @@ fn source_des_prix(table: &TablePrix) -> String {
 }
 
 /// Calcule le plan de craft optimal depuis une base neuve, avec les prix effectifs de `table`.
+/// Rend aussi le plan « actif », que l'overlay suit sur l'objet en cours de craft
+/// ([`super::suivi`]).
 pub fn planifier(
     demande: &DemandePlan,
     table: &TablePrix,
     annuler: &AtomicBool,
-) -> Result<ResultatPlan, ErreurAtelier> {
+) -> Result<(ResultatPlan, PlanActif), ErreurAtelier> {
     let (d, pb) = pool(&demande.base_id, demande.ilvl)?;
     let ilvl = u8::try_from(demande.ilvl).map_err(|_| ErreurAtelier::Niveau(demande.ilvl))?;
     let pool = Arc::new(pb.pool.clone());
@@ -390,6 +393,7 @@ pub fn planifier(
         })
         .collect();
 
+    let labels: Vec<String> = goal_items.iter().map(|g| g.label.clone()).collect();
     let model = Model::new(pool, goal, ilvl, acts, prix_base, revente);
     let depart = MacroState::empty(Rarity::Normal);
     let sol = solve(&model, &[depart], &SolveConfig::default(), annuler)
@@ -438,14 +442,25 @@ pub fn planifier(
         })
         .collect();
 
-    Ok(ResultatPlan {
-        plan,
+    let resultat = ResultatPlan {
         complet: pb.complet(),
         sans_poids: pb.sans_poids.len(),
         prix,
         ligue: table.marche.as_ref().map(|m| m.ligue.clone()),
         attribution: attribution(d),
-    })
+        plan,
+    };
+    let base_nom = base(d, &demande.base_id)?.nom.clone();
+    let actif = PlanActif {
+        base_id: demande.base_id.clone(),
+        base_nom,
+        ilvl,
+        labels,
+        expected_cost: resultat.plan.expected_cost,
+        model,
+        sol,
+    };
+    Ok((resultat, actif))
 }
 
 #[cfg(test)]
@@ -527,7 +542,9 @@ mod tests {
             voulus: vec![voulu("maximum Life"), voulu("Fire Resistance")],
             exclues: vec![],
         };
-        let r = planifier(&demande, &TablePrix::indicative(), &AtomicBool::new(false)).unwrap();
+        let (r, actif) =
+            planifier(&demande, &TablePrix::indicative(), &AtomicBool::new(false)).unwrap();
+        assert_eq!(actif.base_nom, "Suede Bracers");
         assert!(r.complet);
         assert!(r.plan.expected_cost.is_finite() && r.plan.expected_cost > 0.0);
         let mc = r.plan.mc.as_ref().unwrap();

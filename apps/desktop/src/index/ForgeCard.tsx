@@ -11,6 +11,7 @@ import {
   type ForgePlanResult,
   type ForgePrices,
   type ForgeSlot,
+  type ForgeTracking,
   type ForgeWanted,
 } from "../bridge";
 import {
@@ -347,12 +348,14 @@ export function ForgeCard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [onglet, setOnglet] = useState<"plan" | "prix">("plan");
+  const [suivi, setSuivi] = useState<ForgeTracking | null>(null);
 
   useEffect(() => {
     if (!isTauri()) return;
     void commands.getForgeBases().then(setBases).catch((e) => setError(message(e)));
     void commands.getForgeCatalogue().then(setCatalogue).catch(() => undefined);
     void commands.getForgePrices().then(setPrices).catch(() => undefined);
+    void commands.getForgeTracking().then(setSuivi).catch(() => undefined);
   }, []);
 
   const classes = useMemo(() => basesParClasse(bases), [bases]);
@@ -395,6 +398,7 @@ export function ForgeCard() {
     setResult(null);
     try {
       setResult(await commands.planForgeCraft({ baseId, ilvl, voulus, exclues }));
+      setSuivi(await commands.getForgeTracking());
     } catch (err) {
       setError(message(err));
     } finally {
@@ -421,6 +425,23 @@ export function ForgeCard() {
           </button>
         ))}
       </div>
+
+      {suivi && (
+        <div className="flex flex-wrap items-center gap-2 rounded-chip border border-ink-700 bg-ink-950 px-3 py-2 text-xs">
+          <span className="text-text-muted">
+            L'overlay suit le plan <span className="text-text-primary">{suivi.baseNom}</span> (niv. {suivi.ilvl} :{" "}
+            {suivi.labels.map(libelleCourt).join(", ")}). En jeu, <span className="font-mono">Ctrl+Alt+C</span> sur l'objet
+            en cours de craft affiche la prochaine étape.
+          </span>
+          <button
+            type="button"
+            onClick={() => void commands.stopForgeTracking().then(() => setSuivi(null))}
+            className="ml-auto rounded-chip border border-ink-600 px-2 py-0.5 text-text-primary hover:bg-ink-800"
+          >
+            Arrêter le suivi
+          </button>
+        </div>
+      )}
 
       {onglet === "prix" ? (
         <PriceTable

@@ -78,7 +78,13 @@ une source de prix d'objets (même blocage OAuth).
    et des monnaies autorisées ; coût espéré, P50 / P90 sur 4 000 crafts simulés par le moteur exact, que faire
    selon l'état de l'objet, achats moyens, sources des prix et des poids ; onglet Prix (corrections, relevé
    poe.ninja, ligue). Seules les bases dont la page poe2db porte des poids sont proposées.
-6. **Overlay** : Ctrl+Alt+C sur l'objet en cours de craft, l'overlay affiche la prochaine étape du plan.
+6. **Overlay** (`forge::suivi`, commandes `get_forge_advice` / `get_forge_tracking` / `stop_forge_tracking`) : le
+   dernier plan calculé est suivi (en mémoire, jusqu'au prochain calcul ou à « Arrêter le suivi »). Ctrl+Alt+C sur un
+   objet de la même base : chaque mod est retrouvé dans le pool (côté et nom de l'en-tête avancé, puis texte sans les
+   nombres, puis tier), l'objet est projeté sur l'état du solveur et l'overlay affiche la prochaine étape, le coût
+   restant et les résultats possibles du prochain essai. Un mod introuvable (sans poids, désacralisé, artisanal)
+   compte comme mauvais mod. Une copie simple (Ctrl+C) est refusée : elle ne dit pas quels mods sont des
+   préfixes. Un objet d'une autre base passe à Upgrade Copilot.
 
 Hors périmètre pour l'instant : « craftez ou achetez » (pas de prix d'objets), boucle de validation communautaire.
 
