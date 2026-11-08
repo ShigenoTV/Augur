@@ -314,6 +314,7 @@ export const commands = {
   setUpdateChannel: (beta: boolean) => invoke<Settings>("set_update_channel", { beta }),
   getClientLogStatus: () => invoke<ClientLogStatus>("get_client_log_status"),
   setClientLogPath: (path: string | null) => invoke<Settings>("set_client_log_path", { path }),
+  getLeagues: () => invoke<string[]>("get_leagues"),
   setLeague: (league: string | null) => invoke<Settings>("set_league", { league }),
   setShortcuts: (shortcuts: ShortcutSettings) => invoke<Settings>("set_shortcuts", { shortcuts }),
   getMeasureStatus: () => invoke<MeasureStatus>("get_measure_status"),

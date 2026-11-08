@@ -74,6 +74,12 @@ pub fn set_update_channel(
     })
 }
 
+/// Ligues proposées par poe.ninja, pour la liste de Réglages.
+#[tauri::command]
+pub async fn get_leagues(app: AppHandle) -> Result<Vec<String>, AppError> {
+    crate::forge_prices::leagues(&app.package_info().version.to_string()).await
+}
+
 /// Ligue poe.ninja des prix de la Forge. `None` ou vide : ligue par défaut.
 #[tauri::command]
 pub fn set_league(

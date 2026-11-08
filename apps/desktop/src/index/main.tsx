@@ -59,7 +59,7 @@ const PAGES: { id: PageId; nom: string; desc: string; groupe: 0 | 1 }[] = [
   },
   { id: "ledger", nom: "Atlas Ledger", desc: "Suivi de tes sessions de farm de cartes et historique.", groupe: 0 },
   { id: "outils", nom: "Outils", desc: "Session de mesures et banc d'essai du parseur.", groupe: 1 },
-  { id: "reglages", nom: "Réglages", desc: "Journal du jeu, ligue des prix, raccourcis et mises à jour d'Augur.", groupe: 1 },
+  { id: "reglages", nom: "Réglages", desc: "Journal du jeu, ligue souhaitée, raccourcis et mises à jour d'Augur.", groupe: 1 },
 ];
 
 const CLE_PAGE = "augur.page";
@@ -328,7 +328,7 @@ function App() {
             <Card title="Journal du jeu (Client.txt)">
               <ClientLogCard status={clientLog} settings={settings} onSettings={setSettings} />
             </Card>
-            <Card title="Ligue des prix (poe.ninja)">
+            <Card title="Ligue souhaitée">
               <LeagueCard settings={settings} onSettings={setSettings} />
             </Card>
             <Card title="Raccourcis de l'overlay">

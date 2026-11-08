@@ -1,29 +1,45 @@
 import { Kbd, StatePanel } from "@augur/ui";
 import { useEffect, useState, type KeyboardEvent } from "react";
-import { commands, DEFAULT_LEAGUE, isAppError, type Settings, type ShortcutSettings } from "../bridge";
+import { commands, DEFAULT_LEAGUE, isAppError, isTauri, type Settings, type ShortcutSettings } from "../bridge";
 import { afficherRaccourci, lireTouche, SHORTCUTS_PAR_DEFAUT } from "./shortcuts";
 
 const champ =
   "min-w-0 rounded-chip border border-ink-700 bg-ink-950 px-2 py-1.5 text-sm text-text-primary placeholder:text-text-subtle";
-const btnPrimary = "rounded-chip bg-accent px-3 py-1.5 text-sm font-semibold text-accent-ink hover:bg-accent-strong disabled:opacity-50";
 const btnSecondary = "rounded-chip border border-ink-600 px-3 py-1.5 text-sm text-text-muted hover:bg-ink-800 disabled:opacity-50";
 
 const message = (err: unknown) => (isAppError(err) ? err.message : String(err));
 
-/** Ligue poe.ninja utilisée pour les prix de la Forge. */
+/** Ligues proposées si poe.ninja ne répond pas. */
+const LIGUES_SECOURS = [DEFAULT_LEAGUE, "Standard"];
+
+/** Liste déroulante : ligues de poe.ninja, plus la ligue enregistrée si elle n'y est plus. */
+export function optionsLigues(poeNinja: string[] | null, actuelle: string): string[] {
+  const liste = poeNinja && poeNinja.length > 0 ? [...poeNinja] : [...LIGUES_SECOURS];
+  if (!liste.includes(actuelle)) liste.unshift(actuelle);
+  return liste;
+}
+
+/** Ligue poe.ninja utilisée pour les prix de la Forge, choisie dans une liste. */
 export function LeagueCard({ settings, onSettings }: { settings: Settings | null; onSettings: (s: Settings) => void }) {
-  const [input, setInput] = useState("");
+  const [ligues, setLigues] = useState<string[] | null>(null);
+  const [horsLigne, setHorsLigne] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const actuelle = settings?.league ?? DEFAULT_LEAGUE;
 
-  useEffect(() => setInput(settings?.league ?? ""), [settings?.league]);
+  useEffect(() => {
+    if (!isTauri()) return;
+    commands
+      .getLeagues()
+      .then(setLigues)
+      .catch(() => setHorsLigne(true));
+  }, []);
 
-  async function save(league: string | null) {
+  async function choisir(league: string) {
     setError(null);
     setInfo(null);
     try {
-      onSettings(await commands.setLeague(league));
+      onSettings(await commands.setLeague(league === DEFAULT_LEAGUE ? null : league));
       setInfo("Ligue enregistrée. Actualise les prix dans la Forge pour charger son relevé.");
     } catch (err) {
       setError(message(err));
@@ -32,32 +48,24 @@ export function LeagueCard({ settings, onSettings }: { settings: Settings | null
 
   return (
     <div className="space-y-3 text-sm">
-      <p className="text-text-muted">
-        Prix de la Forge relevés sur poe.ninja pour la ligue <span className="font-semibold text-text-primary">{actuelle}</span>.
-      </p>
-      <div className="flex gap-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={DEFAULT_LEAGUE}
-          aria-label="Ligue poe.ninja"
-          className={`${champ} w-64`}
-        />
-        <button
-          type="button"
-          disabled={!settings || input.trim() === (settings.league ?? "")}
-          onClick={() => void save(input.trim() || null)}
-          className={btnPrimary}
-        >
-          Enregistrer
-        </button>
-        {settings?.league && (
-          <button type="button" onClick={() => void save(null)} className={btnSecondary}>
-            Revenir à {DEFAULT_LEAGUE}
-          </button>
-        )}
-      </div>
-      <p className="text-xs text-text-subtle">Écris le nom exact de la ligue, comme sur poe.ninja (ex. Standard).</p>
+      <p className="text-text-muted">Les prix de la Forge sont relevés sur poe.ninja pour cette ligue.</p>
+      <select
+        value={actuelle}
+        disabled={!settings}
+        onChange={(e) => void choisir(e.target.value)}
+        aria-label="Ligue souhaitée"
+        className={`${champ} w-64 disabled:opacity-50`}
+      >
+        {optionsLigues(ligues, actuelle).map((l) => (
+          <option key={l} value={l}>
+            {l}
+            {l === DEFAULT_LEAGUE ? " (par défaut)" : ""}
+          </option>
+        ))}
+      </select>
+      {horsLigne && (
+        <p className="text-xs text-text-subtle">poe.ninja ne répond pas : liste réduite, réessaie plus tard.</p>
+      )}
       {info && <p className="text-xs text-signal-gain">{info}</p>}
       {error && (
         <StatePanel icon="alert" title="Ligue non enregistrée" variant="warn">
