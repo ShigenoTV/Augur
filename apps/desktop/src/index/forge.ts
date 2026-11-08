@@ -5,7 +5,6 @@ import type {
   ForgeBase,
   ForgeItemSummary,
   ForgePlan,
-  ForgePriceSource,
   ForgeSlot,
   ForgeWanted,
 } from "../bridge";
@@ -34,12 +33,6 @@ export function formatPercent(p: number): string {
 export function formatCount(v: number): string {
   return v >= 10 ? nombre(v, 0) : nombre(v, 1);
 }
-
-export const SOURCE_LABEL: Record<ForgePriceSource, string> = {
-  joueur: "saisi",
-  poeNinja: "poe.ninja",
-  indicatif: "indicatif",
-};
 
 export const SLOT_LABEL: Record<ForgeSlot, string> = { prefix: "Préfixes", suffix: "Suffixes" };
 
@@ -93,16 +86,6 @@ export function etapes(plan: ForgePlan, max = 12): ForgeActionNode[] {
     .filter((n) => n.id !== plan.rootId && n.expectedVisits >= 0.01)
     .sort((a, b) => b.expectedVisits - a.expectedVisits);
   return [...(racine ? [racine] : []), ...autres].slice(0, max);
-}
-
-/**
- * Source(s) des prix d'une ligne d'achats : monnaie seule, monnaie + Omen (`exalt+omen_…`) ou
- * bases (`__base`, base neuve et revente).
- */
-export function sourcesAchat(id: string, prix: { id: string; source: ForgePriceSource }[]): string {
-  const ids = id === "__base" ? ["base_neuve", "revente_base"] : id.split("+");
-  const s = new Set(ids.map((i) => prix.find((p) => p.id === i)?.source).filter((x): x is ForgePriceSource => !!x));
-  return [...s].map((x) => SOURCE_LABEL[x]).join(" + ");
 }
 
 /** Lit un prix saisi (« 1,5 » ou « 1.5 ») ; `null` si ce n'est pas un nombre positif ou nul. */

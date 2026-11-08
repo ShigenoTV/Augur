@@ -81,6 +81,39 @@ pub struct RelevePoids {
     pub repoe_version: String,
     pub source: String,
     pub pages: BTreeMap<String, PagePoids>,
+    /// Poids de Craft of Exile pour les mods sans poids chez poe2db (`poids-coe.json`).
+    #[serde(default)]
+    pub complement: Option<ComplementPoids>,
+}
+
+/// Relevé de Craft of Exile qui complète poe2db (décision de Max du 08/11/2026) : seulement les
+/// mods que poe2db n'a pas mesurés. Les poids communs aux deux sources sont identiques.
+#[derive(Clone, Debug, Deserialize)]
+pub struct ComplementPoids {
+    pub source: String,
+    pub date_releve: String,
+    #[serde(default)]
+    pub version_donnees: String,
+    pub pages: BTreeMap<String, PagePoids>,
+}
+
+impl RelevePoids {
+    /// La page porte au moins un poids, chez poe2db ou en complément.
+    pub fn page_utilisable(&self, page: &str) -> bool {
+        let a_des_poids = |p: Option<&PagePoids>| p.is_some_and(|p| !p.poids.is_empty());
+        a_des_poids(self.pages.get(page))
+            || a_des_poids(self.complement.as_ref().and_then(|c| c.pages.get(page)))
+    }
+
+    /// Page de poids d'une base : sa page propre si une source en a une (ex. `Trarthan_Cannon`,
+    /// arbalète à grenades dont les mods diffèrent des autres arbalètes), sinon celle de sa classe.
+    pub fn page_de(&self, base: &BaseTable) -> Option<String> {
+        let propre = base.nom.replace(' ', "_");
+        if self.page_utilisable(&propre) {
+            return Some(propre);
+        }
+        page_poe2db(base)
+    }
 }
 
 /// Une page poe2db : poids mesurés et mods listés sans poids.
@@ -111,6 +144,9 @@ pub struct PoolBase {
     pub date_releve: String,
     /// Mods éligibles sans poids mesuré (non tirés par le moteur).
     pub sans_poids: Vec<SansPoids>,
+    /// Poids pris dans le complément Craft of Exile, et sa source.
+    pub poids_complement: usize,
+    pub source_complement: Option<String>,
 }
 
 impl PoolBase {
@@ -212,12 +248,20 @@ pub fn construire_pool(
     if mods.schema != SCHEMA_TABLES {
         return Err(ErreurPool::Schema(mods.schema));
     }
-    let page_nom =
-        page_poe2db(base).ok_or_else(|| ErreurPool::BaseNonSupportee(base.nom.clone()))?;
-    let page = releve
-        .pages
-        .get(&page_nom)
-        .ok_or_else(|| ErreurPool::PageAbsente(page_nom.clone()))?;
+    let page_nom = releve
+        .page_de(base)
+        .ok_or_else(|| ErreurPool::BaseNonSupportee(base.nom.clone()))?;
+    let vide = PagePoids::default();
+    let complement = releve
+        .complement
+        .as_ref()
+        .and_then(|c| c.pages.get(&page_nom));
+    let page = match (releve.pages.get(&page_nom), complement) {
+        (Some(p), _) => p,
+        (None, Some(_)) => &vide,
+        (None, None) => return Err(ErreurPool::PageAbsente(page_nom.clone())),
+    };
+    let mut poids_complement = 0;
 
     // Mods éligibles sur la base, tous niveaux : les tiers se numérotent sur la famille entière
     // (T1 = niveau le plus haut), puis le niveau d'objet filtre.
@@ -254,7 +298,18 @@ pub fn construire_pool(
                     "prefix" => Slot::Prefix,
                     _ => Slot::Suffix,
                 };
-                let Some(&weight) = page.poids.get(&m.id) else {
+                let weight = match (
+                    page.poids.get(&m.id),
+                    complement.and_then(|c| c.poids.get(&m.id)),
+                ) {
+                    (Some(&w), _) => Some(w),
+                    (None, Some(&w)) => {
+                        poids_complement += 1;
+                        Some(w)
+                    }
+                    (None, None) => None,
+                };
+                let Some(weight) = weight else {
                     sans_poids.push(SansPoids {
                         id: m.id.clone(),
                         slot,
@@ -297,6 +352,10 @@ pub fn construire_pool(
         licence_poids: releve.licence.clone(),
         date_releve: releve.date_releve.clone(),
         sans_poids,
+        poids_complement,
+        source_complement: (poids_complement > 0)
+            .then(|| releve.complement.as_ref().map(|c| c.source.clone()))
+            .flatten(),
     })
 }
 
@@ -353,7 +412,61 @@ mod tests {
             repoe_version: String::new(),
             source: "poe2db".into(),
             pages: [("Body_Armours_int".to_string(), page)].into(),
+            complement: None,
         }
+    }
+
+    fn complement(page: &str, poids: &[(&str, u32)]) -> ComplementPoids {
+        ComplementPoids {
+            source: "Craft of Exile".into(),
+            date_releve: "2026-11-08".into(),
+            version_donnees: "0.5.5.5".into(),
+            pages: [(
+                page.to_string(),
+                PagePoids {
+                    poids: poids.iter().map(|(k, v)| ((*k).into(), *v)).collect(),
+                    inconnus: vec![],
+                },
+            )]
+            .into(),
+        }
+    }
+
+    #[test]
+    fn complement_craft_of_exile() {
+        let mods = TableMods {
+            schema: 1,
+            mods: vec![
+                m("Life1", "Life", "prefix", 1, &[("default", 1)]),
+                m("Mana1", "Mana", "prefix", 1, &[("default", 1)]),
+            ],
+        };
+        // poe2db prime ; le complément comble le mod sans poids
+        let mut r = releve(&[("Life1", 1000)], &["Mana1"]);
+        r.complement = Some(complement(
+            "Body_Armours_int",
+            &[("Life1", 1), ("Mana1", 700)],
+        ));
+        let pb = construire_pool(&mods, &robe(), 60, &r).unwrap();
+        assert!(pb.complet());
+        let w = |id: &str| pb.pool.affixes.iter().find(|a| a.id == id).unwrap().weight;
+        assert_eq!((w("Life1"), w("Mana1")), (1000, 700));
+        assert_eq!(pb.poids_complement, 1);
+        assert_eq!(pb.source_complement.as_deref(), Some("Craft of Exile"));
+
+        // page absente chez poe2db mais présente dans le complément
+        let mut b = robe();
+        b.tags = vec!["str_dex_int_armour".into(), "default".into()];
+        let mut r = releve(&[], &[]);
+        assert!(!r.page_utilisable("Body_Armours_str_dex_int"));
+        r.complement = Some(complement(
+            "Body_Armours_str_dex_int",
+            &[("Life1", 1000), ("Mana1", 700)],
+        ));
+        assert!(r.page_utilisable("Body_Armours_str_dex_int"));
+        let pb = construire_pool(&mods, &b, 60, &r).unwrap();
+        assert_eq!(pb.pool.affixes.len(), 2);
+        assert_eq!(pb.poids_complement, 2);
     }
 
     #[test]
