@@ -85,6 +85,8 @@ pub fn spawn_watcher(app: AppHandle) {
                     }
                 };
                 app.state::<AppState>().set_last_text(text);
+                // La fenêtre principale garde le dernier objet analysé (page Copilot).
+                let _ = app.emit_to("main", events::ITEM_COPIED, item.clone());
                 let _ = app.emit_to(overlay::LABEL, events::ITEM_COPIED, item);
                 let handle = app.clone();
                 let _ = app.run_on_main_thread(move || overlay::show_near_cursor(&handle));

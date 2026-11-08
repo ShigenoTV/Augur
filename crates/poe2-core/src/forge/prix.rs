@@ -23,12 +23,15 @@ pub const BASE_NEUVE: &str = "base_neuve";
 /// Ce que rapporte la revente d'une base ratée (déduit du coût d'un abandon).
 pub const REVENTE_BASE: &str = "revente_base";
 
+/// Divine Orb : pas une monnaie de craft, seulement le taux pour afficher les coûts en Divine.
+pub const DIVINE: &str = "divine";
+
 /// Origine des valeurs indicatives, à afficher avec elles.
 pub const ORIGINE_INDICATIVE: &str = "Valeurs indicatives de septembre 2026 (relevé de \
     poe2-craft-assistant), à corriger aux prix du moment.";
 
 /// Valeurs indicatives, en Exalted Orbs.
-const INDICATIFS: [(&str, f64); 26] = [
+const INDICATIFS: [(&str, f64); 27] = [
     (BASE_NEUVE, 2.0),
     (REVENTE_BASE, 0.0),
     ("transmute", 1.53),
@@ -55,6 +58,8 @@ const INDICATIFS: [(&str, f64); 26] = [
     ("omen_dextral_annulment", 4066.0),
     ("omen_sinistral_erasure", 6979.0),
     ("omen_dextral_erasure", 3944.0),
+    // Relevé poe.ninja du 07/11/2026 (Forbidden Rites) : pas de valeur de septembre.
+    (DIVINE, 635.0),
 ];
 
 /// D'où vient un prix effectif.
@@ -102,7 +107,7 @@ pub enum ErreurPrix {
 
 /// Identifiants qu'une table de prix peut contenir.
 pub fn identifiants() -> impl Iterator<Item = &'static str> {
-    [BASE_NEUVE, REVENTE_BASE]
+    [BASE_NEUVE, REVENTE_BASE, DIVINE]
         .into_iter()
         .chain(MONNAIES.iter().map(|m| m.id))
         .chain(OMENS.iter().map(|o| o.id))
@@ -255,7 +260,7 @@ mod tests {
         t.appliquer_marche(marche(&[
             ("chaos", 60.0),
             ("annul", 250.0),
-            ("divine", 600.0),
+            ("mirror", 600.0),
             ("exalt", f64::NAN),
         ]));
         t.saisir(&saisie(&[("chaos", 40.0)])).unwrap();
@@ -272,7 +277,7 @@ mod tests {
             (1.0, SourcePrix::Indicatif),
             "cote invalide ignorée"
         );
-        assert!(!t.prix.contains_key("divine"));
+        assert!(!t.prix.contains_key("mirror"));
 
         t.effacer_corrections();
         assert_eq!(
@@ -298,8 +303,8 @@ mod tests {
         let mut t = TablePrix::indicative();
         let avant = t.clone();
         assert_eq!(
-            t.saisir(&saisie(&[("chaos", 1.0), ("divine", 200.0)])),
-            Err(ErreurPrix::Inconnu("divine".into()))
+            t.saisir(&saisie(&[("chaos", 1.0), ("mirror", 200.0)])),
+            Err(ErreurPrix::Inconnu("mirror".into()))
         );
         assert_eq!(
             t.saisir(&saisie(&[("chaos", f64::NAN)])),
@@ -314,7 +319,7 @@ mod tests {
 
     #[test]
     fn un_fichier_abime_est_repare() {
-        let json = r#"{"corrections":{"exalt":2.5,"chaos":-1,"divine":300,"revente_base":9},
+        let json = r#"{"corrections":{"exalt":2.5,"chaos":-1,"mirror":300,"revente_base":9},
             "marche":{"ligue":"L","releveA":1,"prix":{"annul":-3,"regal":2},"dates":{},"manquants":[]}}"#;
         let t: TablePrix = serde_json::from_str(json).unwrap();
         let t = t.reparer();
@@ -325,7 +330,7 @@ mod tests {
             (2.0, SourcePrix::PoeNinja)
         );
         assert_eq!(t.sources["annul"], SourcePrix::Indicatif);
-        assert!(!t.prix.contains_key("divine"));
+        assert!(!t.prix.contains_key("mirror"));
         assert_eq!(t.prix[REVENTE_BASE], 0.0);
         assert_eq!(t.prix.len(), INDICATIFS.len());
         // un fichier de la version précédente (prix seuls) repart des valeurs indicatives

@@ -6,8 +6,10 @@ import type {
   ForgeItemSummary,
   ForgePlan,
   ForgeSlot,
+  ForgeTerminalNode,
   ForgeWanted,
 } from "../bridge";
+import { formatCout } from "./devise";
 
 /** Places d'un Rare ordinaire (le plafond propre à la base n'est pas encore extrait). */
 export const MAX_PAR_COTE = 3;
@@ -17,12 +19,7 @@ const nombre = (v: number, dec: number) =>
   v.toLocaleString("fr-FR", { minimumFractionDigits: dec, maximumFractionDigits: dec });
 
 /** Prix ou coût en Exalted Orbs, arrondi selon l'ordre de grandeur. */
-export function formatEx(v: number | null | undefined): string {
-  if (v == null || !Number.isFinite(v)) return "–";
-  const a = Math.abs(v);
-  const dec = a >= 100 ? 0 : a >= 10 ? 1 : 2;
-  return `${nombre(v, dec)} ex`;
-}
+export const formatEx = (v: number | null | undefined): string => formatCout(v);
 
 export function formatPercent(p: number): string {
   if (!Number.isFinite(p)) return "–";
@@ -102,4 +99,72 @@ export function dateReleve(secs: number | null | undefined): string {
   const d = new Date(secs * 1000);
   const p = (n: number) => String(n).padStart(2, "0");
   return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+export type NoeudArbre = { id: string; col: number; row: number; node: ForgeActionNode | ForgeTerminalNode };
+export type LienArbre = { de: string; vers: string; p: number; kind: "success" | "failure"; retour: boolean };
+export type Arbre = {
+  noeuds: NoeudArbre[];
+  liens: LienArbre[];
+  /** Branches non dessinées par nœud (trop rares ou au-delà du plafond) : nombre et probabilité cumulée. */
+  autres: Record<string, { n: number; p: number }>;
+  colonnes: number;
+  lignes: number;
+};
+
+/**
+ * Arbre de décision du plan, en colonnes (une par étape depuis la base neuve). Chaque nœud garde
+ * ses `maxBranches` branches les plus probables ; au-delà de `maxNoeuds`, les nouveaux états ne
+ * sont plus dessinés (comptés dans `autres`). Les retours vers un état déjà placé (abandon puis
+ * base neuve, Annulment…) sont marqués `retour`.
+ */
+export function arbre(plan: ForgePlan, maxBranches = 4, maxNoeuds = 28): Arbre {
+  const place = new Map<string, NoeudArbre>();
+  const parCol: number[] = [];
+  const liens: LienArbre[] = [];
+  const autres: Arbre["autres"] = {};
+  const poser = (id: string, col: number) => {
+    const node = plan.nodes[id];
+    if (!node) return false;
+    const row = parCol[col] ?? 0;
+    parCol[col] = row + 1;
+    place.set(id, { id, col, row, node });
+    return true;
+  };
+  if (!poser(plan.rootId, 0)) return { noeuds: [], liens, autres, colonnes: 0, lignes: 0 };
+  const file = [plan.rootId];
+  while (file.length > 0) {
+    const id = file.shift()!;
+    const src = place.get(id)!;
+    if (src.node.kind !== "action") continue;
+    const branches = src.node.branches
+      .filter((b) => !(b.loopback && b.to === id))
+      .sort((a, b) => b.probability - a.probability);
+    let n = 0;
+    let p = src.node.mergedMinorProbability;
+    let nAutres = src.node.mergedMinorCount;
+    for (const b of branches) {
+      const deja = place.get(b.to);
+      if (n >= maxBranches || (!deja && place.size >= maxNoeuds) || !plan.nodes[b.to]) {
+        nAutres += 1;
+        p += b.probability;
+        continue;
+      }
+      n += 1;
+      if (!deja) {
+        poser(b.to, src.col + 1);
+        file.push(b.to);
+      }
+      const cible = place.get(b.to)!;
+      liens.push({ de: id, vers: b.to, p: b.probability, kind: b.kind, retour: cible.col <= src.col });
+    }
+    if (nAutres > 0) autres[id] = { n: nAutres, p };
+  }
+  return {
+    noeuds: [...place.values()],
+    liens,
+    autres,
+    colonnes: parCol.length,
+    lignes: Math.max(...parCol),
+  };
 }

@@ -33,7 +33,7 @@ pub const CATEGORIE_ESSENCES: &str = "Essences";
 
 /// Identifiant Forge -> (catégorie poe.ninja, identifiant poe.ninja). La base neuve et sa revente
 /// n'ont pas de cote : elles restent saisies par le joueur.
-pub const SOURCES: [(&str, &str, &str); 24] = [
+pub const SOURCES: [(&str, &str, &str); 25] = [
     ("transmute", "Currency", "transmute"),
     (
         "transmute_greater",
@@ -60,6 +60,8 @@ pub const SOURCES: [(&str, &str, &str); 24] = [
     ("chaos_perfect", "Currency", "perfect-chaos-orb"),
     ("annul", "Currency", "annul"),
     ("fracture", "Currency", "fracturing-orb"),
+    // Pas une monnaie de craft : sert à afficher les coûts en Divine.
+    (super::prix::DIVINE, "Currency", "divine"),
     (
         "omen_sinistral_exaltation",
         "Ritual",
@@ -255,7 +257,9 @@ mod tests {
         assert_eq!(monnaies["core"]["primary"], "divine");
         let (prix, manquants) = extraire(&monnaies, "Currency", "Forbidden Rites").unwrap();
         assert!(manquants.is_empty(), "{manquants:?}");
-        assert_eq!(prix.len(), 18);
+        assert_eq!(prix.len(), 19);
+        // 1 Divine = 1 / 0,001575 Exalted (≈ 635), pour l'affichage des coûts en Divine.
+        assert!((prix["divine"] - 1.0 / 0.001575).abs() < 1e-6);
         assert!(
             (prix["exalt"] - 1.0).abs() < 1e-9,
             "l'Exalted vaut 1 : {}",
