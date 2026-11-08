@@ -19,7 +19,8 @@ pub struct Monnaie {
     pub id: &'static str,
     pub nom: &'static str,
     pub genre: CurrencyKind,
-    /// Niveau de mod minimum (Greater : 35, Perfect : 50).
+    /// Niveau de mod minimum (Craft of Exile, émulateur 0.5.5.5) : Transmutation et Augmentation
+    /// Greater 44 / Perfect 70 ; Regal, Exalted et Chaos Greater 35 / Perfect 50.
     pub niveau_min: u8,
 }
 
@@ -57,26 +58,26 @@ pub const MONNAIES: [Monnaie; 18] = {
             "transmute_greater",
             "Greater Orb of Transmutation",
             Transmute,
-            35,
+            44,
         ),
         monnaie(
             "transmute_perfect",
             "Perfect Orb of Transmutation",
             Transmute,
-            50,
+            70,
         ),
         monnaie("augment", "Orb of Augmentation", Augment, 0),
         monnaie(
             "augment_greater",
             "Greater Orb of Augmentation",
             Augment,
-            35,
+            44,
         ),
         monnaie(
             "augment_perfect",
             "Perfect Orb of Augmentation",
             Augment,
-            50,
+            70,
         ),
         monnaie("regal", "Regal Orb", Regal, 0),
         monnaie("regal_greater", "Greater Regal Orb", Regal, 35),

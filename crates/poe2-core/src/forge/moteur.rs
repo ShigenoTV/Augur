@@ -230,6 +230,30 @@ impl AffixPool {
         }
     }
 
+    /// Affixes que le niveau de mod minimum d'une monnaie Greater / Perfect écarte, à cet ilvl
+    /// (`true` = écarté). Règle de Craft of Exile (émulateur 0.5.5.5) : un tier sous le minimum est
+    /// écarté, sauf s'il est le meilleur tier accessible de sa famille, qui reste tirable.
+    pub fn sous_niveau_min(&self, ilvl: u8, min: u8) -> Vec<bool> {
+        if min == 0 {
+            return vec![false; self.affixes.len()];
+        }
+        let mut meilleur: std::collections::HashMap<(GroupId, u16, bool), u8> =
+            std::collections::HashMap::new();
+        for a in self.affixes.iter().filter(|a| a.req_ilvl <= ilvl) {
+            let e = meilleur
+                .entry((a.group, a.family_id, a.desecrated))
+                .or_insert(a.req_ilvl);
+            *e = (*e).max(a.req_ilvl);
+        }
+        self.affixes
+            .iter()
+            .map(|a| {
+                a.req_ilvl < min
+                    && meilleur.get(&(a.group, a.family_id, a.desecrated)) != Some(&a.req_ilvl)
+            })
+            .collect()
+    }
+
     /// (max préfixes, max suffixes) pour cette base à cette rareté : plafond de la rareté (borné par
     /// celui d'un Rare de la classe, ex. joyau 2/2) décalé par l'implicite de la base. Un objet Normal
     /// reste sans affixe.
@@ -293,7 +317,7 @@ impl AffixPool {
         &'a self,
         item: &'a ItemState,
         f: &'a DrawFilter,
-    ) -> impl Fn(&Affix) -> bool + 'a {
+    ) -> impl Fn(usize, &Affix) -> bool + 'a {
         let (cap_p, cap_s) = self.cap_of(item);
         let open_p = self.count(item, Slot::Prefix) < cap_p;
         let open_s = self.count(item, Slot::Suffix) < cap_s;
@@ -302,12 +326,13 @@ impl AffixPool {
         for (i, m) in item.mods().iter().enumerate() {
             held[i] = self.affixes[m.idx as usize].group;
         }
+        let sous_min = self.sous_niveau_min(item.ilvl, f.min_mod_level);
 
-        move |a: &Affix| -> bool {
+        move |i: usize, a: &Affix| -> bool {
             a.weight > 0
                 && a.desecrated == f.require_desecrated
                 && a.req_ilvl <= item.ilvl
-                && a.req_ilvl >= f.min_mod_level
+                && !sous_min[i]
                 && f.require_tag.is_none_or(|t| a.tags & t != 0)
                 && match a.slot {
                     Slot::Prefix => open_p,
@@ -325,8 +350,9 @@ impl AffixPool {
         let total: u64 = self
             .affixes
             .iter()
-            .filter(|a| eligible(a))
-            .map(|a| a.weight as u64)
+            .enumerate()
+            .filter(|&(i, a)| eligible(i, a))
+            .map(|(_, a)| a.weight as u64)
             .sum();
         if total == 0 {
             return Vec::new();
@@ -334,7 +360,7 @@ impl AffixPool {
         self.affixes
             .iter()
             .enumerate()
-            .filter(|(_, a)| eligible(a))
+            .filter(|&(i, a)| eligible(i, a))
             .map(|(i, a)| (i as AffixIdx, a.weight as f64 / total as f64))
             .collect()
     }
@@ -346,15 +372,16 @@ impl AffixPool {
         let total: u64 = self
             .affixes
             .iter()
-            .filter(|a| eligible(a))
-            .map(|a| a.weight as u64)
+            .enumerate()
+            .filter(|&(i, a)| eligible(i, a))
+            .map(|(_, a)| a.weight as u64)
             .sum();
         if total == 0 {
             return None;
         }
         let mut roll = rng.random_range(0..total);
         for (i, a) in self.affixes.iter().enumerate() {
-            if !eligible(a) {
+            if !eligible(i, a) {
                 continue;
             }
             let w = a.weight as u64;
@@ -400,11 +427,15 @@ impl AffixPool {
             return false;
         }
         let pos = if lowest_level {
-            // déterministe : l'affixe TENU du niveau requis le plus bas (égalité -> le premier trouvé)
-            *cands
+            // l'affixe TENU du niveau requis le plus bas ; égalité -> tirage au hasard (Craft of Exile)
+            let niveau = |i: usize| self.affixes[item.mods()[i].idx as usize].req_ilvl;
+            let bas = cands.iter().map(|&i| niveau(i)).min().unwrap();
+            let ex: Vec<usize> = cands
                 .iter()
-                .min_by_key(|&&i| self.affixes[item.mods()[i].idx as usize].req_ilvl)
-                .unwrap()
+                .copied()
+                .filter(|&i| niveau(i) == bas)
+                .collect();
+            ex[rng.random_range(0..ex.len())]
         } else {
             cands[rng.random_range(0..cands.len())]
         };

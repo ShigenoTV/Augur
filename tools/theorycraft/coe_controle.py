@@ -9,6 +9,8 @@ ou suffixe, sans influence, niveau requis atteint, poids mesuré (> 1).
     POOLS=pools.jsonl cargo test -p poe2-core --release --test forge_controle_coe -- --ignored
     python3 tools/theorycraft/coe_controle.py --data data.json --langue english.json --pools pools.jsonl
 
+Contrôle aussi les mods écartés par le niveau minimum des monnaies Greater / Perfect (35, 44, 50, 70).
+
 Résultat du 08/11/2026 (données 0.5.5.5) : 1 714 bases × 4 niveaux, 6 856 pools identiques.
 Code de sortie 1 s'il reste un écart. Python 3.11+, bibliothèque standard seulement.
 """
@@ -50,6 +52,24 @@ def pool_coe(coe: dict, classe: int, ilvl: int) -> dict[str, tuple[str, int]]:
     return pool
 
 
+def ecartes_coe(coe: dict, classe: int, ilvl: int, minimum: int) -> set[str]:
+    """Mods que le niveau minimum d'une monnaie Greater / Perfect écarte, règle de l'émulateur de
+    Craft of Exile : dans un groupe (tiers par niveau croissant), un tier sous le minimum est écarté
+    sauf s'il est le dernier tier accessible à l'ilvl."""
+    mods = {m["id"]: m for m in coe["mods"]["entries"]}
+    groupes: dict[int, list[dict]] = defaultdict(list)
+    for id_mod in sorted(coe["classmods"].get(str(classe), {}), key=int):
+        m = mods[int(id_mod)]
+        groupes[m["group"]].append(m)
+    ecartes = set()
+    for tiers in groupes.values():
+        k = max((i for i, m in enumerate(tiers) if m["minlvl"] <= ilvl), default=-1)
+        for i, m in enumerate(tiers):
+            if m["minlvl"] <= ilvl and m["minlvl"] < minimum and i < k:
+                ecartes.add(m["key"])
+    return ecartes
+
+
 def controler(coe: dict, langue: list, pools: list[dict]) -> list[str]:
     classe_de = {}
     for it in coe["items"]["entries"]:
@@ -66,6 +86,13 @@ def controler(coe: dict, langue: list, pools: list[dict]) -> list[str]:
         pire = max((abs(a.get(k, 0) - b.get(k, 0)), k) for k in a.keys() | b.keys())
         if pire[0] > 1e-9:
             ecarts.append(f"{p['nom']} ilvl {p['ilvl']} : {pire[1]} écart {pire[0]:.4f}")
+            continue
+        presents = {k for k, _, _ in p["mods"]}
+        for minimum, nous in p.get("ecartes", {}).items():
+            eux = ecartes_coe(coe, classe, p["ilvl"], int(minimum)) & presents
+            if set(nous) != eux:
+                diff = sorted(set(nous) ^ eux)[:3]
+                ecarts.append(f"{p['nom']} ilvl {p['ilvl']} niveau min {minimum} : {diff}")
     return ecarts
 
 

@@ -353,13 +353,12 @@ impl Model {
                 let parts: Vec<Dist> = mins(desecrate)
                     .into_iter()
                     .map(|min| {
+                        let sous_min = pool.sous_niveau_min(ilvl, min);
                         dist(
                             pool.affixes
                                 .iter()
                                 .enumerate()
-                                .filter(|(i, a)| {
-                                    a.req_ilvl <= ilvl && a.req_ilvl >= min && keep(*i, a)
-                                })
+                                .filter(|(i, a)| a.req_ilvl <= ilvl && !sous_min[*i] && keep(*i, a))
                                 .map(|(_, a)| (a.req_ilvl, a.weight)),
                         )
                     })
@@ -560,10 +559,11 @@ impl Model {
         let mut w = AddW::default();
         let mut gp = vec![0.0f64; surv_p.first().map_or(0, |r| r.len())];
         let mut gs = vec![0.0f64; surv_s.first().map_or(0, |r| r.len())];
+        let sous_min = self.pool.sous_niveau_min(self.ilvl, c.min_mod_level);
         for (i, a) in self.pool.affixes.iter().enumerate() {
             if a.weight == 0
                 || a.req_ilvl > self.ilvl
-                || a.req_ilvl < c.min_mod_level
+                || sous_min[i]
                 || c.add_slot.is_some_and(|s| s != a.slot)
                 || a.desecrated != desecrate
                 || c.require_tag.is_some_and(|t| a.tags & t == 0)
