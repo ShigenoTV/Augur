@@ -12,9 +12,11 @@
 //!   poe2db (mods sans poids listés à part, jamais inventés).
 //! - [`objectif`] : « ces groupes d'affixes, à tel tier ou mieux ».
 //! - [`monte_carlo`] : simulation parallèle, déterministe pour une graine.
+//! - [`atelier`] : ce que l'appli appelle (données embarquées, bases, affixes, plan).
 //!
 //! Tout est indexé (`u16`) pour le chemin chaud ; aucune entrée-sortie.
 
+pub mod atelier;
 pub mod catalogue;
 pub mod donnees;
 pub mod monte_carlo;

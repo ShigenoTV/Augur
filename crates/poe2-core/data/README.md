@@ -1,10 +1,11 @@
-# Données embarquées par `poe2-core::comparaison`
+# Données embarquées par `poe2-core`
 
-Générées par `tools/gamedata/extract_build_data.py`, jamais modifiées à la main.
+Générées par des scripts de `tools/gamedata/`, jamais modifiées à la main.
 
 | Fichier | Contenu | Source |
 |---|---|---|
 | `gemmes.json` | Lightning Bolt et Arc par niveau (dégâts, chaînes, temps d'incantation, critique, infusion) ; texte des effets de chaque support | RePoE PoE 2, `skills.json` (https://repoe-fork.github.io/poe2/) |
+| `forge.json.gz` | Forge (`poe2-core::forge::atelier`) : mods d'objets tirables (hors Essence), bases, et relevé de poids de mods poe2db | RePoE PoE 2 (`mods.json`, `base_items.json`) ; **poids : PoE2DB / Krakenbul, CC BY-NC-SA 3.0** (voir ci-dessous) |
 | `arbre.json` | Texte des stats de chaque passif, version d'arbre `0_5` | Path of Building Community PoE 2, `src/TreeData/0_5/tree.json` |
 
 Régénérer après un patch du jeu :
@@ -16,7 +17,22 @@ python tools/gamedata/extract_build_data.py --skills skills.json --tree tree.jso
     --tree-version 0_5 --out crates/poe2-core/data
 ```
 
+Régénérer `forge.json.gz` (tables produites par `tools/gamedata/import_repoe.py`) :
+
+```sh
+python tools/gamedata/forge_data.py --tables var/gamedata/tables \
+    --poids tools/theorycraft/donnees/poids-poe2db.json --out crates/poe2-core/data/forge.json.gz
+```
+
 ## Attribution
+
+Les poids de mods de `forge.json.gz` ne sont **pas** sous la licence du reste du dépôt : ce sont les
+estimations de **Krakenbul** (Discord *Prohibited Library*), publiées par **PoE2DB**
+(https://poe2db.tw/us/weightings), sous licence Creative Commons BY-NC-SA 3.0
+(https://creativecommons.org/licenses/by-nc-sa/3.0/). Pas d'utilisation commerciale ; une version modifiée se
+partage sous la même licence. Détail et modifications :
+[`tools/theorycraft/donnees/LICENCE-poids-poe2db.md`](../../../tools/theorycraft/donnees/LICENCE-poids-poe2db.md).
+Augur affiche cette attribution avec chaque plan de Forge.
 
 Les données de l'arbre passif viennent du projet Path of Building Community
 (PoE 2), distribué sous licence MIT (texte complet ci-dessous) :

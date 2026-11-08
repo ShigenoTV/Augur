@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-forge-catalogue"
+description = "Enables the get_forge_catalogue command without any pre-configured scope."
+commands.allow = ["get_forge_catalogue"]
+
+[[permission]]
+identifier = "deny-get-forge-catalogue"
+description = "Denies the get_forge_catalogue command without any pre-configured scope."
+commands.deny = ["get_forge_catalogue"]

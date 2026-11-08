@@ -1,0 +1,122 @@
+/** Forge : mise en forme des données du cœur Rust pour le panneau (fonctions pures, testées). */
+import type {
+  ForgeActionNode,
+  ForgeAffix,
+  ForgeBase,
+  ForgeItemSummary,
+  ForgePlan,
+  ForgePriceSource,
+  ForgeSlot,
+  ForgeWanted,
+} from "../bridge";
+
+/** Places d'un Rare ordinaire (le plafond propre à la base n'est pas encore extrait). */
+export const MAX_PAR_COTE = 3;
+export const MAX_VOULUS = 6;
+
+const nombre = (v: number, dec: number) =>
+  v.toLocaleString("fr-FR", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+
+/** Prix ou coût en Exalted Orbs, arrondi selon l'ordre de grandeur. */
+export function formatEx(v: number | null | undefined): string {
+  if (v == null || !Number.isFinite(v)) return "–";
+  const a = Math.abs(v);
+  const dec = a >= 100 ? 0 : a >= 10 ? 1 : 2;
+  return `${nombre(v, dec)} ex`;
+}
+
+export function formatPercent(p: number): string {
+  if (!Number.isFinite(p)) return "–";
+  if (p > 0 && p < 0.001) return "< 0,1 %";
+  return `${nombre(p * 100, 1)} %`;
+}
+
+export function formatCount(v: number): string {
+  return v >= 10 ? nombre(v, 0) : nombre(v, 1);
+}
+
+export const SOURCE_LABEL: Record<ForgePriceSource, string> = {
+  joueur: "saisi",
+  poeNinja: "poe.ninja",
+  indicatif: "indicatif",
+};
+
+export const SLOT_LABEL: Record<ForgeSlot, string> = { prefix: "Préfixes", suffix: "Suffixes" };
+
+/** Bases regroupées par classe, classes dans l'ordre alphabétique. */
+export function basesParClasse(bases: ForgeBase[]): [string, ForgeBase[]][] {
+  const m = new Map<string, ForgeBase[]>();
+  for (const b of bases) m.set(b.classe, [...(m.get(b.classe) ?? []), b]);
+  return [...m.entries()].sort(([a], [b]) => a.localeCompare(b));
+}
+
+export const cleAffixe = (a: { group: number; family: number }) => `${a.group}:${a.family}`;
+
+/**
+ * Peut-on encore viser cet affixe ? Faux si l'objectif est plein (6 voulus) ou si ce côté
+ * (préfixe / suffixe) a déjà 3 voulus.
+ */
+export function peutAjouter(affixes: ForgeAffix[], voulus: ForgeWanted[], a: ForgeAffix): boolean {
+  if (voulus.length >= MAX_VOULUS) return false;
+  const memeCote = voulus.filter((w) => affixes.find((x) => cleAffixe(x) === cleAffixe(w))?.slot === a.slot).length;
+  return memeCote < MAX_PAR_COTE;
+}
+
+/** Libellé d'un état abstrait : rareté, voulus présents, mauvais mods. */
+export function decrireEtat(s: ForgeItemSummary, labels: string[]): string {
+  const rarete = { normal: "Normal", magic: "Magique", rare: "Rare" }[s.rarity];
+  const parts = [rarete];
+  const nom = (k: number) => labels[k] ?? `#${k + 1}`;
+  if (s.heldWanted.length === 0 && s.badPrefixes + s.badSuffixes === 0 && s.blockedWanted.length === 0) {
+    parts.push("vierge");
+  }
+  for (const k of s.heldWanted) parts.push(`✓ ${nom(k)}`);
+  for (const k of s.blockedWanted) parts.push(`tier trop bas : ${nom(k)}`);
+  const bad = (n: number, mot: string) => (n === 0 ? null : `${n} mauvais ${mot}${n > 1 ? "s" : ""}`);
+  for (const b of [bad(s.badPrefixes, "préfixe"), bad(s.badSuffixes, "suffixe")]) if (b) parts.push(b);
+  return parts.join(" · ");
+}
+
+/** Libellé court d'un affixe voulu (le texte du mod, sans les fourchettes). */
+export function libelleCourt(texte: string): string {
+  return texte.replace(/\(([-\d.]+)-([-\d.]+)\)/g, "#").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Étapes du plan, des états les plus visités aux moins visités (la racine d'abord), limitées à
+ * `max`. Les états au but et ceux qu'on ne visite presque jamais sont laissés de côté.
+ */
+export function etapes(plan: ForgePlan, max = 12): ForgeActionNode[] {
+  const actions = Object.values(plan.nodes).filter((n): n is ForgeActionNode => n.kind === "action");
+  const racine = actions.find((n) => n.id === plan.rootId);
+  const autres = actions
+    .filter((n) => n.id !== plan.rootId && n.expectedVisits >= 0.01)
+    .sort((a, b) => b.expectedVisits - a.expectedVisits);
+  return [...(racine ? [racine] : []), ...autres].slice(0, max);
+}
+
+/**
+ * Source(s) des prix d'une ligne d'achats : monnaie seule, monnaie + Omen (`exalt+omen_…`) ou
+ * bases (`__base`, base neuve et revente).
+ */
+export function sourcesAchat(id: string, prix: { id: string; source: ForgePriceSource }[]): string {
+  const ids = id === "__base" ? ["base_neuve", "revente_base"] : id.split("+");
+  const s = new Set(ids.map((i) => prix.find((p) => p.id === i)?.source).filter((x): x is ForgePriceSource => !!x));
+  return [...s].map((x) => SOURCE_LABEL[x]).join(" + ");
+}
+
+/** Lit un prix saisi (« 1,5 » ou « 1.5 ») ; `null` si ce n'est pas un nombre positif ou nul. */
+export function lirePrix(v: string): number | null {
+  const t = v.trim().replace(",", ".");
+  if (t === "") return null;
+  const n = Number(t);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+/** Date d'un relevé (secondes unix) au format court. */
+export function dateReleve(secs: number | null | undefined): string {
+  if (!secs) return "";
+  const d = new Date(secs * 1000);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}

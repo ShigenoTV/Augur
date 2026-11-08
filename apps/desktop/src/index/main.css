@@ -1,6 +1,8 @@
 /* La fenêtre principale est opaque, contrairement à l'overlay. */
 html,
 body {
+  /* Contrôles natifs (listes déroulantes) en thème sombre. */
+  color-scheme: dark;
   background: var(--color-ink-950);
   min-height: 100%;
 }

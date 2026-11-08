@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-plan-forge-craft"
+description = "Enables the plan_forge_craft command without any pre-configured scope."
+commands.allow = ["plan_forge_craft"]
+
+[[permission]]
+identifier = "deny-plan-forge-craft"
+description = "Denies the plan_forge_craft command without any pre-configured scope."
+commands.deny = ["plan_forge_craft"]
