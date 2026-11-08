@@ -1,0 +1,284 @@
+{
+ "core": {
+  "primary": "divine",
+  "secondary": "chaos",
+  "rates": {
+   "exalted": 660.2,
+   "chaos": 9.56
+  }
+ },
+ "lines": [
+  {
+   "id": "essence-of-delirium",
+   "primaryValue": 6.68
+  },
+  {
+   "id": "essence-of-enhancement",
+   "primaryValue": 2.06
+  },
+  {
+   "id": "essence-of-insulation",
+   "primaryValue": 0.3029
+  },
+  {
+   "id": "essence-of-the-breach",
+   "primaryValue": 0.5961
+  },
+  {
+   "id": "greater-essence-of-enhancement",
+   "primaryValue": 0.003787
+  },
+  {
+   "id": "greater-essence-of-grounding",
+   "primaryValue": 0.003486
+  },
+  {
+   "id": "greater-essence-of-insulation",
+   "primaryValue": 0.04314
+  },
+  {
+   "id": "greater-essence-of-opulence",
+   "primaryValue": 0.003444
+  },
+  {
+   "id": "greater-essence-of-the-body",
+   "primaryValue": 0.004359
+  },
+  {
+   "id": "perfect-essence-of-abrasion",
+   "primaryValue": 0.06974
+  },
+  {
+   "id": "perfect-essence-of-battle",
+   "primaryValue": 0.2759
+  },
+  {
+   "id": "perfect-essence-of-command",
+   "primaryValue": 0.007573
+  },
+  {
+   "id": "perfect-essence-of-electricity",
+   "primaryValue": 0.004701
+  },
+  {
+   "id": "perfect-essence-of-enhancement",
+   "primaryValue": 0.007339
+  },
+  {
+   "id": "perfect-essence-of-haste",
+   "primaryValue": 0.228
+  },
+  {
+   "id": "perfect-essence-of-opulence",
+   "primaryValue": 0.01306
+  },
+  {
+   "id": "perfect-essence-of-thawing",
+   "primaryValue": 0.003029
+  },
+  {
+   "id": "perfect-essence-of-the-body",
+   "primaryValue": 0.04
+  },
+  {
+   "id": "perfect-essence-of-the-infinite",
+   "primaryValue": 0.1888
+  },
+  {
+   "id": "essence-of-sorcery",
+   "primaryValue": 0.5
+  },
+  {
+   "id": "greater-essence-of-ruin",
+   "primaryValue": 0.0106
+  },
+  {
+   "id": "essence-of-abrasion",
+   "primaryValue": 2
+  },
+  {
+   "id": "essence-of-command",
+   "primaryValue": 0.01515
+  },
+  {
+   "id": "essence-of-flames",
+   "primaryValue": 0.006058
+  },
+  {
+   "id": "essence-of-haste",
+   "primaryValue": 0.001515
+  },
+  {
+   "id": "essence-of-horror",
+   "primaryValue": 1.81
+  },
+  {
+   "id": "essence-of-hysteria",
+   "primaryValue": 0.6666
+  },
+  {
+   "id": "essence-of-ice",
+   "primaryValue": 0.8571
+  },
+  {
+   "id": "essence-of-insanity",
+   "primaryValue": 0.006738
+  },
+  {
+   "id": "essence-of-opulence",
+   "primaryValue": 2.5
+  },
+  {
+   "id": "essence-of-the-abyss",
+   "primaryValue": 0.3302
+  },
+  {
+   "id": "essence-of-the-infinite",
+   "primaryValue": 0.07573
+  },
+  {
+   "id": "greater-essence-of-alacrity",
+   "primaryValue": 0.007573
+  },
+  {
+   "id": "greater-essence-of-command",
+   "primaryValue": 0.003029
+  },
+  {
+   "id": "greater-essence-of-flames",
+   "primaryValue": 0.0006491
+  },
+  {
+   "id": "greater-essence-of-ice",
+   "primaryValue": 0.0007573
+  },
+  {
+   "id": "greater-essence-of-sorcery",
+   "primaryValue": 0.003029
+  },
+  {
+   "id": "lesser-essence-of-alacrity",
+   "primaryValue": 0.001515
+  },
+  {
+   "id": "perfect-essence-of-alacrity",
+   "primaryValue": 0.00415
+  },
+  {
+   "id": "greater-essence-of-abrasion",
+   "primaryValue": 0.03238
+  },
+  {
+   "id": "greater-essence-of-battle",
+   "primaryValue": 0.0001515
+  },
+  {
+   "id": "greater-essence-of-electricity",
+   "primaryValue": 0.004241
+  },
+  {
+   "id": "greater-essence-of-haste",
+   "primaryValue": 0.04533
+  },
+  {
+   "id": "greater-essence-of-seeking",
+   "primaryValue": 0.08469
+  },
+  {
+   "id": "greater-essence-of-thawing",
+   "primaryValue": 0.001355
+  },
+  {
+   "id": "greater-essence-of-the-infinite",
+   "primaryValue": 0.03448
+  },
+  {
+   "id": "greater-essence-of-the-mind",
+   "primaryValue": 0.000155
+  },
+  {
+   "id": "lesser-essence-of-abrasion",
+   "primaryValue": 1.6
+  },
+  {
+   "id": "lesser-essence-of-electricity",
+   "primaryValue": 0.8369
+  },
+  {
+   "id": "lesser-essence-of-enhancement",
+   "primaryValue": 0.001515
+  },
+  {
+   "id": "lesser-essence-of-flames",
+   "primaryValue": 0.07422
+  },
+  {
+   "id": "lesser-essence-of-grounding",
+   "primaryValue": 1.05
+  },
+  {
+   "id": "lesser-essence-of-ice",
+   "primaryValue": 0.004544
+  },
+  {
+   "id": "lesser-essence-of-sorcery",
+   "primaryValue": 0.04544
+  },
+  {
+   "id": "lesser-essence-of-thawing",
+   "primaryValue": 0.3138
+  },
+  {
+   "id": "perfect-essence-of-flames",
+   "primaryValue": 0.01494
+  },
+  {
+   "id": "perfect-essence-of-grounding",
+   "primaryValue": 0.01363
+  },
+  {
+   "id": "perfect-essence-of-ice",
+   "primaryValue": 0.003134
+  },
+  {
+   "id": "perfect-essence-of-insulation",
+   "primaryValue": 0.004544
+  },
+  {
+   "id": "perfect-essence-of-ruin",
+   "primaryValue": 0.004682
+  },
+  {
+   "id": "perfect-essence-of-seeking",
+   "primaryValue": 0.05978
+  },
+  {
+   "id": "perfect-essence-of-sorcery",
+   "primaryValue": 0.01187
+  },
+  {
+   "id": "perfect-essence-of-the-mind",
+   "primaryValue": 0.01187
+  },
+  {
+   "id": "lesser-essence-of-the-mind",
+   "primaryValue": 1
+  },
+  {
+   "id": "essence-of-seeking",
+   "primaryValue": 0.001515
+  },
+  {
+   "id": "essence-of-the-body",
+   "primaryValue": 0.04165
+  },
+  {
+   "id": "lesser-essence-of-command",
+   "primaryValue": 0.1893
+  },
+  {
+   "id": "lesser-essence-of-haste",
+   "primaryValue": 0.007573
+  }
+ ]
+}

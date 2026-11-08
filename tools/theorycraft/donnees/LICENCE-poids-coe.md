@@ -16,6 +16,10 @@ données tierces, copiées avec leur attribution sur décision de Max (08/11/202
 - **Contrôle** : `tools/theorycraft/coe_controle.py` compare chaque pool de Forge à Craft of Exile ; au 08/11/2026,
   1 714 bases × 4 niveaux d'objet, 6 856 pools identiques.
 
+Le fichier [`essences-coe.json`](essences-coe.json) vient de la même source et suit la même attribution : mod
+garanti de chaque Essence par classe d'objet (champ `essences` du même fichier de données, relevé du 08/11/2026,
+`tools/theorycraft/coe_essences.py`).
+
 Ces données ne sont pas utilisées commercialement (Augur n'est pas vendu). Toute redistribution garde cette
 attribution.
 

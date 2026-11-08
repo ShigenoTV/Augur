@@ -226,6 +226,13 @@ fn page_armure(prefixe: &str, base: &BaseTable) -> Option<String> {
     Some(format!("{prefixe}_{attr}"))
 }
 
+fn slot_de(m: &ModTable) -> Slot {
+    match m.slot.as_str() {
+        "prefix" => Slot::Prefix,
+        _ => Slot::Suffix,
+    }
+}
+
 /// Poids RePoE (0 ou 1, éligibilité seulement) : première étiquette `default` ou portée par la
 /// base.
 fn eligible(m: &ModTable, tags: &[String]) -> bool {
@@ -244,6 +251,22 @@ pub fn construire_pool(
     base: &BaseTable,
     ilvl: u32,
     releve: &RelevePoids,
+) -> Result<PoolBase, ErreurPool> {
+    construire_pool_avec(mods, base, ilvl, releve, &[])
+}
+
+/// Comme [`construire_pool`], plus les mods garantis par des Essences (`cibles`, identifiants RePoE).
+///
+/// Une cible entre dans le pool avec un poids **nul** quand aucune monnaie ne peut la tirer : niveau
+/// requis au-dessus du niveau d'objet (Craft of Exile ne regarde pas le niveau d'objet pour une
+/// Essence), mod sans poids mesuré, ou mod réservé aux Essences. Un mod réservé aux Essences garde son
+/// groupe d'exclusion mais forme sa propre famille, sans renuméroter les tiers des mods tirables.
+pub fn construire_pool_avec(
+    mods: &TableMods,
+    base: &BaseTable,
+    ilvl: u32,
+    releve: &RelevePoids,
+    cibles: &[&str],
 ) -> Result<PoolBase, ErreurPool> {
     if mods.schema != SCHEMA_TABLES {
         return Err(ErreurPool::Schema(mods.schema));
@@ -282,6 +305,32 @@ pub fn construire_pool(
             .push(m);
     }
 
+    let cible = |m: &ModTable| cibles.contains(&m.id.as_str());
+    let affixe = |m: &ModTable, group, family_id, ti: usize, weight| -> Result<Affix, ErreurPool> {
+        if m.groupes.len() > 1 {
+            return Err(ErreurPool::GroupesMultiples(m.id.clone()));
+        }
+        Ok(Affix {
+            id: m.id.clone(),
+            name: m.nom.clone(),
+            family: m.famille.clone(),
+            text: if m.texte.is_empty() {
+                m.nom.clone()
+            } else {
+                m.texte.clone()
+            },
+            group,
+            family_id,
+            slot: slot_de(m),
+            tier: u8::try_from(ti + 1).unwrap_or(u8::MAX),
+            req_ilvl: u8::try_from(m.niveau).unwrap_or(u8::MAX),
+            weight,
+            tags: 0,
+            desecrated: false,
+            cap_shift: (0, 0),
+        })
+    };
+
     let mut affixes = Vec::new();
     let mut sans_poids = Vec::new();
     for (gi, familles) in par_groupe.values().enumerate() {
@@ -292,12 +341,13 @@ pub fn construire_pool(
             paliers.sort_by(|a, b| b.niveau.cmp(&a.niveau).then_with(|| a.id.cmp(&b.id)));
             for (ti, m) in paliers.iter().enumerate() {
                 if m.niveau > ilvl {
+                    // posé seulement par une Essence, qui ignore le niveau d'objet
+                    if cible(m) {
+                        affixes.push(affixe(m, group, family_id, ti, 0)?);
+                    }
                     continue;
                 }
-                let slot = match m.slot.as_str() {
-                    "prefix" => Slot::Prefix,
-                    _ => Slot::Suffix,
-                };
+                let slot = slot_de(m);
                 let weight = match (
                     page.poids.get(&m.id),
                     complement.and_then(|c| c.poids.get(&m.id)),
@@ -315,27 +365,50 @@ pub fn construire_pool(
                         slot,
                         niveau: m.niveau,
                     });
+                    if cible(m) {
+                        affixes.push(affixe(m, group, family_id, ti, 0)?);
+                    }
                     continue;
                 };
-                if m.groupes.len() > 1 {
-                    return Err(ErreurPool::GroupesMultiples(m.id.clone()));
-                }
-                affixes.push(Affix {
-                    id: m.id.clone(),
-                    name: m.nom.clone(),
-                    family: m.famille.clone(),
-                    text: m.texte.clone(),
-                    group,
-                    family_id,
-                    slot,
-                    tier: u8::try_from(ti + 1).unwrap_or(u8::MAX),
-                    req_ilvl: u8::try_from(m.niveau).unwrap_or(u8::MAX),
-                    weight,
-                    tags: 0,
-                    desecrated: false,
-                    cap_shift: (0, 0),
-                });
+                affixes.push(affixe(m, group, family_id, ti, weight)?);
             }
+        }
+    }
+
+    // Mods garantis qu'aucune monnaie ne tire sur cette base (réservés aux Essences, ou hors des
+    // étiquettes de la base) : groupe d'exclusion partagé, famille à part.
+    let groupes: Vec<&str> = par_groupe.keys().copied().collect();
+    let mut familles_en_plus: BTreeMap<(&str, &str), Vec<&ModTable>> = BTreeMap::new();
+    for m in mods
+        .mods
+        .iter()
+        .filter(|m| cible(m) && !candidats.iter().any(|c| c.id == m.id))
+    {
+        familles_en_plus
+            .entry((m.groupe.as_str(), m.famille.as_str()))
+            .or_default()
+            .push(m);
+    }
+    let mut groupes_en_plus: Vec<&str> = Vec::new();
+    let mut familles_par_groupe: BTreeMap<&str, usize> =
+        par_groupe.iter().map(|(g, f)| (*g, f.len())).collect();
+    for ((g, _), mut paliers) in familles_en_plus {
+        let gi = match groupes.iter().position(|x| *x == g) {
+            Some(i) => i,
+            None => {
+                if !groupes_en_plus.contains(&g) {
+                    groupes_en_plus.push(g);
+                }
+                groupes.len() + groupes_en_plus.iter().position(|x| *x == g).unwrap_or(0)
+            }
+        };
+        let group = GroupId::try_from(gi).map_err(|_| ErreurPool::TropGrand)?;
+        let n = familles_par_groupe.entry(g).or_insert(0);
+        let family_id = u16::try_from(*n).map_err(|_| ErreurPool::TropGrand)?;
+        *n += 1;
+        paliers.sort_by(|a, b| b.niveau.cmp(&a.niveau).then_with(|| a.id.cmp(&b.id)));
+        for (ti, m) in paliers.iter().enumerate() {
+            affixes.push(affixe(m, group, family_id, ti, 0)?);
         }
     }
     if affixes.len() > usize::from(u16::MAX) {

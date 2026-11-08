@@ -35,6 +35,8 @@ const btnSecondary = `${btn} border border-ink-600 text-text-primary hover:bg-in
 const input =
   "rounded-chip border border-ink-700 bg-ink-950 px-2 py-1 text-xs text-text-primary placeholder:text-text-subtle";
 const TOUT_TIER = 255;
+/** Exclut toutes les Essences d'un calcul (même identifiant côté Rust). */
+const ESSENCES = "essences";
 
 const message = (err: unknown) => (isAppError(err) ? err.message : String(err));
 
@@ -103,8 +105,11 @@ function AffixColumn({
                   ))}
                 </select>
               ) : (
-                <span className="font-mono text-[11px] text-text-subtle" title="Chance d'être le prochain mod de ce côté">
-                  {formatPercent(a.part)}
+                <span
+                  className="font-mono text-[11px] text-text-subtle"
+                  title={a.essence ? "Posé seulement par une Essence" : "Chance d'être le prochain mod de ce côté"}
+                >
+                  {a.essence ? "Essence" : formatPercent(a.part)}
                 </span>
               )}
             </li>
@@ -158,6 +163,26 @@ function PriceTable({
     }
   }
 
+  const essences = catalogue.filter((e) => e.genre === "essence");
+  const ligne = (e: ForgeCatalogueEntry) => {
+    const source = prices.sources[e.id] ?? "indicatif";
+    const v = edits[e.id];
+    return (
+      <label key={e.id} className="flex items-center gap-2 py-0.5">
+        <span className="min-w-0 flex-1 truncate text-text-muted" title={e.nom}>
+          {e.nom}
+        </span>
+        {source === "joueur" && <span className="text-[10px] uppercase text-accent">corrigé</span>}
+        <input
+          value={v ?? ""}
+          placeholder={prices.prix[e.id] === undefined ? "?" : formatEx(prices.prix[e.id]).replace(" ex", "")}
+          onChange={(ev) => setEdits({ ...edits, [e.id]: ev.target.value })}
+          className={`${input} w-20 text-right font-mono ${v !== undefined && v.trim() !== "" && lirePrix(v) === null ? "border-signal-loss" : ""}`}
+          aria-label={`Prix de ${e.nom} en Exalted`}
+        />
+      </label>
+    );
+  };
   const marche = prices.marche;
   return (
     <div className="space-y-3">
@@ -187,26 +212,14 @@ function PriceTable({
       </div>
 
       <div className="grid grid-cols-2 gap-x-6 gap-y-0.5 text-xs xl:grid-cols-3">
-        {catalogue.map((e) => {
-          const source = prices.sources[e.id] ?? "indicatif";
-          const v = edits[e.id];
-          return (
-            <label key={e.id} className="flex items-center gap-2 py-0.5">
-              <span className="min-w-0 flex-1 truncate text-text-muted" title={e.nom}>
-                {e.nom}
-              </span>
-              {source === "joueur" && <span className="text-[10px] uppercase text-accent">corrigé</span>}
-              <input
-                value={v ?? ""}
-                placeholder={formatEx(prices.prix[e.id]).replace(" ex", "")}
-                onChange={(ev) => setEdits({ ...edits, [e.id]: ev.target.value })}
-                className={`${input} w-20 text-right font-mono ${v !== undefined && v.trim() !== "" && lirePrix(v) === null ? "border-signal-loss" : ""}`}
-                aria-label={`Prix de ${e.nom} en Exalted`}
-              />
-            </label>
-          );
-        })}
+        {catalogue.filter((e) => e.genre !== "essence").map(ligne)}
       </div>
+      <details className="text-xs">
+        <summary className="cursor-pointer text-text-subtle">
+          Essences ({essences.filter((e) => prices.prix[e.id] !== undefined).length}/{essences.length} avec un prix)
+        </summary>
+        <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-0.5 xl:grid-cols-3">{essences.map(ligne)}</div>
+      </details>
 
       <div className="flex flex-wrap items-center gap-2">
         <button
@@ -230,7 +243,7 @@ function PriceTable({
       </div>
       <p className="text-xs text-text-subtle">
         Prix en Exalted Orbs. Ta saisie l'emporte sur poe.ninja, qui l'emporte sur les valeurs indicatives. La base neuve et sa
-        revente n'ont pas de cote : saisis-les.
+        revente n'ont pas de cote : saisis-les. Une Essence sans prix n'est pas proposée dans les plans.
       </p>
     </div>
   );
@@ -388,7 +401,10 @@ export function ForgeCard() {
     return <p className="text-sm text-text-subtle">Forge fonctionne dans l'application.</p>;
   }
 
-  const monnaies = catalogue.filter((c) => c.genre !== "base");
+  const monnaies = [
+    ...catalogue.filter((c) => c.genre === "monnaie" || c.genre === "omen"),
+    { id: ESSENCES, nom: "Essences (avec un prix)", genre: "essence" as const },
+  ];
   return (
     <div className="space-y-4">
       <div className="flex gap-1 text-sm">

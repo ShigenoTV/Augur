@@ -178,8 +178,8 @@ pub struct Currency {
     #[serde(default)]
     pub remove_lowest_level: bool,
     /// `false` (Essence normale/Lesser/Greater) : Magique → Rare, ajoute l'affixe garanti.
-    /// `true` (Essence Perfect, Alloy Verisium) : objet déjà Rare, retire un mod au hasard PUIS ajoute
-    /// l'affixe garanti — jamais les deux comportements sur la même entrée, comme dans le vrai jeu.
+    /// `true` (Essence Perfect / Corrupted, Alloy Verisium) : objet déjà Rare, retire un mod (du côté
+    /// de l'affixe garanti si ce côté est plein, sinon au hasard) PUIS ajoute l'affixe garanti — jamais les deux comportements sur la même entrée, comme dans le vrai jeu.
     #[serde(default)]
     pub requires_rare: bool,
     pub unit_cost: f64,
@@ -526,8 +526,26 @@ impl AffixPool {
                         false,
                         rng,
                     );
-                } else if c.requires_rare && !self.remove_random(item, None, false, false, rng) {
-                    return Outcome::NotApplicable;
+                } else if c.requires_rare {
+                    // Essence Perfect / Corrupted (émulateur de Craft of Exile) : refusée si un mod du même
+                    // groupe est déjà là, AVANT tout retrait ; le mod retiré est pris du côté du mod garanti
+                    // si ce côté est plein, sinon au hasard parmi tous les mods
+                    let a = &self.affixes[pick as usize];
+                    if item
+                        .mods()
+                        .iter()
+                        .any(|m| self.affixes[m.idx as usize].group == a.group)
+                    {
+                        return Outcome::NotApplicable;
+                    }
+                    let (cap_p, cap_s) = self.cap_of(item);
+                    let plein = match a.slot {
+                        Slot::Prefix => self.count(item, Slot::Prefix) >= cap_p,
+                        Slot::Suffix => self.count(item, Slot::Suffix) >= cap_s,
+                    };
+                    if !self.remove_random(item, plein.then_some(a.slot), false, false, rng) {
+                        return Outcome::NotApplicable;
+                    }
                 }
                 let mut rare = *item;
                 rare.rarity = Rarity::Rare;

@@ -132,7 +132,16 @@ export type ForgeRarity = "normal" | "magic" | "rare";
 export type ForgeAttribution = { source: string; licence: string; dateReleve: string; repoeVersion: string };
 export type ForgeBase = { id: string; nom: string; classe: string; niveauDrop: number; page: string };
 export type ForgeTier = { tier: number; niveau: number; texte: string; poids: number };
-export type ForgeAffix = { group: number; family: number; slot: ForgeSlot; libelle: string; part: number; paliers: ForgeTier[] };
+export type ForgeAffix = {
+  group: number;
+  family: number;
+  slot: ForgeSlot;
+  libelle: string;
+  part: number;
+  /** Posé seulement par une Essence à ce niveau d'objet. */
+  essence: boolean;
+  paliers: ForgeTier[];
+};
 export type ForgeAffixes = {
   baseId: string;
   ilvl: number;
@@ -141,7 +150,7 @@ export type ForgeAffixes = {
   sansPoids: { id: string; slot: ForgeSlot; niveau: number }[];
   attribution: ForgeAttribution;
 };
-export type ForgeCatalogueEntry = { id: string; nom: string; genre: "base" | "monnaie" | "omen" };
+export type ForgeCatalogueEntry = { id: string; nom: string; genre: "base" | "monnaie" | "omen" | "essence" };
 export type ForgePriceSource = "joueur" | "poeNinja" | "indicatif";
 export type ForgeMarket = {
   ligue: string;
