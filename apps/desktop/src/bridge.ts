@@ -271,6 +271,16 @@ export type ForgeTip = {
   conseil: ForgeAdvice;
 };
 export type ForgeTracking = { baseNom: string; ilvl: number; labels: string[] };
+/** Plans calculés (crates/poe2-core/src/forge/historique.rs). */
+export type ForgeHistoryEntry = {
+  id: number;
+  calculeA: number;
+  demande: ForgePlanRequest;
+  baseNom: string;
+  labels: string[];
+  cout: number;
+};
+export type ForgeHistory = { entrees: ForgeHistoryEntry[]; suivi: number | null };
 
 export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -315,6 +325,8 @@ export const commands = {
   getForgeAdvice: () => invoke<ForgeTip | null>("get_forge_advice"),
   getForgeTracking: () => invoke<ForgeTracking | null>("get_forge_tracking"),
   stopForgeTracking: () => invoke<void>("stop_forge_tracking"),
+  getForgeHistory: () => invoke<ForgeHistory>("get_forge_history"),
+  deleteForgeHistoryEntry: (id: number) => invoke<ForgeHistory>("delete_forge_history_entry", { id }),
   getForgePrices: () => invoke<ForgePrices>("get_forge_prices"),
   setForgePrices: (prix: Record<string, number>) => invoke<ForgePrices>("set_forge_prices", { prix }),
   resetForgePrices: () => invoke<ForgePrices>("reset_forge_prices"),

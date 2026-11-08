@@ -116,6 +116,8 @@ pub fn run() {
             commands::get_forge_advice,
             commands::get_forge_tracking,
             commands::stop_forge_tracking,
+            commands::get_forge_history,
+            commands::delete_forge_history_entry,
         ])
         .setup(|app| {
             let handle = app.handle();
@@ -123,7 +125,13 @@ pub fn run() {
             app.manage(character::CharacterState::load(handle));
             app.manage(ledger::LedgerState::open(handle));
             app.manage(forge_prices::ForgePrices::load(handle));
-            app.manage(forge::ForgePlanner::default());
+            app.manage(forge::ForgePlanner::load(handle));
+            // plan suivi avant la fermeture : recalculé en arrière-plan, aux prix du moment
+            let h = handle.clone();
+            tauri::async_runtime::spawn(async move {
+                let prix = h.state::<forge_prices::ForgePrices>().get();
+                h.state::<forge::ForgePlanner>().restaurer(&h, prix).await;
+            });
             overlay::prepare(handle)?;
             tray::create(handle)?;
             clipboard::spawn_watcher(handle.clone());
