@@ -8,8 +8,11 @@
 //! 3. des valeurs **indicatives** (relevé de septembre 2026 de poe2-craft-assistant).
 //!
 //! La table couvre chaque monnaie et Omen du [catalogue](super::catalogue), plus la base neuve et
-//! sa revente (abandon d'un craft), qui n'ont pas de cote poe.ninja.
+//! sa revente (abandon d'un craft), qui n'ont pas de cote poe.ninja. Les Essences n'ont pas de
+//! valeur indicative : une Essence n'a de prix (et n'est proposée au solveur) qu'une fois cotée par
+//! poe.ninja ou saisie par le joueur.
 
+use super::atelier::ids_essences;
 use super::catalogue::{MONNAIES, OMENS};
 use super::ninja::ReleveMarche;
 use serde::{Deserialize, Serialize};
@@ -103,6 +106,7 @@ pub fn identifiants() -> impl Iterator<Item = &'static str> {
         .into_iter()
         .chain(MONNAIES.iter().map(|m| m.id))
         .chain(OMENS.iter().map(|o| o.id))
+        .chain(ids_essences())
 }
 
 fn est_connu(id: &str) -> bool {
@@ -125,17 +129,24 @@ impl TablePrix {
         t
     }
 
-    /// Recalcule les prix effectifs : correction, sinon poe.ninja, sinon indicatif.
+    /// Recalcule les prix effectifs : correction, sinon poe.ninja, sinon indicatif (une Essence sans
+    /// cote ni saisie reste sans prix).
     fn recalculer(&mut self) {
         self.prix.clear();
         self.sources.clear();
-        for (id, indicatif) in INDICATIFS {
+        let indicatifs = INDICATIFS
+            .iter()
+            .map(|(id, p)| (*id, Some(*p)))
+            .chain(ids_essences().map(|id| (id, None)));
+        for (id, indicatif) in indicatifs {
             let (p, s) = if let Some(p) = self.corrections.get(id) {
                 (*p, SourcePrix::Joueur)
             } else if let Some(p) = self.marche.as_ref().and_then(|m| m.prix.get(id)) {
                 (*p, SourcePrix::PoeNinja)
+            } else if let Some(p) = indicatif {
+                (p, SourcePrix::Indicatif)
             } else {
-                (indicatif, SourcePrix::Indicatif)
+                continue;
             };
             self.prix.insert(id.to_string(), p);
             self.sources.insert(id.to_string(), s);
@@ -226,7 +237,12 @@ mod tests {
     #[test]
     fn la_table_indicative_couvre_tout_le_catalogue() {
         let t = TablePrix::indicative();
-        assert_eq!(t.prix.len(), identifiants().count());
+        assert_eq!(
+            t.prix.len(),
+            INDICATIFS.len(),
+            "Essences sans prix indicatif"
+        );
+        assert!(identifiants().count() > INDICATIFS.len() + 50);
         assert!(t.sources.values().all(|s| *s == SourcePrix::Indicatif));
         let a = actions(&t.prix, None).unwrap();
         assert_eq!(a.len(), 18 + 14 + 1);
@@ -266,6 +282,18 @@ mod tests {
     }
 
     #[test]
+    fn une_essence_n_a_de_prix_que_cotee_ou_saisie() {
+        const E: &str = "perfect-essence-of-the-body";
+        let mut t = TablePrix::indicative();
+        assert!(!t.prix.contains_key(E));
+        t.appliquer_marche(marche(&[(E, 120.0), ("essence-inconnue", 3.0)]));
+        assert_eq!((t.prix[E], t.sources[E]), (120.0, SourcePrix::PoeNinja));
+        assert!(!t.prix.contains_key("essence-inconnue"));
+        t.saisir(&saisie(&[(E, 90.0)])).unwrap();
+        assert_eq!((t.prix[E], t.sources[E]), (90.0, SourcePrix::Joueur));
+    }
+
+    #[test]
     fn saisie_validee_en_bloc() {
         let mut t = TablePrix::indicative();
         let avant = t.clone();
@@ -299,7 +327,7 @@ mod tests {
         assert_eq!(t.sources["annul"], SourcePrix::Indicatif);
         assert!(!t.prix.contains_key("divine"));
         assert_eq!(t.prix[REVENTE_BASE], 0.0);
-        assert_eq!(t.prix.len(), identifiants().count());
+        assert_eq!(t.prix.len(), INDICATIFS.len());
         // un fichier de la version précédente (prix seuls) repart des valeurs indicatives
         let ancien: TablePrix =
             serde_json::from_str(r#"{"prix":{"exalt":9},"origine":"x"}"#).unwrap();

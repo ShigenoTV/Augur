@@ -42,8 +42,8 @@ clippy en édition 2024.
 - Page poe2db d'une base : classe au pluriel (`Rings`, `Quarterstaves` pour les bâtons de guerre…), suivie des
   attributs pour les armures (`Body_Armours_int`, `Shields_str_dex`). Pas de page pour les armures force /
   dextérité / intelligence hors armures de corps, ni pour les quelques bases d'armure sans attribut.
-- Limites du pool actuel : pas de mods désacralisés (aucun poids chez poe2db, la Désécration n'est donc pas
-  calculable) ; plafond de la base fixé à 3 préfixes / 3 suffixes (les implicites « +1 Prefix Modifier allowed »
+- Limites du pool actuel : pas de mods désacralisés (aucun poids chez poe2db ni chez Craft of Exile, qui met 1
+  partout : la Désécration n'est donc pas calculable, contrôle du 08/11) ; plafond de la base fixé à 3 préfixes / 3 suffixes (les implicites « +1 Prefix Modifier allowed »
   ne sont pas encore extraits des tables) ; joyaux non traités (pas de bases de joyaux dans les tables).
 - L'attribution des poids suit les données dans le dépôt (`LICENCE-poids-poe2db.md`, `LICENCE-poids-coe.md`). L'appli
   n'affiche pas les sources (choix de Max, 08/11). Le dépôt reste sans licence.
@@ -72,8 +72,12 @@ une source de prix d'objets (même blocage OAuth).
    croisés avec `craft_proba.py` sur trois vraies bases (`tools/theorycraft/fixture_forge.py`).
 3. **Solveur** (`forge::solveur`, `forge::catalogue`) : reverse-crafting repris de `craft-solver` (MDP, policy
    iteration), coût espéré, quantiles P50 / P90, plan de décision, vérification sur le moteur exact ; catalogue des
-   18 monnaies (Greater / Perfect compris) et des 6 Omens d'Exaltation, d'Annulment et d'Erasure. Essences,
-   Désécration et Liquid Emotions viendront avec leurs données (cible par base, poids des mods désacralisés).
+   18 monnaies (Greater / Perfect compris) et des 6 Omens d'Exaltation, d'Annulment et d'Erasure. **Essences**
+   (08/11) : mod garanti par classe d'après Craft of Exile (`tools/theorycraft/coe_essences.py`,
+   `donnees/essences-coe.json`), seulement celles à une cible par classe (Infinite, Enhancement, Greater Battle,
+   Abyss écartées) et hors Alloys ; une Essence n'est proposée que si elle a un prix (poe.ninja, catégorie
+   `Essences`, ou saisie). Désécration et Liquid Emotions restent hors catalogue (pas de poids des mods
+   désacralisés).
 4. **Prix** (`forge::prix`, `forge::ninja`, commandes `get_forge_prices` / `set_forge_prices` /
    `reset_forge_prices` / `refresh_forge_prices`) : table de prix enregistrée dans `forge-prix.json` (dossier de
    configuration d'Augur) ; corrections du joueur, relevé poe.ninja, valeurs indicatives. Une saisie invalide est
@@ -114,5 +118,11 @@ Contrôle du 08/11 avec le code de l'émulateur de Craft of Exile (référence d
 - sous le niveau minimum, un tier n'est écarté que si sa famille a un tier accessible plus haut : le meilleur
   tier accessible d'une famille reste toujours tirable (avant : la famille entière était écartée) ;
 - Omen de Whittling : à égalité de niveau, le mod retiré est tiré au hasard.
+
+Essences, d'après le même émulateur (`poe2_essence`) : Lesser / Normal / Greater sur un objet Magique, qui devient
+Rare avec le mod garanti ; Perfect / Corrupted sur un Rare, refusée si le groupe du mod garanti est déjà pris,
+sinon un mod est retiré **du côté du mod garanti si ce côté est plein**, au hasard sinon, puis le mod garanti est
+posé. Le niveau d'objet n'est pas regardé : un mod garanti au-dessus du niveau d'objet, ou réservé aux Essences
+(% de vie des armures de corps…), entre dans le pool avec un poids nul et peut être visé.
 
 `tools/theorycraft/coe_controle.py` vérifie aussi, base par base, les mods écartés par chaque niveau minimum.

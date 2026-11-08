@@ -5,9 +5,9 @@
 //! Le coût d'une action est en Exalted Orbs, lu dans une table de prix fournie par l'appelant
 //! (`prix`, identifiant -> prix). Un prix manquant est une erreur : jamais de prix inventé.
 //!
-//! Pas encore au catalogue : Essences, Désécration (os abyssaux) et leurs Omens, Liquid Emotions.
-//! Le moteur sait les appliquer ; il leur manque la cible par base (Essences) ou les poids des mods
-//! désacralisés.
+//! Les Essences dépendent de la classe d'objet : elles sont ajoutées par `atelier::planifier`, d'après
+//! les données embarquées. Pas encore au catalogue : Désécration (os abyssaux) et ses Omens, Liquid
+//! Emotions. Le moteur sait les appliquer ; il leur manque les poids des mods désacralisés.
 
 use super::moteur::{Currency, CurrencyKind, Slot};
 use super::solveur::{Action, ActionKind};

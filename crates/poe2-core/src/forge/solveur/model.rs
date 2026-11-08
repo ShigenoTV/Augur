@@ -1137,8 +1137,31 @@ impl Model {
                 match targets.as_slice() {
                     [one] => {
                         if cur.requires_rare {
+                            // Essence Perfect / Corrupted (Craft of Exile) : refusée si le groupe du mod garanti
+                            // est déjà pris, avant tout retrait ; retrait du côté du mod garanti si ce côté est
+                            // plein, sinon au hasard
+                            let (t, slot, class) = *one;
+                            let pris = match class {
+                                Class::Wanted(k) | Class::Blocked(k) => {
+                                    (s.held | s.blocked) >> k & 1 == 1
+                                }
+                                Class::Other => s.ess & self.tracked_bit(t).unwrap_or(0) != 0,
+                            };
+                            let (cap_p, cap_s) = self.caps(&s, Rarity::Rare);
+                            let (np, ns) = self.counts(&s);
+                            let plein = match slot {
+                                Slot::Prefix => np >= cap_p,
+                                Slot::Suffix => ns >= cap_s,
+                            };
                             let mut rm = Vec::new();
-                            if self.remove_outcomes(s, None, Removal::Random, &mut rm) {
+                            if !pris
+                                && self.remove_outcomes(
+                                    s,
+                                    plein.then_some(slot),
+                                    Removal::Random,
+                                    &mut rm,
+                                )
+                            {
                                 branches.extend(rm.into_iter().map(|(s1, p1)| (*one, s1, p1)));
                             }
                         } else {

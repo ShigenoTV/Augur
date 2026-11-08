@@ -19,6 +19,7 @@ const affixe = (group: number, slot: "prefix" | "suffix"): ForgeAffix => ({
   slot,
   libelle: "",
   part: 0.1,
+  essence: false,
   paliers: [],
 });
 

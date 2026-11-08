@@ -5,6 +5,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import coe_controle as k
+import coe_essences as es
 import coe_poids as c
 
 # Fixture fictive au format du fichier de données de Craft of Exile.
@@ -92,3 +93,40 @@ def test_ecartes_par_niveau_minimum():
     assert k.ecartes_coe(coe, 7, 80, 35) == {"Bas"}
     # à l'ilvl 50, Haut (niv. 60) est inaccessible : Bas redevient le meilleur tier
     assert k.ecartes_coe(coe, 7, 50, 35) == set()
+
+
+def test_essences_une_cible_par_classe():
+    langue = ["Rings", "Gloves (STR)", "Wands (Fire)", "Essence of the Body", "Essence of Battle", "Runic Alloy"]
+    coe = {
+        "classes": {
+            "entries": [
+                {"id": 1, "label": 0, "class": 5},
+                {"id": 2, "label": 1, "class": 22},
+                {"id": 3, "label": 2, "class": 8},
+            ]
+        },
+        "mods": {"entries": [{"id": 1, "key": "Life1"}, {"id": 2, "key": "Acc1"}, {"id": 3, "key": "Acc2"}]},
+        "essences": {
+            "entries": [
+                {"id": 0, "label": 3, "type": 3},
+                {"id": 1, "label": 4, "type": 2},
+                {"id": 2, "label": 5, "type": 5},
+            ],
+            "byessences": {
+                "0": {"5": [1], "22": [1], "99": [1]},
+                "1": {"8": [2, 3]},
+                "2": {"5": [1]},
+            },
+        },
+    }
+    liste, multiples = es.essences(coe, langue)
+    assert multiples == 1
+    assert liste == [
+        {
+            "id": "essence-of-the-body",
+            "nom": "Essence of the Body",
+            "type": "perfect",
+            "cibles": {"Gloves": "Life1", "Ring": "Life1"},
+        }
+    ]
+    assert es.slug("The Runefather's Alloy") == "the-runefather-s-alloy"

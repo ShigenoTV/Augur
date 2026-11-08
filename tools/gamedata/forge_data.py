@@ -8,7 +8,10 @@ Réunit dans un seul fichier compressé :
 - le relevé de poids poe2db de `tools/theorycraft/donnees/poids-poe2db.json` (estimations de
   Krakenbul, CC BY-NC-SA 3.0 : l'attribution suit ces données, voir `data/README.md`) ;
 - en complément (`--complement`), les poids Craft of Exile des mods que poe2db n'a pas mesurés
-  (`tools/theorycraft/donnees/poids-coe.json`, voir `LICENCE-poids-coe.md`).
+  (`tools/theorycraft/donnees/poids-coe.json`, voir `LICENCE-poids-coe.md`) ;
+- avec `--essences`, le mod garanti de chaque Essence par classe d'objet
+  (`tools/theorycraft/donnees/essences-coe.json`, Craft of Exile). Les mods garantis sont gardés même
+  quand ils ne sont pas tirables (mods réservés aux Essences).
 
 Seuls les champs lus par `poe2_core::forge::donnees` sont gardés. La sortie est déterministe
 (JSON canonique, gzip sans date) : deux exécutions sur les mêmes entrées donnent les mêmes octets.
@@ -18,6 +21,7 @@ Utilisation :
     python tools/gamedata/forge_data.py --tables var/gamedata/tables \\
         --poids tools/theorycraft/donnees/poids-poe2db.json \\
         --complement tools/theorycraft/donnees/poids-coe.json \\
+        --essences tools/theorycraft/donnees/essences-coe.json \\
         --out crates/poe2-core/data/forge.json.gz
 
 Python 3.11+, bibliothèque standard seulement.
@@ -48,16 +52,29 @@ CHAMPS_BASE = ("id", "nom", "classe", "tags", "niveau_drop")
 
 
 def construire(
-    mods: dict, bases: dict, releve: dict, source: dict, complement: dict | None = None
+    mods: dict,
+    bases: dict,
+    releve: dict,
+    source: dict,
+    complement: dict | None = None,
+    essences: dict | None = None,
 ) -> dict:
+    liste = essences["essences"] if essences else []
+    cibles = {m for e in liste for m in e["cibles"].values()}
+    connus = {m["id"] for m in mods["mods"]}
+    if absents := sorted(cibles - connus):
+        raise ValueError(f"mods garantis absents des tables : {', '.join(absents)}")
     garde = [
         {k: m[k] for k in CHAMPS_MOD if k in m}
         for m in mods["mods"]
-        if m["domaine"] == "item"
-        and not m.get("essence_seulement")
-        and any(s["weight"] > 0 for s in m["spawn"])
+        if m["id"] in cibles
+        or (
+            m["domaine"] == "item"
+            and not m.get("essence_seulement")
+            and any(s["weight"] > 0 for s in m["spawn"])
+        )
     ]
-    return {
+    sortie = {
         "schema": SCHEMA,
         "repoe_version": source.get("version_repoe", ""),
         "mods": {
@@ -73,6 +90,9 @@ def construire(
         },
         "releve": {**releve, "complement": complement} if complement else releve,
     }
+    if liste:
+        sortie["essences"] = liste
+    return sortie
 
 
 def ecrire(donnees: dict, sortie: Path) -> None:
@@ -98,6 +118,11 @@ def principal(argv: list[str] | None = None) -> int:
         type=Path,
         help="poids Craft of Exile des mods sans poids poe2db (tools/theorycraft/donnees/poids-coe.json)",
     )
+    p.add_argument(
+        "--essences",
+        type=Path,
+        help="mod garanti de chaque Essence par classe (tools/theorycraft/donnees/essences-coe.json)",
+    )
     p.add_argument("--out", type=Path, required=True)
     a = p.parse_args(argv)
     lire = lambda chemin: json.loads(chemin.read_text(encoding="utf-8"))
@@ -107,11 +132,13 @@ def principal(argv: list[str] | None = None) -> int:
         lire(a.poids),
         lire(a.tables / "source.json"),
         lire(a.complement) if a.complement else None,
+        lire(a.essences) if a.essences else None,
     )
     ecrire(donnees, a.out)
     print(
         f"{a.out} : {len(donnees['mods']['mods'])} mods, {len(donnees['bases']['bases'])} bases, "
-        f"{len(donnees['releve']['pages'])} pages de poids, RePoE {donnees['repoe_version']}"
+        f"{len(donnees['releve']['pages'])} pages de poids, {len(donnees.get('essences', []))} Essences, "
+        f"RePoE {donnees['repoe_version']}"
     )
     return 0
 

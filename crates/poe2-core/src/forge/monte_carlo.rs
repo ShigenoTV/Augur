@@ -280,6 +280,59 @@ pub(crate) mod tests {
         }
     }
 
+    /// Essence Perfect (émulateur de Craft of Exile) : retrait du côté du mod garanti quand ce côté est
+    /// plein, sinon au hasard parmi tous les mods ; refusée si le groupe du mod garanti est déjà pris.
+    #[test]
+    fn perfect_essence_removes_from_the_target_side_when_full() {
+        let mut affixes: Vec<Affix> = (0..4)
+            .map(|i| aff("P", i, Slot::Prefix, 100))
+            .chain((10..14).map(|i| aff("S", i, Slot::Suffix, 100)))
+            .collect();
+        let cible = affixes.len() as AffixIdx;
+        affixes.push(aff("Vie", 50, Slot::Prefix, 0));
+        let pool = AffixPool {
+            affixes,
+            ..AffixPool::default()
+        };
+        let parfaite = Currency {
+            target: Some(cible),
+            requires_rare: true,
+            ..cur(CurrencyKind::Essence)
+        };
+        let objet = |idx: &[AffixIdx]| {
+            let mut it = ItemState::new(Rarity::Rare, 80);
+            for &idx in idx {
+                it.push(Mod {
+                    idx,
+                    fractured: false,
+                    crafted: false,
+                });
+            }
+            it
+        };
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(5);
+        let mut suffixe_retire = 0;
+        for _ in 0..2000 {
+            // préfixes pleins : un préfixe part, les deux suffixes restent
+            let mut it = objet(&[0, 1, 2, 4, 5]);
+            assert_eq!(pool.apply(&mut it, &parfaite, &mut rng), Outcome::Applied);
+            assert_eq!(pool.count(&it, Slot::Prefix), 3);
+            assert_eq!(pool.count(&it, Slot::Suffix), 2);
+            // place libre : n'importe quel mod part (ici un suffixe 2 fois sur 3)
+            let mut it = objet(&[0, 4, 5]);
+            assert_eq!(pool.apply(&mut it, &parfaite, &mut rng), Outcome::Applied);
+            suffixe_retire += (pool.count(&it, Slot::Suffix) == 1) as u32;
+        }
+        assert!((1250..1420).contains(&suffixe_retire), "{suffixe_retire}");
+        // groupe déjà pris : refusée, rien n'est retiré
+        let mut it = objet(&[0, cible, 4]);
+        assert_eq!(
+            pool.apply(&mut it, &parfaite, &mut rng),
+            Outcome::NotApplicable
+        );
+        assert_eq!(it.mods().len(), 3);
+    }
+
     /// Potent Liquid Contempt : slot tiré à 50/50, puis le préfixe « +1 Suffix Modifier allowed » OU le
     /// suffixe « +1 Prefix Modifier allowed » remplace un affixe non fracturé de ce slot. Avec le préfixe, le
     /// joyau 2/2 accepte un 3e suffixe ; une fois ce préfixe retiré, les 3 suffixes restent mais aucun

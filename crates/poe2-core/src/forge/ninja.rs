@@ -24,8 +24,12 @@ pub const DELAI_MIN_SECS: u64 = 300;
 /// Après un échec réseau, nouvel essai au plus tôt 10 minutes plus tard.
 pub const DELAI_APRES_ERREUR_SECS: u64 = 600;
 
-/// Catégories poe.ninja interrogées : monnaies et Omens (`Ritual`).
-pub const CATEGORIES: [&str; 2] = ["Currency", "Ritual"];
+/// Catégories poe.ninja interrogées : monnaies, Omens (`Ritual`) et Essences.
+pub const CATEGORIES: [&str; 3] = ["Currency", "Ritual", CATEGORIE_ESSENCES];
+
+/// Catégorie des Essences : toutes ses lignes sont reprises, sous l'identifiant poe.ninja (qui est
+/// aussi celui de Forge) ; la table de prix écarte celles que Forge ne connaît pas.
+pub const CATEGORIE_ESSENCES: &str = "Essences";
 
 /// Identifiant Forge -> (catégorie poe.ninja, identifiant poe.ninja). La base neuve et sa revente
 /// n'ont pas de cote : elles restent saisies par le joueur.
@@ -148,6 +152,18 @@ pub fn extraire(
     }
     let facteur = facteur_exalted(doc)?;
     let (mut prix, mut manquants) = (BTreeMap::new(), Vec::new());
+    if categorie == CATEGORIE_ESSENCES {
+        for l in lignes {
+            let id = l["id"].as_str();
+            let v = l["primaryValue"]
+                .as_f64()
+                .filter(|v| v.is_finite() && *v > 0.0);
+            if let (Some(id), Some(v)) = (id, v) {
+                prix.insert(id.to_string(), v * facteur);
+            }
+        }
+        return Ok((prix, manquants));
+    }
     for (id, _, ninja_id) in SOURCES.iter().filter(|(_, c, _)| *c == categorie) {
         let v = lignes
             .iter()
@@ -261,6 +277,17 @@ mod tests {
             .as_f64()
             .unwrap();
         assert!((prix["omen_dextral_annulment"] - brut * 635.0).abs() < 1e-6);
+    }
+
+    /// Réponse réelle du 08/11/2026 (1 Divine = 660,2 Exalted) : toutes les Essences cotées, sous leur
+    /// identifiant poe.ninja.
+    #[test]
+    fn essences_reprises_sous_leur_identifiant() {
+        let doc = fixture("ninja-essences.json");
+        let (prix, manquants) = extraire(&doc, CATEGORIE_ESSENCES, "Forbidden Rites").unwrap();
+        assert!(manquants.is_empty());
+        assert_eq!(prix.len(), 68);
+        assert!((prix["perfect-essence-of-the-body"] - 0.04 * 660.2).abs() < 1e-9);
     }
 
     #[test]
