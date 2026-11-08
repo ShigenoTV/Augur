@@ -6,7 +6,7 @@ import { decrireEtat, formatCount, formatPercent, libelleCourt } from "../index/
 
 export type ForgeView = { status: "tip"; tip: ForgeTip } | { status: "error"; error: AppError };
 
-function Shell({ children, onClose }: { children: React.ReactNode; onClose?: () => void }) {
+function Shell({ children, onClose, fermer }: { children: React.ReactNode; onClose?: () => void; fermer: string }) {
   return (
     <div
       className="augur-panel w-[360px] p-3.5 text-text-primary motion-safe:animate-[augur-enter_120ms_var(--ease-out-quick)]"
@@ -18,7 +18,7 @@ function Shell({ children, onClose }: { children: React.ReactNode; onClose?: () 
       {children}
       <footer className="mt-3 flex items-center justify-between gap-2 border-t border-ink-700 pt-2 text-2xs text-text-subtle">
         <button type="button" onClick={onClose} className="flex items-center gap-1 hover:text-text-muted">
-          <Kbd>Échap</Kbd> fermer
+          <Kbd>{fermer}</Kbd> fermer
         </button>
         <span>Plan suivi depuis la fenêtre Augur</span>
       </footer>
@@ -27,13 +27,22 @@ function Shell({ children, onClose }: { children: React.ReactNode; onClose?: () 
 }
 
 /** Prochaine étape du plan Forge pour l'objet copié en jeu (Ctrl+Alt+C). */
-export function ForgeTipPanel({ view, onClose }: { view: ForgeView; onClose?: () => void }) {
+export function ForgeTipPanel({
+  view,
+  onClose,
+  fermer = "Échap",
+}: {
+  view: ForgeView;
+  onClose?: () => void;
+  /** Raccourci de fermeture choisi dans Réglages, déjà au format affiché. */
+  fermer?: string;
+}) {
   // Même monnaie d'affichage que la fenêtre principale (stockage local partagé).
   const { affichage } = useAffichage();
   const cout = (v: number | null | undefined) => formatCout(v, affichage);
   if (view.status === "error") {
     return (
-      <Shell onClose={onClose}>
+      <Shell onClose={onClose} fermer={fermer}>
         <StatePanel icon="alert" title="Objet non suivi" variant="warn">
           {view.error.message}
         </StatePanel>
@@ -45,7 +54,7 @@ export function ForgeTipPanel({ view, onClose }: { view: ForgeView; onClose?: ()
   const labels = tip.labels.map(libelleCourt);
   const action = conseil.action;
   return (
-    <Shell onClose={onClose}>
+    <Shell onClose={onClose} fermer={fermer}>
       <p className="text-sm font-semibold">{tip.baseNom}</p>
       <p className="text-2xs text-text-subtle">{decrireEtat(conseil.state, labels)}</p>
       <ul className="mt-2 space-y-0.5 text-2xs">

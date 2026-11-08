@@ -5,7 +5,7 @@
 //! fichier abîmé ou ancien est réparé au chargement.
 //!
 //! poe.ninja (décision de Max du 07/11/2026) : relevé déclenché par le joueur, une requête pour la
-//! liste des ligues (si aucune n'est choisie) et une par catégorie, User-Agent identifiant Augur,
+//! liste des ligues (à l'ouverture de Réglages) et une par catégorie, User-Agent identifiant Augur,
 //! jamais plus d'une actualisation toutes les 5 minutes (10 après un échec).
 
 use std::collections::BTreeMap;
@@ -87,24 +87,39 @@ async fn get_json(client: &reqwest::Client, url: &str) -> Result<serde_json::Val
     serde_json::from_str(&body).map_err(|e| network(format!("Réponse poe.ninja inattendue ({e}).")))
 }
 
+fn client(version: &str) -> Result<reqwest::Client, AppError> {
+    // reqwest est compilé sans fournisseur de chiffrement (« rustls-no-provider », imposé par
+    // tauri-plugin-updater) : on installe ring, comme le fait le plugin.
+    if rustls::crypto::CryptoProvider::get_default().is_none() {
+        let _ = rustls::crypto::ring::default_provider().install_default();
+    }
+    reqwest::Client::builder()
+        .user_agent(format!(
+            "Augur/{version} (outil personnel de craft PoE 2 ; actualisation manuelle, 5 min au moins)"
+        ))
+        .timeout(Duration::from_secs(20))
+        .build()
+        .map_err(|e| network(format!("Client HTTP indisponible ({e}).")))
+}
+
+/// Liste des ligues de poe.ninja (une requête, à l'ouverture de Réglages).
+pub async fn leagues(version: &str) -> Result<Vec<String>, AppError> {
+    let client = client(version)?;
+    let doc = get_json(&client, &format!("{}/leagues", ninja::API)).await?;
+    let list = ninja::ligues(&doc);
+    if list.is_empty() {
+        return Err(network("poe.ninja n'a renvoyé aucune ligue.".into()));
+    }
+    Ok(list)
+}
+
 /// Télécharge un relevé poe.ninja (ligue courante si `ligue` est vide).
 async fn fetch(
     version: &str,
     ligue: &str,
     precedent: Option<&ReleveMarche>,
 ) -> Result<ReleveMarche, AppError> {
-    // reqwest est compilé sans fournisseur de chiffrement (« rustls-no-provider », imposé par
-    // tauri-plugin-updater) : on installe ring, comme le fait le plugin.
-    if rustls::crypto::CryptoProvider::get_default().is_none() {
-        let _ = rustls::crypto::ring::default_provider().install_default();
-    }
-    let client = reqwest::Client::builder()
-        .user_agent(format!(
-            "Augur/{version} (outil personnel de craft PoE 2 ; actualisation manuelle, 5 min au moins)"
-        ))
-        .timeout(Duration::from_secs(20))
-        .build()
-        .map_err(|e| network(format!("Client HTTP indisponible ({e}).")))?;
+    let client = client(version)?;
     let ligue = match ligue.trim() {
         "" => ninja::premiere_ligue(&get_json(&client, &format!("{}/leagues", ninja::API)).await?)
             .map_err(|e| network(e.to_string()))?,

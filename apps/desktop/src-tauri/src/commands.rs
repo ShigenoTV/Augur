@@ -74,6 +74,60 @@ pub fn set_update_channel(
     })
 }
 
+/// Ligues proposées par poe.ninja, pour la liste de Réglages.
+#[tauri::command]
+pub async fn get_leagues(app: AppHandle) -> Result<Vec<String>, AppError> {
+    crate::forge_prices::leagues(&app.package_info().version.to_string()).await
+}
+
+/// Ligue poe.ninja des prix de la Forge. `None` ou vide : ligue par défaut.
+#[tauri::command]
+pub fn set_league(
+    app: AppHandle,
+    store: State<'_, crate::settings::SettingsStore>,
+    league: Option<String>,
+) -> Result<crate::settings::Settings, AppError> {
+    let league = league
+        .map(|l| l.trim().to_string())
+        .filter(|l| !l.is_empty());
+    store.update(&app, |s| s.league = league).map_err(|e| {
+        app_error(
+            crate::contracts::ErrorCode::Internal,
+            format!("Réglage non enregistré ({e})."),
+        )
+    })
+}
+
+/// Raccourcis de l'overlay. Si l'overlay est affiché, les anciennes touches
+/// sont libérées et les nouvelles prises tout de suite.
+#[tauri::command]
+pub fn set_shortcuts(
+    app: AppHandle,
+    store: State<'_, crate::settings::SettingsStore>,
+    shortcuts: crate::settings::ShortcutSettings,
+) -> Result<crate::settings::Settings, AppError> {
+    let shortcuts = crate::settings::ShortcutSettings {
+        close_overlay: shortcuts.close_overlay.trim().to_string(),
+        upgrade_search: shortcuts.upgrade_search.trim().to_string(),
+    };
+    crate::shortcuts::validate(&shortcuts)
+        .map_err(|m| app_error(crate::contracts::ErrorCode::Internal, m))?;
+    let visible = app.state::<overlay::OverlayCtl>().is_visible();
+    if visible {
+        crate::shortcuts::unregister_overlay(&app);
+    }
+    let result = store.update(&app, |s| s.shortcuts = shortcuts);
+    if visible {
+        crate::shortcuts::register_overlay(&app);
+    }
+    result.map_err(|e| {
+        app_error(
+            crate::contracts::ErrorCode::Internal,
+            format!("Réglage non enregistré ({e})."),
+        )
+    })
+}
+
 #[tauri::command]
 pub fn get_client_log_status(
     state: State<'_, crate::client_log::ClientLogState>,
@@ -287,9 +341,15 @@ pub fn reset_forge_prices(
 pub async fn refresh_forge_prices(
     app: AppHandle,
     prices: State<'_, crate::forge_prices::ForgePrices>,
+    store: State<'_, crate::settings::SettingsStore>,
     ligue: Option<String>,
 ) -> Result<poe2_core::forge::prix::TablePrix, AppError> {
-    prices.refresh(&app, ligue.as_deref().unwrap_or("")).await
+    // Sans ligue précisée : celle des Réglages (Forbidden Rites par défaut).
+    let ligue = ligue
+        .map(|l| l.trim().to_string())
+        .filter(|l| !l.is_empty())
+        .unwrap_or_else(|| store.get().league().to_string());
+    prices.refresh(&app, &ligue).await
 }
 
 #[tauri::command]

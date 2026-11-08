@@ -3,6 +3,7 @@ import { CopilotOverlay, fixtures, type CopilotView } from "@augur/ui";
 import { StrictMode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { commands, isAppError, isTauri, on } from "../bridge";
+import { afficherRaccourci, SHORTCUTS_PAR_DEFAUT } from "../index/shortcuts";
 import { ForgeTipPanel, type ForgeView } from "./ForgeTipPanel";
 import { EVALUATING_DELAY_MS, runCopilot } from "./copilot";
 
@@ -15,6 +16,9 @@ function Overlay() {
   const [measuring, setMeasuring] = useState(false);
   // Plan Forge suivi : l'objet copié est celui du craft en cours.
   const [forge, setForge] = useState<ForgeView | null>(null);
+  // Raccourcis choisis dans Réglages, relus à chaque objet copié.
+  const [raccourcis, setRaccourcis] = useState(SHORTCUTS_PAR_DEFAUT);
+  const hotkeys = { close: afficherRaccourci(raccourcis.closeOverlay), upgradeSearch: afficherRaccourci(raccourcis.upgradeSearch) };
 
   useEffect(() => {
     if (!isTauri()) return;
@@ -31,6 +35,10 @@ function Overlay() {
     const unlisten = [
       on.itemCopied((item) => {
         const id = ++run.current;
+        void commands
+          .getSettings()
+          .then((s) => setRaccourcis(s.shortcuts))
+          .catch(() => undefined);
         const emit = (v: CopilotView) => {
           if (run.current === id) setView(v);
         };
@@ -105,9 +113,9 @@ function Overlay() {
         </p>
       )}
       {forge ? (
-        <ForgeTipPanel view={forge} onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)} />
+        <ForgeTipPanel view={forge} fermer={hotkeys.close} onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)} />
       ) : (
-        <CopilotOverlay state={view} onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)} />
+        <CopilotOverlay state={view} hotkeys={hotkeys} onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)} />
       )}
     </div>
   );

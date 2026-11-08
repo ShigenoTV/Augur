@@ -46,7 +46,8 @@ Bon à savoir :
   jeu.
 - Augur ne réagit au Ctrl+C **que si le jeu est au premier plan**. Un Ctrl+C dans ton
   navigateur ou Discord ne déclenche rien.
-- **Échap** et **Alt+U** ne sont captés par Augur que pendant l'affichage de l'overlay.
+- **Échap** et **Alt+U** ne sont captés par Augur que pendant l'affichage de l'overlay. Tu peux les changer dans **Réglages > Raccourcis de l'overlay** ; Ctrl+C et Ctrl+Alt+C sont fixés par le jeu.
+- La ligue des prix poe.ninja de la Forge (Forbidden Rites par défaut) se choisit dans une liste, dans **Réglages > Ligue souhaitée**.
   Le reste du temps, ils restent au jeu.
 - Avec un personnage importé, l'overlay affiche le **gain ou la perte de DPS** si
   l'objet remplaçait celui que tu portes au même emplacement (pour une bague : le

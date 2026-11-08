@@ -14,6 +14,8 @@ import { createRoot } from "react-dom/client";
 import { commands, isAppError, isTauri, on, type ClientLogStatus, type Settings } from "../bridge";
 import { CharacterCard } from "./CharacterCard";
 import { ClientLogCard } from "./ClientLogCard";
+import { LeagueCard, ShortcutsCard } from "./SettingsCards";
+import { afficherRaccourci, SHORTCUTS_PAR_DEFAUT } from "./shortcuts";
 import { summarizeClientLog } from "./clientLog";
 import { ForgeCard } from "./ForgeCard";
 import { LedgerCard } from "./LedgerCard";
@@ -57,7 +59,7 @@ const PAGES: { id: PageId; nom: string; desc: string; groupe: 0 | 1 }[] = [
   },
   { id: "ledger", nom: "Atlas Ledger", desc: "Suivi de tes sessions de farm de cartes et historique.", groupe: 0 },
   { id: "outils", nom: "Outils", desc: "Session de mesures et banc d'essai du parseur.", groupe: 1 },
-  { id: "reglages", nom: "Réglages", desc: "Journal du jeu et mises à jour d'Augur.", groupe: 1 },
+  { id: "reglages", nom: "Réglages", desc: "Journal du jeu, ligue souhaitée, raccourcis et mises à jour d'Augur.", groupe: 1 },
 ];
 
 const CLE_PAGE = "augur.page";
@@ -137,6 +139,7 @@ function App() {
   }, []);
 
   const logSummary = summarizeClientLog(clientLog);
+  const raccourcis = settings?.shortcuts ?? SHORTCUTS_PAR_DEFAUT;
 
   async function tryParse() {
     setError(null);
@@ -250,12 +253,15 @@ function App() {
                     <Kbd>Ctrl+Alt+C</Kbd> sur l'objet en cours de craft : prochaine étape du plan Forge
                   </li>
                   <li>
-                    <Kbd>Échap</Kbd> ferme l'overlay (actif seulement quand il est affiché)
+                    <Kbd>{afficherRaccourci(raccourcis.closeOverlay)}</Kbd> ferme l'overlay (actif seulement quand il est affiché)
                   </li>
                   <li>
-                    <Kbd>Alt+U</Kbd> cherche un meilleur objet (sprint 3)
+                    <Kbd>{afficherRaccourci(raccourcis.upgradeSearch)}</Kbd> cherche un meilleur objet (sprint 3)
                   </li>
                 </ul>
+                <button type="button" onClick={() => ouvrir("reglages")} className="mt-2 text-xs text-accent hover:underline">
+                  Modifier les raccourcis
+                </button>
                 <p className="mt-3 text-xs text-text-subtle">
                   Le jeu doit être en mode « fenêtré sans bordure » pour que l'overlay s'affiche par-dessus.
                 </p>
@@ -278,7 +284,7 @@ function App() {
           </div>
 
           <div hidden={page !== "forge"}>
-            <ForgeCard />
+            <ForgeCard ligue={settings?.league ?? null} onReglages={() => ouvrir("reglages")} />
           </div>
 
           <div hidden={page !== "ledger"}>
@@ -321,6 +327,12 @@ function App() {
           <div hidden={page !== "reglages"} className="space-y-4">
             <Card title="Journal du jeu (Client.txt)">
               <ClientLogCard status={clientLog} settings={settings} onSettings={setSettings} />
+            </Card>
+            <Card title="Ligue souhaitée">
+              <LeagueCard settings={settings} onSettings={setSettings} />
+            </Card>
+            <Card title="Raccourcis de l'overlay">
+              <ShortcutsCard settings={settings} onSettings={setSettings} />
             </Card>
             <Card title="Mises à jour">
               <div className="flex flex-wrap items-center gap-4 text-sm">

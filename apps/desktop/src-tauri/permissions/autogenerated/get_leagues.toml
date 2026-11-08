@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-leagues"
+description = "Enables the get_leagues command without any pre-configured scope."
+commands.allow = ["get_leagues"]
+
+[[permission]]
+identifier = "deny-get-leagues"
+description = "Denies the get_leagues command without any pre-configured scope."
+commands.deny = ["get_leagues"]

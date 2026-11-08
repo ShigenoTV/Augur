@@ -191,6 +191,24 @@ pub fn premiere_ligue(doc: &Value) -> Result<String, ErreurNinja> {
         .ok_or_else(|| ErreurNinja::Format("liste de ligues vide".into()))
 }
 
+/// Noms des ligues proposées par poe.ninja (`/leagues`), dans son ordre, sans doublon.
+pub fn ligues(doc: &Value) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for id in doc
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|l| l["id"].as_str())
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+    {
+        if !out.iter().any(|o| o == id) {
+            out.push(id.to_string());
+        }
+    }
+    out
+}
+
 /// Construit un relevé à partir des réponses de chaque catégorie, puis le fusionne avec le
 /// précédent : même ligue, un prix absent cette fois garde sa dernière valeur et sa date ; une
 /// autre ligue repart de zéro.
@@ -355,6 +373,13 @@ mod tests {
             "Forbidden Rites"
         );
         assert!(premiere_ligue(&json!([])).is_err());
+        assert_eq!(
+            ligues(
+                &json!([{"id": "Forbidden Rites"}, {"id": "Standard"}, {"id": "Standard"}, {"x": 1}])
+            ),
+            ["Forbidden Rites", "Standard"]
+        );
+        assert!(ligues(&json!({})).is_empty());
 
         assert_eq!(actualisation_permise(1000, None, None), Ok(()));
         assert_eq!(actualisation_permise(1000, Some(900), None), Err(200));
