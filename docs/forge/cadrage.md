@@ -37,7 +37,8 @@ clippy en édition 2024.
 - Une base n'est proposée que si **tous** ses mods ont un poids. Contrôle du 08/11 (`tools/theorycraft/coe_controle.py`) :
   1 714 bases × 4 niveaux d'objet, 6 856 pools identiques à Craft of Exile. Écartées : bases `[DNT]` (pas en jeu),
   Energy Blade (créée par une compétence), Grasping Mail (Craft of Exile lui donne des mods de bijou que les tables du
-  jeu refusent). Une base qui a sa propre page de poids (Trarthan Cannon, arbalète à grenades) l'utilise au lieu de
+  jeu refusent). Fists of Stone (gants d'Ascendance, et leur version Runeforged) sont écartées : Craft of Exile les
+  marque non modifiables (contrôle du 08/11 : toutes nos autres bases existent chez lui, modifiables). Une base qui a sa propre page de poids (Trarthan Cannon, arbalète à grenades) l'utilise au lieu de
   celle de sa classe.
 - Page poe2db d'une base : classe au pluriel (`Rings`, `Quarterstaves` pour les bâtons de guerre…), suivie des
   attributs pour les armures (`Body_Armours_int`, `Shields_str_dex`). Pas de page pour les armures force /
@@ -89,12 +90,17 @@ une source de prix d'objets (même blocage OAuth).
    selon l'état de l'objet, achats moyens ; onglet Prix (corrections, relevé
    poe.ninja, ligue). Seules les bases dont tous les mods ont un poids sont proposées.
 6. **Overlay** (`forge::suivi`, commandes `get_forge_advice` / `get_forge_tracking` / `stop_forge_tracking`) : le
-   dernier plan calculé est suivi (en mémoire, jusqu'au prochain calcul ou à « Arrêter le suivi »). Ctrl+Alt+C sur un
+   dernier plan calculé est suivi (jusqu'au prochain calcul ou à « Arrêter le suivi » ; gardé à la fermeture d'Augur et
+   recalculé au démarrage, aux prix du moment). Ctrl+Alt+C sur un
    objet de la même base : chaque mod est retrouvé dans le pool (côté et nom de l'en-tête avancé, puis texte sans les
    nombres, puis tier), l'objet est projeté sur l'état du solveur et l'overlay affiche la prochaine étape, le coût
    restant et les résultats possibles du prochain essai. Un mod introuvable (sans poids, désacralisé, artisanal)
    compte comme mauvais mod. Une copie simple (Ctrl+C) est refusée : elle ne dit pas quels mods sont des
    préfixes. Un objet d'une autre base passe à Upgrade Copilot.
+7. **Historique** (`forge::historique`, `forge-historique.json`, commandes `get_forge_history` /
+   `delete_forge_history_entry`, demande de Max du 08/11) : chaque plan calculé y entre (50 au plus, la même
+   demande recalculée remplace son entrée) ; onglet Historique du panneau pour le rouvrir (nouveau calcul) ou le
+   supprimer.
 
 Hors périmètre pour l'instant : « craftez ou achetez » (pas de prix d'objets), boucle de validation communautaire.
 

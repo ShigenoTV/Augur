@@ -8,6 +8,9 @@ import {
   type ForgeAffixes,
   type ForgeBase,
   type ForgeCatalogueEntry,
+  type ForgeHistory,
+  type ForgeHistoryEntry,
+  type ForgePlanRequest,
   type ForgePlanResult,
   type ForgePrices,
   type ForgeSlot,
@@ -249,6 +252,72 @@ function PriceTable({
   );
 }
 
+/** Plans calculés : rouvrir (nouveau calcul aux prix du moment) ou supprimer. */
+function HistoryView({
+  historique,
+  busy,
+  onReopen,
+  onDelete,
+}: {
+  historique: ForgeHistory | null;
+  busy: boolean;
+  onReopen: (e: ForgeHistoryEntry) => void;
+  onDelete: (e: ForgeHistoryEntry) => void;
+}) {
+  if (!historique || historique.entrees.length === 0) {
+    return <p className="text-xs text-text-subtle">Aucun plan calculé pour l'instant : chaque calcul s'ajoute ici.</p>;
+  }
+  return (
+    <div className="space-y-2">
+      <table className="w-full text-xs">
+        <thead className="text-left text-text-subtle">
+          <tr>
+            <th className="py-1 font-normal">Base</th>
+            <th className="font-normal">Affixes voulus</th>
+            <th className="text-right font-normal">Coût espéré</th>
+            <th className="text-right font-normal">Calculé le</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {historique.entrees.map((e) => (
+            <tr key={e.id} className="border-t border-ink-800 align-top">
+              <td className="py-1 pr-2 text-text-primary">
+                {e.baseNom} <span className="text-text-subtle">(niv. {e.demande.ilvl})</span>
+                {historique.suivi === e.id && <span className="ml-1 text-[10px] uppercase text-accent">suivi</span>}
+              </td>
+              <td className="py-1 pr-2 text-text-muted">{e.labels.map(libelleCourt).join(", ")}</td>
+              <td className="whitespace-nowrap py-1 pr-2 text-right font-mono text-text-primary">{formatEx(e.cout)}</td>
+              <td className="whitespace-nowrap py-1 pr-2 text-right text-text-subtle">{dateReleve(e.calculeA)}</td>
+              <td className="whitespace-nowrap py-1 text-right">
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => onReopen(e)}
+                  className="rounded-chip border border-ink-600 px-2 py-0.5 text-text-primary hover:bg-ink-800 disabled:opacity-50"
+                >
+                  Rouvrir
+                </button>{" "}
+                <button
+                  type="button"
+                  onClick={() => onDelete(e)}
+                  className="rounded-chip px-2 py-0.5 text-text-subtle hover:text-signal-loss"
+                  aria-label={`Supprimer le plan ${e.baseNom}`}
+                >
+                  Supprimer
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="text-[11px] text-text-subtle">
+        Rouvrir recalcule le plan aux prix du moment. Le plan suivi par l'overlay est gardé quand tu fermes Augur.
+      </p>
+    </div>
+  );
+}
+
 /** Résultat d'un calcul : coût espéré, quantiles, étapes du plan et achats. */
 function PlanView({ result }: { result: ForgePlanResult }) {
   const { plan } = result;
@@ -338,8 +407,9 @@ export function ForgeCard() {
   const [result, setResult] = useState<ForgePlanResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [onglet, setOnglet] = useState<"plan" | "prix">("plan");
+  const [onglet, setOnglet] = useState<"plan" | "prix" | "historique">("plan");
   const [suivi, setSuivi] = useState<ForgeTracking | null>(null);
+  const [historique, setHistorique] = useState<ForgeHistory | null>(null);
 
   useEffect(() => {
     if (!isTauri()) return;
@@ -347,6 +417,12 @@ export function ForgeCard() {
     void commands.getForgeCatalogue().then(setCatalogue).catch(() => undefined);
     void commands.getForgePrices().then(setPrices).catch(() => undefined);
     void commands.getForgeTracking().then(setSuivi).catch(() => undefined);
+    void commands.getForgeHistory().then(setHistorique).catch(() => undefined);
+    // Le plan suivi avant la fermeture est recalculé au démarrage : on relit le suivi un peu après.
+    const timer = setTimeout(() => {
+      void commands.getForgeTracking().then(setSuivi).catch(() => undefined);
+    }, 4000);
+    return () => clearTimeout(timer);
   }, []);
 
   const classes = useMemo(() => basesParClasse(bases), [bases]);
@@ -383,17 +459,38 @@ export function ForgeCard() {
     setVoulus((v) => v.map((w) => (cleAffixe(w) === cleAffixe(a) ? { ...w, maxTier: tier } : w)));
   }
 
-  async function calculer() {
+  async function calculer(demande: ForgePlanRequest = { baseId, ilvl, voulus, exclues }) {
     setBusy(true);
     setError(null);
     setResult(null);
     try {
-      setResult(await commands.planForgeCraft({ baseId, ilvl, voulus, exclues }));
+      setResult(await commands.planForgeCraft(demande));
       setSuivi(await commands.getForgeTracking());
+      setHistorique(await commands.getForgeHistory());
     } catch (err) {
       setError(message(err));
     } finally {
       setBusy(false);
+    }
+  }
+
+  function rouvrir(e: ForgeHistoryEntry) {
+    const b = bases.find((x) => x.id === e.demande.baseId);
+    if (b) setClasse(b.classe);
+    setBaseId(e.demande.baseId);
+    setIlvl(e.demande.ilvl);
+    setVoulus(e.demande.voulus);
+    setExclues(e.demande.exclues);
+    setOnglet("plan");
+    void calculer(e.demande);
+  }
+
+  async function supprimer(e: ForgeHistoryEntry) {
+    try {
+      setHistorique(await commands.deleteForgeHistoryEntry(e.id));
+      setSuivi(await commands.getForgeTracking());
+    } catch (err) {
+      setError(message(err));
     }
   }
 
@@ -408,14 +505,14 @@ export function ForgeCard() {
   return (
     <div className="space-y-4">
       <div className="flex gap-1 text-sm">
-        {(["plan", "prix"] as const).map((o) => (
+        {(["plan", "prix", "historique"] as const).map((o) => (
           <button
             key={o}
             type="button"
             onClick={() => setOnglet(o)}
             className={`rounded-chip px-3 py-1 ${onglet === o ? "bg-ink-800 text-text-primary" : "text-text-subtle hover:text-text-primary"}`}
           >
-            {o === "plan" ? "Plan de craft" : "Prix"}
+            {o === "plan" ? "Plan de craft" : o === "prix" ? "Prix" : `Historique (${historique?.entrees.length ?? 0})`}
           </button>
         ))}
       </div>
@@ -429,7 +526,12 @@ export function ForgeCard() {
           </span>
           <button
             type="button"
-            onClick={() => void commands.stopForgeTracking().then(() => setSuivi(null))}
+            onClick={() =>
+              void commands
+                .stopForgeTracking()
+                .then(() => setSuivi(null))
+                .then(() => commands.getForgeHistory().then(setHistorique))
+            }
             className="ml-auto rounded-chip border border-ink-600 px-2 py-0.5 text-text-primary hover:bg-ink-800"
           >
             Arrêter le suivi
@@ -437,7 +539,9 @@ export function ForgeCard() {
         </div>
       )}
 
-      {onglet === "prix" ? (
+      {onglet === "historique" ? (
+        <HistoryView historique={historique} busy={busy} onReopen={rouvrir} onDelete={(e) => void supprimer(e)} />
+      ) : onglet === "prix" ? (
         <PriceTable
           prices={prices}
           catalogue={catalogue}

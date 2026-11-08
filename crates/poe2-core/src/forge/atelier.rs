@@ -159,8 +159,13 @@ pub struct BaseForge {
 /// Bases écartées malgré des poids : leur pool ne correspond pas à celui de Craft of Exile (contrôle
 /// du 08/11/2026). Energy Blade est créée par une compétence et existe en deux classes ; Craft of
 /// Exile donne à Grasping Mail des mods de bijou que les tables du jeu ne lui autorisent pas.
+/// Fists of Stone (gants d'Ascendance, et leur version Runeforged) ne se modifient pas : Craft of
+/// Exile les marque « unmodifiable » (contrôle du 08/11/2026, seules bases concernées).
 fn ecartee(nom: &str) -> bool {
-    nom.starts_with("[DNT]") || nom == "Energy Blade" || nom.ends_with("Grasping Mail")
+    nom.starts_with("[DNT]")
+        || nom == "Energy Blade"
+        || nom.ends_with("Grasping Mail")
+        || nom.ends_with("Fists of Stone")
 }
 
 /// Bases calculables (tous leurs mods ont un poids, chez poe2db ou en complément), triées par
@@ -363,7 +368,7 @@ pub fn catalogue() -> Vec<EntreeCatalogue> {
 }
 
 /// Ce que le panneau demande.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DemandePlan {
     pub base_id: String,
@@ -636,6 +641,7 @@ mod tests {
         // dagues complétées par Craft of Exile ; bases [DNT] et à pool douteux écartées
         assert!(b.iter().any(|b| b.classe == "Dagger"));
         assert!(!b.iter().any(|b| ecartee(&b.nom)));
+        assert!(!b.iter().any(|b| b.nom.contains("Fists of Stone")));
         assert_eq!(catalogue().len(), 26 + d.essences.len());
         assert!(d.essences.len() > 60);
         // chaque mod garanti est dans les tables embarquées

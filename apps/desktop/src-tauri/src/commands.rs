@@ -312,11 +312,28 @@ pub fn get_forge_catalogue() -> Vec<poe2_core::forge::atelier::EntreeCatalogue> 
 
 #[tauri::command]
 pub async fn plan_forge_craft(
+    app: AppHandle,
     planner: State<'_, crate::forge::ForgePlanner>,
     prices: State<'_, crate::forge_prices::ForgePrices>,
     demande: poe2_core::forge::atelier::DemandePlan,
 ) -> Result<poe2_core::forge::atelier::ResultatPlan, AppError> {
-    planner.plan(demande, prices.get()).await
+    planner.plan(&app, demande, prices.get()).await
+}
+
+#[tauri::command]
+pub fn get_forge_history(
+    planner: State<'_, crate::forge::ForgePlanner>,
+) -> poe2_core::forge::historique::Historique {
+    planner.historique()
+}
+
+#[tauri::command]
+pub fn delete_forge_history_entry(
+    app: AppHandle,
+    planner: State<'_, crate::forge::ForgePlanner>,
+    id: u64,
+) -> poe2_core::forge::historique::Historique {
+    planner.supprimer(&app, id)
 }
 
 #[tauri::command]
@@ -338,6 +355,6 @@ pub fn get_forge_tracking(
 }
 
 #[tauri::command]
-pub fn stop_forge_tracking(planner: State<'_, crate::forge::ForgePlanner>) {
-    planner.arreter();
+pub fn stop_forge_tracking(app: AppHandle, planner: State<'_, crate::forge::ForgePlanner>) {
+    planner.arreter(&app);
 }

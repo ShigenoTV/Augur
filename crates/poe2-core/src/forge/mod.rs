@@ -13,6 +13,7 @@
 //! - [`objectif`] : « ces groupes d'affixes, à tel tier ou mieux ».
 //! - [`monte_carlo`] : simulation parallèle, déterministe pour une graine.
 //! - [`atelier`] : ce que l'appli appelle (données embarquées, bases, affixes, plan).
+//! - [`historique`] : plans calculés, à rouvrir ou supprimer, et plan suivi gardé au redémarrage.
 //! - [`suivi`] : objet copié en jeu (Ctrl+Alt+C) → prochaine étape du plan actif.
 //!
 //! Tout est indexé (`u16`) pour le chemin chaud ; aucune entrée-sortie.
@@ -20,6 +21,7 @@
 pub mod atelier;
 pub mod catalogue;
 pub mod donnees;
+pub mod historique;
 pub mod monte_carlo;
 pub mod moteur;
 pub mod ninja;
