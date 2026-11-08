@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ForgeAffix, ForgePlan } from "../bridge";
 import {
+  arbre,
   basesParClasse,
   dateReleve,
   decrireEtat,
@@ -103,5 +104,62 @@ describe("Forge", () => {
   it("date un relevé", () => {
     expect(dateReleve(null)).toBe("");
     expect(dateReleve(1_762_550_000)).toMatch(/^\d{2}\/\d{2} \d{2}:\d{2}$/);
+  });
+});
+
+describe("arbre de décision", () => {
+  const etat = { rarity: "normal" as const, heldWanted: [], blockedWanted: [], fracturedWanted: null, badPrefixes: 0, badSuffixes: 0 };
+  const action = (id: string, branches: [string, number, boolean?][]) => ({
+    kind: "action" as const,
+    id,
+    stateKey: id,
+    state: etat,
+    expectedVisits: 1,
+    costToGo: 10,
+    action: { id: "x", label: id, unitCost: 1, isAbandon: false },
+    repeat: null,
+    branches: branches.map(([to, probability, loopback = false], i) => ({
+      id: `${id}-${i}`,
+      kind: to === "goal" ? ("success" as const) : ("failure" as const),
+      label: "",
+      probability,
+      to,
+      loopback,
+      extraCost: 0,
+    })),
+    mergedMinorProbability: 0,
+    mergedMinorCount: 0,
+  });
+  const plan = {
+    rootId: "r",
+    nodes: {
+      r: action("r", [["a", 0.5], ["b", 0.3], ["c", 0.15], ["d", 0.04], ["e", 0.01]]),
+      a: action("a", [["goal", 0.6], ["ab", 0.4]]),
+      ab: action("ab", [["r", 1, true]]),
+      b: action("b", [["b", 0.5, true], ["goal", 0.5]]),
+      c: action("c", [["a", 1]]),
+      d: action("d", []),
+      e: action("e", []),
+      goal: { kind: "terminal", id: "goal", stateKey: "g", state: etat, expectedVisits: 1, costToGo: 0, result: "goal", note: null },
+    },
+  } as unknown as ForgePlan;
+
+  it("place les états en colonnes et garde les branches les plus probables", () => {
+    const t = arbre(plan, 4);
+    const col = Object.fromEntries(t.noeuds.map((n) => [n.id, n.col]));
+    expect(col).toEqual({ r: 0, a: 1, b: 1, c: 1, d: 1, goal: 2, ab: 2 });
+    expect(t.autres.r).toEqual({ n: 1, p: 0.01 });
+    // Boucle sur soi-même (essais répétés) : pas de lien dessiné.
+    expect(t.liens.some((l) => l.de === "b" && l.vers === "b")).toBe(false);
+    // Abandon puis base neuve, et c -> a (même colonne) : retours.
+    expect(t.liens.filter((l) => l.retour).map((l) => `${l.de}>${l.vers}`)).toEqual(["c>a", "ab>r"]);
+    expect(t.colonnes).toBe(3);
+    expect(t.lignes).toBe(4);
+  });
+
+  it("plafonne le nombre d'états dessinés", () => {
+    const t = arbre(plan, 4, 3);
+    expect(t.noeuds.map((n) => n.id)).toEqual(["r", "a", "b"]);
+    expect(t.autres.r).toEqual({ n: 3, p: 0.2 });
   });
 });

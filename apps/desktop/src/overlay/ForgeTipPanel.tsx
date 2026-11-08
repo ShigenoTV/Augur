@@ -1,7 +1,8 @@
 import { Kbd, StatePanel } from "@augur/ui";
 import type { AppError } from "@augur/ui";
 import type { ForgeTip } from "../bridge";
-import { decrireEtat, formatCount, formatEx, formatPercent, libelleCourt } from "../index/forge";
+import { formatCout, useAffichage } from "../index/devise";
+import { decrireEtat, formatCount, formatPercent, libelleCourt } from "../index/forge";
 
 export type ForgeView = { status: "tip"; tip: ForgeTip } | { status: "error"; error: AppError };
 
@@ -27,6 +28,9 @@ function Shell({ children, onClose }: { children: React.ReactNode; onClose?: () 
 
 /** Prochaine étape du plan Forge pour l'objet copié en jeu (Ctrl+Alt+C). */
 export function ForgeTipPanel({ view, onClose }: { view: ForgeView; onClose?: () => void }) {
+  // Même monnaie d'affichage que la fenêtre principale (stockage local partagé).
+  const { affichage } = useAffichage();
+  const cout = (v: number | null | undefined) => formatCout(v, affichage);
   if (view.status === "error") {
     return (
       <Shell onClose={onClose}>
@@ -71,11 +75,11 @@ export function ForgeTipPanel({ view, onClose }: { view: ForgeView; onClose?: ()
             {action.isAbandon ? "Repartir d'une base neuve" : action.label}
           </p>
           <p className="text-2xs text-text-subtle">
-            {action.isAbandon ? "Objet à revendre ou à jeter" : `${formatEx(action.unitCost)} par essai`}
+            {action.isAbandon ? "Objet à revendre ou à jeter" : `${cout(action.unitCost)} par essai`}
             {conseil.repeat && conseil.repeat.expectedAttempts > 1.05
               ? ` · ~${formatCount(conseil.repeat.expectedAttempts)} essais attendus`
               : ""}
-            {` · reste ${formatEx(conseil.costToGo)} (plan entier : ${formatEx(tip.coutPlan)})`}
+            {` · reste ${cout(conseil.costToGo)} (plan entier : ${cout(tip.coutPlan)})`}
           </p>
           {conseil.outcomes.length > 0 && (
             <ul className="mt-2 space-y-0.5 text-2xs">

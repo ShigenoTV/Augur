@@ -1,5 +1,5 @@
 import { StatePanel } from "@augur/ui";
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import {
   commands,
   isAppError,
@@ -31,6 +31,8 @@ import {
   lirePrix,
   peutAjouter,
 } from "./forge";
+import { DecisionTree } from "./DecisionTree";
+import { AffichageContext, useCout } from "./devise";
 
 const btn = "rounded-chip px-3 py-1.5 text-sm font-semibold disabled:opacity-50";
 const btnPrimary = `${btn} bg-accent text-accent-ink hover:bg-accent-strong`;
@@ -43,15 +45,19 @@ const ESSENCES = "essences";
 
 const message = (err: unknown) => (isAppError(err) ? err.message : String(err));
 
+/** Chiffre clé de la bande en haut d'un résultat (comme l'ancienne appli de craft). */
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-chip border border-ink-700 bg-ink-950 px-3 py-2">
+    <div className="border-ink-700 px-4 py-3 [&:not(:last-child)]:border-r">
       <p className="text-xs text-text-subtle">{label}</p>
-      <p className="font-mono text-base text-text-primary">{value}</p>
+      <p className="font-display text-xl font-semibold text-accent">{value}</p>
       {hint && <p className="text-[11px] text-text-subtle">{hint}</p>}
     </div>
   );
 }
+
+/** Divine Orb : pas une monnaie de craft, seulement le taux d'affichage des coûts en Divine. */
+const DIVINE: ForgeCatalogueEntry = { id: "divine", nom: "Divine Orb (affichage en Divine)", genre: "monnaie" };
 
 /** Colonne d'affixes visables (préfixes ou suffixes) avec le tier minimum voulu. */
 function AffixColumn({
@@ -215,7 +221,7 @@ function PriceTable({
       </div>
 
       <div className="grid grid-cols-2 gap-x-6 gap-y-0.5 text-xs xl:grid-cols-3">
-        {catalogue.filter((e) => e.genre !== "essence").map(ligne)}
+        {[...catalogue.filter((e) => e.genre !== "essence"), DIVINE].map(ligne)}
       </div>
       <details className="text-xs">
         <summary className="cursor-pointer text-text-subtle">
@@ -264,6 +270,7 @@ function HistoryView({
   onReopen: (e: ForgeHistoryEntry) => void;
   onDelete: (e: ForgeHistoryEntry) => void;
 }) {
+  const cout = useCout();
   if (!historique || historique.entrees.length === 0) {
     return <p className="text-xs text-text-subtle">Aucun plan calculé pour l'instant : chaque calcul s'ajoute ici.</p>;
   }
@@ -287,7 +294,7 @@ function HistoryView({
                 {historique.suivi === e.id && <span className="ml-1 text-[10px] uppercase text-accent">suivi</span>}
               </td>
               <td className="py-1 pr-2 text-text-muted">{e.labels.map(libelleCourt).join(", ")}</td>
-              <td className="whitespace-nowrap py-1 pr-2 text-right font-mono text-text-primary">{formatEx(e.cout)}</td>
+              <td className="whitespace-nowrap py-1 pr-2 text-right font-mono text-text-primary">{cout(e.cout)}</td>
               <td className="whitespace-nowrap py-1 pr-2 text-right text-text-subtle">{dateReleve(e.calculeA)}</td>
               <td className="whitespace-nowrap py-1 text-right">
                 <button
@@ -318,18 +325,29 @@ function HistoryView({
   );
 }
 
-/** Résultat d'un calcul : coût espéré, quantiles, étapes du plan et achats. */
+/** Résultat d'un calcul : chiffres clés, puis arbre de décision, étapes ou liste de courses. */
 function PlanView({ result }: { result: ForgePlanResult }) {
+  const cout = useCout();
+  const [vue, setVue] = useState<"arbre" | "etapes" | "courses">("arbre");
   const { plan } = result;
   const labels = plan.goal.map((g) => libelleCourt(g.label));
   const mc = plan.mc;
+  const vues = [
+    ["arbre", "Arbre de décision"],
+    ["etapes", "Étapes"],
+    ["courses", "Liste de courses"],
+  ] as const;
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-4 gap-2">
-        <Stat label="Coût espéré" value={formatEx(plan.expectedCost)} hint="hors base de départ" />
-        <Stat label="Médiane (P50)" value={formatEx(mc?.medianCost)} hint={mc ? `${formatCount(mc.trials)} crafts simulés` : undefined} />
-        <Stat label="Malchanceux (P90)" value={formatEx(mc?.p90Cost)} hint="9 crafts sur 10 coûtent moins" />
-        <Stat label="Base de départ" value={formatEx(plan.baseCost)} hint={mc ? `${formatCount(mc.meanAbandons)} abandon(s) en moyenne` : undefined} />
+      <div className="grid grid-cols-4 rounded-panel border border-ink-700 bg-ink-950">
+        <Stat label="Coût moyen" value={cout(plan.expectedCost + plan.baseCost)} hint={`base neuve comprise (${cout(plan.baseCost)})`} />
+        <Stat label="Une fois sur deux" value={cout(mc?.medianCost)} hint={mc ? `médiane de ${formatCount(mc.trials)} crafts simulés` : undefined} />
+        <Stat label="Budget sûr (9 sur 10)" value={cout(mc?.p90Cost)} hint={mc ? `99 sur 100 : ${cout(mc.p99Cost)}` : undefined} />
+        <Stat
+          label="Abandons"
+          value={mc ? formatCount(mc.meanAbandons) : "–"}
+          hint={mc ? `${formatCount(mc.meanSteps)} étapes en moyenne` : undefined}
+        />
       </div>
 
       {!result.complet && (
@@ -338,52 +356,71 @@ function PlanView({ result }: { result: ForgePlanResult }) {
         </StatePanel>
       )}
 
-      <div className="grid grid-cols-[3fr_2fr] gap-6">
-        <div>
-          <p className="mb-1 text-xs font-semibold text-text-muted">Que faire selon l'état de l'objet</p>
-          <table className="w-full text-xs">
-            <thead className="text-left text-text-subtle">
-              <tr>
-                <th className="py-1 font-normal">Objet</th>
-                <th className="font-normal">Action</th>
-                <th className="text-right font-normal" title="Coût espéré pour finir depuis cet état">Reste</th>
-              </tr>
-            </thead>
-            <tbody>
-              {etapes(plan).map((n) => (
-                <tr key={n.id} className="border-t border-ink-800 align-top">
-                  <td className="py-1 pr-2 text-text-muted">{decrireEtat(n.state, labels)}</td>
-                  <td className="py-1 pr-2 text-text-primary">
-                    {n.action.isAbandon ? "Repartir d'une base neuve" : n.action.label}
-                    {n.repeat && n.repeat.expectedAttempts > 1.05 && (
-                      <span className="text-text-subtle"> · ~{formatCount(n.repeat.expectedAttempts)} essais</span>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap py-1 text-right font-mono text-text-muted">{formatEx(n.costToGo)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div>
-          <p className="mb-1 text-xs font-semibold text-text-muted">Achats moyens</p>
-          <table className="w-full text-xs">
-            <tbody>
-              {plan.shopping.map((s) => (
-                <tr key={s.id} className="border-t border-ink-800">
-                  <td className="py-1 pr-2 text-text-muted">{s.label}</td>
-                  <td className="whitespace-nowrap py-1 pr-2 text-right font-mono text-text-subtle">×{formatCount(s.expectedCount)}</td>
-                  <td className="whitespace-nowrap py-1 text-right font-mono text-text-primary">{formatEx(s.expectedCost)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="flex gap-5 border-b border-ink-700 text-sm">
+        {vues.map(([id, nom]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setVue(id)}
+            className={`-mb-px border-b-2 pb-1.5 ${vue === id ? "border-accent font-semibold text-accent" : "border-transparent text-text-muted hover:text-text-primary"}`}
+          >
+            {nom}
+          </button>
+        ))}
       </div>
+
+      {vue === "arbre" && <DecisionTree plan={plan} />}
+
+      {vue === "etapes" && (
+        <table className="w-full text-xs">
+          <thead className="text-left text-text-subtle">
+            <tr>
+              <th className="py-1 font-normal">Objet</th>
+              <th className="font-normal">Action</th>
+              <th className="text-right font-normal" title="Coût espéré pour finir depuis cet état">Reste</th>
+            </tr>
+          </thead>
+          <tbody>
+            {etapes(plan).map((n) => (
+              <tr key={n.id} className="border-t border-ink-800 align-top">
+                <td className="py-1 pr-2 text-text-muted">{decrireEtat(n.state, labels)}</td>
+                <td className="py-1 pr-2 text-text-primary">
+                  {n.action.isAbandon ? "Repartir d'une base neuve" : n.action.label}
+                  {n.repeat && n.repeat.expectedAttempts > 1.05 && (
+                    <span className="text-text-subtle"> · ~{formatCount(n.repeat.expectedAttempts)} essais</span>
+                  )}
+                </td>
+                <td className="whitespace-nowrap py-1 text-right font-mono text-text-muted">{cout(n.costToGo)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {vue === "courses" && (
+        <table className="w-full max-w-xl text-xs">
+          <thead className="text-left text-text-subtle">
+            <tr>
+              <th className="py-1 font-normal">À acheter (en moyenne)</th>
+              <th className="text-right font-normal">Quantité</th>
+              <th className="text-right font-normal">Coût</th>
+            </tr>
+          </thead>
+          <tbody>
+            {plan.shopping.map((l) => (
+              <tr key={l.id} className="border-t border-ink-800">
+                <td className="py-1 pr-2 text-text-muted">{l.label}</td>
+                <td className="whitespace-nowrap py-1 pr-2 text-right font-mono text-text-subtle">×{formatCount(l.expectedCount)}</td>
+                <td className="whitespace-nowrap py-1 text-right font-mono text-text-primary">{cout(l.expectedCost)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       <p className="text-[11px] text-text-subtle">
         Calcul : {formatCount(plan.solver.states)} états, {plan.solver.millis} ms
-        {mc ? `, vérifié sur ${formatCount(mc.trials)} crafts simulés (moyenne ${formatEx(mc.meanCost)})` : ""}. Corrige les
+        {mc ? `, vérifié sur ${formatCount(mc.trials)} crafts simulés (moyenne ${cout(mc.meanCost)})` : ""}. Corrige les
         prix dans l'onglet Prix.
       </p>
     </div>
@@ -410,6 +447,13 @@ export function ForgeCard() {
   const [onglet, setOnglet] = useState<"plan" | "prix" | "historique">("plan");
   const [suivi, setSuivi] = useState<ForgeTracking | null>(null);
   const [historique, setHistorique] = useState<ForgeHistory | null>(null);
+  const { majTaux } = useContext(AffichageContext);
+
+  // Taux d'affichage Chaos / Divine : ceux de la table de prix (partagés avec l'overlay).
+  useEffect(() => {
+    if (prices) majTaux(prices.prix);
+    // majTaux change à chaque rendu : seuls les prix déclenchent la mise à jour.
+  }, [prices]);
 
   useEffect(() => {
     if (!isTauri()) return;
