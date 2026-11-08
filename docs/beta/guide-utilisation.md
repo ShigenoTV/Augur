@@ -14,6 +14,7 @@ mode **fenêtré sans bordure**.
 | Overlay : prix estimé | ⏳ pas encore |
 | Session de mesures (export des objets, codes PoB, zones) | ✅ à tester |
 | Atlas Ledger (temps en map, maps par heure) | ✅ à tester |
+| Forge : coût d'un craft (panneau) et prochaine étape du plan dans l'overlay (Ctrl+Alt+C) | ✅ à tester à partir de la v0.1.6 |
 | Mises à jour automatiques | ✅ à tester |
 
 Ce tableau est mis à jour à chaque version de la bêta.
