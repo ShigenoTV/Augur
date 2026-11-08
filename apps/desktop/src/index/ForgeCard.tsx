@@ -2,6 +2,7 @@ import { StatePanel } from "@augur/ui";
 import { useContext, useEffect, useMemo, useState } from "react";
 import {
   commands,
+  DEFAULT_LEAGUE,
   isAppError,
   isTauri,
   type ForgeAffix,
@@ -133,21 +134,21 @@ function AffixColumn({
 function PriceTable({
   prices,
   catalogue,
+  ligue,
+  onReglages,
   onPrices,
 }: {
   prices: ForgePrices | null;
   catalogue: ForgeCatalogueEntry[];
+  /** Ligue poe.ninja choisie dans Réglages. */
+  ligue: string;
+  onReglages?: () => void;
   onPrices: (p: ForgePrices) => void;
 }) {
   const [edits, setEdits] = useState<Record<string, string>>({});
-  const [ligue, setLigue] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (prices?.marche && !ligue) setLigue(prices.marche.ligue);
-  }, [prices, ligue]);
 
   if (!prices) return null;
   const invalides = Object.entries(edits).filter(([, v]) => v.trim() !== "" && lirePrix(v) === null);
@@ -196,19 +197,21 @@ function PriceTable({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-end gap-2">
-        <label className="flex flex-col gap-1 text-xs text-text-subtle">
+        <p className="flex flex-col gap-1 text-xs text-text-subtle">
           Ligue poe.ninja
-          <input
-            value={ligue}
-            onChange={(e) => setLigue(e.target.value)}
-            placeholder="Ligue en cours"
-            className={`${input} w-48`}
-          />
-        </label>
+          <span className="py-1.5 text-sm text-text-primary">
+            {ligue}
+            {onReglages && (
+              <button type="button" onClick={onReglages} className="ml-2 text-xs text-accent hover:underline">
+                changer dans Réglages
+              </button>
+            )}
+          </span>
+        </p>
         <button
           type="button"
           disabled={busy}
-          onClick={() => void run(() => commands.refreshForgePrices(ligue.trim() || null), "Prix actualisés depuis poe.ninja.")}
+          onClick={() => void run(() => commands.refreshForgePrices(ligue), "Prix actualisés depuis poe.ninja.")}
           className={btnSecondary}
         >
           Actualiser depuis poe.ninja
@@ -431,7 +434,7 @@ function PlanView({ result }: { result: ForgePlanResult }) {
  * Forge : choisir une base et un objectif, obtenir la stratégie au meilleur coût espéré (solveur
  * exact du cœur Rust) avec ses quantiles et ses achats.
  */
-export function ForgeCard() {
+export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onReglages?: () => void }) {
   const [bases, setBases] = useState<ForgeBase[]>([]);
   const [catalogue, setCatalogue] = useState<ForgeCatalogueEntry[]>([]);
   const [prices, setPrices] = useState<ForgePrices | null>(null);
@@ -589,6 +592,8 @@ export function ForgeCard() {
         <PriceTable
           prices={prices}
           catalogue={catalogue}
+          ligue={ligue ?? DEFAULT_LEAGUE}
+          onReglages={onReglages}
           onPrices={(p) => {
             setPrices(p);
             // Le plan affiché a été calculé avec les anciens prix.

@@ -14,6 +14,8 @@ fn main() {
             "set_update_channel",
             "get_client_log_status",
             "set_client_log_path",
+            "set_league",
+            "set_shortcuts",
             "get_measure_status",
             "start_measure_session",
             "stop_measure_session",

@@ -85,6 +85,8 @@ pub fn run() {
             commands::check_for_update,
             commands::install_update,
             commands::get_settings,
+            commands::set_league,
+            commands::set_shortcuts,
             commands::set_update_channel,
             commands::get_client_log_status,
             commands::set_client_log_path,

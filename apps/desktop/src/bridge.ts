@@ -35,7 +35,19 @@ export const EVENTS = {
   characterChanged: "augur://character-changed",
 } as const;
 
-export type Settings = { betaChannel: boolean; clientLogPath: string | null };
+/** Raccourcis de l'overlay, au format « Alt+U », « Ctrl+Shift+F2 », « Escape » (src-tauri/src/shortcuts.rs). */
+export type ShortcutSettings = { closeOverlay: string; upgradeSearch: string };
+
+export type Settings = {
+  betaChannel: boolean;
+  clientLogPath: string | null;
+  /** Ligue poe.ninja des prix de la Forge ; null : ligue par défaut (DEFAULT_LEAGUE). */
+  league: string | null;
+  shortcuts: ShortcutSettings;
+};
+
+/** Doit rester égale à DEFAULT_LEAGUE (src-tauri/src/settings.rs). */
+export const DEFAULT_LEAGUE = "Forbidden Rites";
 
 /** État du suivi de Client.txt (apps/desktop/src-tauri/src/client_log.rs). */
 export type ClientLogStatus = {
@@ -302,6 +314,8 @@ export const commands = {
   setUpdateChannel: (beta: boolean) => invoke<Settings>("set_update_channel", { beta }),
   getClientLogStatus: () => invoke<ClientLogStatus>("get_client_log_status"),
   setClientLogPath: (path: string | null) => invoke<Settings>("set_client_log_path", { path }),
+  setLeague: (league: string | null) => invoke<Settings>("set_league", { league }),
+  setShortcuts: (shortcuts: ShortcutSettings) => invoke<Settings>("set_shortcuts", { shortcuts }),
   getMeasureStatus: () => invoke<MeasureStatus>("get_measure_status"),
   startMeasureSession: () => invoke<MeasureStatus>("start_measure_session"),
   stopMeasureSession: () => invoke<MeasureStatus>("stop_measure_session"),

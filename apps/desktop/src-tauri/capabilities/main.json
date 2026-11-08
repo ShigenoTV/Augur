@@ -17,6 +17,8 @@
     "allow-set-update-channel",
     "allow-get-client-log-status",
     "allow-set-client-log-path",
+    "allow-set-league",
+    "allow-set-shortcuts",
     "allow-get-measure-status",
     "allow-start-measure-session",
     "allow-stop-measure-session",
