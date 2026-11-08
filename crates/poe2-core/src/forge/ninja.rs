@@ -24,12 +24,15 @@ pub const DELAI_MIN_SECS: u64 = 300;
 /// Après un échec réseau, nouvel essai au plus tôt 10 minutes plus tard.
 pub const DELAI_APRES_ERREUR_SECS: u64 = 600;
 
-/// Catégories poe.ninja interrogées : monnaies, Omens (`Ritual`) et Essences.
-pub const CATEGORIES: [&str; 3] = ["Currency", "Ritual", CATEGORIE_ESSENCES];
+/// Catégories poe.ninja interrogées : monnaies, Omens (`Ritual`), Essences et Alloys (`Verisium`).
+pub const CATEGORIES: [&str; 4] = ["Currency", "Ritual", CATEGORIE_ESSENCES, CATEGORIE_ALLOYS];
 
 /// Catégorie des Essences : toutes ses lignes sont reprises, sous l'identifiant poe.ninja (qui est
 /// aussi celui de Forge) ; la table de prix écarte celles que Forge ne connaît pas.
 pub const CATEGORIE_ESSENCES: &str = "Essences";
+
+/// Catégorie des Alloys (avec les autres objets Verisium) : reprise comme celle des Essences.
+pub const CATEGORIE_ALLOYS: &str = "Verisium";
 
 /// Identifiant Forge -> (catégorie poe.ninja, identifiant poe.ninja). La base neuve et sa revente
 /// n'ont pas de cote : elles restent saisies par le joueur.
@@ -154,7 +157,7 @@ pub fn extraire(
     }
     let facteur = facteur_exalted(doc)?;
     let (mut prix, mut manquants) = (BTreeMap::new(), Vec::new());
-    if categorie == CATEGORIE_ESSENCES {
+    if categorie == CATEGORIE_ESSENCES || categorie == CATEGORIE_ALLOYS {
         for l in lignes {
             let id = l["id"].as_str();
             let v = l["primaryValue"]
@@ -292,6 +295,17 @@ mod tests {
         assert!(manquants.is_empty());
         assert_eq!(prix.len(), 68);
         assert!((prix["perfect-essence-of-the-body"] - 0.04 * 660.2).abs() < 1e-9);
+    }
+
+    /// Réponse réelle du 08/11/2026 (1 Divine = 666,2 Exalted) : les 13 Alloys cotés, sous leur
+    /// identifiant poe.ninja (apostrophe retirée : « The Runebinder's Alloy » -> the-runebinders-alloy).
+    #[test]
+    fn alloys_repris_sous_leur_identifiant() {
+        let doc = fixture("ninja-verisium.json");
+        let (prix, manquants) = extraire(&doc, CATEGORIE_ALLOYS, "Forbidden Rites").unwrap();
+        assert!(manquants.is_empty());
+        assert_eq!(prix.keys().filter(|k| k.ends_with("-alloy")).count(), 13);
+        assert!((prix["the-runebinders-alloy"] - 0.5813 * 666.2).abs() < 1e-9);
     }
 
     #[test]

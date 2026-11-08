@@ -379,10 +379,12 @@ pub fn construire_pool_avec(
     // étiquettes de la base) : groupe d'exclusion partagé, famille à part.
     let groupes: Vec<&str> = par_groupe.keys().copied().collect();
     let mut familles_en_plus: BTreeMap<(&str, &str), Vec<&ModTable>> = BTreeMap::new();
+    // Un mod à plusieurs groupes d'exclusion (Alloys hybrides, ex. vitesse d'attaque ET d'incantation)
+    // n'est pas modélisé : il reste hors du pool, et l'Alloy qui le pose n'est pas proposé.
     for m in mods
         .mods
         .iter()
-        .filter(|m| cible(m) && !candidats.iter().any(|c| c.id == m.id))
+        .filter(|m| cible(m) && m.groupes.len() <= 1 && !candidats.iter().any(|c| c.id == m.id))
     {
         familles_en_plus
             .entry((m.groupe.as_str(), m.famille.as_str()))

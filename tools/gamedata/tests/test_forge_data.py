@@ -87,12 +87,12 @@ def test_complement_dans_le_releve():
 def test_essences_et_leurs_mods_garantis():
     mods = {"schema": 1, "mods": [_mod("A"), _mod("Reserve", poids=0), _mod("Autre", poids=0)]}
     bases = {"schema": 1, "bases": []}
-    essences = {"essences": [{"id": "e", "nom": "E", "type": "perfect", "cibles": {"Ring": "Reserve"}}]}
+    essences = {"essences": [{"id": "e", "nom": "E", "type": "perfect", "cibles": {"Ring": ["Reserve"], "Belt": ["A", "Reserve"]}}]}
     d = fd.construire(mods, bases, {"pages": {}}, {"version_repoe": "x"}, essences=essences)
     assert [m["id"] for m in d["mods"]["mods"]] == ["A", "Reserve"]
     assert d["essences"] == essences["essences"]
     assert "essences" not in fd.construire(mods, bases, {"pages": {}}, {"version_repoe": "x"})
-    manquant = {"essences": [{"id": "e", "nom": "E", "type": "normal", "cibles": {"Ring": "Absent"}}]}
+    manquant = {"essences": [{"id": "e", "nom": "E", "type": "normal", "cibles": {"Ring": ["A", "Absent"]}}]}
     try:
         fd.construire(mods, bases, {"pages": {}}, {"version_repoe": "x"}, essences=manquant)
     except ValueError as err:

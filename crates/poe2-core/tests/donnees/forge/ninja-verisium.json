@@ -1,0 +1,108 @@
+{
+ "core": {
+  "primary": "divine",
+  "secondary": "chaos",
+  "rates": {
+   "exalted": 666.2,
+   "chaos": 9.62
+  }
+ },
+ "lines": [
+  {
+   "id": "adaptive-alloy",
+   "primaryValue": 0.1985
+  },
+  {
+   "id": "celestial-alloy",
+   "primaryValue": 0.7143
+  },
+  {
+   "id": "expansive-alloy",
+   "primaryValue": 0.05202
+  },
+  {
+   "id": "liquid-verisium",
+   "primaryValue": 0.07372
+  },
+  {
+   "id": "protective-alloy",
+   "primaryValue": 0.007506
+  },
+  {
+   "id": "runic-alloy",
+   "primaryValue": 0.09817
+  },
+  {
+   "id": "sovereign-alloy",
+   "primaryValue": 0.2903
+  },
+  {
+   "id": "swift-alloy",
+   "primaryValue": 0.004063
+  },
+  {
+   "id": "transcendent-alloy",
+   "primaryValue": 0.1323
+  },
+  {
+   "id": "veridical-starlit-ore",
+   "primaryValue": 0.06933
+  },
+  {
+   "id": "verisium",
+   "primaryValue": 7.662e-05
+  },
+  {
+   "id": "cyclonic-alloy",
+   "primaryValue": 0.02987
+  },
+  {
+   "id": "revered-starlit-ore",
+   "primaryValue": 2
+  },
+  {
+   "id": "venerable-starlit-ore",
+   "primaryValue": 1
+  },
+  {
+   "id": "exceptional-verisium",
+   "primaryValue": 0.001445
+  },
+  {
+   "id": "medveds-crest-of-the-circle",
+   "primaryValue": 0.0003108
+  },
+  {
+   "id": "mystic-alloy",
+   "primaryValue": 0.07811
+  },
+  {
+   "id": "olroths-crest-of-the-sun",
+   "primaryValue": 0.01489
+  },
+  {
+   "id": "prismatic-alloy",
+   "primaryValue": 0.003645
+  },
+  {
+   "id": "the-runebinders-alloy",
+   "primaryValue": 0.5813
+  },
+  {
+   "id": "the-runefathers-alloy",
+   "primaryValue": 0.0007506
+  },
+  {
+   "id": "uhtreds-crest-of-the-chalice",
+   "primaryValue": 0.007192
+  },
+  {
+   "id": "voranas-crest-of-the-scythe",
+   "primaryValue": 0.04211
+  },
+  {
+   "id": "warding-starlit-ore",
+   "primaryValue": 0.0881
+  }
+ ]
+}

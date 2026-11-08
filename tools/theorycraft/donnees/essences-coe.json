@@ -3,18 +3,129 @@
  "essences": [
   {
    "cibles": {
-    "Bow": "LocalAddedPhysicalDamage5",
-    "Crossbow": "LocalAddedPhysicalDamageTwoHand5",
-    "Dagger": "LocalAddedPhysicalDamage5",
-    "Flail": "LocalAddedPhysicalDamage5",
-    "One Hand Axe": "LocalAddedPhysicalDamage5",
-    "One Hand Mace": "LocalAddedPhysicalDamage5",
-    "One Hand Sword": "LocalAddedPhysicalDamage5",
-    "Spear": "LocalAddedPhysicalDamage5",
-    "Two Hand Axe": "LocalAddedPhysicalDamageTwoHand5",
-    "Two Hand Mace": "LocalAddedPhysicalDamageTwoHand5",
-    "Two Hand Sword": "LocalAddedPhysicalDamageTwoHand5",
-    "Warstaff": "LocalAddedPhysicalDamageTwoHand5"
+    "Gloves": [
+     "AlloyAttackSpeedIfMissingWardRecently1"
+    ],
+    "Sceptre": [
+     "AlloyPuppetMasterChance1"
+    ],
+    "Staff": [
+     "AlloyDamageAsExtraFireTwoHandWhileMissingRunicWard1"
+    ],
+    "Wand": [
+     "AlloyDamageAsExtraFireWhileMissingRunicWard1"
+    ]
+   },
+   "id": "adaptive-alloy",
+   "nom": "Adaptive Alloy",
+   "type": "alloy"
+  },
+  {
+   "cibles": {
+    "Bow": [
+     "AlloyAccuracyAttackSpeedHybrid1"
+    ],
+    "Crossbow": [
+     "AlloyAccuracyAttackSpeedHybrid1"
+    ],
+    "Dagger": [
+     "AlloyAccuracyAttackSpeedHybrid1"
+    ],
+    "Flail": [
+     "AlloyAccuracyAttackSpeedHybrid1"
+    ],
+    "One Hand Axe": [
+     "AlloyAccuracyAttackSpeedHybrid1"
+    ],
+    "One Hand Mace": [
+     "AlloyAccuracyAttackSpeedHybrid1"
+    ],
+    "One Hand Sword": [
+     "AlloyAccuracyAttackSpeedHybrid1"
+    ],
+    "Spear": [
+     "AlloyAccuracyAttackSpeedHybrid1"
+    ],
+    "Staff": [
+     "AlloySpellLevelManaHybrid1"
+    ],
+    "Two Hand Axe": [
+     "AlloyAccuracyAttackSpeedHybrid1"
+    ],
+    "Two Hand Mace": [
+     "AlloyAccuracyAttackSpeedHybrid1"
+    ],
+    "Two Hand Sword": [
+     "AlloyAccuracyAttackSpeedHybrid1"
+    ],
+    "Wand": [
+     "AlloySpellLevelManaHybrid1"
+    ],
+    "Warstaff": [
+     "AlloyAccuracyAttackSpeedHybrid1"
+    ]
+   },
+   "id": "celestial-alloy",
+   "nom": "Celestial Alloy",
+   "type": "alloy"
+  },
+  {
+   "cibles": {
+    "Body Armour": [
+     "AlloyReducedSlowPotency1"
+    ],
+    "Boots": [
+     "AlloySkillEffectDuration1"
+    ],
+    "Gloves": [
+     "AlloyDamagingAilmentDuration1"
+    ],
+    "Helmet": [
+     "AlloyArchonDuration1"
+    ]
+   },
+   "id": "cyclonic-alloy",
+   "nom": "Cyclonic Alloy",
+   "type": "alloy"
+  },
+  {
+   "cibles": {
+    "Bow": [
+     "LocalAddedPhysicalDamage5"
+    ],
+    "Crossbow": [
+     "LocalAddedPhysicalDamageTwoHand5"
+    ],
+    "Dagger": [
+     "LocalAddedPhysicalDamage5"
+    ],
+    "Flail": [
+     "LocalAddedPhysicalDamage5"
+    ],
+    "One Hand Axe": [
+     "LocalAddedPhysicalDamage5"
+    ],
+    "One Hand Mace": [
+     "LocalAddedPhysicalDamage5"
+    ],
+    "One Hand Sword": [
+     "LocalAddedPhysicalDamage5"
+    ],
+    "Spear": [
+     "LocalAddedPhysicalDamage5"
+    ],
+    "Two Hand Axe": [
+     "LocalAddedPhysicalDamageTwoHand5"
+    ],
+    "Two Hand Mace": [
+     "LocalAddedPhysicalDamageTwoHand5"
+    ],
+    "Two Hand Sword": [
+     "LocalAddedPhysicalDamageTwoHand5"
+    ],
+    "Warstaff": [
+     "LocalAddedPhysicalDamageTwoHand5"
+    ]
    },
    "id": "essence-of-abrasion",
    "nom": "Essence of Abrasion",
@@ -22,9 +133,15 @@
   },
   {
    "cibles": {
-    "Focus": "IncreasedCastSpeed3",
-    "Staff": "IncreasedCastSpeedTwoHand3",
-    "Wand": "IncreasedCastSpeed3"
+    "Focus": [
+     "IncreasedCastSpeed3"
+    ],
+    "Staff": [
+     "IncreasedCastSpeedTwoHand3"
+    ],
+    "Wand": [
+     "IncreasedCastSpeed3"
+    ]
    },
    "id": "essence-of-alacrity",
    "nom": "Essence of Alacrity",
@@ -32,18 +149,42 @@
   },
   {
    "cibles": {
-    "Bow": "LocalIncreasedAccuracy5",
-    "Crossbow": "LocalIncreasedAccuracy5",
-    "Dagger": "LocalIncreasedAccuracy5",
-    "Flail": "LocalIncreasedAccuracy5",
-    "One Hand Axe": "LocalIncreasedAccuracy5",
-    "One Hand Mace": "LocalIncreasedAccuracy5",
-    "One Hand Sword": "LocalIncreasedAccuracy5",
-    "Spear": "LocalIncreasedAccuracy5",
-    "Two Hand Axe": "LocalIncreasedAccuracy5",
-    "Two Hand Mace": "LocalIncreasedAccuracy5",
-    "Two Hand Sword": "LocalIncreasedAccuracy5",
-    "Warstaff": "LocalIncreasedAccuracy5"
+    "Bow": [
+     "LocalIncreasedAccuracy5"
+    ],
+    "Crossbow": [
+     "LocalIncreasedAccuracy5"
+    ],
+    "Dagger": [
+     "LocalIncreasedAccuracy5"
+    ],
+    "Flail": [
+     "LocalIncreasedAccuracy5"
+    ],
+    "One Hand Axe": [
+     "LocalIncreasedAccuracy5"
+    ],
+    "One Hand Mace": [
+     "LocalIncreasedAccuracy5"
+    ],
+    "One Hand Sword": [
+     "LocalIncreasedAccuracy5"
+    ],
+    "Spear": [
+     "LocalIncreasedAccuracy5"
+    ],
+    "Two Hand Axe": [
+     "LocalIncreasedAccuracy5"
+    ],
+    "Two Hand Mace": [
+     "LocalIncreasedAccuracy5"
+    ],
+    "Two Hand Sword": [
+     "LocalIncreasedAccuracy5"
+    ],
+    "Warstaff": [
+     "LocalIncreasedAccuracy5"
+    ]
    },
    "id": "essence-of-battle",
    "nom": "Essence of Battle",
@@ -51,7 +192,9 @@
   },
   {
    "cibles": {
-    "Sceptre": "NearbyAlliesAllDamage4"
+    "Sceptre": [
+     "NearbyAlliesAllDamage4"
+    ]
    },
    "id": "essence-of-command",
    "nom": "Essence of Command",
@@ -59,7 +202,9 @@
   },
   {
    "cibles": {
-    "Body Armour": "EssenceGrantedPassive"
+    "Body Armour": [
+     "EssenceGrantedPassive"
+    ]
    },
    "id": "essence-of-delirium",
    "nom": "Essence of Delirium",
@@ -67,18 +212,42 @@
   },
   {
    "cibles": {
-    "Bow": "LocalAddedLightningDamage5",
-    "Crossbow": "LocalAddedLightningDamageTwoHand5",
-    "Dagger": "LocalAddedLightningDamage5",
-    "Flail": "LocalAddedLightningDamage5",
-    "One Hand Axe": "LocalAddedLightningDamage5",
-    "One Hand Mace": "LocalAddedLightningDamage5",
-    "One Hand Sword": "LocalAddedLightningDamage5",
-    "Spear": "LocalAddedLightningDamage5",
-    "Two Hand Axe": "LocalAddedLightningDamageTwoHand5",
-    "Two Hand Mace": "LocalAddedLightningDamageTwoHand5",
-    "Two Hand Sword": "LocalAddedLightningDamageTwoHand5",
-    "Warstaff": "LocalAddedLightningDamageTwoHand5"
+    "Bow": [
+     "LocalAddedLightningDamage5"
+    ],
+    "Crossbow": [
+     "LocalAddedLightningDamageTwoHand5"
+    ],
+    "Dagger": [
+     "LocalAddedLightningDamage5"
+    ],
+    "Flail": [
+     "LocalAddedLightningDamage5"
+    ],
+    "One Hand Axe": [
+     "LocalAddedLightningDamage5"
+    ],
+    "One Hand Mace": [
+     "LocalAddedLightningDamage5"
+    ],
+    "One Hand Sword": [
+     "LocalAddedLightningDamage5"
+    ],
+    "Spear": [
+     "LocalAddedLightningDamage5"
+    ],
+    "Two Hand Axe": [
+     "LocalAddedLightningDamageTwoHand5"
+    ],
+    "Two Hand Mace": [
+     "LocalAddedLightningDamageTwoHand5"
+    ],
+    "Two Hand Sword": [
+     "LocalAddedLightningDamageTwoHand5"
+    ],
+    "Warstaff": [
+     "LocalAddedLightningDamageTwoHand5"
+    ]
    },
    "id": "essence-of-electricity",
    "nom": "Essence of Electricity",
@@ -86,18 +255,105 @@
   },
   {
    "cibles": {
-    "Bow": "LocalAddedFireDamage5",
-    "Crossbow": "LocalAddedFireDamageTwoHand5",
-    "Dagger": "LocalAddedFireDamage5",
-    "Flail": "LocalAddedFireDamage5",
-    "One Hand Axe": "LocalAddedFireDamage5",
-    "One Hand Mace": "LocalAddedFireDamage5",
-    "One Hand Sword": "LocalAddedFireDamage5",
-    "Spear": "LocalAddedFireDamage5",
-    "Two Hand Axe": "LocalAddedFireDamageTwoHand5",
-    "Two Hand Mace": "LocalAddedFireDamageTwoHand5",
-    "Two Hand Sword": "LocalAddedFireDamageTwoHand5",
-    "Warstaff": "LocalAddedFireDamageTwoHand5"
+    "Body Armour": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent4",
+     "LocalIncreasedEvasionRatingPercent4",
+     "LocalIncreasedEnergyShieldPercent4",
+     "LocalIncreasedArmourAndEvasion4",
+     "LocalIncreasedArmourAndEnergyShield4",
+     "LocalIncreasedEvasionAndEnergyShield4"
+    ],
+    "Boots": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent4",
+     "LocalIncreasedEvasionRatingPercent4",
+     "LocalIncreasedEnergyShieldPercent4",
+     "LocalIncreasedArmourAndEvasion4",
+     "LocalIncreasedArmourAndEnergyShield4",
+     "LocalIncreasedEvasionAndEnergyShield4"
+    ],
+    "Buckler": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent4",
+     "LocalIncreasedEvasionRatingPercent4",
+     "LocalIncreasedEnergyShieldPercent4",
+     "LocalIncreasedArmourAndEvasion4",
+     "LocalIncreasedArmourAndEnergyShield4",
+     "LocalIncreasedEvasionAndEnergyShield4"
+    ],
+    "Focus": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent4",
+     "LocalIncreasedEvasionRatingPercent4",
+     "LocalIncreasedEnergyShieldPercent4",
+     "LocalIncreasedArmourAndEvasion4",
+     "LocalIncreasedArmourAndEnergyShield4",
+     "LocalIncreasedEvasionAndEnergyShield4"
+    ],
+    "Gloves": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent4",
+     "LocalIncreasedEvasionRatingPercent4",
+     "LocalIncreasedEnergyShieldPercent4",
+     "LocalIncreasedArmourAndEvasion4",
+     "LocalIncreasedArmourAndEnergyShield4",
+     "LocalIncreasedEvasionAndEnergyShield4"
+    ],
+    "Helmet": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent4",
+     "LocalIncreasedEvasionRatingPercent4",
+     "LocalIncreasedEnergyShieldPercent4",
+     "LocalIncreasedArmourAndEvasion4",
+     "LocalIncreasedArmourAndEnergyShield4",
+     "LocalIncreasedEvasionAndEnergyShield4"
+    ],
+    "Shield": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent4",
+     "LocalIncreasedEvasionRatingPercent4",
+     "LocalIncreasedEnergyShieldPercent4",
+     "LocalIncreasedArmourAndEvasion4",
+     "LocalIncreasedArmourAndEnergyShield4",
+     "LocalIncreasedEvasionAndEnergyShield4"
+    ]
+   },
+   "id": "essence-of-enhancement",
+   "nom": "Essence of Enhancement",
+   "type": "normal"
+  },
+  {
+   "cibles": {
+    "Bow": [
+     "LocalAddedFireDamage5"
+    ],
+    "Crossbow": [
+     "LocalAddedFireDamageTwoHand5"
+    ],
+    "Dagger": [
+     "LocalAddedFireDamage5"
+    ],
+    "Flail": [
+     "LocalAddedFireDamage5"
+    ],
+    "One Hand Axe": [
+     "LocalAddedFireDamage5"
+    ],
+    "One Hand Mace": [
+     "LocalAddedFireDamage5"
+    ],
+    "One Hand Sword": [
+     "LocalAddedFireDamage5"
+    ],
+    "Spear": [
+     "LocalAddedFireDamage5"
+    ],
+    "Two Hand Axe": [
+     "LocalAddedFireDamageTwoHand5"
+    ],
+    "Two Hand Mace": [
+     "LocalAddedFireDamageTwoHand5"
+    ],
+    "Two Hand Sword": [
+     "LocalAddedFireDamageTwoHand5"
+    ],
+    "Warstaff": [
+     "LocalAddedFireDamageTwoHand5"
+    ]
    },
    "id": "essence-of-flames",
    "nom": "Essence of Flames",
@@ -105,16 +361,36 @@
   },
   {
    "cibles": {
-    "Amulet": "LightningResist4",
-    "Belt": "LightningResist4",
-    "Body Armour": "LightningResist4",
-    "Boots": "LightningResist4",
-    "Buckler": "LightningResist4",
-    "Focus": "LightningResist4",
-    "Gloves": "LightningResist4",
-    "Helmet": "LightningResist4",
-    "Ring": "LightningResist4",
-    "Shield": "LightningResist4"
+    "Amulet": [
+     "LightningResist4"
+    ],
+    "Belt": [
+     "LightningResist4"
+    ],
+    "Body Armour": [
+     "LightningResist4"
+    ],
+    "Boots": [
+     "LightningResist4"
+    ],
+    "Buckler": [
+     "LightningResist4"
+    ],
+    "Focus": [
+     "LightningResist4"
+    ],
+    "Gloves": [
+     "LightningResist4"
+    ],
+    "Helmet": [
+     "LightningResist4"
+    ],
+    "Ring": [
+     "LightningResist4"
+    ],
+    "Shield": [
+     "LightningResist4"
+    ]
    },
    "id": "essence-of-grounding",
    "nom": "Essence of Grounding",
@@ -122,18 +398,42 @@
   },
   {
    "cibles": {
-    "Bow": "LocalIncreasedAttackSpeed3",
-    "Crossbow": "LocalIncreasedAttackSpeed3",
-    "Dagger": "LocalIncreasedAttackSpeed5",
-    "Flail": "LocalIncreasedAttackSpeed5",
-    "One Hand Axe": "LocalIncreasedAttackSpeed5",
-    "One Hand Mace": "LocalIncreasedAttackSpeed5",
-    "One Hand Sword": "LocalIncreasedAttackSpeed5",
-    "Spear": "LocalIncreasedAttackSpeed5",
-    "Two Hand Axe": "LocalIncreasedAttackSpeed5",
-    "Two Hand Mace": "LocalIncreasedAttackSpeed5",
-    "Two Hand Sword": "LocalIncreasedAttackSpeed5",
-    "Warstaff": "LocalIncreasedAttackSpeed5"
+    "Bow": [
+     "LocalIncreasedAttackSpeed3"
+    ],
+    "Crossbow": [
+     "LocalIncreasedAttackSpeed3"
+    ],
+    "Dagger": [
+     "LocalIncreasedAttackSpeed5"
+    ],
+    "Flail": [
+     "LocalIncreasedAttackSpeed5"
+    ],
+    "One Hand Axe": [
+     "LocalIncreasedAttackSpeed5"
+    ],
+    "One Hand Mace": [
+     "LocalIncreasedAttackSpeed5"
+    ],
+    "One Hand Sword": [
+     "LocalIncreasedAttackSpeed5"
+    ],
+    "Spear": [
+     "LocalIncreasedAttackSpeed5"
+    ],
+    "Two Hand Axe": [
+     "LocalIncreasedAttackSpeed5"
+    ],
+    "Two Hand Mace": [
+     "LocalIncreasedAttackSpeed5"
+    ],
+    "Two Hand Sword": [
+     "LocalIncreasedAttackSpeed5"
+    ],
+    "Warstaff": [
+     "LocalIncreasedAttackSpeed5"
+    ]
    },
    "id": "essence-of-haste",
    "nom": "Essence of Haste",
@@ -141,8 +441,12 @@
   },
   {
    "cibles": {
-    "Boots": "EssenceLocalRuneAndSoulCoreEffect1",
-    "Gloves": "EssenceLocalRuneAndSoulCoreEffect1"
+    "Boots": [
+     "EssenceLocalRuneAndSoulCoreEffect1"
+    ],
+    "Gloves": [
+     "EssenceLocalRuneAndSoulCoreEffect1"
+    ]
    },
    "id": "essence-of-horror",
    "nom": "Essence of Horror",
@@ -150,17 +454,39 @@
   },
   {
    "cibles": {
-    "Amulet": "DamageTakenGainedAsLife4_",
-    "Belt": "StunThreshold10",
-    "Body Armour": "AttackerTakesDamage6",
-    "Boots": "MovementVelocity5",
-    "Buckler": "LocalBlockChance2",
-    "Focus": "EnergyShieldRechargeRate5______",
-    "Gloves": "CriticalMultiplier4",
-    "Helmet": "GlobalMinionSpellSkillGemLevel1",
-    "Quiver": "DamageWithBows5",
-    "Ring": "ManaRegeneration5",
-    "Shield": "LocalBlockChance2"
+    "Amulet": [
+     "DamageTakenGainedAsLife4_"
+    ],
+    "Belt": [
+     "StunThreshold10"
+    ],
+    "Body Armour": [
+     "AttackerTakesDamage6"
+    ],
+    "Boots": [
+     "MovementVelocity5"
+    ],
+    "Buckler": [
+     "LocalBlockChance2"
+    ],
+    "Focus": [
+     "EnergyShieldRechargeRate5______"
+    ],
+    "Gloves": [
+     "CriticalMultiplier4"
+    ],
+    "Helmet": [
+     "GlobalMinionSpellSkillGemLevel1"
+    ],
+    "Quiver": [
+     "DamageWithBows5"
+    ],
+    "Ring": [
+     "ManaRegeneration5"
+    ],
+    "Shield": [
+     "LocalBlockChance2"
+    ]
    },
    "id": "essence-of-hysteria",
    "nom": "Essence of Hysteria",
@@ -168,18 +494,42 @@
   },
   {
    "cibles": {
-    "Bow": "LocalAddedColdDamage5",
-    "Crossbow": "LocalAddedColdDamageTwoHand5",
-    "Dagger": "LocalAddedColdDamage5",
-    "Flail": "LocalAddedColdDamage5",
-    "One Hand Axe": "LocalAddedColdDamage5",
-    "One Hand Mace": "LocalAddedColdDamage5",
-    "One Hand Sword": "LocalAddedColdDamage5",
-    "Spear": "LocalAddedColdDamage5",
-    "Two Hand Axe": "LocalAddedColdDamageTwoHand5",
-    "Two Hand Mace": "LocalAddedColdDamageTwoHand5",
-    "Two Hand Sword": "LocalAddedColdDamageTwoHand5",
-    "Warstaff": "LocalAddedColdDamageTwoHand5"
+    "Bow": [
+     "LocalAddedColdDamage5"
+    ],
+    "Crossbow": [
+     "LocalAddedColdDamageTwoHand5"
+    ],
+    "Dagger": [
+     "LocalAddedColdDamage5"
+    ],
+    "Flail": [
+     "LocalAddedColdDamage5"
+    ],
+    "One Hand Axe": [
+     "LocalAddedColdDamage5"
+    ],
+    "One Hand Mace": [
+     "LocalAddedColdDamage5"
+    ],
+    "One Hand Sword": [
+     "LocalAddedColdDamage5"
+    ],
+    "Spear": [
+     "LocalAddedColdDamage5"
+    ],
+    "Two Hand Axe": [
+     "LocalAddedColdDamageTwoHand5"
+    ],
+    "Two Hand Mace": [
+     "LocalAddedColdDamageTwoHand5"
+    ],
+    "Two Hand Sword": [
+     "LocalAddedColdDamageTwoHand5"
+    ],
+    "Warstaff": [
+     "LocalAddedColdDamageTwoHand5"
+    ]
    },
    "id": "essence-of-ice",
    "nom": "Essence of Ice",
@@ -187,7 +537,9 @@
   },
   {
    "cibles": {
-    "Belt": "EssenceCorruptForTwoEnchantments1"
+    "Belt": [
+     "EssenceCorruptForTwoEnchantments1"
+    ]
    },
    "id": "essence-of-insanity",
    "nom": "Essence of Insanity",
@@ -195,16 +547,36 @@
   },
   {
    "cibles": {
-    "Amulet": "FireResist4",
-    "Belt": "FireResist4",
-    "Body Armour": "FireResist4",
-    "Boots": "FireResist4",
-    "Buckler": "FireResist4",
-    "Focus": "FireResist4",
-    "Gloves": "FireResist4",
-    "Helmet": "FireResist4",
-    "Ring": "FireResist4",
-    "Shield": "FireResist4"
+    "Amulet": [
+     "FireResist4"
+    ],
+    "Belt": [
+     "FireResist4"
+    ],
+    "Body Armour": [
+     "FireResist4"
+    ],
+    "Boots": [
+     "FireResist4"
+    ],
+    "Buckler": [
+     "FireResist4"
+    ],
+    "Focus": [
+     "FireResist4"
+    ],
+    "Gloves": [
+     "FireResist4"
+    ],
+    "Helmet": [
+     "FireResist4"
+    ],
+    "Ring": [
+     "FireResist4"
+    ],
+    "Shield": [
+     "FireResist4"
+    ]
    },
    "id": "essence-of-insulation",
    "nom": "Essence of Insulation",
@@ -212,11 +584,21 @@
   },
   {
    "cibles": {
-    "Amulet": "ItemFoundRarityIncrease2",
-    "Boots": "ItemFoundRarityIncrease2",
-    "Gloves": "ItemFoundRarityIncrease2",
-    "Helmet": "ItemFoundRarityIncrease2",
-    "Ring": "ItemFoundRarityIncrease2"
+    "Amulet": [
+     "ItemFoundRarityIncrease2"
+    ],
+    "Boots": [
+     "ItemFoundRarityIncrease2"
+    ],
+    "Gloves": [
+     "ItemFoundRarityIncrease2"
+    ],
+    "Helmet": [
+     "ItemFoundRarityIncrease2"
+    ],
+    "Ring": [
+     "ItemFoundRarityIncrease2"
+    ]
    },
    "id": "essence-of-opulence",
    "nom": "Essence of Opulence",
@@ -224,16 +606,36 @@
   },
   {
    "cibles": {
-    "Amulet": "ChaosResist2",
-    "Belt": "ChaosResist2",
-    "Body Armour": "ChaosResist2",
-    "Boots": "ChaosResist2",
-    "Buckler": "ChaosResist2",
-    "Focus": "ChaosResist2",
-    "Gloves": "ChaosResist2",
-    "Helmet": "ChaosResist2",
-    "Ring": "ChaosResist2",
-    "Shield": "ChaosResist2"
+    "Amulet": [
+     "ChaosResist2"
+    ],
+    "Belt": [
+     "ChaosResist2"
+    ],
+    "Body Armour": [
+     "ChaosResist2"
+    ],
+    "Boots": [
+     "ChaosResist2"
+    ],
+    "Buckler": [
+     "ChaosResist2"
+    ],
+    "Focus": [
+     "ChaosResist2"
+    ],
+    "Gloves": [
+     "ChaosResist2"
+    ],
+    "Helmet": [
+     "ChaosResist2"
+    ],
+    "Ring": [
+     "ChaosResist2"
+    ],
+    "Shield": [
+     "ChaosResist2"
+    ]
    },
    "id": "essence-of-ruin",
    "nom": "Essence of Ruin",
@@ -241,21 +643,51 @@
   },
   {
    "cibles": {
-    "Bow": "LocalCriticalStrikeChance3",
-    "Crossbow": "LocalCriticalStrikeChance3",
-    "Dagger": "LocalCriticalStrikeChance3",
-    "Flail": "LocalCriticalStrikeChance3",
-    "Focus": "SpellCriticalStrikeChance3",
-    "One Hand Axe": "LocalCriticalStrikeChance3",
-    "One Hand Mace": "LocalCriticalStrikeChance3",
-    "One Hand Sword": "LocalCriticalStrikeChance3",
-    "Spear": "LocalCriticalStrikeChance3",
-    "Staff": "SpellCriticalStrikeChanceTwoHand3",
-    "Two Hand Axe": "LocalCriticalStrikeChance3",
-    "Two Hand Mace": "LocalCriticalStrikeChance3",
-    "Two Hand Sword": "LocalCriticalStrikeChance3",
-    "Wand": "SpellCriticalStrikeChance3",
-    "Warstaff": "LocalCriticalStrikeChance3"
+    "Bow": [
+     "LocalCriticalStrikeChance3"
+    ],
+    "Crossbow": [
+     "LocalCriticalStrikeChance3"
+    ],
+    "Dagger": [
+     "LocalCriticalStrikeChance3"
+    ],
+    "Flail": [
+     "LocalCriticalStrikeChance3"
+    ],
+    "Focus": [
+     "SpellCriticalStrikeChance3"
+    ],
+    "One Hand Axe": [
+     "LocalCriticalStrikeChance3"
+    ],
+    "One Hand Mace": [
+     "LocalCriticalStrikeChance3"
+    ],
+    "One Hand Sword": [
+     "LocalCriticalStrikeChance3"
+    ],
+    "Spear": [
+     "LocalCriticalStrikeChance3"
+    ],
+    "Staff": [
+     "SpellCriticalStrikeChanceTwoHand3"
+    ],
+    "Two Hand Axe": [
+     "LocalCriticalStrikeChance3"
+    ],
+    "Two Hand Mace": [
+     "LocalCriticalStrikeChance3"
+    ],
+    "Two Hand Sword": [
+     "LocalCriticalStrikeChance3"
+    ],
+    "Wand": [
+     "SpellCriticalStrikeChance3"
+    ],
+    "Warstaff": [
+     "LocalCriticalStrikeChance3"
+    ]
    },
    "id": "essence-of-seeking",
    "nom": "Essence of Seeking",
@@ -263,9 +695,15 @@
   },
   {
    "cibles": {
-    "Focus": "SpellDamageOnWeapon4",
-    "Staff": "SpellDamageOnTwoHandWeapon4",
-    "Wand": "SpellDamageOnWeapon4"
+    "Focus": [
+     "SpellDamageOnWeapon4"
+    ],
+    "Staff": [
+     "SpellDamageOnTwoHandWeapon4"
+    ],
+    "Wand": [
+     "SpellDamageOnWeapon4"
+    ]
    },
    "id": "essence-of-sorcery",
    "nom": "Essence of Sorcery",
@@ -273,16 +711,36 @@
   },
   {
    "cibles": {
-    "Amulet": "ColdResist4",
-    "Belt": "ColdResist4",
-    "Body Armour": "ColdResist4",
-    "Boots": "ColdResist4",
-    "Buckler": "ColdResist4",
-    "Focus": "ColdResist4",
-    "Gloves": "ColdResist4",
-    "Helmet": "ColdResist4",
-    "Ring": "ColdResist4",
-    "Shield": "ColdResist4"
+    "Amulet": [
+     "ColdResist4"
+    ],
+    "Belt": [
+     "ColdResist4"
+    ],
+    "Body Armour": [
+     "ColdResist4"
+    ],
+    "Boots": [
+     "ColdResist4"
+    ],
+    "Buckler": [
+     "ColdResist4"
+    ],
+    "Focus": [
+     "ColdResist4"
+    ],
+    "Gloves": [
+     "ColdResist4"
+    ],
+    "Helmet": [
+     "ColdResist4"
+    ],
+    "Ring": [
+     "ColdResist4"
+    ],
+    "Shield": [
+     "ColdResist4"
+    ]
    },
    "id": "essence-of-thawing",
    "nom": "Essence of Thawing",
@@ -290,15 +748,144 @@
   },
   {
    "cibles": {
-    "Amulet": "IncreasedLife6",
-    "Belt": "IncreasedLife7",
-    "Body Armour": "IncreasedLife7",
-    "Boots": "IncreasedLife6",
-    "Buckler": "IncreasedLife7",
-    "Gloves": "IncreasedLife6",
-    "Helmet": "IncreasedLife7",
-    "Ring": "IncreasedLife6",
-    "Shield": "IncreasedLife7"
+    "Amulet": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Belt": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Body Armour": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Boots": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Bow": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Buckler": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Crossbow": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Dagger": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Flail": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Focus": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Gloves": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Helmet": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "One Hand Axe": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "One Hand Mace": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "One Hand Sword": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Quiver": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Ring": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Sceptre": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Shield": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Spear": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Staff": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Two Hand Axe": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Two Hand Mace": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Two Hand Sword": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Wand": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ],
+    "Warstaff": [
+     "EssenceAbyssPrefix",
+     "EssenceAbyssSuffix"
+    ]
+   },
+   "id": "essence-of-the-abyss",
+   "nom": "Essence of the Abyss",
+   "type": "corrupted"
+  },
+  {
+   "cibles": {
+    "Amulet": [
+     "IncreasedLife6"
+    ],
+    "Belt": [
+     "IncreasedLife7"
+    ],
+    "Body Armour": [
+     "IncreasedLife7"
+    ],
+    "Boots": [
+     "IncreasedLife6"
+    ],
+    "Buckler": [
+     "IncreasedLife7"
+    ],
+    "Gloves": [
+     "IncreasedLife6"
+    ],
+    "Helmet": [
+     "IncreasedLife7"
+    ],
+    "Ring": [
+     "IncreasedLife6"
+    ],
+    "Shield": [
+     "IncreasedLife7"
+    ]
    },
    "id": "essence-of-the-body",
    "nom": "Essence of the Body",
@@ -306,8 +893,12 @@
   },
   {
    "cibles": {
-    "Amulet": "EssenceBreach",
-    "Ring": "EssenceBreach"
+    "Amulet": [
+     "EssenceBreach"
+    ],
+    "Ring": [
+     "EssenceBreach"
+    ]
    },
    "id": "essence-of-the-breach",
    "nom": "Essence of the Breach",
@@ -315,12 +906,161 @@
   },
   {
    "cibles": {
-    "Amulet": "IncreasedMana7",
-    "Belt": "IncreasedMana6",
-    "Boots": "IncreasedMana6",
-    "Gloves": "IncreasedMana6",
-    "Helmet": "IncreasedMana6",
-    "Ring": "IncreasedMana7"
+    "Amulet": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Belt": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Body Armour": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Boots": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Bow": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Buckler": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Crossbow": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Dagger": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Flail": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Focus": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Gloves": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Helmet": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "One Hand Axe": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "One Hand Mace": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "One Hand Sword": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Quiver": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Ring": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Sceptre": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Shield": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Spear": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Staff": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Two Hand Axe": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Two Hand Mace": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Two Hand Sword": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Wand": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ],
+    "Warstaff": [
+     "Strength4",
+     "Dexterity4",
+     "Intelligence4"
+    ]
+   },
+   "id": "essence-of-the-infinite",
+   "nom": "Essence of the Infinite",
+   "type": "normal"
+  },
+  {
+   "cibles": {
+    "Amulet": [
+     "IncreasedMana7"
+    ],
+    "Belt": [
+     "IncreasedMana6"
+    ],
+    "Boots": [
+     "IncreasedMana6"
+    ],
+    "Gloves": [
+     "IncreasedMana6"
+    ],
+    "Helmet": [
+     "IncreasedMana6"
+    ],
+    "Ring": [
+     "IncreasedMana7"
+    ]
    },
    "id": "essence-of-the-mind",
    "nom": "Essence of the Mind",
@@ -328,18 +1068,61 @@
   },
   {
    "cibles": {
-    "Bow": "LocalAddedPhysicalDamage7",
-    "Crossbow": "LocalAddedPhysicalDamageTwoHand7",
-    "Dagger": "LocalAddedPhysicalDamage7",
-    "Flail": "LocalAddedPhysicalDamage7",
-    "One Hand Axe": "LocalAddedPhysicalDamage7",
-    "One Hand Mace": "LocalAddedPhysicalDamage7",
-    "One Hand Sword": "LocalAddedPhysicalDamage7",
-    "Spear": "LocalAddedPhysicalDamage7",
-    "Two Hand Axe": "LocalAddedPhysicalDamageTwoHand7",
-    "Two Hand Mace": "LocalAddedPhysicalDamageTwoHand7",
-    "Two Hand Sword": "LocalAddedPhysicalDamageTwoHand7",
-    "Warstaff": "LocalAddedPhysicalDamageTwoHand7"
+    "Body Armour": [
+     "AlloyPresenceAreaOfEffect1"
+    ],
+    "Boots": [
+     "AlloyTemporaryMinionSkillLimit1"
+    ],
+    "Gloves": [
+     "AlloyRemnantPickupRange1"
+    ],
+    "Helmet": [
+     "AlloyManaCostEfficiency1"
+    ]
+   },
+   "id": "expansive-alloy",
+   "nom": "Expansive Alloy",
+   "type": "alloy"
+  },
+  {
+   "cibles": {
+    "Bow": [
+     "LocalAddedPhysicalDamage7"
+    ],
+    "Crossbow": [
+     "LocalAddedPhysicalDamageTwoHand7"
+    ],
+    "Dagger": [
+     "LocalAddedPhysicalDamage7"
+    ],
+    "Flail": [
+     "LocalAddedPhysicalDamage7"
+    ],
+    "One Hand Axe": [
+     "LocalAddedPhysicalDamage7"
+    ],
+    "One Hand Mace": [
+     "LocalAddedPhysicalDamage7"
+    ],
+    "One Hand Sword": [
+     "LocalAddedPhysicalDamage7"
+    ],
+    "Spear": [
+     "LocalAddedPhysicalDamage7"
+    ],
+    "Two Hand Axe": [
+     "LocalAddedPhysicalDamageTwoHand7"
+    ],
+    "Two Hand Mace": [
+     "LocalAddedPhysicalDamageTwoHand7"
+    ],
+    "Two Hand Sword": [
+     "LocalAddedPhysicalDamageTwoHand7"
+    ],
+    "Warstaff": [
+     "LocalAddedPhysicalDamageTwoHand7"
+    ]
    },
    "id": "greater-essence-of-abrasion",
    "nom": "Greater Essence of Abrasion",
@@ -347,9 +1130,15 @@
   },
   {
    "cibles": {
-    "Focus": "IncreasedCastSpeed5",
-    "Staff": "IncreasedCastSpeedTwoHand5",
-    "Wand": "IncreasedCastSpeed5"
+    "Focus": [
+     "IncreasedCastSpeed5"
+    ],
+    "Staff": [
+     "IncreasedCastSpeedTwoHand5"
+    ],
+    "Wand": [
+     "IncreasedCastSpeed5"
+    ]
    },
    "id": "greater-essence-of-alacrity",
    "nom": "Greater Essence of Alacrity",
@@ -357,7 +1146,72 @@
   },
   {
    "cibles": {
-    "Sceptre": "NearbyAlliesAllDamage6"
+    "Bow": [
+     "LocalIncreasedAccuracy7",
+     "IncreasedAccuracy7"
+    ],
+    "Crossbow": [
+     "LocalIncreasedAccuracy7",
+     "IncreasedAccuracy7"
+    ],
+    "Dagger": [
+     "LocalIncreasedAccuracy7",
+     "IncreasedAccuracy7"
+    ],
+    "Flail": [
+     "LocalIncreasedAccuracy7",
+     "IncreasedAccuracy7"
+    ],
+    "Gloves": [
+     "LocalIncreasedAccuracy7",
+     "IncreasedAccuracy7"
+    ],
+    "One Hand Axe": [
+     "LocalIncreasedAccuracy7",
+     "IncreasedAccuracy7"
+    ],
+    "One Hand Mace": [
+     "LocalIncreasedAccuracy7",
+     "IncreasedAccuracy7"
+    ],
+    "One Hand Sword": [
+     "LocalIncreasedAccuracy7",
+     "IncreasedAccuracy7"
+    ],
+    "Quiver": [
+     "LocalIncreasedAccuracy7",
+     "IncreasedAccuracy7"
+    ],
+    "Spear": [
+     "LocalIncreasedAccuracy7",
+     "IncreasedAccuracy7"
+    ],
+    "Two Hand Axe": [
+     "LocalIncreasedAccuracy7",
+     "IncreasedAccuracy7"
+    ],
+    "Two Hand Mace": [
+     "LocalIncreasedAccuracy7",
+     "IncreasedAccuracy7"
+    ],
+    "Two Hand Sword": [
+     "LocalIncreasedAccuracy7",
+     "IncreasedAccuracy7"
+    ],
+    "Warstaff": [
+     "LocalIncreasedAccuracy7",
+     "IncreasedAccuracy7"
+    ]
+   },
+   "id": "greater-essence-of-battle",
+   "nom": "Greater Essence of Battle",
+   "type": "greater"
+  },
+  {
+   "cibles": {
+    "Sceptre": [
+     "NearbyAlliesAllDamage6"
+    ]
    },
    "id": "greater-essence-of-command",
    "nom": "Greater Essence of Command",
@@ -365,18 +1219,42 @@
   },
   {
    "cibles": {
-    "Bow": "LocalAddedLightningDamage7",
-    "Crossbow": "LocalAddedLightningDamageTwoHand7",
-    "Dagger": "LocalAddedLightningDamage7",
-    "Flail": "LocalAddedLightningDamage7",
-    "One Hand Axe": "LocalAddedLightningDamage7",
-    "One Hand Mace": "LocalAddedLightningDamage7",
-    "One Hand Sword": "LocalAddedLightningDamage7",
-    "Spear": "LocalAddedLightningDamage7",
-    "Two Hand Axe": "LocalAddedLightningDamageTwoHand7",
-    "Two Hand Mace": "LocalAddedLightningDamageTwoHand7",
-    "Two Hand Sword": "LocalAddedLightningDamageTwoHand7",
-    "Warstaff": "LocalAddedLightningDamageTwoHand7"
+    "Bow": [
+     "LocalAddedLightningDamage7"
+    ],
+    "Crossbow": [
+     "LocalAddedLightningDamageTwoHand7"
+    ],
+    "Dagger": [
+     "LocalAddedLightningDamage7"
+    ],
+    "Flail": [
+     "LocalAddedLightningDamage7"
+    ],
+    "One Hand Axe": [
+     "LocalAddedLightningDamage7"
+    ],
+    "One Hand Mace": [
+     "LocalAddedLightningDamage7"
+    ],
+    "One Hand Sword": [
+     "LocalAddedLightningDamage7"
+    ],
+    "Spear": [
+     "LocalAddedLightningDamage7"
+    ],
+    "Two Hand Axe": [
+     "LocalAddedLightningDamageTwoHand7"
+    ],
+    "Two Hand Mace": [
+     "LocalAddedLightningDamageTwoHand7"
+    ],
+    "Two Hand Sword": [
+     "LocalAddedLightningDamageTwoHand7"
+    ],
+    "Warstaff": [
+     "LocalAddedLightningDamageTwoHand7"
+    ]
    },
    "id": "greater-essence-of-electricity",
    "nom": "Greater Essence of Electricity",
@@ -384,18 +1262,105 @@
   },
   {
    "cibles": {
-    "Bow": "LocalAddedFireDamage7",
-    "Crossbow": "LocalAddedFireDamageTwoHand7",
-    "Dagger": "LocalAddedFireDamage7",
-    "Flail": "LocalAddedFireDamage7",
-    "One Hand Axe": "LocalAddedFireDamage7",
-    "One Hand Mace": "LocalAddedFireDamage7",
-    "One Hand Sword": "LocalAddedFireDamage7",
-    "Spear": "LocalAddedFireDamage7",
-    "Two Hand Axe": "LocalAddedFireDamageTwoHand7",
-    "Two Hand Mace": "LocalAddedFireDamageTwoHand7",
-    "Two Hand Sword": "LocalAddedFireDamageTwoHand7",
-    "Warstaff": "LocalAddedFireDamageTwoHand7"
+    "Body Armour": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent5",
+     "LocalIncreasedEvasionRatingPercent5",
+     "LocalIncreasedEnergyShieldPercent5",
+     "LocalIncreasedArmourAndEvasion5",
+     "LocalIncreasedArmourAndEnergyShield5",
+     "LocalIncreasedEvasionAndEnergyShield5_"
+    ],
+    "Boots": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent5",
+     "LocalIncreasedEvasionRatingPercent5",
+     "LocalIncreasedEnergyShieldPercent5",
+     "LocalIncreasedArmourAndEvasion5",
+     "LocalIncreasedArmourAndEnergyShield5",
+     "LocalIncreasedEvasionAndEnergyShield5_"
+    ],
+    "Buckler": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent5",
+     "LocalIncreasedEvasionRatingPercent5",
+     "LocalIncreasedEnergyShieldPercent5",
+     "LocalIncreasedArmourAndEvasion5",
+     "LocalIncreasedArmourAndEnergyShield5",
+     "LocalIncreasedEvasionAndEnergyShield5_"
+    ],
+    "Focus": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent5",
+     "LocalIncreasedEvasionRatingPercent5",
+     "LocalIncreasedEnergyShieldPercent5",
+     "LocalIncreasedArmourAndEvasion5",
+     "LocalIncreasedArmourAndEnergyShield5",
+     "LocalIncreasedEvasionAndEnergyShield5_"
+    ],
+    "Gloves": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent5",
+     "LocalIncreasedEvasionRatingPercent5",
+     "LocalIncreasedEnergyShieldPercent5",
+     "LocalIncreasedArmourAndEvasion5",
+     "LocalIncreasedArmourAndEnergyShield5",
+     "LocalIncreasedEvasionAndEnergyShield5_"
+    ],
+    "Helmet": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent5",
+     "LocalIncreasedEvasionRatingPercent5",
+     "LocalIncreasedEnergyShieldPercent5",
+     "LocalIncreasedArmourAndEvasion5",
+     "LocalIncreasedArmourAndEnergyShield5",
+     "LocalIncreasedEvasionAndEnergyShield5_"
+    ],
+    "Shield": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent5",
+     "LocalIncreasedEvasionRatingPercent5",
+     "LocalIncreasedEnergyShieldPercent5",
+     "LocalIncreasedArmourAndEvasion5",
+     "LocalIncreasedArmourAndEnergyShield5",
+     "LocalIncreasedEvasionAndEnergyShield5_"
+    ]
+   },
+   "id": "greater-essence-of-enhancement",
+   "nom": "Greater Essence of Enhancement",
+   "type": "greater"
+  },
+  {
+   "cibles": {
+    "Bow": [
+     "LocalAddedFireDamage7"
+    ],
+    "Crossbow": [
+     "LocalAddedFireDamageTwoHand7"
+    ],
+    "Dagger": [
+     "LocalAddedFireDamage7"
+    ],
+    "Flail": [
+     "LocalAddedFireDamage7"
+    ],
+    "One Hand Axe": [
+     "LocalAddedFireDamage7"
+    ],
+    "One Hand Mace": [
+     "LocalAddedFireDamage7"
+    ],
+    "One Hand Sword": [
+     "LocalAddedFireDamage7"
+    ],
+    "Spear": [
+     "LocalAddedFireDamage7"
+    ],
+    "Two Hand Axe": [
+     "LocalAddedFireDamageTwoHand7"
+    ],
+    "Two Hand Mace": [
+     "LocalAddedFireDamageTwoHand7"
+    ],
+    "Two Hand Sword": [
+     "LocalAddedFireDamageTwoHand7"
+    ],
+    "Warstaff": [
+     "LocalAddedFireDamageTwoHand7"
+    ]
    },
    "id": "greater-essence-of-flames",
    "nom": "Greater Essence of Flames",
@@ -403,16 +1368,36 @@
   },
   {
    "cibles": {
-    "Amulet": "LightningResist6",
-    "Belt": "LightningResist6",
-    "Body Armour": "LightningResist6",
-    "Boots": "LightningResist6",
-    "Buckler": "LightningResist6",
-    "Focus": "LightningResist6",
-    "Gloves": "LightningResist6",
-    "Helmet": "LightningResist6",
-    "Ring": "LightningResist6",
-    "Shield": "LightningResist6"
+    "Amulet": [
+     "LightningResist6"
+    ],
+    "Belt": [
+     "LightningResist6"
+    ],
+    "Body Armour": [
+     "LightningResist6"
+    ],
+    "Boots": [
+     "LightningResist6"
+    ],
+    "Buckler": [
+     "LightningResist6"
+    ],
+    "Focus": [
+     "LightningResist6"
+    ],
+    "Gloves": [
+     "LightningResist6"
+    ],
+    "Helmet": [
+     "LightningResist6"
+    ],
+    "Ring": [
+     "LightningResist6"
+    ],
+    "Shield": [
+     "LightningResist6"
+    ]
    },
    "id": "greater-essence-of-grounding",
    "nom": "Greater Essence of Grounding",
@@ -420,18 +1405,42 @@
   },
   {
    "cibles": {
-    "Bow": "LocalIncreasedAttackSpeed4",
-    "Crossbow": "LocalIncreasedAttackSpeed4",
-    "Dagger": "LocalIncreasedAttackSpeed7",
-    "Flail": "LocalIncreasedAttackSpeed7",
-    "One Hand Axe": "LocalIncreasedAttackSpeed7",
-    "One Hand Mace": "LocalIncreasedAttackSpeed7",
-    "One Hand Sword": "LocalIncreasedAttackSpeed7",
-    "Spear": "LocalIncreasedAttackSpeed7",
-    "Two Hand Axe": "LocalIncreasedAttackSpeed7",
-    "Two Hand Mace": "LocalIncreasedAttackSpeed7",
-    "Two Hand Sword": "LocalIncreasedAttackSpeed7",
-    "Warstaff": "LocalIncreasedAttackSpeed7"
+    "Bow": [
+     "LocalIncreasedAttackSpeed4"
+    ],
+    "Crossbow": [
+     "LocalIncreasedAttackSpeed4"
+    ],
+    "Dagger": [
+     "LocalIncreasedAttackSpeed7"
+    ],
+    "Flail": [
+     "LocalIncreasedAttackSpeed7"
+    ],
+    "One Hand Axe": [
+     "LocalIncreasedAttackSpeed7"
+    ],
+    "One Hand Mace": [
+     "LocalIncreasedAttackSpeed7"
+    ],
+    "One Hand Sword": [
+     "LocalIncreasedAttackSpeed7"
+    ],
+    "Spear": [
+     "LocalIncreasedAttackSpeed7"
+    ],
+    "Two Hand Axe": [
+     "LocalIncreasedAttackSpeed7"
+    ],
+    "Two Hand Mace": [
+     "LocalIncreasedAttackSpeed7"
+    ],
+    "Two Hand Sword": [
+     "LocalIncreasedAttackSpeed7"
+    ],
+    "Warstaff": [
+     "LocalIncreasedAttackSpeed7"
+    ]
    },
    "id": "greater-essence-of-haste",
    "nom": "Greater Essence of Haste",
@@ -439,18 +1448,42 @@
   },
   {
    "cibles": {
-    "Bow": "LocalAddedColdDamage7",
-    "Crossbow": "LocalAddedColdDamageTwoHand7",
-    "Dagger": "LocalAddedColdDamage7",
-    "Flail": "LocalAddedColdDamage7",
-    "One Hand Axe": "LocalAddedColdDamage7",
-    "One Hand Mace": "LocalAddedColdDamage7",
-    "One Hand Sword": "LocalAddedColdDamage7",
-    "Spear": "LocalAddedColdDamage7",
-    "Two Hand Axe": "LocalAddedColdDamageTwoHand7",
-    "Two Hand Mace": "LocalAddedColdDamageTwoHand7",
-    "Two Hand Sword": "LocalAddedColdDamageTwoHand7",
-    "Warstaff": "LocalAddedColdDamageTwoHand7"
+    "Bow": [
+     "LocalAddedColdDamage7"
+    ],
+    "Crossbow": [
+     "LocalAddedColdDamageTwoHand7"
+    ],
+    "Dagger": [
+     "LocalAddedColdDamage7"
+    ],
+    "Flail": [
+     "LocalAddedColdDamage7"
+    ],
+    "One Hand Axe": [
+     "LocalAddedColdDamage7"
+    ],
+    "One Hand Mace": [
+     "LocalAddedColdDamage7"
+    ],
+    "One Hand Sword": [
+     "LocalAddedColdDamage7"
+    ],
+    "Spear": [
+     "LocalAddedColdDamage7"
+    ],
+    "Two Hand Axe": [
+     "LocalAddedColdDamageTwoHand7"
+    ],
+    "Two Hand Mace": [
+     "LocalAddedColdDamageTwoHand7"
+    ],
+    "Two Hand Sword": [
+     "LocalAddedColdDamageTwoHand7"
+    ],
+    "Warstaff": [
+     "LocalAddedColdDamageTwoHand7"
+    ]
    },
    "id": "greater-essence-of-ice",
    "nom": "Greater Essence of Ice",
@@ -458,16 +1491,36 @@
   },
   {
    "cibles": {
-    "Amulet": "FireResist6",
-    "Belt": "FireResist6",
-    "Body Armour": "FireResist6",
-    "Boots": "FireResist6",
-    "Buckler": "FireResist6",
-    "Focus": "FireResist6",
-    "Gloves": "FireResist6",
-    "Helmet": "FireResist6",
-    "Ring": "FireResist6",
-    "Shield": "FireResist6"
+    "Amulet": [
+     "FireResist6"
+    ],
+    "Belt": [
+     "FireResist6"
+    ],
+    "Body Armour": [
+     "FireResist6"
+    ],
+    "Boots": [
+     "FireResist6"
+    ],
+    "Buckler": [
+     "FireResist6"
+    ],
+    "Focus": [
+     "FireResist6"
+    ],
+    "Gloves": [
+     "FireResist6"
+    ],
+    "Helmet": [
+     "FireResist6"
+    ],
+    "Ring": [
+     "FireResist6"
+    ],
+    "Shield": [
+     "FireResist6"
+    ]
    },
    "id": "greater-essence-of-insulation",
    "nom": "Greater Essence of Insulation",
@@ -475,11 +1528,21 @@
   },
   {
    "cibles": {
-    "Amulet": "ItemFoundRarityIncrease3",
-    "Boots": "ItemFoundRarityIncrease3",
-    "Gloves": "ItemFoundRarityIncrease3",
-    "Helmet": "ItemFoundRarityIncrease3",
-    "Ring": "ItemFoundRarityIncrease3"
+    "Amulet": [
+     "ItemFoundRarityIncrease3"
+    ],
+    "Boots": [
+     "ItemFoundRarityIncrease3"
+    ],
+    "Gloves": [
+     "ItemFoundRarityIncrease3"
+    ],
+    "Helmet": [
+     "ItemFoundRarityIncrease3"
+    ],
+    "Ring": [
+     "ItemFoundRarityIncrease3"
+    ]
    },
    "id": "greater-essence-of-opulence",
    "nom": "Greater Essence of Opulence",
@@ -487,16 +1550,36 @@
   },
   {
    "cibles": {
-    "Amulet": "ChaosResist4",
-    "Belt": "ChaosResist4",
-    "Body Armour": "ChaosResist4",
-    "Boots": "ChaosResist4",
-    "Buckler": "ChaosResist4",
-    "Focus": "ChaosResist4",
-    "Gloves": "ChaosResist4",
-    "Helmet": "ChaosResist4",
-    "Ring": "ChaosResist4",
-    "Shield": "ChaosResist4"
+    "Amulet": [
+     "ChaosResist4"
+    ],
+    "Belt": [
+     "ChaosResist4"
+    ],
+    "Body Armour": [
+     "ChaosResist4"
+    ],
+    "Boots": [
+     "ChaosResist4"
+    ],
+    "Buckler": [
+     "ChaosResist4"
+    ],
+    "Focus": [
+     "ChaosResist4"
+    ],
+    "Gloves": [
+     "ChaosResist4"
+    ],
+    "Helmet": [
+     "ChaosResist4"
+    ],
+    "Ring": [
+     "ChaosResist4"
+    ],
+    "Shield": [
+     "ChaosResist4"
+    ]
    },
    "id": "greater-essence-of-ruin",
    "nom": "Greater Essence of Ruin",
@@ -504,21 +1587,51 @@
   },
   {
    "cibles": {
-    "Bow": "LocalCriticalStrikeChance4",
-    "Crossbow": "LocalCriticalStrikeChance4",
-    "Dagger": "LocalCriticalStrikeChance4",
-    "Flail": "LocalCriticalStrikeChance4",
-    "Focus": "SpellCriticalStrikeChance4",
-    "One Hand Axe": "LocalCriticalStrikeChance4",
-    "One Hand Mace": "LocalCriticalStrikeChance4",
-    "One Hand Sword": "LocalCriticalStrikeChance4",
-    "Spear": "LocalCriticalStrikeChance4",
-    "Staff": "SpellCriticalStrikeChanceTwoHand4",
-    "Two Hand Axe": "LocalCriticalStrikeChance4",
-    "Two Hand Mace": "LocalCriticalStrikeChance4",
-    "Two Hand Sword": "LocalCriticalStrikeChance4",
-    "Wand": "SpellCriticalStrikeChance4",
-    "Warstaff": "LocalCriticalStrikeChance4"
+    "Bow": [
+     "LocalCriticalStrikeChance4"
+    ],
+    "Crossbow": [
+     "LocalCriticalStrikeChance4"
+    ],
+    "Dagger": [
+     "LocalCriticalStrikeChance4"
+    ],
+    "Flail": [
+     "LocalCriticalStrikeChance4"
+    ],
+    "Focus": [
+     "SpellCriticalStrikeChance4"
+    ],
+    "One Hand Axe": [
+     "LocalCriticalStrikeChance4"
+    ],
+    "One Hand Mace": [
+     "LocalCriticalStrikeChance4"
+    ],
+    "One Hand Sword": [
+     "LocalCriticalStrikeChance4"
+    ],
+    "Spear": [
+     "LocalCriticalStrikeChance4"
+    ],
+    "Staff": [
+     "SpellCriticalStrikeChanceTwoHand4"
+    ],
+    "Two Hand Axe": [
+     "LocalCriticalStrikeChance4"
+    ],
+    "Two Hand Mace": [
+     "LocalCriticalStrikeChance4"
+    ],
+    "Two Hand Sword": [
+     "LocalCriticalStrikeChance4"
+    ],
+    "Wand": [
+     "SpellCriticalStrikeChance4"
+    ],
+    "Warstaff": [
+     "LocalCriticalStrikeChance4"
+    ]
    },
    "id": "greater-essence-of-seeking",
    "nom": "Greater Essence of Seeking",
@@ -526,9 +1639,15 @@
   },
   {
    "cibles": {
-    "Focus": "SpellDamageOnWeapon6",
-    "Staff": "SpellDamageOnTwoHandWeapon6",
-    "Wand": "SpellDamageOnWeapon6"
+    "Focus": [
+     "SpellDamageOnWeapon6"
+    ],
+    "Staff": [
+     "SpellDamageOnTwoHandWeapon6"
+    ],
+    "Wand": [
+     "SpellDamageOnWeapon6"
+    ]
    },
    "id": "greater-essence-of-sorcery",
    "nom": "Greater Essence of Sorcery",
@@ -536,16 +1655,36 @@
   },
   {
    "cibles": {
-    "Amulet": "ColdResist6",
-    "Belt": "ColdResist6",
-    "Body Armour": "ColdResist6",
-    "Boots": "ColdResist6",
-    "Buckler": "ColdResist6",
-    "Focus": "ColdResist6",
-    "Gloves": "ColdResist6",
-    "Helmet": "ColdResist6",
-    "Ring": "ColdResist6",
-    "Shield": "ColdResist6"
+    "Amulet": [
+     "ColdResist6"
+    ],
+    "Belt": [
+     "ColdResist6"
+    ],
+    "Body Armour": [
+     "ColdResist6"
+    ],
+    "Boots": [
+     "ColdResist6"
+    ],
+    "Buckler": [
+     "ColdResist6"
+    ],
+    "Focus": [
+     "ColdResist6"
+    ],
+    "Gloves": [
+     "ColdResist6"
+    ],
+    "Helmet": [
+     "ColdResist6"
+    ],
+    "Ring": [
+     "ColdResist6"
+    ],
+    "Shield": [
+     "ColdResist6"
+    ]
    },
    "id": "greater-essence-of-thawing",
    "nom": "Greater Essence of Thawing",
@@ -553,14 +1692,30 @@
   },
   {
    "cibles": {
-    "Amulet": "IncreasedLife7",
-    "Belt": "IncreasedLife8",
-    "Body Armour": "IncreasedLife8",
-    "Boots": "IncreasedLife7",
-    "Buckler": "IncreasedLife8",
-    "Gloves": "IncreasedLife7",
-    "Helmet": "IncreasedLife8",
-    "Shield": "IncreasedLife8"
+    "Amulet": [
+     "IncreasedLife7"
+    ],
+    "Belt": [
+     "IncreasedLife8"
+    ],
+    "Body Armour": [
+     "IncreasedLife8"
+    ],
+    "Boots": [
+     "IncreasedLife7"
+    ],
+    "Buckler": [
+     "IncreasedLife8"
+    ],
+    "Gloves": [
+     "IncreasedLife7"
+    ],
+    "Helmet": [
+     "IncreasedLife8"
+    ],
+    "Shield": [
+     "IncreasedLife8"
+    ]
    },
    "id": "greater-essence-of-the-body",
    "nom": "Greater Essence of the Body",
@@ -568,12 +1723,161 @@
   },
   {
    "cibles": {
-    "Amulet": "IncreasedMana8",
-    "Belt": "IncreasedMana7",
-    "Boots": "IncreasedMana7",
-    "Gloves": "IncreasedMana7",
-    "Helmet": "IncreasedMana7",
-    "Ring": "IncreasedMana8"
+    "Amulet": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Belt": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Body Armour": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Boots": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Bow": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Buckler": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Crossbow": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Dagger": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Flail": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Focus": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Gloves": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Helmet": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "One Hand Axe": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "One Hand Mace": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "One Hand Sword": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Quiver": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Ring": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Sceptre": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Shield": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Spear": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Staff": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Two Hand Axe": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Two Hand Mace": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Two Hand Sword": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Wand": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ],
+    "Warstaff": [
+     "Strength6",
+     "Dexterity6",
+     "Intelligence6"
+    ]
+   },
+   "id": "greater-essence-of-the-infinite",
+   "nom": "Greater Essence of the Infinite",
+   "type": "greater"
+  },
+  {
+   "cibles": {
+    "Amulet": [
+     "IncreasedMana8"
+    ],
+    "Belt": [
+     "IncreasedMana7"
+    ],
+    "Boots": [
+     "IncreasedMana7"
+    ],
+    "Gloves": [
+     "IncreasedMana7"
+    ],
+    "Helmet": [
+     "IncreasedMana7"
+    ],
+    "Ring": [
+     "IncreasedMana8"
+    ]
    },
    "id": "greater-essence-of-the-mind",
    "nom": "Greater Essence of the Mind",
@@ -581,18 +1885,42 @@
   },
   {
    "cibles": {
-    "Bow": "LocalAddedPhysicalDamage2",
-    "Crossbow": "LocalAddedPhysicalDamageTwoHand2",
-    "Dagger": "LocalAddedPhysicalDamage2",
-    "Flail": "LocalAddedPhysicalDamage2",
-    "One Hand Axe": "LocalAddedPhysicalDamage2",
-    "One Hand Mace": "LocalAddedPhysicalDamage2",
-    "One Hand Sword": "LocalAddedPhysicalDamage2",
-    "Spear": "LocalAddedPhysicalDamage2",
-    "Two Hand Axe": "LocalAddedPhysicalDamageTwoHand2",
-    "Two Hand Mace": "LocalAddedPhysicalDamageTwoHand2",
-    "Two Hand Sword": "LocalAddedPhysicalDamageTwoHand2",
-    "Warstaff": "LocalAddedPhysicalDamageTwoHand2"
+    "Bow": [
+     "LocalAddedPhysicalDamage2"
+    ],
+    "Crossbow": [
+     "LocalAddedPhysicalDamageTwoHand2"
+    ],
+    "Dagger": [
+     "LocalAddedPhysicalDamage2"
+    ],
+    "Flail": [
+     "LocalAddedPhysicalDamage2"
+    ],
+    "One Hand Axe": [
+     "LocalAddedPhysicalDamage2"
+    ],
+    "One Hand Mace": [
+     "LocalAddedPhysicalDamage2"
+    ],
+    "One Hand Sword": [
+     "LocalAddedPhysicalDamage2"
+    ],
+    "Spear": [
+     "LocalAddedPhysicalDamage2"
+    ],
+    "Two Hand Axe": [
+     "LocalAddedPhysicalDamageTwoHand2"
+    ],
+    "Two Hand Mace": [
+     "LocalAddedPhysicalDamageTwoHand2"
+    ],
+    "Two Hand Sword": [
+     "LocalAddedPhysicalDamageTwoHand2"
+    ],
+    "Warstaff": [
+     "LocalAddedPhysicalDamageTwoHand2"
+    ]
    },
    "id": "lesser-essence-of-abrasion",
    "nom": "Lesser Essence of Abrasion",
@@ -600,9 +1928,15 @@
   },
   {
    "cibles": {
-    "Focus": "IncreasedCastSpeed2",
-    "Staff": "IncreasedCastSpeedTwoHand2",
-    "Wand": "IncreasedCastSpeed2"
+    "Focus": [
+     "IncreasedCastSpeed2"
+    ],
+    "Staff": [
+     "IncreasedCastSpeedTwoHand2"
+    ],
+    "Wand": [
+     "IncreasedCastSpeed2"
+    ]
    },
    "id": "lesser-essence-of-alacrity",
    "nom": "Lesser Essence of Alacrity",
@@ -610,18 +1944,42 @@
   },
   {
    "cibles": {
-    "Bow": "LocalIncreasedAccuracy3",
-    "Crossbow": "LocalIncreasedAccuracy3",
-    "Dagger": "LocalIncreasedAccuracy3",
-    "Flail": "LocalIncreasedAccuracy3",
-    "One Hand Axe": "LocalIncreasedAccuracy3",
-    "One Hand Mace": "LocalIncreasedAccuracy3",
-    "One Hand Sword": "LocalIncreasedAccuracy3",
-    "Spear": "LocalIncreasedAccuracy3",
-    "Two Hand Axe": "LocalIncreasedAccuracy3",
-    "Two Hand Mace": "LocalIncreasedAccuracy3",
-    "Two Hand Sword": "LocalIncreasedAccuracy3",
-    "Warstaff": "LocalIncreasedAccuracy3"
+    "Bow": [
+     "LocalIncreasedAccuracy3"
+    ],
+    "Crossbow": [
+     "LocalIncreasedAccuracy3"
+    ],
+    "Dagger": [
+     "LocalIncreasedAccuracy3"
+    ],
+    "Flail": [
+     "LocalIncreasedAccuracy3"
+    ],
+    "One Hand Axe": [
+     "LocalIncreasedAccuracy3"
+    ],
+    "One Hand Mace": [
+     "LocalIncreasedAccuracy3"
+    ],
+    "One Hand Sword": [
+     "LocalIncreasedAccuracy3"
+    ],
+    "Spear": [
+     "LocalIncreasedAccuracy3"
+    ],
+    "Two Hand Axe": [
+     "LocalIncreasedAccuracy3"
+    ],
+    "Two Hand Mace": [
+     "LocalIncreasedAccuracy3"
+    ],
+    "Two Hand Sword": [
+     "LocalIncreasedAccuracy3"
+    ],
+    "Warstaff": [
+     "LocalIncreasedAccuracy3"
+    ]
    },
    "id": "lesser-essence-of-battle",
    "nom": "Lesser Essence of Battle",
@@ -629,7 +1987,9 @@
   },
   {
    "cibles": {
-    "Sceptre": "NearbyAlliesAllDamage2"
+    "Sceptre": [
+     "NearbyAlliesAllDamage2"
+    ]
    },
    "id": "lesser-essence-of-command",
    "nom": "Lesser Essence of Command",
@@ -637,18 +1997,42 @@
   },
   {
    "cibles": {
-    "Bow": "LocalAddedLightningDamage2",
-    "Crossbow": "LocalAddedLightningDamageTwoHand2",
-    "Dagger": "LocalAddedLightningDamage2",
-    "Flail": "LocalAddedLightningDamage2",
-    "One Hand Axe": "LocalAddedLightningDamage2",
-    "One Hand Mace": "LocalAddedLightningDamage2",
-    "One Hand Sword": "LocalAddedLightningDamage2",
-    "Spear": "LocalAddedLightningDamage2",
-    "Two Hand Axe": "LocalAddedLightningDamageTwoHand2",
-    "Two Hand Mace": "LocalAddedLightningDamageTwoHand2",
-    "Two Hand Sword": "LocalAddedLightningDamageTwoHand2",
-    "Warstaff": "LocalAddedLightningDamageTwoHand2"
+    "Bow": [
+     "LocalAddedLightningDamage2"
+    ],
+    "Crossbow": [
+     "LocalAddedLightningDamageTwoHand2"
+    ],
+    "Dagger": [
+     "LocalAddedLightningDamage2"
+    ],
+    "Flail": [
+     "LocalAddedLightningDamage2"
+    ],
+    "One Hand Axe": [
+     "LocalAddedLightningDamage2"
+    ],
+    "One Hand Mace": [
+     "LocalAddedLightningDamage2"
+    ],
+    "One Hand Sword": [
+     "LocalAddedLightningDamage2"
+    ],
+    "Spear": [
+     "LocalAddedLightningDamage2"
+    ],
+    "Two Hand Axe": [
+     "LocalAddedLightningDamageTwoHand2"
+    ],
+    "Two Hand Mace": [
+     "LocalAddedLightningDamageTwoHand2"
+    ],
+    "Two Hand Sword": [
+     "LocalAddedLightningDamageTwoHand2"
+    ],
+    "Warstaff": [
+     "LocalAddedLightningDamageTwoHand2"
+    ]
    },
    "id": "lesser-essence-of-electricity",
    "nom": "Lesser Essence of Electricity",
@@ -656,18 +2040,105 @@
   },
   {
    "cibles": {
-    "Bow": "LocalAddedFireDamage2",
-    "Crossbow": "LocalAddedFireDamageTwoHand2",
-    "Dagger": "LocalAddedFireDamage2",
-    "Flail": "LocalAddedFireDamage2",
-    "One Hand Axe": "LocalAddedFireDamage2",
-    "One Hand Mace": "LocalAddedFireDamage2",
-    "One Hand Sword": "LocalAddedFireDamage2",
-    "Spear": "LocalAddedFireDamage2",
-    "Two Hand Axe": "LocalAddedFireDamageTwoHand2",
-    "Two Hand Mace": "LocalAddedFireDamageTwoHand2",
-    "Two Hand Sword": "LocalAddedFireDamageTwoHand2",
-    "Warstaff": "LocalAddedFireDamageTwoHand2"
+    "Body Armour": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent2",
+     "LocalIncreasedEvasionRatingPercent2",
+     "LocalIncreasedEnergyShieldPercent2",
+     "LocalIncreasedArmourAndEvasion2",
+     "LocalIncreasedArmourAndEnergyShield2",
+     "LocalIncreasedEvasionAndEnergyShield2"
+    ],
+    "Boots": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent2",
+     "LocalIncreasedEvasionRatingPercent2",
+     "LocalIncreasedEnergyShieldPercent2",
+     "LocalIncreasedArmourAndEvasion2",
+     "LocalIncreasedArmourAndEnergyShield2",
+     "LocalIncreasedEvasionAndEnergyShield2"
+    ],
+    "Buckler": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent2",
+     "LocalIncreasedEvasionRatingPercent2",
+     "LocalIncreasedEnergyShieldPercent2",
+     "LocalIncreasedArmourAndEvasion2",
+     "LocalIncreasedArmourAndEnergyShield2",
+     "LocalIncreasedEvasionAndEnergyShield2"
+    ],
+    "Focus": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent2",
+     "LocalIncreasedEvasionRatingPercent2",
+     "LocalIncreasedEnergyShieldPercent2",
+     "LocalIncreasedArmourAndEvasion2",
+     "LocalIncreasedArmourAndEnergyShield2",
+     "LocalIncreasedEvasionAndEnergyShield2"
+    ],
+    "Gloves": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent2",
+     "LocalIncreasedEvasionRatingPercent2",
+     "LocalIncreasedEnergyShieldPercent2",
+     "LocalIncreasedArmourAndEvasion2",
+     "LocalIncreasedArmourAndEnergyShield2",
+     "LocalIncreasedEvasionAndEnergyShield2"
+    ],
+    "Helmet": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent2",
+     "LocalIncreasedEvasionRatingPercent2",
+     "LocalIncreasedEnergyShieldPercent2",
+     "LocalIncreasedArmourAndEvasion2",
+     "LocalIncreasedArmourAndEnergyShield2",
+     "LocalIncreasedEvasionAndEnergyShield2"
+    ],
+    "Shield": [
+     "LocalIncreasedPhysicalDamageReductionRatingPercent2",
+     "LocalIncreasedEvasionRatingPercent2",
+     "LocalIncreasedEnergyShieldPercent2",
+     "LocalIncreasedArmourAndEvasion2",
+     "LocalIncreasedArmourAndEnergyShield2",
+     "LocalIncreasedEvasionAndEnergyShield2"
+    ]
+   },
+   "id": "lesser-essence-of-enhancement",
+   "nom": "Lesser Essence of Enhancement",
+   "type": "lesser"
+  },
+  {
+   "cibles": {
+    "Bow": [
+     "LocalAddedFireDamage2"
+    ],
+    "Crossbow": [
+     "LocalAddedFireDamageTwoHand2"
+    ],
+    "Dagger": [
+     "LocalAddedFireDamage2"
+    ],
+    "Flail": [
+     "LocalAddedFireDamage2"
+    ],
+    "One Hand Axe": [
+     "LocalAddedFireDamage2"
+    ],
+    "One Hand Mace": [
+     "LocalAddedFireDamage2"
+    ],
+    "One Hand Sword": [
+     "LocalAddedFireDamage2"
+    ],
+    "Spear": [
+     "LocalAddedFireDamage2"
+    ],
+    "Two Hand Axe": [
+     "LocalAddedFireDamageTwoHand2"
+    ],
+    "Two Hand Mace": [
+     "LocalAddedFireDamageTwoHand2"
+    ],
+    "Two Hand Sword": [
+     "LocalAddedFireDamageTwoHand2"
+    ],
+    "Warstaff": [
+     "LocalAddedFireDamageTwoHand2"
+    ]
    },
    "id": "lesser-essence-of-flames",
    "nom": "Lesser Essence of Flames",
@@ -675,16 +2146,36 @@
   },
   {
    "cibles": {
-    "Amulet": "LightningResist2",
-    "Belt": "LightningResist2",
-    "Body Armour": "LightningResist2",
-    "Boots": "LightningResist2",
-    "Buckler": "LightningResist2",
-    "Focus": "LightningResist2",
-    "Gloves": "LightningResist2",
-    "Helmet": "LightningResist2",
-    "Ring": "LightningResist2",
-    "Shield": "LightningResist2"
+    "Amulet": [
+     "LightningResist2"
+    ],
+    "Belt": [
+     "LightningResist2"
+    ],
+    "Body Armour": [
+     "LightningResist2"
+    ],
+    "Boots": [
+     "LightningResist2"
+    ],
+    "Buckler": [
+     "LightningResist2"
+    ],
+    "Focus": [
+     "LightningResist2"
+    ],
+    "Gloves": [
+     "LightningResist2"
+    ],
+    "Helmet": [
+     "LightningResist2"
+    ],
+    "Ring": [
+     "LightningResist2"
+    ],
+    "Shield": [
+     "LightningResist2"
+    ]
    },
    "id": "lesser-essence-of-grounding",
    "nom": "Lesser Essence of Grounding",
@@ -692,18 +2183,42 @@
   },
   {
    "cibles": {
-    "Bow": "LocalIncreasedAttackSpeed2",
-    "Crossbow": "LocalIncreasedAttackSpeed2",
-    "Dagger": "LocalIncreasedAttackSpeed3",
-    "Flail": "LocalIncreasedAttackSpeed3",
-    "One Hand Axe": "LocalIncreasedAttackSpeed3",
-    "One Hand Mace": "LocalIncreasedAttackSpeed3",
-    "One Hand Sword": "LocalIncreasedAttackSpeed3",
-    "Spear": "LocalIncreasedAttackSpeed3",
-    "Two Hand Axe": "LocalIncreasedAttackSpeed3",
-    "Two Hand Mace": "LocalIncreasedAttackSpeed3",
-    "Two Hand Sword": "LocalIncreasedAttackSpeed3",
-    "Warstaff": "LocalIncreasedAttackSpeed3"
+    "Bow": [
+     "LocalIncreasedAttackSpeed2"
+    ],
+    "Crossbow": [
+     "LocalIncreasedAttackSpeed2"
+    ],
+    "Dagger": [
+     "LocalIncreasedAttackSpeed3"
+    ],
+    "Flail": [
+     "LocalIncreasedAttackSpeed3"
+    ],
+    "One Hand Axe": [
+     "LocalIncreasedAttackSpeed3"
+    ],
+    "One Hand Mace": [
+     "LocalIncreasedAttackSpeed3"
+    ],
+    "One Hand Sword": [
+     "LocalIncreasedAttackSpeed3"
+    ],
+    "Spear": [
+     "LocalIncreasedAttackSpeed3"
+    ],
+    "Two Hand Axe": [
+     "LocalIncreasedAttackSpeed3"
+    ],
+    "Two Hand Mace": [
+     "LocalIncreasedAttackSpeed3"
+    ],
+    "Two Hand Sword": [
+     "LocalIncreasedAttackSpeed3"
+    ],
+    "Warstaff": [
+     "LocalIncreasedAttackSpeed3"
+    ]
    },
    "id": "lesser-essence-of-haste",
    "nom": "Lesser Essence of Haste",
@@ -711,18 +2226,42 @@
   },
   {
    "cibles": {
-    "Bow": "LocalAddedColdDamage2",
-    "Crossbow": "LocalAddedColdDamageTwoHand2",
-    "Dagger": "LocalAddedColdDamage2",
-    "Flail": "LocalAddedColdDamage2",
-    "One Hand Axe": "LocalAddedColdDamage2",
-    "One Hand Mace": "LocalAddedColdDamage2",
-    "One Hand Sword": "LocalAddedColdDamage2",
-    "Spear": "LocalAddedColdDamage2",
-    "Two Hand Axe": "LocalAddedColdDamageTwoHand2",
-    "Two Hand Mace": "LocalAddedColdDamageTwoHand2",
-    "Two Hand Sword": "LocalAddedColdDamageTwoHand2",
-    "Warstaff": "LocalAddedColdDamageTwoHand2"
+    "Bow": [
+     "LocalAddedColdDamage2"
+    ],
+    "Crossbow": [
+     "LocalAddedColdDamageTwoHand2"
+    ],
+    "Dagger": [
+     "LocalAddedColdDamage2"
+    ],
+    "Flail": [
+     "LocalAddedColdDamage2"
+    ],
+    "One Hand Axe": [
+     "LocalAddedColdDamage2"
+    ],
+    "One Hand Mace": [
+     "LocalAddedColdDamage2"
+    ],
+    "One Hand Sword": [
+     "LocalAddedColdDamage2"
+    ],
+    "Spear": [
+     "LocalAddedColdDamage2"
+    ],
+    "Two Hand Axe": [
+     "LocalAddedColdDamageTwoHand2"
+    ],
+    "Two Hand Mace": [
+     "LocalAddedColdDamageTwoHand2"
+    ],
+    "Two Hand Sword": [
+     "LocalAddedColdDamageTwoHand2"
+    ],
+    "Warstaff": [
+     "LocalAddedColdDamageTwoHand2"
+    ]
    },
    "id": "lesser-essence-of-ice",
    "nom": "Lesser Essence of Ice",
@@ -730,16 +2269,36 @@
   },
   {
    "cibles": {
-    "Amulet": "FireResist2",
-    "Belt": "FireResist2",
-    "Body Armour": "FireResist2",
-    "Boots": "FireResist2",
-    "Buckler": "FireResist2",
-    "Focus": "FireResist2",
-    "Gloves": "FireResist2",
-    "Helmet": "FireResist2",
-    "Ring": "FireResist2",
-    "Shield": "FireResist2"
+    "Amulet": [
+     "FireResist2"
+    ],
+    "Belt": [
+     "FireResist2"
+    ],
+    "Body Armour": [
+     "FireResist2"
+    ],
+    "Boots": [
+     "FireResist2"
+    ],
+    "Buckler": [
+     "FireResist2"
+    ],
+    "Focus": [
+     "FireResist2"
+    ],
+    "Gloves": [
+     "FireResist2"
+    ],
+    "Helmet": [
+     "FireResist2"
+    ],
+    "Ring": [
+     "FireResist2"
+    ],
+    "Shield": [
+     "FireResist2"
+    ]
    },
    "id": "lesser-essence-of-insulation",
    "nom": "Lesser Essence of Insulation",
@@ -747,11 +2306,21 @@
   },
   {
    "cibles": {
-    "Amulet": "ItemFoundRarityIncrease1",
-    "Boots": "ItemFoundRarityIncrease1",
-    "Gloves": "ItemFoundRarityIncrease1",
-    "Helmet": "ItemFoundRarityIncrease1",
-    "Ring": "ItemFoundRarityIncrease1"
+    "Amulet": [
+     "ItemFoundRarityIncrease1"
+    ],
+    "Boots": [
+     "ItemFoundRarityIncrease1"
+    ],
+    "Gloves": [
+     "ItemFoundRarityIncrease1"
+    ],
+    "Helmet": [
+     "ItemFoundRarityIncrease1"
+    ],
+    "Ring": [
+     "ItemFoundRarityIncrease1"
+    ]
    },
    "id": "lesser-essence-of-opulence",
    "nom": "Lesser Essence of Opulence",
@@ -759,16 +2328,36 @@
   },
   {
    "cibles": {
-    "Amulet": "ChaosResist1",
-    "Belt": "ChaosResist1",
-    "Body Armour": "ChaosResist1",
-    "Boots": "ChaosResist1",
-    "Buckler": "ChaosResist1",
-    "Focus": "ChaosResist1",
-    "Gloves": "ChaosResist1",
-    "Helmet": "ChaosResist1",
-    "Ring": "ChaosResist1",
-    "Shield": "ChaosResist1"
+    "Amulet": [
+     "ChaosResist1"
+    ],
+    "Belt": [
+     "ChaosResist1"
+    ],
+    "Body Armour": [
+     "ChaosResist1"
+    ],
+    "Boots": [
+     "ChaosResist1"
+    ],
+    "Buckler": [
+     "ChaosResist1"
+    ],
+    "Focus": [
+     "ChaosResist1"
+    ],
+    "Gloves": [
+     "ChaosResist1"
+    ],
+    "Helmet": [
+     "ChaosResist1"
+    ],
+    "Ring": [
+     "ChaosResist1"
+    ],
+    "Shield": [
+     "ChaosResist1"
+    ]
    },
    "id": "lesser-essence-of-ruin",
    "nom": "Lesser Essence of Ruin",
@@ -776,21 +2365,51 @@
   },
   {
    "cibles": {
-    "Bow": "LocalCriticalStrikeChance2",
-    "Crossbow": "LocalCriticalStrikeChance2",
-    "Dagger": "LocalCriticalStrikeChance2",
-    "Flail": "LocalCriticalStrikeChance2",
-    "Focus": "SpellCriticalStrikeChance2",
-    "One Hand Axe": "LocalCriticalStrikeChance2",
-    "One Hand Mace": "LocalCriticalStrikeChance2",
-    "One Hand Sword": "LocalCriticalStrikeChance2",
-    "Spear": "LocalCriticalStrikeChance2",
-    "Staff": "SpellCriticalStrikeChanceTwoHand2",
-    "Two Hand Axe": "LocalCriticalStrikeChance2",
-    "Two Hand Mace": "LocalCriticalStrikeChance2",
-    "Two Hand Sword": "LocalCriticalStrikeChance2",
-    "Wand": "SpellCriticalStrikeChance2",
-    "Warstaff": "LocalCriticalStrikeChance2"
+    "Bow": [
+     "LocalCriticalStrikeChance2"
+    ],
+    "Crossbow": [
+     "LocalCriticalStrikeChance2"
+    ],
+    "Dagger": [
+     "LocalCriticalStrikeChance2"
+    ],
+    "Flail": [
+     "LocalCriticalStrikeChance2"
+    ],
+    "Focus": [
+     "SpellCriticalStrikeChance2"
+    ],
+    "One Hand Axe": [
+     "LocalCriticalStrikeChance2"
+    ],
+    "One Hand Mace": [
+     "LocalCriticalStrikeChance2"
+    ],
+    "One Hand Sword": [
+     "LocalCriticalStrikeChance2"
+    ],
+    "Spear": [
+     "LocalCriticalStrikeChance2"
+    ],
+    "Staff": [
+     "SpellCriticalStrikeChanceTwoHand2"
+    ],
+    "Two Hand Axe": [
+     "LocalCriticalStrikeChance2"
+    ],
+    "Two Hand Mace": [
+     "LocalCriticalStrikeChance2"
+    ],
+    "Two Hand Sword": [
+     "LocalCriticalStrikeChance2"
+    ],
+    "Wand": [
+     "SpellCriticalStrikeChance2"
+    ],
+    "Warstaff": [
+     "LocalCriticalStrikeChance2"
+    ]
    },
    "id": "lesser-essence-of-seeking",
    "nom": "Lesser Essence of Seeking",
@@ -798,9 +2417,15 @@
   },
   {
    "cibles": {
-    "Focus": "SpellDamageOnWeapon2",
-    "Staff": "SpellDamageOnTwoHandWeapon2",
-    "Wand": "SpellDamageOnWeapon2"
+    "Focus": [
+     "SpellDamageOnWeapon2"
+    ],
+    "Staff": [
+     "SpellDamageOnTwoHandWeapon2"
+    ],
+    "Wand": [
+     "SpellDamageOnWeapon2"
+    ]
    },
    "id": "lesser-essence-of-sorcery",
    "nom": "Lesser Essence of Sorcery",
@@ -808,16 +2433,36 @@
   },
   {
    "cibles": {
-    "Amulet": "ColdResist2",
-    "Belt": "ColdResist2",
-    "Body Armour": "ColdResist2",
-    "Boots": "ColdResist2",
-    "Buckler": "ColdResist2",
-    "Focus": "ColdResist2",
-    "Gloves": "ColdResist2",
-    "Helmet": "ColdResist2",
-    "Ring": "ColdResist2",
-    "Shield": "ColdResist2"
+    "Amulet": [
+     "ColdResist2"
+    ],
+    "Belt": [
+     "ColdResist2"
+    ],
+    "Body Armour": [
+     "ColdResist2"
+    ],
+    "Boots": [
+     "ColdResist2"
+    ],
+    "Buckler": [
+     "ColdResist2"
+    ],
+    "Focus": [
+     "ColdResist2"
+    ],
+    "Gloves": [
+     "ColdResist2"
+    ],
+    "Helmet": [
+     "ColdResist2"
+    ],
+    "Ring": [
+     "ColdResist2"
+    ],
+    "Shield": [
+     "ColdResist2"
+    ]
    },
    "id": "lesser-essence-of-thawing",
    "nom": "Lesser Essence of Thawing",
@@ -825,16 +2470,36 @@
   },
   {
    "cibles": {
-    "Amulet": "IncreasedLife2",
-    "Belt": "IncreasedLife3",
-    "Body Armour": "IncreasedLife3",
-    "Boots": "IncreasedLife3",
-    "Buckler": "IncreasedLife3",
-    "Focus": "IncreasedLife3",
-    "Gloves": "IncreasedLife3",
-    "Helmet": "IncreasedLife3",
-    "Ring": "IncreasedLife2",
-    "Shield": "IncreasedLife3"
+    "Amulet": [
+     "IncreasedLife2"
+    ],
+    "Belt": [
+     "IncreasedLife3"
+    ],
+    "Body Armour": [
+     "IncreasedLife3"
+    ],
+    "Boots": [
+     "IncreasedLife3"
+    ],
+    "Buckler": [
+     "IncreasedLife3"
+    ],
+    "Focus": [
+     "IncreasedLife3"
+    ],
+    "Gloves": [
+     "IncreasedLife3"
+    ],
+    "Helmet": [
+     "IncreasedLife3"
+    ],
+    "Ring": [
+     "IncreasedLife2"
+    ],
+    "Shield": [
+     "IncreasedLife3"
+    ]
    },
    "id": "lesser-essence-of-the-body",
    "nom": "Lesser Essence of the Body",
@@ -842,12 +2507,161 @@
   },
   {
    "cibles": {
-    "Amulet": "IncreasedMana3",
-    "Belt": "IncreasedMana3",
-    "Boots": "IncreasedMana3",
-    "Gloves": "IncreasedMana3",
-    "Helmet": "IncreasedMana3",
-    "Ring": "IncreasedMana3"
+    "Amulet": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Belt": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Body Armour": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Boots": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Bow": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Buckler": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Crossbow": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Dagger": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Flail": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Focus": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Gloves": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Helmet": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "One Hand Axe": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "One Hand Mace": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "One Hand Sword": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Quiver": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Ring": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Sceptre": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Shield": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Spear": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Staff": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Two Hand Axe": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Two Hand Mace": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Two Hand Sword": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Wand": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ],
+    "Warstaff": [
+     "Strength2",
+     "Dexterity2",
+     "Intelligence2"
+    ]
+   },
+   "id": "lesser-essence-of-the-infinite",
+   "nom": "Lesser Essence of the Infinite",
+   "type": "lesser"
+  },
+  {
+   "cibles": {
+    "Amulet": [
+     "IncreasedMana3"
+    ],
+    "Belt": [
+     "IncreasedMana3"
+    ],
+    "Boots": [
+     "IncreasedMana3"
+    ],
+    "Gloves": [
+     "IncreasedMana3"
+    ],
+    "Helmet": [
+     "IncreasedMana3"
+    ],
+    "Ring": [
+     "IncreasedMana3"
+    ]
    },
    "id": "lesser-essence-of-the-mind",
    "nom": "Lesser Essence of the Mind",
@@ -855,18 +2669,70 @@
   },
   {
    "cibles": {
-    "Bow": "EssenceDamageasExtraPhysical1",
-    "Crossbow": "EssenceDamageasExtraPhysical2H",
-    "Dagger": "EssenceDamageasExtraPhysical1",
-    "Flail": "EssenceDamageasExtraPhysical1",
-    "One Hand Axe": "EssenceDamageasExtraPhysical1",
-    "One Hand Mace": "EssenceDamageasExtraPhysical1",
-    "One Hand Sword": "EssenceDamageasExtraPhysical1",
-    "Spear": "EssenceDamageasExtraPhysical1",
-    "Two Hand Axe": "EssenceDamageasExtraPhysical2H",
-    "Two Hand Mace": "EssenceDamageasExtraPhysical2H",
-    "Two Hand Sword": "EssenceDamageasExtraPhysical2H",
-    "Warstaff": "EssenceDamageasExtraPhysical2H"
+    "Boots": [
+     "AlloySpiritOnBoots1"
+    ],
+    "Gloves": [
+     "AlloyAttackAreaOfEffect1"
+    ],
+    "Helmet": [
+     "AlloySpellAreaOfEffect1"
+    ],
+    "Quiver": [
+     "AlloyChanceToChain1"
+    ],
+    "Sceptre": [
+     "AlloyMaximumElementalInfusions1"
+    ],
+    "Staff": [
+     "AlloyMaximumElementalInfusions1"
+    ],
+    "Wand": [
+     "AlloyMaximumElementalInfusions1"
+    ]
+   },
+   "id": "mystic-alloy",
+   "nom": "Mystic Alloy",
+   "type": "alloy"
+  },
+  {
+   "cibles": {
+    "Bow": [
+     "EssenceDamageasExtraPhysical1"
+    ],
+    "Crossbow": [
+     "EssenceDamageasExtraPhysical2H"
+    ],
+    "Dagger": [
+     "EssenceDamageasExtraPhysical1"
+    ],
+    "Flail": [
+     "EssenceDamageasExtraPhysical1"
+    ],
+    "One Hand Axe": [
+     "EssenceDamageasExtraPhysical1"
+    ],
+    "One Hand Mace": [
+     "EssenceDamageasExtraPhysical1"
+    ],
+    "One Hand Sword": [
+     "EssenceDamageasExtraPhysical1"
+    ],
+    "Spear": [
+     "EssenceDamageasExtraPhysical1"
+    ],
+    "Two Hand Axe": [
+     "EssenceDamageasExtraPhysical2H"
+    ],
+    "Two Hand Mace": [
+     "EssenceDamageasExtraPhysical2H"
+    ],
+    "Two Hand Sword": [
+     "EssenceDamageasExtraPhysical2H"
+    ],
+    "Warstaff": [
+     "EssenceDamageasExtraPhysical2H"
+    ]
    },
    "id": "perfect-essence-of-abrasion",
    "nom": "Perfect Essence of Abrasion",
@@ -874,9 +2740,15 @@
   },
   {
    "cibles": {
-    "Focus": "EssenceManaCostReduction",
-    "Staff": "EssenceManaCostReduction2H",
-    "Wand": "EssenceManaCostReduction"
+    "Focus": [
+     "EssenceManaCostReduction"
+    ],
+    "Staff": [
+     "EssenceManaCostReduction2H"
+    ],
+    "Wand": [
+     "EssenceManaCostReduction"
+    ]
    },
    "id": "perfect-essence-of-alacrity",
    "nom": "Perfect Essence of Alacrity",
@@ -884,18 +2756,42 @@
   },
   {
    "cibles": {
-    "Bow": "EssenceAttackSkillLevel1H1",
-    "Crossbow": "EssenceAttackSkillLevel2H1",
-    "Dagger": "EssenceAttackSkillLevel1H1",
-    "Flail": "EssenceAttackSkillLevel1H1",
-    "One Hand Axe": "EssenceAttackSkillLevel1H1",
-    "One Hand Mace": "EssenceAttackSkillLevel1H1",
-    "One Hand Sword": "EssenceAttackSkillLevel1H1",
-    "Spear": "EssenceAttackSkillLevel1H1",
-    "Two Hand Axe": "EssenceAttackSkillLevel2H1",
-    "Two Hand Mace": "EssenceAttackSkillLevel2H1",
-    "Two Hand Sword": "EssenceAttackSkillLevel2H1",
-    "Warstaff": "EssenceAttackSkillLevel2H1"
+    "Bow": [
+     "EssenceAttackSkillLevel1H1"
+    ],
+    "Crossbow": [
+     "EssenceAttackSkillLevel2H1"
+    ],
+    "Dagger": [
+     "EssenceAttackSkillLevel1H1"
+    ],
+    "Flail": [
+     "EssenceAttackSkillLevel1H1"
+    ],
+    "One Hand Axe": [
+     "EssenceAttackSkillLevel1H1"
+    ],
+    "One Hand Mace": [
+     "EssenceAttackSkillLevel1H1"
+    ],
+    "One Hand Sword": [
+     "EssenceAttackSkillLevel1H1"
+    ],
+    "Spear": [
+     "EssenceAttackSkillLevel1H1"
+    ],
+    "Two Hand Axe": [
+     "EssenceAttackSkillLevel2H1"
+    ],
+    "Two Hand Mace": [
+     "EssenceAttackSkillLevel2H1"
+    ],
+    "Two Hand Sword": [
+     "EssenceAttackSkillLevel2H1"
+    ],
+    "Warstaff": [
+     "EssenceAttackSkillLevel2H1"
+    ]
    },
    "id": "perfect-essence-of-battle",
    "nom": "Perfect Essence of Battle",
@@ -903,7 +2799,9 @@
   },
   {
    "cibles": {
-    "Sceptre": "EssenceAuraEffect1"
+    "Sceptre": [
+     "EssenceAuraEffect1"
+    ]
    },
    "id": "perfect-essence-of-command",
    "nom": "Perfect Essence of Command",
@@ -911,18 +2809,42 @@
   },
   {
    "cibles": {
-    "Bow": "EssenceDamageasExtraLightning1",
-    "Crossbow": "EssenceDamageasExtraLightning2H",
-    "Dagger": "EssenceDamageasExtraLightning1",
-    "Flail": "EssenceDamageasExtraLightning1",
-    "One Hand Axe": "EssenceDamageasExtraLightning1",
-    "One Hand Mace": "EssenceDamageasExtraLightning1",
-    "One Hand Sword": "EssenceDamageasExtraLightning1",
-    "Spear": "EssenceDamageasExtraLightning1",
-    "Two Hand Axe": "EssenceDamageasExtraLightning2H",
-    "Two Hand Mace": "EssenceDamageasExtraLightning2H",
-    "Two Hand Sword": "EssenceDamageasExtraLightning2H",
-    "Warstaff": "EssenceDamageasExtraLightning2H"
+    "Bow": [
+     "EssenceDamageasExtraLightning1"
+    ],
+    "Crossbow": [
+     "EssenceDamageasExtraLightning2H"
+    ],
+    "Dagger": [
+     "EssenceDamageasExtraLightning1"
+    ],
+    "Flail": [
+     "EssenceDamageasExtraLightning1"
+    ],
+    "One Hand Axe": [
+     "EssenceDamageasExtraLightning1"
+    ],
+    "One Hand Mace": [
+     "EssenceDamageasExtraLightning1"
+    ],
+    "One Hand Sword": [
+     "EssenceDamageasExtraLightning1"
+    ],
+    "Spear": [
+     "EssenceDamageasExtraLightning1"
+    ],
+    "Two Hand Axe": [
+     "EssenceDamageasExtraLightning2H"
+    ],
+    "Two Hand Mace": [
+     "EssenceDamageasExtraLightning2H"
+    ],
+    "Two Hand Sword": [
+     "EssenceDamageasExtraLightning2H"
+    ],
+    "Warstaff": [
+     "EssenceDamageasExtraLightning2H"
+    ]
    },
    "id": "perfect-essence-of-electricity",
    "nom": "Perfect Essence of Electricity",
@@ -930,7 +2852,9 @@
   },
   {
    "cibles": {
-    "Amulet": "EssenceGlobalDefences1"
+    "Amulet": [
+     "EssenceGlobalDefences1"
+    ]
    },
    "id": "perfect-essence-of-enhancement",
    "nom": "Perfect Essence of Enhancement",
@@ -938,18 +2862,42 @@
   },
   {
    "cibles": {
-    "Bow": "EssenceDamageasExtraFire1",
-    "Crossbow": "EssenceDamageasExtraFire2H",
-    "Dagger": "EssenceDamageasExtraFire1",
-    "Flail": "EssenceDamageasExtraFire1",
-    "One Hand Axe": "EssenceDamageasExtraFire1",
-    "One Hand Mace": "EssenceDamageasExtraFire1",
-    "One Hand Sword": "EssenceDamageasExtraFire1",
-    "Spear": "EssenceDamageasExtraFire1",
-    "Two Hand Axe": "EssenceDamageasExtraFire2H",
-    "Two Hand Mace": "EssenceDamageasExtraFire2H",
-    "Two Hand Sword": "EssenceDamageasExtraFire2H",
-    "Warstaff": "EssenceDamageasExtraFire2H"
+    "Bow": [
+     "EssenceDamageasExtraFire1"
+    ],
+    "Crossbow": [
+     "EssenceDamageasExtraFire2H"
+    ],
+    "Dagger": [
+     "EssenceDamageasExtraFire1"
+    ],
+    "Flail": [
+     "EssenceDamageasExtraFire1"
+    ],
+    "One Hand Axe": [
+     "EssenceDamageasExtraFire1"
+    ],
+    "One Hand Mace": [
+     "EssenceDamageasExtraFire1"
+    ],
+    "One Hand Sword": [
+     "EssenceDamageasExtraFire1"
+    ],
+    "Spear": [
+     "EssenceDamageasExtraFire1"
+    ],
+    "Two Hand Axe": [
+     "EssenceDamageasExtraFire2H"
+    ],
+    "Two Hand Mace": [
+     "EssenceDamageasExtraFire2H"
+    ],
+    "Two Hand Sword": [
+     "EssenceDamageasExtraFire2H"
+    ],
+    "Warstaff": [
+     "EssenceDamageasExtraFire2H"
+    ]
    },
    "id": "perfect-essence-of-flames",
    "nom": "Perfect Essence of Flames",
@@ -957,7 +2905,9 @@
   },
   {
    "cibles": {
-    "Gloves": "EssenceLightningRecoupLife1"
+    "Gloves": [
+     "EssenceLightningRecoupLife1"
+    ]
    },
    "id": "perfect-essence-of-grounding",
    "nom": "Perfect Essence of Grounding",
@@ -965,18 +2915,42 @@
   },
   {
    "cibles": {
-    "Bow": "EssenceOnslaughtonKill1",
-    "Crossbow": "EssenceOnslaughtonKill1",
-    "Dagger": "EssenceOnslaughtonKill1",
-    "Flail": "EssenceOnslaughtonKill1",
-    "One Hand Axe": "EssenceOnslaughtonKill1",
-    "One Hand Mace": "EssenceOnslaughtonKill1",
-    "One Hand Sword": "EssenceOnslaughtonKill1",
-    "Spear": "EssenceOnslaughtonKill1",
-    "Two Hand Axe": "EssenceOnslaughtonKill1",
-    "Two Hand Mace": "EssenceOnslaughtonKill1",
-    "Two Hand Sword": "EssenceOnslaughtonKill1",
-    "Warstaff": "EssenceOnslaughtonKill1"
+    "Bow": [
+     "EssenceOnslaughtonKill1"
+    ],
+    "Crossbow": [
+     "EssenceOnslaughtonKill1"
+    ],
+    "Dagger": [
+     "EssenceOnslaughtonKill1"
+    ],
+    "Flail": [
+     "EssenceOnslaughtonKill1"
+    ],
+    "One Hand Axe": [
+     "EssenceOnslaughtonKill1"
+    ],
+    "One Hand Mace": [
+     "EssenceOnslaughtonKill1"
+    ],
+    "One Hand Sword": [
+     "EssenceOnslaughtonKill1"
+    ],
+    "Spear": [
+     "EssenceOnslaughtonKill1"
+    ],
+    "Two Hand Axe": [
+     "EssenceOnslaughtonKill1"
+    ],
+    "Two Hand Mace": [
+     "EssenceOnslaughtonKill1"
+    ],
+    "Two Hand Sword": [
+     "EssenceOnslaughtonKill1"
+    ],
+    "Warstaff": [
+     "EssenceOnslaughtonKill1"
+    ]
    },
    "id": "perfect-essence-of-haste",
    "nom": "Perfect Essence of Haste",
@@ -984,18 +2958,42 @@
   },
   {
    "cibles": {
-    "Bow": "EssenceDamageasExtraCold1",
-    "Crossbow": "EssenceDamageasExtraCold2H",
-    "Dagger": "EssenceDamageasExtraCold1",
-    "Flail": "EssenceDamageasExtraCold1",
-    "One Hand Axe": "EssenceDamageasExtraCold1",
-    "One Hand Mace": "EssenceDamageasExtraCold1",
-    "One Hand Sword": "EssenceDamageasExtraCold1",
-    "Spear": "EssenceDamageasExtraCold1",
-    "Two Hand Axe": "EssenceDamageasExtraCold2H",
-    "Two Hand Mace": "EssenceDamageasExtraCold2H",
-    "Two Hand Sword": "EssenceDamageasExtraCold2H",
-    "Warstaff": "EssenceDamageasExtraCold2H"
+    "Bow": [
+     "EssenceDamageasExtraCold1"
+    ],
+    "Crossbow": [
+     "EssenceDamageasExtraCold2H"
+    ],
+    "Dagger": [
+     "EssenceDamageasExtraCold1"
+    ],
+    "Flail": [
+     "EssenceDamageasExtraCold1"
+    ],
+    "One Hand Axe": [
+     "EssenceDamageasExtraCold1"
+    ],
+    "One Hand Mace": [
+     "EssenceDamageasExtraCold1"
+    ],
+    "One Hand Sword": [
+     "EssenceDamageasExtraCold1"
+    ],
+    "Spear": [
+     "EssenceDamageasExtraCold1"
+    ],
+    "Two Hand Axe": [
+     "EssenceDamageasExtraCold2H"
+    ],
+    "Two Hand Mace": [
+     "EssenceDamageasExtraCold2H"
+    ],
+    "Two Hand Sword": [
+     "EssenceDamageasExtraCold2H"
+    ],
+    "Warstaff": [
+     "EssenceDamageasExtraCold2H"
+    ]
    },
    "id": "perfect-essence-of-ice",
    "nom": "Perfect Essence of Ice",
@@ -1003,7 +3001,9 @@
   },
   {
    "cibles": {
-    "Belt": "EssenceFireRecoupLife1"
+    "Belt": [
+     "EssenceFireRecoupLife1"
+    ]
    },
    "id": "perfect-essence-of-insulation",
    "nom": "Perfect Essence of Insulation",
@@ -1011,7 +3011,9 @@
   },
   {
    "cibles": {
-    "Gloves": "EssenceGoldDropped1"
+    "Gloves": [
+     "EssenceGoldDropped1"
+    ]
    },
    "id": "perfect-essence-of-opulence",
    "nom": "Perfect Essence of Opulence",
@@ -1019,7 +3021,9 @@
   },
   {
    "cibles": {
-    "Body Armour": "EssencePhysicalDamageTakenAsChaos1"
+    "Body Armour": [
+     "EssencePhysicalDamageTakenAsChaos1"
+    ]
    },
    "id": "perfect-essence-of-ruin",
    "nom": "Perfect Essence of Ruin",
@@ -1027,7 +3031,9 @@
   },
   {
    "cibles": {
-    "Body Armour": "EssenceReducedCriticalDamageAgainstYou1"
+    "Body Armour": [
+     "EssenceReducedCriticalDamageAgainstYou1"
+    ]
    },
    "id": "perfect-essence-of-seeking",
    "nom": "Perfect Essence of Seeking",
@@ -1035,8 +3041,12 @@
   },
   {
    "cibles": {
-    "Staff": "EssenceSpellSkillLevel2H1",
-    "Wand": "EssenceSpellSkillLevel1H1"
+    "Staff": [
+     "EssenceSpellSkillLevel2H1"
+    ],
+    "Wand": [
+     "EssenceSpellSkillLevel1H1"
+    ]
    },
    "id": "perfect-essence-of-sorcery",
    "nom": "Perfect Essence of Sorcery",
@@ -1044,7 +3054,9 @@
   },
   {
    "cibles": {
-    "Helmet": "EssenceColdRecoupLife1"
+    "Helmet": [
+     "EssenceColdRecoupLife1"
+    ]
    },
    "id": "perfect-essence-of-thawing",
    "nom": "Perfect Essence of Thawing",
@@ -1052,7 +3064,9 @@
   },
   {
    "cibles": {
-    "Body Armour": "EssenceIncreasedLifePercent1"
+    "Body Armour": [
+     "EssenceIncreasedLifePercent1"
+    ]
    },
    "id": "perfect-essence-of-the-body",
    "nom": "Perfect Essence of the Body",
@@ -1060,11 +3074,360 @@
   },
   {
    "cibles": {
-    "Ring": "EssenceIncreasedManaPercent1"
+    "Amulet": [
+     "EssencePercentStrength1",
+     "EssencePercentDexterity1",
+     "EssencePercentIntelligence1"
+    ]
+   },
+   "id": "perfect-essence-of-the-infinite",
+   "nom": "Perfect Essence of the Infinite",
+   "type": "perfect"
+  },
+  {
+   "cibles": {
+    "Ring": [
+     "EssenceIncreasedManaPercent1"
+    ]
    },
    "id": "perfect-essence-of-the-mind",
    "nom": "Perfect Essence of the Mind",
    "type": "perfect"
+  },
+  {
+   "cibles": {
+    "Bow": [
+     "AlloyAilmentMagnitude1"
+    ],
+    "Crossbow": [
+     "AlloyAilmentMagnitude1"
+    ],
+    "Dagger": [
+     "AlloyAilmentMagnitude1"
+    ],
+    "Flail": [
+     "AlloyAilmentMagnitude1"
+    ],
+    "Focus": [
+     "AlloyExposureEffect1"
+    ],
+    "Gloves": [
+     "AlloyElementalPenetration1"
+    ],
+    "One Hand Axe": [
+     "AlloyAilmentMagnitude1"
+    ],
+    "One Hand Mace": [
+     "AlloyAilmentMagnitude1"
+    ],
+    "One Hand Sword": [
+     "AlloyAilmentMagnitude1"
+    ],
+    "Sceptre": [
+     "AlloyMinionDamagingAilmentMagnitude1"
+    ],
+    "Spear": [
+     "AlloyAilmentMagnitude1"
+    ],
+    "Staff": [
+     "AlloyExposureEffect1"
+    ],
+    "Two Hand Axe": [
+     "AlloyAilmentMagnitude1"
+    ],
+    "Two Hand Mace": [
+     "AlloyAilmentMagnitude1"
+    ],
+    "Two Hand Sword": [
+     "AlloyAilmentMagnitude1"
+    ],
+    "Wand": [
+     "AlloyExposureEffect1"
+    ],
+    "Warstaff": [
+     "AlloyAilmentMagnitude1"
+    ]
+   },
+   "id": "prismatic-alloy",
+   "nom": "Prismatic Alloy",
+   "type": "alloy"
+  },
+  {
+   "cibles": {
+    "Belt": [
+     "AlloyRecoverRunicWardOnCharmUse1"
+    ],
+    "Bow": [
+     "AlloyMaximumRunicWardWeapon1"
+    ],
+    "Buckler": [
+     "AlloyRunicWardOnBlock1"
+    ],
+    "Crossbow": [
+     "AlloyMaximumRunicWardWeapon1"
+    ],
+    "Dagger": [
+     "AlloyMaximumRunicWardWeapon1"
+    ],
+    "Flail": [
+     "AlloyMaximumRunicWardWeapon1"
+    ],
+    "One Hand Axe": [
+     "AlloyMaximumRunicWardWeapon1"
+    ],
+    "One Hand Mace": [
+     "AlloyMaximumRunicWardWeapon1"
+    ],
+    "One Hand Sword": [
+     "AlloyMaximumRunicWardWeapon1"
+    ],
+    "Sceptre": [
+     "AlloyMaximumRunicWardWeapon1"
+    ],
+    "Shield": [
+     "AlloyRunicWardOnBlock1"
+    ],
+    "Spear": [
+     "AlloyMaximumRunicWardWeapon1"
+    ],
+    "Staff": [
+     "AlloyMaximumRunicWardWeapon1"
+    ],
+    "Two Hand Axe": [
+     "AlloyMaximumRunicWardWeapon1"
+    ],
+    "Two Hand Mace": [
+     "AlloyMaximumRunicWardWeapon1"
+    ],
+    "Two Hand Sword": [
+     "AlloyMaximumRunicWardWeapon1"
+    ],
+    "Wand": [
+     "AlloyMaximumRunicWardWeapon1"
+    ],
+    "Warstaff": [
+     "AlloyMaximumRunicWardWeapon1"
+    ]
+   },
+   "id": "protective-alloy",
+   "nom": "Protective Alloy",
+   "type": "alloy"
+  },
+  {
+   "cibles": {
+    "Amulet": [
+     "AlloyMaximumRunicWardPercent1"
+    ],
+    "Belt": [
+     "AlloyRunicWardRechargeRate1"
+    ],
+    "Ring": [
+     "AlloyMaximumRunicWard1"
+    ]
+   },
+   "id": "runic-alloy",
+   "nom": "Runic Alloy",
+   "type": "alloy"
+  },
+  {
+   "cibles": {
+    "Amulet": [
+     "AlloyEffectOfResistanceMods1"
+    ],
+    "Belt": [
+     "AlloyEffectOfResistanceMods1"
+    ],
+    "Body Armour": [
+     "AlloyLocalWardIncreasePercent1"
+    ],
+    "Boots": [
+     "AlloyLocalWardIncreasePercent1"
+    ],
+    "Bow": [
+     "AlloyEffectOfSocketedAugments1"
+    ],
+    "Buckler": [
+     "AlloyLocalWardIncreasePercent1"
+    ],
+    "Crossbow": [
+     "AlloyEffectOfSocketedAugments1"
+    ],
+    "Dagger": [
+     "AlloyEffectOfSocketedAugments1"
+    ],
+    "Flail": [
+     "AlloyEffectOfSocketedAugments1"
+    ],
+    "Focus": [
+     "AlloyLocalWardIncreasePercent1"
+    ],
+    "Gloves": [
+     "AlloyLocalWardIncreasePercent1"
+    ],
+    "Helmet": [
+     "AlloyLocalWardIncreasePercent1"
+    ],
+    "One Hand Axe": [
+     "AlloyEffectOfSocketedAugments1"
+    ],
+    "One Hand Mace": [
+     "AlloyEffectOfSocketedAugments1"
+    ],
+    "One Hand Sword": [
+     "AlloyEffectOfSocketedAugments1"
+    ],
+    "Ring": [
+     "AlloyEffectOfResistanceMods1"
+    ],
+    "Sceptre": [
+     "AlloyEffectOfSocketedAugments1"
+    ],
+    "Shield": [
+     "AlloyLocalWardIncreasePercent1"
+    ],
+    "Spear": [
+     "AlloyEffectOfSocketedAugments1"
+    ],
+    "Staff": [
+     "AlloyEffectOfSocketedAugments1"
+    ],
+    "Two Hand Axe": [
+     "AlloyEffectOfSocketedAugments1"
+    ],
+    "Two Hand Mace": [
+     "AlloyEffectOfSocketedAugments1"
+    ],
+    "Two Hand Sword": [
+     "AlloyEffectOfSocketedAugments1"
+    ],
+    "Wand": [
+     "AlloyEffectOfSocketedAugments1"
+    ],
+    "Warstaff": [
+     "AlloyEffectOfSocketedAugments1"
+    ]
+   },
+   "id": "sovereign-alloy",
+   "nom": "Sovereign Alloy",
+   "type": "alloy"
+  },
+  {
+   "cibles": {
+    "Belt": [
+     "AlloyFlaskChargesPerSecond1"
+    ],
+    "Buckler": [
+     "AlloyTotemPlacementSpeed1"
+    ],
+    "Focus": [
+     "AlloyTotemPlacementSpeed1"
+    ],
+    "Gloves": [
+     "AlloyCastSpeedGloves1"
+    ],
+    "Ring": [
+     "AlloyAttackSpeedRing1"
+    ],
+    "Shield": [
+     "AlloyTotemPlacementSpeed1"
+    ]
+   },
+   "id": "swift-alloy",
+   "nom": "Swift Alloy",
+   "type": "alloy"
+  },
+  {
+   "cibles": {
+    "Bow": [
+     "AlloyMarkEffect"
+    ],
+    "Crossbow": [
+     "AlloyBallistaLimit1"
+    ],
+    "Sceptre": [
+     "AlloyPuppeteerStacks1"
+    ],
+    "Staff": [
+     "AlloyNaturesArchon1"
+    ],
+    "Wand": [
+     "AlloyElementalSkillLimit1"
+    ]
+   },
+   "id": "the-runebinders-alloy",
+   "nom": "The Runebinder's Alloy",
+   "type": "alloy"
+  },
+  {
+   "cibles": {
+    "One Hand Mace": [
+     "AlloyRetainGlory1"
+    ],
+    "Spear": [
+     "AlloyMeleeStrikeRange1"
+    ],
+    "Two Hand Mace": [
+     "AlloyRetainGlory1"
+    ],
+    "Warstaff": [
+     "AlloyBellLimit1"
+    ]
+   },
+   "id": "the-runefathers-alloy",
+   "nom": "The Runefather's Alloy",
+   "type": "alloy"
+  },
+  {
+   "cibles": {
+    "Bow": [
+     "AlloyAttributeIncreasedLocalPhysicalDamageHybrid1"
+    ],
+    "Crossbow": [
+     "AlloyAttributeIncreasedLocalPhysicalDamageHybrid1"
+    ],
+    "Dagger": [
+     "AlloyAttributeIncreasedLocalPhysicalDamageHybrid1"
+    ],
+    "Flail": [
+     "AlloyAttributeIncreasedLocalPhysicalDamageHybrid1"
+    ],
+    "Focus": [
+     "AlloyCastSpeedDamageAsExtraColdHybridOneHand1"
+    ],
+    "One Hand Axe": [
+     "AlloyAttributeIncreasedLocalPhysicalDamageHybrid1"
+    ],
+    "One Hand Mace": [
+     "AlloyAttributeIncreasedLocalPhysicalDamageHybrid1"
+    ],
+    "One Hand Sword": [
+     "AlloyAttributeIncreasedLocalPhysicalDamageHybrid1"
+    ],
+    "Spear": [
+     "AlloyAttributeIncreasedLocalPhysicalDamageHybrid1"
+    ],
+    "Staff": [
+     "AlloyCastSpeedDamageAsExtraColdHybrid1"
+    ],
+    "Two Hand Axe": [
+     "AlloyAttributeIncreasedLocalPhysicalDamageHybrid1"
+    ],
+    "Two Hand Mace": [
+     "AlloyAttributeIncreasedLocalPhysicalDamageHybrid1"
+    ],
+    "Two Hand Sword": [
+     "AlloyAttributeIncreasedLocalPhysicalDamageHybrid1"
+    ],
+    "Wand": [
+     "AlloyCastSpeedDamageAsExtraColdHybridOneHand1"
+    ],
+    "Warstaff": [
+     "AlloyAttributeIncreasedLocalPhysicalDamageHybrid1"
+    ]
+   },
+   "id": "transcendent-alloy",
+   "nom": "Transcendent Alloy",
+   "type": "alloy"
   }
  ],
  "source": "Craft of Exile (https://www.craftofexile.com/?game=poe2), données de l'émulateur PoE 2 ; poids estimés par Krakenbul (Prohibited Library)",

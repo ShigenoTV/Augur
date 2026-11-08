@@ -95,7 +95,7 @@ def test_ecartes_par_niveau_minimum():
     assert k.ecartes_coe(coe, 7, 50, 35) == set()
 
 
-def test_essences_une_cible_par_classe():
+def test_essences_et_alloys_par_classe():
     langue = ["Rings", "Gloves (STR)", "Wands (Fire)", "Essence of the Body", "Essence of Battle", "Runic Alloy"]
     coe = {
         "classes": {
@@ -114,7 +114,7 @@ def test_essences_une_cible_par_classe():
             ],
             "byessences": {
                 "0": {"5": [1], "22": [1], "99": [1]},
-                "1": {"8": [2, 3]},
+                "1": {"8": [3, 2]},
                 "2": {"5": [1]},
             },
         },
@@ -123,10 +123,17 @@ def test_essences_une_cible_par_classe():
     assert multiples == 1
     assert liste == [
         {
+            "id": "essence-of-battle",
+            "nom": "Essence of Battle",
+            "type": "greater",
+            "cibles": {"Wand": ["Acc2", "Acc1"]},
+        },
+        {
             "id": "essence-of-the-body",
             "nom": "Essence of the Body",
             "type": "perfect",
-            "cibles": {"Gloves": "Life1", "Ring": "Life1"},
-        }
+            "cibles": {"Gloves": ["Life1"], "Ring": ["Life1"]},
+        },
+        {"id": "runic-alloy", "nom": "Runic Alloy", "type": "alloy", "cibles": {"Ring": ["Life1"]}},
     ]
-    assert es.slug("The Runefather's Alloy") == "the-runefather-s-alloy"
+    assert es.slug("The Runefather's Alloy") == "the-runefathers-alloy"

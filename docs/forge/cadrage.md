@@ -75,9 +75,11 @@ une source de prix d'objets (même blocage OAuth).
    iteration), coût espéré, quantiles P50 / P90, plan de décision, vérification sur le moteur exact ; catalogue des
    18 monnaies (Greater / Perfect compris) et des 6 Omens d'Exaltation, d'Annulment et d'Erasure. **Essences**
    (08/11) : mod garanti par classe d'après Craft of Exile (`tools/theorycraft/coe_essences.py`,
-   `donnees/essences-coe.json`), seulement celles à une cible par classe (Infinite, Enhancement, Greater Battle,
-   Abyss écartées) et hors Alloys ; une Essence n'est proposée que si elle a un prix (poe.ninja, catégorie
-   `Essences`, ou saisie). Désécration et Liquid Emotions restent hors catalogue (pas de poids des mods
+   `donnees/essences-coe.json`). Depuis le 08/11 aussi les Essences à plusieurs mods possibles (Infinite,
+   Enhancement, Greater Battle, Abyss) et les 13 Alloys ; une Essence ou un Alloy n'est proposé que s'il a un
+   prix (poe.ninja, catégories `Essences` et `Verisium`, ou saisie). Les mods à plusieurs groupes d'exclusion
+   (Swift Alloy sur anneau et gants, Transcendent Alloy sur arme d'attaque) ne sont pas modélisés : ces Alloys ne
+   sont pas proposés sur ces classes. Désécration et Liquid Emotions restent hors catalogue (pas de poids des mods
    désacralisés).
 4. **Prix** (`forge::prix`, `forge::ninja`, commandes `get_forge_prices` / `set_forge_prices` /
    `reset_forge_prices` / `refresh_forge_prices`) : table de prix enregistrée dans `forge-prix.json` (dossier de
@@ -125,10 +127,13 @@ Contrôle du 08/11 avec le code de l'émulateur de Craft of Exile (référence d
   tier accessible d'une famille reste toujours tirable (avant : la famille entière était écartée) ;
 - Omen de Whittling : à égalité de niveau, le mod retiré est tiré au hasard.
 
-Essences, d'après le même émulateur (`poe2_essence`) : Lesser / Normal / Greater sur un objet Magique, qui devient
-Rare avec le mod garanti ; Perfect / Corrupted sur un Rare, refusée si le groupe du mod garanti est déjà pris,
-sinon un mod est retiré **du côté du mod garanti si ce côté est plein**, au hasard sinon, puis le mod garanti est
-posé. Le niveau d'objet n'est pas regardé : un mod garanti au-dessus du niveau d'objet, ou réservé aux Essences
+Essences et Alloys, d'après le même émulateur (`poe2_essence`) : Lesser / Normal / Greater sur un objet Magique, qui
+devient Rare avec le mod garanti ; Perfect / Corrupted / Alloy sur un Rare. Quand l'Essence a plusieurs mods
+possibles pour la classe, un seul est posé, tiré **à chances égales** parmi ceux dont le groupe n'est pas déjà
+sur l'objet (refusée si aucun) ; l'émulateur ne filtre pas ces mods selon la base (une Essence of Enhancement
+peut poser un % d'évasion sur un casque d'armure). Sur un Rare, un mod est ensuite retiré **du côté du mod tiré si
+ce côté est plein**, au hasard sinon, puis le mod est posé. Vérifié le 08/11 sur 6 cas × 3 000 essais lancés
+dans l'émulateur (test `memes_tirages_que_craft_of_exile`). Le niveau d'objet n'est pas regardé : un mod garanti au-dessus du niveau d'objet, ou réservé aux Essences
 (% de vie des armures de corps…), entre dans le pool avec un poids nul et peut être visé.
 
 `tools/theorycraft/coe_controle.py` vérifie aussi, base par base, les mods écartés par chaque niveau minimum.

@@ -138,7 +138,7 @@ export type ForgeAffix = {
   slot: ForgeSlot;
   libelle: string;
   part: number;
-  /** Posé seulement par une Essence à ce niveau d'objet. */
+  /** Posé seulement par une Essence ou un Alloy à ce niveau d'objet. */
   essence: boolean;
   paliers: ForgeTier[];
 };

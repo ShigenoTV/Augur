@@ -279,13 +279,15 @@ impl Model {
             (other_pos, surv_p, surv_s)
         }
         let shift_targets = actions.iter().filter_map(|a| match &a.kind {
-            ActionKind::Currency(c) if c.kind == CurrencyKind::Essence => {
-                Some([c.target, c.alt_target])
-            }
+            ActionKind::Currency(c) if c.kind == CurrencyKind::Essence => Some(
+                [c.target, c.alt_target]
+                    .into_iter()
+                    .flatten()
+                    .chain(c.more_targets.iter().copied()),
+            ),
             _ => None,
         });
         let extra = shift_targets
-            .flatten()
             .flatten()
             .map(|t| pool.affixes[t as usize].cap_shift)
             .fold((0i8, 0i8), |(a, b), (p, q)| (a.max(p), b.max(q)));
@@ -420,6 +422,7 @@ impl Model {
                     [c.target, c.alt_target]
                         .into_iter()
                         .flatten()
+                        .chain(c.more_targets.iter().copied())
                         .map(|t| {
                             (
                                 t,
@@ -1134,53 +1137,57 @@ impl Model {
                 };
                 // (affixe ajouté, état après retrait, probabilité)
                 let mut branches: Vec<((AffixIdx, Slot, Class), MacroState, f64)> = Vec::new();
-                match targets.as_slice() {
-                    [one] => {
+                if cur.alt_target.is_some() {
+                    // préfixe OU suffixe (Potent Liquid Ferocity/Contempt) : slot tiré à 50/50, puis le mod remplace
+                    // un affixe non fracturé de CE slot (aucun retrait si ce slot n'en a pas)
+                    for &t in targets {
+                        let mut rm = Vec::new();
+                        if self.remove_outcomes(s, Some(t.1), Removal::Random, &mut rm) {
+                            branches.extend(rm.into_iter().map(|(s1, p1)| (t, s1, 0.5 * p1)));
+                        } else {
+                            branches.push((t, s, 0.5));
+                        }
+                    }
+                } else {
+                    // Essence ou Alloy (Craft of Exile) : un mod tiré à chances égales parmi les mods possibles
+                    // dont le groupe n'est pas déjà pris ; refusée si aucun. Perfect / Corrupted / Alloy : retrait
+                    // du côté du mod tiré si ce côté est plein, sinon au hasard
+                    let libres: Vec<(AffixIdx, Slot, Class)> = targets
+                        .iter()
+                        .copied()
+                        .filter(|&(t, _, class)| match class {
+                            Class::Wanted(k) | Class::Blocked(k) => {
+                                (s.held | s.blocked) >> k & 1 == 0
+                            }
+                            Class::Other => s.ess & self.tracked_bit(t).unwrap_or(0) == 0,
+                        })
+                        .collect();
+                    let p = 1.0 / libres.len().max(1) as f64;
+                    let plusieurs = libres.len() > 1;
+                    for one in libres {
                         if cur.requires_rare {
-                            // Essence Perfect / Corrupted (Craft of Exile) : refusée si le groupe du mod garanti
-                            // est déjà pris, avant tout retrait ; retrait du côté du mod garanti si ce côté est
-                            // plein, sinon au hasard
-                            let (t, slot, class) = *one;
-                            let pris = match class {
-                                Class::Wanted(k) | Class::Blocked(k) => {
-                                    (s.held | s.blocked) >> k & 1 == 1
-                                }
-                                Class::Other => s.ess & self.tracked_bit(t).unwrap_or(0) != 0,
-                            };
                             let (cap_p, cap_s) = self.caps(&s, Rarity::Rare);
                             let (np, ns) = self.counts(&s);
-                            let plein = match slot {
+                            let plein = match one.1 {
                                 Slot::Prefix => np >= cap_p,
                                 Slot::Suffix => ns >= cap_s,
                             };
                             let mut rm = Vec::new();
-                            if !pris
-                                && self.remove_outcomes(
-                                    s,
-                                    plein.then_some(slot),
-                                    Removal::Random,
-                                    &mut rm,
-                                )
-                            {
-                                branches.extend(rm.into_iter().map(|(s1, p1)| (*one, s1, p1)));
+                            if self.remove_outcomes(
+                                s,
+                                plein.then_some(one.1),
+                                Removal::Random,
+                                &mut rm,
+                            ) {
+                                branches.extend(rm.into_iter().map(|(s1, p1)| (one, s1, p * p1)));
+                            } else if plusieurs {
+                                // aucun mod à retirer de ce côté : refusée, l'objet reste tel quel (moteur exact)
+                                v.push((s, p));
                             }
                         } else {
-                            branches.push((*one, s, 1.0));
+                            branches.push((one, s, p));
                         }
                     }
-                    // préfixe OU suffixe (Potent Liquid Ferocity/Contempt) : slot tiré à 50/50, puis le mod remplace un
-                    // affixe non fracturé de CE slot (aucun retrait si ce slot n'en a pas)
-                    [a, b] => {
-                        for t in [*a, *b] {
-                            let mut rm = Vec::new();
-                            if self.remove_outcomes(s, Some(t.1), Removal::Random, &mut rm) {
-                                branches.extend(rm.into_iter().map(|(s1, p1)| (t, s1, 0.5 * p1)));
-                            } else {
-                                branches.push((t, s, 0.5));
-                            }
-                        }
-                    }
-                    _ => {}
                 }
                 for (t, s1, p1) in branches {
                     // sans place ou en conflit : l'objet reste tel quel (même règle que le moteur exact), plutôt que de

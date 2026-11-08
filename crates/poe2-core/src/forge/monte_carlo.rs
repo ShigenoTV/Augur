@@ -161,6 +161,7 @@ pub(crate) mod tests {
             remove_slot: None,
             target: None,
             alt_target: None,
+            more_targets: Vec::new(),
             require_tag: None,
             remove_desecrated_only: false,
             remove_lowest_level: false,
@@ -331,6 +332,87 @@ pub(crate) mod tests {
             Outcome::NotApplicable
         );
         assert_eq!(it.mods().len(), 3);
+    }
+
+    /// Essence à plusieurs mods possibles (Essence of the Infinite, Alloys ; émulateur de Craft of Exile) :
+    /// un seul mod posé, à chances égales parmi ceux dont le groupe n'est pas déjà sur l'objet ; refusée
+    /// si tous le sont. Perfect : retrait du côté du mod tiré quand ce côté est plein.
+    #[test]
+    fn essence_with_several_mods_picks_one_among_the_free_ones() {
+        let mut affixes: Vec<Affix> = (0..4)
+            .map(|i| aff("P", i, Slot::Prefix, 100))
+            .chain((10..14).map(|i| aff("S", i, Slot::Suffix, 100)))
+            .collect();
+        let force = affixes.len() as AffixIdx;
+        affixes.push(aff("Force", 20, Slot::Suffix, 0));
+        affixes.push(aff("Dex", 21, Slot::Suffix, 0));
+        affixes.push(aff("Int", 22, Slot::Suffix, 0));
+        let (dex, int) = (force + 1, force + 2);
+        // groupe 10 (suffixe tirable) pour le mod Dex : déjà pris si le suffixe 4 est là
+        affixes[dex as usize].group = 10;
+        let pool = AffixPool {
+            affixes,
+            ..AffixPool::default()
+        };
+        let infinite = Currency {
+            target: Some(force),
+            more_targets: vec![dex, int],
+            ..cur(CurrencyKind::Essence)
+        };
+        let objet = |rarity, idx: &[AffixIdx]| {
+            let mut it = ItemState::new(rarity, 80);
+            for &idx in idx {
+                it.push(Mod {
+                    idx,
+                    fractured: false,
+                    crafted: false,
+                });
+            }
+            it
+        };
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(3);
+        let mut n = [0u32; 3];
+        for _ in 0..3000 {
+            let mut it = objet(Rarity::Magic, &[0]);
+            assert_eq!(pool.apply(&mut it, &infinite, &mut rng), Outcome::Applied);
+            assert_eq!(it.rarity, Rarity::Rare);
+            let pose = it.mods().iter().find(|m| m.crafted).unwrap().idx;
+            n[(pose - force) as usize] += 1;
+        }
+        assert!(n.iter().all(|&k| (900..1100).contains(&k)), "{n:?}");
+        // suffixe du groupe de Dex déjà là : Force ou Int, une fois sur deux
+        let mut n = [0u32; 3];
+        for _ in 0..2000 {
+            let mut it = objet(Rarity::Magic, &[4]);
+            assert_eq!(pool.apply(&mut it, &infinite, &mut rng), Outcome::Applied);
+            n[(it.mods()[1].idx - force) as usize] += 1;
+        }
+        assert_eq!(n[1], 0);
+        assert!((900..1100).contains(&n[0]), "{n:?}");
+        // Perfect sur Rare aux suffixes pleins : un suffixe part, le mod tiré le remplace
+        let parfaite = Currency {
+            requires_rare: true,
+            ..infinite.clone()
+        };
+        for _ in 0..200 {
+            let mut it = objet(Rarity::Rare, &[0, 5, 6, 7]);
+            assert_eq!(pool.apply(&mut it, &parfaite, &mut rng), Outcome::Applied);
+            assert_eq!(pool.count(&it, Slot::Prefix), 1);
+            assert_eq!(pool.count(&it, Slot::Suffix), 3);
+        }
+        // les trois groupes déjà pris : refusée, objet inchangé
+        let seule = Currency {
+            target: Some(dex),
+            more_targets: vec![],
+            ..infinite.clone()
+        };
+        let mut it = objet(Rarity::Magic, &[4]);
+        assert_eq!(
+            pool.apply(&mut it, &seule, &mut rng),
+            Outcome::NotApplicable
+        );
+        assert_eq!(it.rarity, Rarity::Magic);
+        assert_eq!(it.len(), 1);
     }
 
     /// Potent Liquid Contempt : slot tiré à 50/50, puis le préfixe « +1 Suffix Modifier allowed » OU le
