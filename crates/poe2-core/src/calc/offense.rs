@@ -430,8 +430,9 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
         GenreCompetence::Sort => stats::CAST_SPEED,
         GenreCompetence::Attaque => stats::ATTACK_SPEED,
     }];
-    let t_inc = db.trace_increased("increased", &s);
-    let t_more = db.trace_more("more", &s);
+    let s: &[&str] = if comp.cadence_fixe { &[] } else { &s };
+    let t_inc = db.trace_increased("increased", s);
+    let t_more = db.trace_more("more", s);
     let cadence = base_cadence * t_inc.valeur * t_more.valeur;
     let incantations_par_seconde = Trace::feuille("incantations par seconde", cadence)
         .avec_formule(format!(

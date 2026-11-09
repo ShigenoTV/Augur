@@ -49,6 +49,7 @@ const mechanics: Record<string, string> = {
   "passifs-non-traduits": "Certains passifs ne sont pas comptés",
   "supports-non-modelises": "Certains supports ne sont pas comptés",
   "formule-generique": "Sort pas encore vérifié en jeu (calcul générique)",
+  "cadence-declenchement": "Sort déclenché : cadence supposée",
   "arbre-autre-version": "Build fait sur une autre version de l'arbre",
 };
 

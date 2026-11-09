@@ -70,7 +70,24 @@ SKILLS = {
             }
         ],
     },
-    # Écartés : canalisé (sans temps d'incantation), sort sans dégâts, interne.
+    # Déclenché : pas de temps d'incantation, cadence = temps de recharge.
+    "TriggeredStaticShocksPlayer": {
+        "cast_time": 0,
+        "static": {"cooldown": 400},
+        "active_skill": {"display_name": "Static Shocks", "types": ["Spell", "Lightning", "Triggered"]},
+        "stat_sets": [
+            {
+                "static": {
+                    "stats": [
+                        {"id": "spell_minimum_base_lightning_damage", "type": "float"},
+                        {"id": "spell_maximum_base_lightning_damage", "type": "float"},
+                    ],
+                },
+                "per_level": {"1": {"stats": [{"value": 2}, {"value": 9}]}},
+            }
+        ],
+    },
+    # Écartés : sans dégâts de base, sort sans dégâts, interne.
     "IncinerateChannelPlayer": {
         "cast_time": 0,
         "active_skill": {"display_name": "Burn", "types": ["Spell", "Fire"]},
@@ -147,7 +164,16 @@ def test_extraction(tmp_path: Path) -> None:
     assert arc["niveaux"]["20"] == {"degats": {"foudre": [20.0, 386.0]}, "chaines": 9.0}
     assert arc["chaines_par_qualite"] == 0.1
     assert arc["infusion"] == {"element": "foudre", "degats_more": 200, "chaines": 6}
-    assert sorted(g["actives"]) == ["ArcPlayer", "FireballPlayer", "LightningArrowPlayer", "LightningBoltPlayer"]
+    assert sorted(g["actives"]) == [
+        "ArcPlayer",
+        "FireballPlayer",
+        "LightningArrowPlayer",
+        "LightningBoltPlayer",
+        "TriggeredStaticShocksPlayer",
+    ]
+    ss = g["actives"]["TriggeredStaticShocksPlayer"]
+    assert ss["declenche"] is True and ss["temps_incantation"] == 0.4
+    assert "declenche" not in g["actives"]["FireballPlayer"]
     la = g["actives"]["LightningArrowPlayer"]
     assert la["genre"] == "attaque" and la["vitesse_attaque"] == 90
     assert la["niveaux"]["1"]["multiplicateur"] == 100 and la["niveaux"]["20"]["multiplicateur"] == 250

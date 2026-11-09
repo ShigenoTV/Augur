@@ -87,6 +87,11 @@ pub struct Competence {
     /// Infusion consommée par la compétence si possible (Arc : foudre).
     #[serde(default)]
     pub infusion: Option<Infusion>,
+    /// Compétence déclenchée : sa cadence ne dépend pas de la vitesse
+    /// d'incantation ou d'attaque (`temps_incantation` = temps de recharge,
+    /// ou 1 s par convention).
+    #[serde(default)]
+    pub cadence_fixe: bool,
 }
 
 /// Effet d'une infusion consommée (Arc : « 200% more damage » et « Chain 6

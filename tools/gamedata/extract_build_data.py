@@ -117,14 +117,22 @@ def active(skills: dict, skill_id: str, name: str, verifiee: bool = True) -> dic
     elements = sorted({TAGS[t] for t in types if t in TAGS})
     if not elements:
         elements = sorted({e for n in niveaux.values() for e in n["degats"]})
+    # Sans temps d'incantation : sort déclenché (ou persistant). Sa cadence
+    # dépend de ce qui le déclenche : on prend son temps de recharge, sinon
+    # 1 par seconde, ce qui garde juste la comparaison d'objets en %.
+    declenche = not s.get("cast_time")
+    cooldown = ((s.get("static") or {}).get("cooldown")) or 0
+    temps = s["cast_time"] / 1000 if not declenche else (cooldown / 1000 if cooldown else 1.0)
     out = {
         "nom": name,
-        "temps_incantation": s["cast_time"] / 1000,
+        "temps_incantation": temps,
         "critique_base": static.get("crit_chance", 0) / 100,
         "niveaux": niveaux,
         "elements": elements,
         "verifiee": verifiee,
     }
+    if declenche:
+        out["declenche"] = True
     for q in static.get("quality_stats") or []:
         per_mille = (q.get("stats") or {}).get("number_of_chains")
         if per_mille is not None:
@@ -149,8 +157,6 @@ def sort_generique(skill_id: str, s: dict) -> str | None:
     name = (a.get("display_name") or "").strip()
     if not name or "[" in name or "Spell" not in (a.get("types") or []):
         return None
-    if not s.get("cast_time"):
-        return None  # canalisé ou sans temps d'incantation : cadence inconnue
     try:
         return name if _set_de_degats(s) is not None else None
     except (KeyError, TypeError, ValueError):

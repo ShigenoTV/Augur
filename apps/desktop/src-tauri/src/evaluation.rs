@@ -79,6 +79,16 @@ pub fn to_delta(c: &Comparaison, ms: u32) -> ItemDelta {
             )],
         ));
     }
+    if let Some(t) = r.cadence_supposee {
+        mechanics.push(note_avec(
+            "cadence-declenchement",
+            vec![format!(
+                "{} est déclenché : cadence supposée d'un déclenchement toutes les {} s (temps de recharge du jeu, sinon 1 par seconde). Le DPS affiché en dépend, mais l'écart en % entre les deux objets reste juste",
+                c.competence,
+                format!("{t}").replace('.', ",")
+            )],
+        ));
+    }
     if !r.mods_candidat_non_traduits.is_empty() {
         mechanics.push(note_avec(
             "mods-objet-non-traduits",

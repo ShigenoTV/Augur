@@ -63,6 +63,8 @@ pub struct Rapport {
     pub arbre_autre_version: bool,
     /// Sort calculé par la formule générique (pas un archétype vérifié en jeu).
     pub formule_generique: bool,
+    /// Sort déclenché : cadence supposée (temps de recharge, sinon 1 par seconde).
+    pub cadence_supposee: Option<f64>,
 }
 
 impl Rapport {
@@ -74,6 +76,7 @@ impl Rapport {
             && self.supports_non_modelises.is_empty()
             && !self.arbre_autre_version
             && !self.formule_generique
+            && self.cadence_supposee.is_none()
     }
 }
 
@@ -337,6 +340,7 @@ fn modeliser(
     }
 
     rapport.formule_generique = !active.verifiee;
+    rapport.cadence_supposee = active.declenche.then_some(active.temps_incantation);
     let niveau_voulu = gemme.niveau as i32 + acc.niveaux.pour_sort(&active.elements());
     let (niveau, data) = active
         .niveau(niveau_voulu)
@@ -364,6 +368,7 @@ fn modeliser(
             qualite: gemme.qualite as f64,
             chaines_par_qualite: 0.0,
             infusion: None,
+            cadence_fixe: false,
         }
     } else {
         Competence {
@@ -379,6 +384,7 @@ fn modeliser(
             qualite: gemme.qualite as f64,
             chaines_par_qualite: active.chaines_par_qualite,
             infusion: active.infusion.clone(),
+            cadence_fixe: active.declenche,
         }
     };
     Ok((
@@ -686,6 +692,31 @@ Implicits: 0
             "{}",
             c.dps_avant
         );
+    }
+
+    #[test]
+    fn sort_declenche_a_cadence_fixe() {
+        let b = build_sort("Coursing Current", "TriggeredDeadlyCurrentPlayer", BAGUETTE);
+        let vitesse = comparer(
+            &b,
+            "Wands",
+            "Ember Song",
+            &lignes(&["30% increased Cast Speed"]),
+        )
+        .unwrap();
+        assert!(vitesse.dps_avant > 0.0);
+        // La vitesse d'incantation ne change pas la cadence d'un déclenchement.
+        assert!(vitesse.dps_apres <= vitesse.dps_avant, "{vitesse:?}");
+        assert_eq!(vitesse.rapport.cadence_supposee, Some(0.2));
+        assert!(!vitesse.rapport.complet());
+        let degats = comparer(
+            &b,
+            "Wands",
+            "Ember Song",
+            &lignes(&["100% increased Lightning Damage"]),
+        )
+        .unwrap();
+        assert!(degats.dps_apres > degats.dps_avant, "{degats:?}");
     }
 
     #[test]

@@ -53,6 +53,10 @@ pub struct GemmeActive {
     /// Archétype vérifié en jeu ; sinon, formule générique.
     #[serde(default)]
     pub verifiee: bool,
+    /// Sort déclenché (Hailstorm, Coursing Current…) : `temps_incantation`
+    /// est son temps de recharge, ou 1 s s'il n'en a pas.
+    #[serde(default)]
+    pub declenche: bool,
     /// « sort » (défaut) ou « attaque ».
     #[serde(default)]
     pub genre: Option<String>,

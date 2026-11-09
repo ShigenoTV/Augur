@@ -238,6 +238,7 @@ fn competence(nom: &str) -> Competence {
         chaines_base: None,
         qualite: 0.0,
         chaines_par_qualite: 0.0,
+        cadence_fixe: false,
         infusion: None,
     }
 }
