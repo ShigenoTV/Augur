@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { describeStrategy, formatDuration, formatRate, parseTags, shortDateTime, timeShares } from "./ledger";
+import {
+  EMPTY_LOOT,
+  LOOT_ITEMS,
+  describeStrategy,
+  formatDuration,
+  formatRate,
+  lootDraft,
+  lootNet,
+  parseAmount,
+  parseTags,
+  shortDateTime,
+  timeShares,
+} from "./ledger";
 
 describe("Atlas Ledger", () => {
   it("formate les durées", () => {
@@ -37,5 +49,39 @@ describe("Atlas Ledger", () => {
     expect(shortDateTime(null)).toBe("");
     expect(shortDateTime("n'importe quoi")).toBe("");
     expect(shortDateTime("2026-11-07T19:35:00Z")).toMatch(/^\d{2}\/\d{2} \d{2}:\d{2}$/);
+  });
+});
+
+describe("Atlas Ledger : butin", () => {
+  const prix = { divine: 600, exalt: 1, chaos: 50 };
+
+  it("lit les montants saisis", () => {
+    expect(parseAmount("12,5")).toBe(12.5);
+    expect(parseAmount(" 1 200 ")).toBe(1200);
+    expect(parseAmount("-3")).toBe(0);
+    expect(parseAmount("abc")).toBe(0);
+    expect(parseAmount("")).toBe(0);
+  });
+
+  it("valorise un butin comme le cœur Rust", () => {
+    const loot = { quantites: { divine: 1, exalt: 12, chaos: 2, annul: 3 }, autre: 30, depense: 20 };
+    // L'Annulment sans prix compte pour zéro.
+    expect(lootNet(loot, prix)).toBe(722);
+  });
+
+  it("reprend la dépense de la dernière map saisie", () => {
+    const loot = {
+      "0": { quantites: {}, autre: 0, depense: 4 },
+      "2": { quantites: { exalt: 3 }, autre: 0, depense: 6 },
+    };
+    expect(lootDraft(loot, 2)).toBe(loot["2"]);
+    expect(lootDraft(loot, 1).depense).toBe(4);
+    expect(lootDraft(loot, 5)).toEqual({ quantites: {}, autre: 0, depense: 6 });
+    expect(lootDraft({}, 0)).toEqual(EMPTY_LOOT);
+  });
+
+  it("propose les monnaies connues du cœur", () => {
+    expect(LOOT_ITEMS).toHaveLength(12);
+    expect(new Set(LOOT_ITEMS.map((i) => i.id)).size).toBe(12);
   });
 });

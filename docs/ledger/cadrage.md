@@ -20,7 +20,17 @@ Atlas Ledger est le troisième produit du [plan fondateur](../plan-fondateur.md)
 2. **Historique local et étiquetage** : sessions enregistrées en SQLite dans `%APPDATA%` (comme prévu au plan, section 1.4) ; stratégie étiquetée par le joueur (tablettes de précurseur, mécaniques ciblées, tier de Waystone).
 3. **Panneau Ledger** dans la fenêtre principale : session en cours, liste des maps, historique.
 
-Hors périmètre pour l'instant : valeur du butin, couche communautaire et prévision de marché (backend et historique nécessaires), stash tracker (en attente de l'API).
+Hors périmètre pour l'instant : couche communautaire et prévision de marché (backend et historique nécessaires), stash tracker (en attente de l'API).
+
+## Gains par map (v2)
+
+**Décision de Max (9 novembre 2026) :** `Client.txt` ne note pas le butin et les réserves restent fermées, donc le joueur saisit son butin après chaque map avec des **compteurs rapides** (code : [`crates/poe2-core/src/ledger/butin.rs`](../../crates/poe2-core/src/ledger/butin.rs)).
+
+- Compteurs pour 12 monnaies (Divine, Annulment, Chaos, Exalted, Regal, Alchemy, Augmentation, Transmutation, Greater Exalted, Greater Chaos, Greater Regal, Fracturing), plus « autre butin » et « dépense » (Waystone, tablettes) en Exalted.
+- Valorisation aux prix de Forge : correction du joueur, sinon relevé poe.ninja, sinon valeurs indicatives. Une monnaie sans prix compte pour zéro.
+- La dépense de la dernière map saisie est proposée pour la suivante (même Waystone en général).
+- Bilan : gains nets, moyenne par map saisie, gains par heure de session (à partir d'une minute), dépense totale.
+- Le butin peut être saisi pendant la session ou après coup depuis l'historique. Chaque session enregistrée garde l'instantané des prix de son arrêt (schéma SQLite 2 : colonnes `loot` et `prices`) : sa valeur ne bouge plus avec le marché. Une session du schéma 1 prend les prix du moment à sa première saisie.
 
 ## Règles du suivi
 

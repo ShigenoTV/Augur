@@ -1,18 +1,26 @@
 //! Atlas Ledger dans l'application : session de farm en cours, alimentée
 //! par les lignes de `Client.txt`, et historique local (SQLite).
 //!
-//! Le découpage en maps et la répartition du temps viennent de
-//! `poe2_core::ledger` ; ce module ne fait que tenir l'état, horodater et
-//! enregistrer. Rien ne quitte le PC.
+//! Le découpage en maps, la répartition du temps et la valeur du butin
+//! viennent de `poe2_core::ledger` ; ce module ne fait que tenir l'état,
+//! horodater et enregistrer. Le butin de chaque map est saisi par le joueur
+//! et valorisé aux prix de Forge (poe.ninja, sinon indicatifs). Rien ne
+//! quitte le PC.
 
+use std::collections::BTreeMap;
 use std::sync::{Mutex, MutexGuard};
 use std::time::Instant;
 
-use poe2_core::ledger::{Bilan, EvenementJournal, Horodatage, LigneJournal, SuiviSession};
+use poe2_core::ledger::butin::prix_objets;
+use poe2_core::ledger::{
+    Bilan, BilanGains, Butin, ButinsSession, EvenementJournal, Horodatage, LigneJournal,
+    SuiviSession, bilan_gains,
+};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::ledger_store::{LedgerStore, SessionRow, Strategy};
+use crate::forge_prices::ForgePrices;
+use crate::ledger_store::{LedgerStore, SessionRow, StoredSession, Strategy};
 use crate::time::rfc3339_now;
 
 /// Événement émis à chaque changement de la session (charge : `LedgerStatus`).
@@ -31,6 +39,10 @@ pub struct LedgerStatus {
     pub strategy: Strategy,
     /// Bilan de la session en cours, jusqu'à maintenant.
     pub summary: Option<Bilan>,
+    /// Butin saisi pour chaque map de la session en cours (position dans `summary.maps`).
+    pub loot: ButinsSession,
+    /// Valeur du butin aux prix du moment.
+    pub gains: Option<BilanGains>,
     /// Dernière session enregistrée.
     pub last_saved_id: Option<i64>,
     /// Historique indisponible (base illisible) : message affichable.
@@ -41,6 +53,7 @@ struct Active {
     started_at: String,
     suivi: SuiviSession,
     strategy: Strategy,
+    butins: ButinsSession,
 }
 
 #[derive(Default)]
@@ -63,8 +76,13 @@ impl Inner {
             .map(|(t, at)| t + at.elapsed().as_secs() as Horodatage)
     }
 
-    fn status(&self) -> LedgerStatus {
+    fn status(&self, prix: &BTreeMap<String, f64>) -> LedgerStatus {
         let now = self.now_log();
+        let summary = self.active.as_ref().map(|a| a.suivi.bilan(now));
+        let gains = match (&self.active, &summary) {
+            (Some(a), Some(b)) => Some(bilan_gains(b, &a.butins, prix)),
+            _ => None,
+        };
         LedgerStatus {
             active: self.active.is_some(),
             started_at: self.active.as_ref().map(|a| a.started_at.clone()),
@@ -73,7 +91,13 @@ impl Inner {
                 .as_ref()
                 .map(|a| a.strategy.clone())
                 .unwrap_or_default(),
-            summary: self.active.as_ref().map(|a| a.suivi.bilan(now)),
+            summary,
+            loot: self
+                .active
+                .as_ref()
+                .map(|a| a.butins.clone())
+                .unwrap_or_default(),
+            gains,
             last_saved_id: self.last_saved_id,
             storage_error: self.storage_error.clone(),
         }
@@ -111,9 +135,20 @@ impl LedgerState {
         self.0.lock().unwrap_or_else(|e| e.into_inner())
     }
 
-    pub fn status(&self) -> LedgerStatus {
-        self.lock().status()
+    pub fn status(&self, prix: &BTreeMap<String, f64>) -> LedgerStatus {
+        self.lock().status(prix)
     }
+}
+
+/// Prix effectifs de Forge (identifiant -> prix en Exalted), lus avant de verrouiller le Ledger.
+fn prices(app: &AppHandle) -> BTreeMap<String, f64> {
+    app.state::<ForgePrices>().get().prix
+}
+
+/// État courant, aux prix du moment.
+pub fn status(app: &AppHandle) -> LedgerStatus {
+    let prix = prices(app);
+    app.state::<LedgerState>().status(&prix)
 }
 
 fn emit(app: &AppHandle, status: &LedgerStatus) {
@@ -122,6 +157,7 @@ fn emit(app: &AppHandle, status: &LedgerStatus) {
 
 /// Ligne utile de `Client.txt` (appelée par le suivi du journal).
 pub fn on_log_line(app: &AppHandle, line: &LigneJournal) {
+    let prix = prices(app);
     let status = {
         let state = app.state::<LedgerState>();
         let mut g = state.lock();
@@ -134,7 +170,7 @@ pub fn on_log_line(app: &AppHandle, line: &LigneJournal) {
         match g.active.as_mut() {
             Some(active) => {
                 active.suivi.pousser(line);
-                Some(g.status())
+                Some(g.status(&prix))
             }
             None => None,
         }
@@ -145,6 +181,7 @@ pub fn on_log_line(app: &AppHandle, line: &LigneJournal) {
 }
 
 pub fn start(app: &AppHandle) -> LedgerStatus {
+    let prix = prices(app);
     let status = {
         let state = app.state::<LedgerState>();
         let mut g = state.lock();
@@ -161,9 +198,10 @@ pub fn start(app: &AppHandle) -> LedgerStatus {
                 started_at: rfc3339_now(),
                 suivi,
                 strategy: Strategy::default(),
+                butins: ButinsSession::new(),
             });
         }
-        g.status()
+        g.status(&prix)
     };
     emit(app, &status);
     status
@@ -171,6 +209,7 @@ pub fn start(app: &AppHandle) -> LedgerStatus {
 
 /// Arrête la session et l'enregistre (sauf si elle est vide).
 pub fn stop(app: &AppHandle) -> Result<LedgerStatus, String> {
+    let prix = prices(app);
     let state = app.state::<LedgerState>();
     let (status, result) = {
         let mut g = state.lock();
@@ -188,6 +227,8 @@ pub fn stop(app: &AppHandle) -> Result<LedgerStatus, String> {
                                 &rfc3339_now(),
                                 &active.strategy,
                                 &summary,
+                                &active.butins,
+                                &prix_objets(&prix),
                             )
                             .map_err(|e| format!("Session non enregistrée ({e})."))
                     });
@@ -199,7 +240,7 @@ pub fn stop(app: &AppHandle) -> Result<LedgerStatus, String> {
             }
             None => Ok(()),
         };
-        (g.status(), result)
+        (g.status(&prix), result)
     };
     emit(app, &status);
     result.map(|()| status)
@@ -212,6 +253,7 @@ pub fn set_strategy(
     strategy: Strategy,
 ) -> Result<LedgerStatus, String> {
     let strategy = strategy.normalized();
+    let prix = prices(app);
     let state = app.state::<LedgerState>();
     let status = {
         let mut g = state.lock();
@@ -230,10 +272,53 @@ pub fn set_strategy(
                 }
             }
         }
-        g.status()
+        g.status(&prix)
     };
     emit(app, &status);
     Ok(status)
+}
+
+/// Saisit le butin d'une map de la session en cours.
+pub fn set_loot(app: &AppHandle, map: usize, loot: Butin) -> Result<LedgerStatus, String> {
+    let loot = loot.normalise();
+    let prix = prices(app);
+    let state = app.state::<LedgerState>();
+    let status = {
+        let mut g = state.lock();
+        let now = g.now_log();
+        let Some(active) = g.active.as_mut() else {
+            return Err("Aucune session en cours.".into());
+        };
+        if map >= active.suivi.bilan(now).maps.len() {
+            return Err("Map introuvable dans la session.".into());
+        }
+        if loot.est_vide() {
+            active.butins.remove(&map);
+        } else {
+            active.butins.insert(map, loot);
+        }
+        g.status(&prix)
+    };
+    emit(app, &status);
+    Ok(status)
+}
+
+/// Saisit le butin d'une map d'une session enregistrée (valorisé aux prix gardés avec elle).
+pub fn set_session_loot(
+    app: &AppHandle,
+    id: i64,
+    map: usize,
+    loot: Butin,
+) -> Result<StoredSession, String> {
+    let loot = loot.normalise();
+    let prix = prix_objets(&prices(app));
+    let state = app.state::<LedgerState>();
+    let g = state.lock();
+    let store = g.store()?;
+    store
+        .set_loot(id, map, loot, &prix)
+        .map_err(|e| format!("Butin non enregistré ({e})."))?
+        .ok_or_else(|| "Session ou map introuvable.".into())
 }
 
 pub fn history(app: &AppHandle, limit: u32) -> Result<Vec<SessionRow>, String> {

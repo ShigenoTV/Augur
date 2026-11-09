@@ -1,4 +1,4 @@
-import type { LedgerStrategy, LedgerTime } from "../bridge";
+import type { LedgerLoot, LedgerStrategy, LedgerTime } from "../bridge";
 
 /** « 4 min 05 », « 1 h 02 », « 42 s » : durée en secondes, lisible. */
 export function formatDuration(secs: number | null | undefined): string {
@@ -49,4 +49,49 @@ export function shortDateTime(rfc3339: string | null): string {
   if (Number.isNaN(d.getTime())) return "";
   const two = (n: number) => String(n).padStart(2, "0");
   return `${two(d.getDate())}/${two(d.getMonth() + 1)} ${two(d.getHours())}:${two(d.getMinutes())}`;
+}
+
+/** Monnaies proposées en compteurs (mêmes identifiants que `OBJETS` dans poe2-core). */
+export const LOOT_ITEMS: { id: string; nom: string }[] = [
+  { id: "divine", nom: "Divine" },
+  { id: "annul", nom: "Annulment" },
+  { id: "chaos", nom: "Chaos" },
+  { id: "exalt", nom: "Exalted" },
+  { id: "regal", nom: "Regal" },
+  { id: "alchemy", nom: "Alchemy" },
+  { id: "augment", nom: "Augmentation" },
+  { id: "transmute", nom: "Transmutation" },
+  { id: "exalt_greater", nom: "Greater Exalted" },
+  { id: "chaos_greater", nom: "Greater Chaos" },
+  { id: "regal_greater", nom: "Greater Regal" },
+  { id: "fracture", nom: "Fracturing" },
+];
+
+export const EMPTY_LOOT: LedgerLoot = { quantites: {}, autre: 0, depense: 0 };
+
+/** « 12,5 » ou « 12.5 » → 12,5 ; vide ou invalide → 0 ; jamais négatif. */
+export function parseAmount(text: string): number {
+  const v = Number(text.trim().replace(/\s/g, "").replace(",", "."));
+  return Number.isFinite(v) && v > 0 ? v : 0;
+}
+
+/** Valeur nette d'un butin aux prix donnés (en Exalted), comme `Butin::valeur` côté Rust. */
+export function lootNet(loot: LedgerLoot, prix: Record<string, number>): number {
+  let brut = loot.autre;
+  for (const [id, q] of Object.entries(loot.quantites)) {
+    const p = prix[id];
+    if (p !== undefined && Number.isFinite(p) && p >= 0) brut += p * q;
+  }
+  return brut - loot.depense;
+}
+
+/** Butin à proposer pour une map sans saisie : la dépense de la dernière map saisie (même Waystone). */
+export function lootDraft(loot: Record<string, LedgerLoot>, map: number): LedgerLoot {
+  const saisi = loot[String(map)];
+  if (saisi) return saisi;
+  const avant = Object.keys(loot)
+    .map(Number)
+    .filter((i) => i < map)
+    .sort((a, b) => b - a)[0];
+  return { ...EMPTY_LOOT, depense: avant === undefined ? 0 : (loot[String(avant)]?.depense ?? 0) };
 }

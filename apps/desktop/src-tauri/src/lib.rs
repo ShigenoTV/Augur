@@ -100,6 +100,8 @@ pub fn run() {
             commands::start_ledger_session,
             commands::stop_ledger_session,
             commands::set_ledger_strategy,
+            commands::set_ledger_loot,
+            commands::set_ledger_session_loot,
             commands::list_ledger_sessions,
             commands::get_ledger_session,
             commands::delete_ledger_session,

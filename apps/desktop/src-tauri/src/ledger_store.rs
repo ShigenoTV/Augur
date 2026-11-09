@@ -5,15 +5,21 @@
 //! bilan (calculé par `poe2_core::ledger`) et la stratégie étiquetée par le
 //! joueur. Le bilan est gardé en JSON : son format suit le moteur, la base
 //! ne garde en colonnes que ce qui sert au tri et aux regroupements.
+//!
+//! Depuis le schéma 2, chaque session garde aussi le butin saisi pour ses
+//! maps et l'instantané des prix (en Exalted) relevés à son arrêt : la valeur
+//! d'une session ancienne ne bouge pas avec le marché.
 
 use std::path::Path;
 
-use poe2_core::ledger::Bilan;
+use std::collections::BTreeMap;
+
+use poe2_core::ledger::{Bilan, BilanGains, Butin, ButinsSession, bilan_gains};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 
 /// Version du schéma, dans `PRAGMA user_version`.
-const SCHEMA: i32 = 1;
+const SCHEMA: i32 = 2;
 
 /// Longueur maximale d'une étiquette ou d'une note (saisie du joueur).
 const TEXTE_MAX: usize = 500;
@@ -64,6 +70,11 @@ pub struct StoredSession {
     pub ended_at: String,
     pub strategy: Strategy,
     pub summary: Bilan,
+    /// Butin saisi par map (position dans `summary.maps`).
+    pub loot: ButinsSession,
+    /// Prix (en Exalted) relevés à l'arrêt de la session.
+    pub prices: BTreeMap<String, f64>,
+    pub gains: BilanGains,
 }
 
 /// Résumé d'une session pour la liste de l'historique.
@@ -79,6 +90,11 @@ pub struct SessionRow {
     pub map_secs: i64,
     pub maps_per_hour: Option<f64>,
     pub avg_map_secs: Option<i64>,
+    /// Maps dont le butin a été saisi.
+    pub loot_maps: u32,
+    /// Gain net (Exalted), absent sans saisie.
+    pub net: Option<f64>,
+    pub net_per_hour: Option<f64>,
 }
 
 pub struct LedgerStore {
@@ -114,6 +130,13 @@ impl LedgerStore {
                 );
                 CREATE INDEX IF NOT EXISTS sessions_started ON sessions(started_at);",
             )?;
+            db.pragma_update(None, "user_version", 1)?;
+        }
+        if version < 2 {
+            db.execute_batch(
+                "ALTER TABLE sessions ADD COLUMN loot   TEXT NOT NULL DEFAULT '{}';
+                 ALTER TABLE sessions ADD COLUMN prices TEXT NOT NULL DEFAULT '{}';",
+            )?;
             db.pragma_update(None, "user_version", SCHEMA)?;
         }
         Ok(Self { db })
@@ -126,10 +149,12 @@ impl LedgerStore {
         ended_at: &str,
         strategy: &Strategy,
         summary: &Bilan,
+        loot: &ButinsSession,
+        prices: &BTreeMap<String, f64>,
     ) -> rusqlite::Result<i64> {
         self.db.execute(
-            "INSERT INTO sessions (started_at, ended_at, strategy, summary, maps, total_secs, map_secs)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            "INSERT INTO sessions (started_at, ended_at, strategy, summary, maps, total_secs, map_secs, loot, prices)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
             params![
                 started_at,
                 ended_at,
@@ -138,6 +163,8 @@ impl LedgerStore {
                 summary.maps.len() as i64,
                 summary.temps.total(),
                 summary.temps.map,
+                to_json(loot),
+                to_json(prices),
             ],
         )?;
         Ok(self.db.last_insert_rowid())
@@ -152,6 +179,37 @@ impl LedgerStore {
         Ok(n > 0)
     }
 
+    /// Saisit le butin d'une map d'une session enregistrée (un butin vide l'efface). Une session
+    /// enregistrée sans prix (schéma 1) prend les prix donnés. Rien si la session ou la map est
+    /// absente.
+    pub fn set_loot(
+        &self,
+        id: i64,
+        map: usize,
+        loot: Butin,
+        current_prices: &BTreeMap<String, f64>,
+    ) -> rusqlite::Result<Option<StoredSession>> {
+        let Some(mut s) = self.get(id)? else {
+            return Ok(None);
+        };
+        if map >= s.summary.maps.len() {
+            return Ok(None);
+        }
+        if loot.est_vide() {
+            s.loot.remove(&map);
+        } else {
+            s.loot.insert(map, loot);
+        }
+        if s.prices.is_empty() {
+            s.prices = current_prices.clone();
+        }
+        self.db.execute(
+            "UPDATE sessions SET loot = ?1, prices = ?2 WHERE id = ?3",
+            params![to_json(&s.loot), to_json(&s.prices), id],
+        )?;
+        self.get(id)
+    }
+
     pub fn delete(&self, id: i64) -> rusqlite::Result<bool> {
         Ok(self
             .db
@@ -162,7 +220,7 @@ impl LedgerStore {
     pub fn get(&self, id: i64) -> rusqlite::Result<Option<StoredSession>> {
         self.db
             .query_row(
-                "SELECT id, started_at, ended_at, strategy, summary FROM sessions WHERE id = ?1",
+                "SELECT id, started_at, ended_at, strategy, summary, loot, prices FROM sessions WHERE id = ?1",
                 params![id],
                 |r| {
                     Ok((
@@ -171,32 +229,51 @@ impl LedgerStore {
                         r.get::<_, String>(2)?,
                         r.get::<_, String>(3)?,
                         r.get::<_, String>(4)?,
+                        r.get::<_, String>(5)?,
+                        r.get::<_, String>(6)?,
                     ))
                 },
             )
             .optional()
             .map(|row| {
-                row.and_then(|(id, started_at, ended_at, strategy, summary)| {
-                    Some(StoredSession {
-                        id,
-                        started_at,
-                        ended_at,
-                        strategy: serde_json::from_str(&strategy).unwrap_or_default(),
+                row.and_then(
+                    |(id, started_at, ended_at, strategy, summary, loot, prices)| {
                         // Un bilan illisible (format futur) est ignoré plutôt que bloquant.
-                        summary: serde_json::from_str(&summary).ok()?,
-                    })
-                })
+                        let summary: Bilan = serde_json::from_str(&summary).ok()?;
+                        let loot = read_loot(&loot);
+                        let prices = read_prices(&prices);
+                        let gains = bilan_gains(&summary, &loot, &prices);
+                        Some(StoredSession {
+                            id,
+                            started_at,
+                            ended_at,
+                            strategy: serde_json::from_str(&strategy).unwrap_or_default(),
+                            summary,
+                            loot,
+                            prices,
+                            gains,
+                        })
+                    },
+                )
             })
     }
 
     /// Sessions les plus récentes d'abord.
     pub fn list(&self, limit: u32) -> rusqlite::Result<Vec<SessionRow>> {
         let mut stmt = self.db.prepare(
-            "SELECT id, started_at, ended_at, strategy, maps, total_secs, map_secs, summary
+            "SELECT id, started_at, ended_at, strategy, maps, total_secs, map_secs, summary, loot, prices
              FROM sessions ORDER BY started_at DESC, id DESC LIMIT ?1",
         )?;
         let rows = stmt.query_map(params![limit], |r| {
             let summary: Option<Bilan> = serde_json::from_str(&r.get::<_, String>(7)?).ok();
+            let gains = summary.as_ref().map(|s| {
+                bilan_gains(
+                    s,
+                    &read_loot(&r.get::<_, String>(8).unwrap_or_default()),
+                    &read_prices(&r.get::<_, String>(9).unwrap_or_default()),
+                )
+            });
+            let saisies = gains.as_ref().map_or(0, |g| g.maps_saisies);
             Ok(SessionRow {
                 id: r.get(0)?,
                 started_at: r.get(1)?,
@@ -207,10 +284,31 @@ impl LedgerStore {
                 map_secs: r.get(6)?,
                 maps_per_hour: summary.as_ref().and_then(|s| s.maps_par_heure),
                 avg_map_secs: summary.as_ref().and_then(|s| s.duree_moyenne_map),
+                loot_maps: saisies,
+                net: gains.as_ref().filter(|_| saisies > 0).map(|g| g.net),
+                net_per_hour: gains.as_ref().and_then(|g| g.net_par_heure),
             })
         })?;
         rows.collect()
     }
+}
+
+/// Butin enregistré : entrées illisibles ou invalides écartées.
+fn read_loot(json: &str) -> ButinsSession {
+    serde_json::from_str::<ButinsSession>(json)
+        .unwrap_or_default()
+        .into_iter()
+        .map(|(i, b)| (i, b.normalise()))
+        .filter(|(_, b)| !b.est_vide())
+        .collect()
+}
+
+fn read_prices(json: &str) -> BTreeMap<String, f64> {
+    serde_json::from_str::<BTreeMap<String, f64>>(json)
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|(_, p)| p.is_finite() && *p >= 0.0)
+        .collect()
 }
 
 fn to_json<T: Serialize>(value: &T) -> String {
@@ -247,6 +345,8 @@ mod tests {
                 "2026-11-07T19:10:00Z",
                 &strat,
                 &bilan(),
+                &ButinsSession::new(),
+                &BTreeMap::new(),
             )
             .unwrap();
         let b = store
@@ -255,6 +355,8 @@ mod tests {
                 "2026-11-08T19:10:00Z",
                 &Strategy::default(),
                 &bilan(),
+                &ButinsSession::new(),
+                &BTreeMap::new(),
             )
             .unwrap();
 
@@ -282,6 +384,8 @@ mod tests {
                 "2026-11-07T19:10:00Z",
                 &Strategy::default(),
                 &bilan(),
+                &ButinsSession::new(),
+                &BTreeMap::new(),
             )
             .unwrap();
         let strat = Strategy {
@@ -308,11 +412,111 @@ mod tests {
                     "2026-11-07T19:10:00Z",
                     &Strategy::default(),
                     &bilan(),
+                    &ButinsSession::new(),
+                    &BTreeMap::new(),
                 )
                 .unwrap()
         };
         let store = LedgerStore::open(&path).unwrap();
         assert!(store.get(id).unwrap().is_some());
+    }
+
+    fn prices() -> BTreeMap<String, f64> {
+        [("exalt".to_string(), 1.0), ("divine".to_string(), 600.0)]
+            .into_iter()
+            .collect()
+    }
+
+    fn loot(q: &[(&str, u32)], depense: f64) -> Butin {
+        Butin {
+            quantites: q.iter().map(|(k, v)| ((*k).to_string(), *v)).collect(),
+            autre: 0.0,
+            depense,
+        }
+    }
+
+    #[test]
+    fn garde_le_butin_et_les_prix_de_la_session() {
+        let store = LedgerStore::in_memory().unwrap();
+        let butins: ButinsSession = [(0, loot(&[("exalt", 20)], 5.0))].into_iter().collect();
+        let id = store
+            .insert(
+                "2026-11-09T19:00:00Z",
+                "2026-11-09T19:10:00Z",
+                &Strategy::default(),
+                &bilan(),
+                &butins,
+                &prices(),
+            )
+            .unwrap();
+        let s = store.get(id).unwrap().unwrap();
+        assert_eq!(s.loot, butins);
+        assert_eq!(s.gains.net, 15.0);
+
+        // Saisie après coup, aux prix gardés (pas à ceux du moment).
+        let moment: BTreeMap<String, f64> = [("divine".to_string(), 900.0)].into_iter().collect();
+        let s = store
+            .set_loot(id, 1, loot(&[("divine", 1)], 0.0), &moment)
+            .unwrap()
+            .unwrap();
+        assert_eq!(s.gains.net, 615.0);
+        assert_eq!(s.gains.maps_saisies, 2);
+        let row = &store.list(1).unwrap()[0];
+        assert_eq!((row.loot_maps, row.net), (2, Some(615.0)));
+        // 615 ex en 10 minutes.
+        assert_eq!(row.net_per_hour, Some(3_690.0));
+
+        // Un butin vide efface la saisie ; une map absente est refusée.
+        let s = store
+            .set_loot(id, 1, Butin::default(), &moment)
+            .unwrap()
+            .unwrap();
+        assert_eq!(s.gains.maps_saisies, 1);
+        assert!(
+            store
+                .set_loot(id, 2, loot(&[("exalt", 1)], 0.0), &moment)
+                .unwrap()
+                .is_none()
+        );
+        assert!(
+            store
+                .set_loot(id + 1, 0, loot(&[("exalt", 1)], 0.0), &moment)
+                .unwrap()
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn migre_une_base_du_schema_1() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("ledger.sqlite");
+        {
+            let db = Connection::open(&path).unwrap();
+            db.execute_batch(
+                "CREATE TABLE sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT, started_at TEXT NOT NULL,
+                    ended_at TEXT NOT NULL, strategy TEXT NOT NULL, summary TEXT NOT NULL,
+                    maps INTEGER NOT NULL, total_secs INTEGER NOT NULL, map_secs INTEGER NOT NULL);
+                 PRAGMA user_version = 1;",
+            )
+            .unwrap();
+            db.execute(
+                "INSERT INTO sessions (started_at, ended_at, strategy, summary, maps, total_secs, map_secs)
+                 VALUES ('2026-11-07T19:00:00Z', '2026-11-07T19:10:00Z', '{}', ?1, 2, 600, 540)",
+                params![to_json(&bilan())],
+            )
+            .unwrap();
+        }
+        let store = LedgerStore::open(&path).unwrap();
+        let row = &store.list(1).unwrap()[0];
+        assert_eq!((row.loot_maps, row.net), (0, None));
+        // Une ancienne session prend les prix du moment à la première saisie.
+        let s = store
+            .set_loot(row.id, 0, loot(&[("divine", 1)], 0.0), &prices())
+            .unwrap()
+            .unwrap();
+        assert_eq!(s.prices, prices());
+        assert_eq!(s.gains.net, 600.0);
     }
 
     #[test]

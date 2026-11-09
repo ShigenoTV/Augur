@@ -98,11 +98,26 @@ export type LedgerStrategy = {
   mechanics: string[];
   note: string;
 };
+/** Butin d'une map, saisi par le joueur (crates/poe2-core/src/ledger/butin.rs). Montants en Exalted. */
+export type LedgerLoot = { quantites: Record<string, number>; autre: number; depense: number };
+export type LedgerLootValue = { brut: number; depense: number; net: number; sansPrix: string[] };
+export type LedgerGains = {
+  parMap: (LedgerLootValue | null)[];
+  brut: number;
+  depense: number;
+  net: number;
+  mapsSaisies: number;
+  netParMap: number | null;
+  netParHeure: number | null;
+};
 export type LedgerStatus = {
   active: boolean;
   startedAt: string | null;
   strategy: LedgerStrategy;
   summary: LedgerSummary | null;
+  /** Butin par position de map dans `summary.maps`. */
+  loot: Record<string, LedgerLoot>;
+  gains: LedgerGains | null;
   lastSavedId: number | null;
   storageError: string | null;
 };
@@ -116,6 +131,9 @@ export type LedgerSessionRow = {
   mapSecs: number;
   mapsPerHour: number | null;
   avgMapSecs: number | null;
+  lootMaps: number;
+  net: number | null;
+  netPerHour: number | null;
 };
 export type LedgerSession = {
   id: number;
@@ -123,6 +141,10 @@ export type LedgerSession = {
   endedAt: string;
   strategy: LedgerStrategy;
   summary: LedgerSummary;
+  loot: Record<string, LedgerLoot>;
+  /** Prix (en Exalted) relevés à l'arrêt de la session. */
+  prices: Record<string, number>;
+  gains: LedgerGains;
 };
 
 /** Personnage importé d'un code Path of Building (apps/desktop/src-tauri/src/character.rs). */
@@ -327,6 +349,9 @@ export const commands = {
   stopLedgerSession: () => invoke<LedgerStatus>("stop_ledger_session"),
   setLedgerStrategy: (id: number | null, strategy: LedgerStrategy) =>
     invoke<LedgerStatus>("set_ledger_strategy", { id, strategy }),
+  setLedgerLoot: (map: number, loot: LedgerLoot) => invoke<LedgerStatus>("set_ledger_loot", { map, loot }),
+  setLedgerSessionLoot: (id: number, map: number, loot: LedgerLoot) =>
+    invoke<LedgerSession>("set_ledger_session_loot", { id, map, loot }),
   listLedgerSessions: (limit: number) => invoke<LedgerSessionRow[]>("list_ledger_sessions", { limit }),
   getLedgerSession: (id: number) => invoke<LedgerSession>("get_ledger_session", { id }),
   deleteLedgerSession: (id: number) => invoke<void>("delete_ledger_session", { id }),

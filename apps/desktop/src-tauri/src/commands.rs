@@ -222,10 +222,8 @@ fn internal(message: String) -> AppError {
 }
 
 #[tauri::command]
-pub fn get_ledger_status(
-    state: State<'_, crate::ledger::LedgerState>,
-) -> crate::ledger::LedgerStatus {
-    state.status()
+pub fn get_ledger_status(app: AppHandle) -> crate::ledger::LedgerStatus {
+    crate::ledger::status(&app)
 }
 
 /// Démarre une session Atlas Ledger (sans effet si une session est en cours).
@@ -248,6 +246,27 @@ pub fn set_ledger_strategy(
     strategy: crate::ledger_store::Strategy,
 ) -> Result<crate::ledger::LedgerStatus, AppError> {
     crate::ledger::set_strategy(&app, id, strategy).map_err(internal)
+}
+
+/// Butin d'une map de la session en cours.
+#[tauri::command]
+pub fn set_ledger_loot(
+    app: AppHandle,
+    map: usize,
+    loot: poe2_core::ledger::Butin,
+) -> Result<crate::ledger::LedgerStatus, AppError> {
+    crate::ledger::set_loot(&app, map, loot).map_err(internal)
+}
+
+/// Butin d'une map d'une session de l'historique.
+#[tauri::command]
+pub fn set_ledger_session_loot(
+    app: AppHandle,
+    id: i64,
+    map: usize,
+    loot: poe2_core::ledger::Butin,
+) -> Result<crate::ledger_store::StoredSession, AppError> {
+    crate::ledger::set_session_loot(&app, id, map, loot).map_err(internal)
 }
 
 #[tauri::command]
