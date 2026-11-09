@@ -106,8 +106,12 @@ pub fn emplacements(classe: &str) -> Option<(&'static [&'static str], &'static [
     const W1: &[&str] = &["Weapon 1"];
     const W2: &[&str] = &["Weapon 2"];
     Some(match classe {
-        "Wands" | "Sceptres" | "Daggers" | "Claws" | "Spears" | "Flails" | "One Hand Maces"
+        "Wands" | "Daggers" | "Claws" | "Spears" | "Flails" | "One Hand Maces"
         | "One Hand Swords" | "One Hand Axes" => (W1, &[]),
+        // Un sceptre se tient dans l'une ou l'autre main, à côté d'une baguette
+        // par exemple (règle de Path of Building) : il n'apporte souvent que de
+        // l'Esprit et ne doit pas être comparé qu'à l'arme qui porte le DPS.
+        "Sceptres" => (&["Weapon 1", "Weapon 2"], &[]),
         "Staves" | "Warstaves" | "Quarterstaves" | "Two Hand Maces" | "Two Hand Swords"
         | "Two Hand Axes" => (W1, W2),
         "Bows" | "Crossbows" => (W1, &[]),
@@ -121,6 +125,29 @@ pub fn emplacements(classe: &str) -> Option<(&'static [&'static str], &'static [
         "Body Armours" => (&["Body Armour"], &[]),
         _ => return None,
     })
+}
+
+/// La main gauche peut-elle recevoir un sceptre ? Non si l'arme équipée
+/// en main droite se tient à deux mains (bâton, arc, arbalète…). Une base
+/// inconnue des données est supposée à une main.
+fn main_gauche_libre(build: &BuildPob) -> bool {
+    let Some(arme) = build.objet("Weapon 1") else {
+        return true;
+    };
+    let Ok(donnees) = crate::forge::atelier::donnees() else {
+        return true;
+    };
+    let noms: Vec<&str> = [arme.base.as_deref(), arme.nom.as_deref()]
+        .into_iter()
+        .flatten()
+        .collect();
+    !donnees
+        .bases
+        .bases
+        .iter()
+        .filter(|b| b.tags.iter().any(|t| t == "twohand"))
+        // Les objets magiques portent leurs affixes autour du nom de base.
+        .any(|b| noms.iter().any(|n| n.contains(b.nom.as_str())))
 }
 
 /// Emplacements qui comptent pour le personnage : ni set d'armes de
@@ -313,6 +340,9 @@ pub fn comparer(
 
     let mut meilleur: Option<Comparaison> = None;
     for emplacement in choix {
+        if *emplacement == "Weapon 2" && classe == "Sceptres" && !main_gauche_libre(build) {
+            continue;
+        }
         let mut retires = vec![*emplacement];
         retires.extend_from_slice(liberes);
         let mut rapport = rapport_avant.clone();
@@ -464,6 +494,54 @@ Implicits: 0
             .unwrap();
         let p = comparer(&build(BAGUETTE, "", id), "Amulets", "X", &[]).unwrap();
         assert!((p.dps_avant / sans.dps_avant - 1.72 / 1.6).abs() < 1e-9);
+    }
+
+    const SCEPTRE: [&str; 3] = [
+        "58% increased Spirit",
+        "+28 to maximum Mana",
+        "Allies in your Presence have 9% increased Attack Speed",
+    ];
+
+    #[test]
+    fn un_sceptre_va_en_main_gauche_a_cote_de_la_baguette() {
+        let b = build(BAGUETTE, "", "");
+        let c = comparer(&b, "Sceptres", "Morbid Chant", &lignes(&SCEPTRE)).unwrap();
+        assert_eq!(c.emplacement, "Weapon 2");
+        assert_eq!(c.remplace, None);
+        // Esprit et mana n'apportent rien au DPS : pas de fausse régression.
+        assert!((c.dps_apres - c.dps_avant).abs() < 1e-9, "{c:?}");
+    }
+
+    #[test]
+    fn un_sceptre_remplace_le_focus_s_il_y_en_a_un() {
+        let objets = BAGUETTE.replace(
+            r#"<ItemSet id="1"><Slot name="Weapon 1" itemId="1"/>"#,
+            r#"<Item id="2">Rarity: RARE
+Gloom Veil
+Twig Focus
+Implicits: 0
+20% increased Lightning Damage
+</Item>
+<ItemSet id="1"><Slot name="Weapon 1" itemId="1"/><Slot name="Weapon 2" itemId="2"/>"#,
+        );
+        let c = comparer(&build(&objets, "", ""), "Sceptres", "X", &lignes(&SCEPTRE)).unwrap();
+        assert_eq!(c.emplacement, "Weapon 2");
+        assert_eq!(c.remplace.as_deref(), Some("Gloom Veil"));
+        assert!(c.dps_apres < c.dps_avant);
+    }
+
+    #[test]
+    fn pas_de_sceptre_en_main_gauche_avec_un_baton() {
+        let baton = r#"<Item id="1">Rarity: RARE
+Doom Song
+Ashen Staff
+Implicits: 0
+60% increased Lightning Damage
+</Item>
+<ItemSet id="1"><Slot name="Weapon 1" itemId="1"/></ItemSet>"#;
+        let c = comparer(&build(baton, "", ""), "Sceptres", "X", &lignes(&SCEPTRE)).unwrap();
+        assert_eq!(c.emplacement, "Weapon 1");
+        assert_eq!(c.remplace.as_deref(), Some("Doom Song"));
     }
 
     #[test]
