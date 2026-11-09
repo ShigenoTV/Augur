@@ -89,6 +89,11 @@ impl TypeDegats {
         format!("attack_added_{}_damage_max", self.cle())
     }
 
+    /// Dégâts dans le temps propres au type (« Chaos Damage over Time »).
+    pub fn stat_degats_dot(self) -> String {
+        format!("{}_damage_over_time", self.cle())
+    }
+
     pub fn stat_penetration(self) -> String {
         format!("{}_penetration", self.cle())
     }
@@ -109,6 +114,17 @@ pub const ELEMENTAL_DAMAGE: &str = "elemental_damage";
 pub const CAST_SPEED: &str = "cast_speed";
 pub const ATTACK_DAMAGE: &str = "attack_damage";
 pub const ATTACK_SPEED: &str = "attack_speed";
+/// Dégâts des coups seulement (« more Damage with Hits » des supports).
+pub const HIT_DAMAGE: &str = "hit_damage";
+/// Dégâts dans le temps (« increased Damage over Time »).
+pub const DAMAGE_OVER_TIME: &str = "damage_over_time";
+/// Stats des minions (« Minions deal 20% increased Damage »…) : les mods du
+/// personnage ne s'appliquent pas à ses minions.
+pub const MINION_DAMAGE: &str = "minion_damage";
+pub const MINION_ATTACK_SPEED: &str = "minion_attack_speed";
+pub const MINION_CAST_SPEED: &str = "minion_cast_speed";
+pub const MINION_CRITICAL_HIT_CHANCE: &str = "minion_critical_hit_chance";
+pub const MINION_CRITICAL_DAMAGE_BONUS: &str = "minion_critical_damage_bonus";
 pub const CRITICAL_HIT_CHANCE: &str = "critical_hit_chance";
 pub const CRITICAL_DAMAGE_BONUS: &str = "critical_damage_bonus";
 pub const SPELL_CRITICAL_HIT_CHANCE: &str = "spell_critical_hit_chance";
@@ -158,6 +174,13 @@ pub fn stats_connues() -> Vec<String> {
         CAST_SPEED,
         ATTACK_DAMAGE,
         ATTACK_SPEED,
+        HIT_DAMAGE,
+        DAMAGE_OVER_TIME,
+        MINION_DAMAGE,
+        MINION_ATTACK_SPEED,
+        MINION_CAST_SPEED,
+        MINION_CRITICAL_HIT_CHANCE,
+        MINION_CRITICAL_DAMAGE_BONUS,
         CRITICAL_HIT_CHANCE,
         CRITICAL_DAMAGE_BONUS,
         SPELL_CRITICAL_HIT_CHANCE,
@@ -180,6 +203,7 @@ pub fn stats_connues() -> Vec<String> {
     .collect();
     for t in TypeDegats::TOUS {
         v.push(t.stat_degats());
+        v.push(t.stat_degats_dot());
         v.push(t.stat_ajoutes_min());
         v.push(t.stat_ajoutes_max());
         v.push(t.stat_ajoutes_attaque_min());

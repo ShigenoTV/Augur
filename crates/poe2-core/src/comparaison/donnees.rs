@@ -26,11 +26,21 @@ pub struct NiveauGemme {
     pub multiplicateur: Option<f64>,
     #[serde(default)]
     pub chaines: Option<f64>,
+    /// Dégâts dans le temps de base, par seconde et par type.
+    #[serde(default)]
+    pub dot: BTreeMap<String, f64>,
 }
 
 impl NiveauGemme {
     pub fn degats(&self) -> BTreeMap<TypeDegats, [f64; 2]> {
         self.degats
+            .iter()
+            .filter_map(|(k, v)| TypeDegats::depuis_nom(k).map(|t| (t, *v)))
+            .collect()
+    }
+
+    pub fn dot(&self) -> BTreeMap<TypeDegats, f64> {
+        self.dot
             .iter()
             .filter_map(|(k, v)| TypeDegats::depuis_nom(k).map(|t| (t, *v)))
             .collect()
@@ -57,7 +67,12 @@ pub struct GemmeActive {
     /// est son temps de recharge, ou 1 s s'il n'en a pas.
     #[serde(default)]
     pub declenche: bool,
-    /// « sort » (défaut) ou « attaque ».
+    /// Les mods de dégâts des sorts s'appliquent à ses dégâts dans le temps.
+    #[serde(default)]
+    pub dot_sort: bool,
+    /// « sort » (défaut), « attaque », « minion_attaque » ou « minion_sort ».
+    /// Pour les minions, les dégâts de chaque niveau sont ceux d'un monstre
+    /// allié de niveau 2 × niveau de la gemme : un indice, juste en %.
     #[serde(default)]
     pub genre: Option<String>,
     /// Attaque : vitesse de la gemme en % de celle de l'arme (« Attack Speed: 90% of base »).
@@ -84,6 +99,13 @@ pub struct BaseArme {
 impl GemmeActive {
     pub fn est_attaque(&self) -> bool {
         self.genre.as_deref() == Some("attaque")
+    }
+
+    pub fn est_minion(&self) -> bool {
+        matches!(
+            self.genre.as_deref(),
+            Some("minion_attaque" | "minion_sort")
+        )
     }
 
     pub fn conversion(&self) -> BTreeMap<TypeDegats, BTreeMap<TypeDegats, f64>> {

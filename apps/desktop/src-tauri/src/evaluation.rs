@@ -89,6 +89,33 @@ pub fn to_delta(c: &Comparaison, ms: u32) -> ItemDelta {
             )],
         ));
     }
+    if r.minion_relatif {
+        mechanics.push(note_avec(
+            "minion-relatif",
+            vec![format!(
+                "{} : DPS d'un minion allié de son niveau (2 par niveau de gemme), sans les dégâts propres à chaque minion. Seuls les mods de minions comptent (dégâts, vitesse, critique, niveaux) ; l'écart en % entre les deux objets reste juste",
+                c.competence
+            )],
+        ));
+    }
+    if r.dot_suppose {
+        mechanics.push(note_avec(
+            "degats-dans-le-temps",
+            vec![format!(
+                "{} : dégâts dans le temps comptés pour un seul effet actif à la fois ; les ailments (ignite, poison, saignement) ne sont pas encore comptés",
+                c.competence
+            )],
+        ));
+    }
+    if r.double_arme {
+        mechanics.push(note_avec(
+            "double-arme",
+            vec![
+                "Deux armes : les attaques sont supposées alterner entre les mains (moyenne des dégâts, du temps d'attaque et du critique)"
+                    .to_string(),
+            ],
+        ));
+    }
     if !r.mods_candidat_non_traduits.is_empty() {
         mechanics.push(note_avec(
             "mods-objet-non-traduits",
@@ -291,6 +318,22 @@ Implicits: 0
                 .iter()
                 .any(|n| n.mechanic == "formule-generique")
         );
+    }
+
+    #[test]
+    fn minions_et_degats_dans_le_temps_signales() {
+        let a_note = |gemme: &str, note: &str| {
+            let d = evaluate(Some(&build(gemme)), &baguette()).unwrap();
+            d.mechanics.iter().any(|n| n.mechanic == note)
+        };
+        assert!(a_note(
+            r#"<Gem nameSpec="Raise Zombie" skillId="RaiseZombiePlayer" level="20"/>"#,
+            "minion-relatif"
+        ));
+        assert!(a_note(
+            r#"<Gem nameSpec="Contagion" skillId="ContagionPlayer" level="20"/>"#,
+            "degats-dans-le-temps"
+        ));
     }
 
     #[test]

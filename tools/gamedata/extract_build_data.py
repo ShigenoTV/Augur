@@ -95,18 +95,65 @@ def _set_de_degats(s: dict) -> dict | None:
     return None
 
 
+def _dot(stat_set: dict, level: dict) -> dict:
+    """Dégâts dans le temps de base de la compétence, par seconde et par type."""
+    out = {}
+    for jeu, cle in ELEMENTS.items():
+        v = _stat_value(stat_set, level, f"base_{jeu}_damage_to_deal_per_minute")
+        if v:
+            out[cle] = round(v / 60, 4)
+    return out
+
+
+def _set_de_dot(s: dict) -> dict | None:
+    """Premier jeu de stats qui porte des dégâts dans le temps à chaque niveau."""
+    for st in s.get("stat_sets") or []:
+        levels = st.get("per_level") or {}
+        if levels and all(_dot(st, lv) for lv in levels.values()):
+            return st
+    return None
+
+
+def _dot_de_sort(s: dict) -> bool:
+    """Les mods de dégâts des sorts s'appliquent-ils à ses dégâts dans le temps ?"""
+    types = ((s.get("active_skill") or {}).get("types")) or []
+    if "DegenOnlySpellDamage" in types:
+        return True
+    return any(
+        x.get("id") == "spell_damage_modifiers_apply_to_skill_dot"
+        for st in s.get("stat_sets") or []
+        for x in (st.get("static") or {}).get("stats") or []
+    )
+
+
+def _ajouter_dot(s: dict, out: dict) -> None:
+    """Ajoute aux niveaux de `out` les dégâts dans le temps de la compétence."""
+    st = _set_de_dot(s)
+    if st is None:
+        return
+    for lvl, data in st["per_level"].items():
+        if lvl in out["niveaux"]:
+            out["niveaux"][lvl]["dot"] = _dot(st, data)
+    if _dot_de_sort(s):
+        out["dot_sort"] = True
+
+
 def active(skills: dict, skill_id: str, name: str, verifiee: bool = True) -> dict:
     s = skills.get(skill_id)
     if not isinstance(s, dict):
         raise DonneesError(f"compétence {skill_id} absente de skills.json")
     stat_set = s["stat_sets"][0] if verifiee else _set_de_degats(s)
+    # Sort sans coup (Contagion, Tornado…) : seulement des dégâts dans le temps.
+    sans_coup = stat_set is None and not verifiee and _set_de_dot(s) is not None
+    if sans_coup:
+        stat_set = _set_de_dot(s)
     if stat_set is None:
         raise DonneesError(f"{skill_id} : aucun jeu de stats avec des dégâts")
     static = stat_set["static"]
     niveaux = {}
     for lvl, data in sorted(stat_set["per_level"].items(), key=lambda kv: int(kv[0])):
         degats = _degats(stat_set, data)
-        if not degats:
+        if not degats and not sans_coup:
             raise DonneesError(f"{skill_id} niveau {lvl} : dégâts absents")
         n = {"degats": degats}
         chains = _stat_value(stat_set, data, "number_of_chains")
@@ -133,6 +180,8 @@ def active(skills: dict, skill_id: str, name: str, verifiee: bool = True) -> dic
     }
     if declenche:
         out["declenche"] = True
+    if not verifiee:
+        _ajouter_dot(s, out)
     for q in static.get("quality_stats") or []:
         per_mille = (q.get("stats") or {}).get("number_of_chains")
         if per_mille is not None:
@@ -158,7 +207,9 @@ def sort_generique(skill_id: str, s: dict) -> str | None:
     if not name or "[" in name or "Spell" not in (a.get("types") or []):
         return None
     try:
-        return name if _set_de_degats(s) is not None else None
+        if _set_de_degats(s) is not None or _set_de_dot(s) is not None:
+            return name
+        return None
     except (KeyError, TypeError, ValueError):
         return None
 
@@ -173,10 +224,71 @@ def actives(skills: dict) -> dict:
         if name:
             out[skill_id] = active(skills, skill_id, name, verifiee=False)
             continue
+        m = minion(skill_id, s)
+        if m:
+            out[skill_id] = m
+            continue
         a = attaque(skill_id, s)
         if a:
             out[skill_id] = a
     return dict(sorted(out.items()))
+
+
+# Niveau des minions selon le niveau de la gemme (2 par niveau) et dégâts de
+# base d'un monstre allié par niveau (1 à 100) : Path of Building PoE 2,
+# src/Data/Misc.lua (`minionLevelTable`, `monsterAllyDamageTable`), licence MIT.
+DEGATS_ALLIE = [
+    3.11, 4.42, 5.82, 7.31, 8.92, 10.63, 12.46, 14.42, 16.51, 18.73,
+    21.1, 23.62, 26.31, 29.16, 32.19, 35.42, 38.83, 42.46, 46.31, 50.39,
+    54.71, 59.29, 64.14, 69.27, 74.69, 80.43, 86.5, 92.91, 99.69, 106.84,
+    114.4, 122.37, 130.79, 139.67, 149.04, 158.91, 169.32, 180.29, 191.86, 204.04,
+    216.86, 230.37, 244.6, 259.57, 275.32, 291.9, 309.34, 327.69, 346.98, 367.27,
+    388.59, 411.01, 434.57, 459.32, 485.33, 512.66, 541.35, 571.49, 603.14, 636.37,
+    671.26, 707.87, 746.3, 786.63, 828.94, 873.34, 919.91, 968.76, 1019.99, 1073.72,
+    1130.06, 1189.13, 1251.06, 1315.98, 1384.03, 1455.34, 1530.08, 1608.4, 1690.46, 1776.43,
+    1866.5, 1960.84, 2059.66, 2163.16, 2271.56, 2385.06, 2503.91, 2628.36, 2758.64, 2895.03,
+    3037.8, 3187.24, 3343.66, 3507.35, 3678.66, 3857.93, 4045.51, 4241.77, 4447.11, 4661.93,
+]
+
+
+def minion(skill_id: str, s: dict) -> dict | None:
+    """Gemme de minions : dégâts relatifs d'un minion allié à son niveau.
+
+    Les dégâts propres à chaque minion (multiplicateur, temps d'attaque) ne
+    sont pas dans RePoE : le DPS est un indice, juste en % entre deux objets.
+    """
+    if not skill_id.endswith("Player") or s.get("is_support"):
+        return None
+    a = s.get("active_skill") or {}
+    name = (a.get("display_name") or "").strip()
+    types = a.get("types") or []
+    if not name or "[" in name or "{" in name or "CreatesMinion" not in types:
+        return None
+    ids = {
+        x.get("id")
+        for st in s.get("stat_sets") or []
+        for x in (st.get("static") or {}).get("stats") or []
+    }
+    if "base_deal_no_damage" in ids:
+        return None
+    mt = a.get("minion_types") or []
+    genre = "minion_attaque" if "Attack" in mt else "minion_sort" if "Spell" in mt else None
+    levels = sorted((s.get("per_level") or {}), key=int)
+    if genre is None or len(levels) < 2:
+        return None
+    niveaux = {}
+    for lvl in levels:
+        d = DEGATS_ALLIE[min(2 * int(lvl), 100) - 1]
+        niveaux[lvl] = {"degats": {"physique": [d, d]}}
+    return {
+        "nom": name,
+        "genre": genre,
+        "temps_incantation": 1.0,
+        "critique_base": 5.0,
+        "niveaux": niveaux,
+        "elements": [],
+        "verifiee": False,
+    }
 
 
 CONVERSION = "active_skill_base_physical_damage_%_to_convert_to_"
@@ -222,6 +334,7 @@ def attaque(skill_id: str, s: dict) -> dict | None:
     }
     if conversion:
         out["conversion"] = {"physique": conversion}
+    _ajouter_dot(s, out)
     return out
 
 

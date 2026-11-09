@@ -50,6 +50,9 @@ const mechanics: Record<string, string> = {
   "supports-non-modelises": "Certains supports ne sont pas comptés",
   "formule-generique": "Sort pas encore vérifié en jeu (calcul générique)",
   "cadence-declenchement": "Sort déclenché : cadence supposée",
+  "minion-relatif": "Minions : DPS relatif (le % reste juste)",
+  "degats-dans-le-temps": "Dégâts dans le temps : un seul effet actif supposé",
+  "double-arme": "Deux armes : attaques en alternance supposées",
   "arbre-autre-version": "Build fait sur une autre version de l'arbre",
 };
 

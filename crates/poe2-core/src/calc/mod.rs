@@ -7,9 +7,10 @@
 //! Archétype couvert au sprint 1 : **sort à dégâts directs** (dégâts de
 //! gemme et ajoutés, increased/more par type, critique, vitesse
 //! d'incantation, résistances et pénétration de la cible), plus les
-//! mitigations défensives de base. Les conversions de dégâts, les attaques,
-//! les ailments et les dégâts dans le temps ne sont pas encore couverts :
-//! un cas golden qui en dépend doit être marqué « non supporté ».
+//! mitigations défensives de base. Depuis : conversions, attaques, minions
+//! (indice relatif) et dégâts dans le temps propres à la compétence. Les
+//! ailments (ignite, poison, saignement) ne sont pas encore couverts : un
+//! cas golden qui en dépend doit être marqué « non supporté ».
 //!
 //! Deuxième archétype (Arc, fiche 09) : nombre de chaînes (base du niveau,
 //! qualité, `number_of_chains`), infusion consommée par la compétence,
@@ -35,15 +36,29 @@ pub use modifier::{ConditionModificateur, Modificateur, TypeModificateur};
 pub use stats::TypeDegats;
 pub use trace::{Contribution, Trace};
 
-/// Genre de compétence. Seuls les sorts sont couverts au sprint 1.
+/// Genre de compétence.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "snake_case")]
 pub enum GenreCompetence {
     #[default]
     Sort,
     /// Attaque : dégâts de base déjà tirés de l'arme (`degats`), cadence
     /// tirée du temps d'attaque (`temps_incantation`), stats d'attaque.
     Attaque,
+    /// Minions qui attaquent : seules les stats de minions comptent
+    /// (`minion_damage`, `minion_attack_speed`…), pas celles du personnage.
+    MinionAttaque,
+    /// Minions qui lancent des sorts (`minion_cast_speed`).
+    MinionSort,
+}
+
+impl GenreCompetence {
+    pub fn est_minion(self) -> bool {
+        matches!(
+            self,
+            GenreCompetence::MinionAttaque | GenreCompetence::MinionSort
+        )
+    }
 }
 
 fn cent() -> f64 {
@@ -92,6 +107,15 @@ pub struct Competence {
     /// ou 1 s par convention).
     #[serde(default)]
     pub cadence_fixe: bool,
+    /// Dégâts dans le temps de base de la compétence, par seconde et par type
+    /// (RePoE `base_<type>_damage_to_deal_per_minute` / 60). Un seul effet
+    /// actif à la fois est supposé : ils ne dépendent pas de la cadence.
+    #[serde(default)]
+    pub dot: BTreeMap<TypeDegats, f64>,
+    /// Les mods de dégâts des sorts s'appliquent à ces dégâts dans le temps
+    /// (Contagion, Tornado : `spell_damage_modifiers_apply_to_skill_dot`).
+    #[serde(default)]
+    pub dot_sort: bool,
 }
 
 /// Effet d'une infusion consommée (Arc : « 200% more damage » et « Chain 6
@@ -298,6 +322,9 @@ pub fn valider(perso: &Personnage) -> Result<(), Vec<ErreurCalcul>> {
                 c.nom
             )));
         }
+        if c.dot.values().any(|v| !v.is_finite() || *v < 0.0) {
+            erreurs.push(ErreurCalcul::ValeurNonFinie(format!("{} (dot)", c.nom)));
+        }
         for (t, [min, max]) in &c.degats {
             if !(min.is_finite() && max.is_finite()) || *min < 0.0 || min > max {
                 erreurs.push(ErreurCalcul::PlageDegats(t.nom()));
@@ -353,6 +380,9 @@ pub fn calculer(perso: &Personnage, cond: &Conditions) -> Result<Resultats, Vec<
         ins("chance_critique", o.chance_critique);
         ins("bonus_degats_critiques", o.bonus_critique);
         ins("incantations_par_seconde", o.incantations_par_seconde);
+        if let Some(t) = o.dps_dot {
+            ins("dps_dot", t);
+        }
         if let Some(base) = comp.chaines_base {
             ins("nombre_chaines", nombre_chaines(&db, base));
         }

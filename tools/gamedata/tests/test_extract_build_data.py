@@ -87,6 +87,35 @@ SKILLS = {
             }
         ],
     },
+    # Sort sans coup : seulement des dégâts dans le temps (par minute).
+    "ContagionPlayer": {
+        "cast_time": 1000,
+        "active_skill": {
+            "display_name": "Contagion",
+            "types": ["Spell", "Chaos", "DegenOnlySpellDamage"],
+        },
+        "stat_sets": [
+            {
+                "static": {
+                    "stats": [
+                        {"id": "base_chaos_damage_to_deal_per_minute", "type": "float"}
+                    ]
+                },
+                "per_level": {"1": {"stats": [{"value": 600}]}},
+            }
+        ],
+    },
+    # Gemme de minions : dégâts d'un allié de niveau 2 × niveau de la gemme.
+    "RaiseZombiePlayer": {
+        "cast_time": 600,
+        "per_level": {"1": {}, "20": {}},
+        "active_skill": {
+            "display_name": "Raise Zombie",
+            "types": ["Minion", "CreatesMinion"],
+            "minion_types": ["Attack", "Melee"],
+        },
+        "stat_sets": [{"static": {"stats": []}, "per_level": {"1": {}}}],
+    },
     # Écartés : sans dégâts de base, sort sans dégâts, interne.
     "IncinerateChannelPlayer": {
         "cast_time": 0,
@@ -166,11 +195,20 @@ def test_extraction(tmp_path: Path) -> None:
     assert arc["infusion"] == {"element": "foudre", "degats_more": 200, "chaines": 6}
     assert sorted(g["actives"]) == [
         "ArcPlayer",
+        "ContagionPlayer",
         "FireballPlayer",
         "LightningArrowPlayer",
         "LightningBoltPlayer",
+        "RaiseZombiePlayer",
         "TriggeredStaticShocksPlayer",
     ]
+    co = g["actives"]["ContagionPlayer"]
+    assert co["niveaux"]["1"] == {"degats": {}, "dot": {"chaos": 10.0}}
+    assert co["dot_sort"] is True
+    rz = g["actives"]["RaiseZombiePlayer"]
+    assert rz["genre"] == "minion_attaque"
+    assert rz["niveaux"]["1"] == {"degats": {"physique": [4.42, 4.42]}}
+    assert rz["niveaux"]["20"] == {"degats": {"physique": [204.04, 204.04]}}
     ss = g["actives"]["TriggeredStaticShocksPlayer"]
     assert ss["declenche"] is True and ss["temps_incantation"] == 0.4
     assert "declenche" not in g["actives"]["FireballPlayer"]
