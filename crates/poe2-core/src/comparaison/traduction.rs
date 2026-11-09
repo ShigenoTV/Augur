@@ -152,7 +152,7 @@ fn motifs() -> &'static Motifs {
                 r"^Adds {n} to {n} (Physical|Fire|Cold|Lightning|Chaos) Damage to Spells$"
             )),
             gain: r(format!(
-                r"^Gain {n}% of (?:(Physical|Fire|Cold|Lightning|Chaos|Elemental) )?Damage as Extra (Physical|Fire|Cold|Lightning|Chaos) Damage$"
+                r"^(?:Supported Skills )?Gain {n}% of (?:(Physical|Fire|Cold|Lightning|Chaos|Elemental) )?Damage as [Ee]xtra (Physical|Fire|Cold|Lightning|Chaos) Damage$"
             )),
             niveaux: r(
                 r"^\+(\d+) to Level of all (Spell |Elemental Spell |(?:(Physical|Fire|Cold|Lightning|Chaos) (?:Spell )?)|)Skills$"
@@ -162,7 +162,7 @@ fn motifs() -> &'static Motifs {
                 r"^Damage Penetrates {n}% (Fire|Cold|Lightning|Chaos) Resistance$"
             )),
             support_degats: r(format!(
-                r"^Supported (?:Spells|Skills) deal {n}% (more|less|increased|reduced) (?:(Spell|Elemental|Lightning) )?Damage( while you are above (\d+)% of your Maximum Mana)?$"
+                r"^Supported (?:Spells|Skills) deal {n}% (more|less|increased|reduced) (?:(Spell|Elemental|Physical|Fire|Cold|Lightning|Chaos) )?[Dd]amage(?: with Hits)?( while you are above (\d+)% of your Maximum Mana)?$"
             )),
             support_stat: r(format!(
                 r"^Supported (?:Spells|Skills) have {n}% (more|less|increased|reduced) (Cast Speed|Critical Hit Chance|Critical Damage Bonus)$"
@@ -505,5 +505,25 @@ mod tests {
         ] {
             assert_eq!(traduire(l, "t"), Traduction::NonTraduite, "{l}");
         }
+    }
+
+    #[test]
+    fn traduit_les_effets_de_supports_courants() {
+        let un = |l: &str| match traduire(l, "t") {
+            Traduction::Mods(v) if v.len() == 1 => v[0].clone(),
+            autre => panic!("{l} : {autre:?}"),
+        };
+        let m = un("Supported Skills deal 25% less Damage with Hits");
+        assert_eq!((m.stat.as_str(), m.valeur), (stats::DAMAGE, -25.0));
+        assert_eq!(m.kind, TypeModificateur::More);
+        let m = un("Supported Skills deal 30% more Physical Damage");
+        assert_eq!(m.stat, TypeDegats::Physique.stat_degats());
+        let m = un("Supported Skills Gain 10% of Damage as extra Chaos Damage");
+        assert_eq!(m.stat, stats::stat_gain_tous(TypeDegats::Chaos));
+        let m = un("Supported Skills Gain 15% of Cold Damage as Extra Chaos Damage");
+        assert_eq!(
+            m.stat,
+            stats::stat_gain(TypeDegats::Froid, TypeDegats::Chaos)
+        );
     }
 }
