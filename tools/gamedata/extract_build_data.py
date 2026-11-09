@@ -4,6 +4,7 @@
 Entrées :
 
     skills.json   RePoE PoE 2 (https://repoe-fork.github.io/poe2/skills.json)
+    base_items.json (facultatif) RePoE PoE 2 : bases d'armes, pour les attaques
     tree.json     arbre passif de Path of Building PoE 2
                   (src/TreeData/<version>/tree.json, licence MIT)
 
@@ -165,6 +166,93 @@ def actives(skills: dict) -> dict:
         name = sort_generique(skill_id, s)
         if name:
             out[skill_id] = active(skills, skill_id, name, verifiee=False)
+            continue
+        a = attaque(skill_id, s)
+        if a:
+            out[skill_id] = a
+    return dict(sorted(out.items()))
+
+
+CONVERSION = "active_skill_base_physical_damage_%_to_convert_to_"
+
+
+def attaque(skill_id: str, s: dict) -> dict | None:
+    """Attaque de joueur à dégâts : efficacité par niveau, vitesse, conversion."""
+    if not skill_id.endswith("Player") or s.get("is_support"):
+        return None
+    if skill_id.startswith(("GS", "GT", "Mtx", "Archnemesis")):
+        return None
+    a = s.get("active_skill") or {}
+    name = (a.get("display_name") or "").strip()
+    types = a.get("types") or []
+    if not name or "[" in name or "Attack" not in types:
+        return None
+    sets = s.get("stat_sets") or []
+    if not sets or not sets[0].get("per_level"):
+        return None
+    st = sets[0]
+    stats = (st.get("static") or {}).get("stats") or []
+    ids = {x.get("id"): x for x in stats}
+    if "base_deal_no_damage" in ids:
+        return None
+    niveaux = {}
+    for lvl, data in sorted(st["per_level"].items(), key=lambda kv: int(kv[0])):
+        niveaux[lvl] = {"degats": {}, "multiplicateur": float(data.get("damage_multiplier") or 100)}
+    conversion = {}
+    for jeu, cle in ELEMENTS.items():
+        x = ids.get(CONVERSION + jeu)
+        if x and x.get("value"):
+            conversion[cle] = float(x["value"])
+    asm = ((s.get("static") or {}).get("attack_speed_multiplier")) or 0
+    out = {
+        "nom": name,
+        "genre": "attaque",
+        "temps_incantation": 1.0,
+        "critique_base": 0.0,
+        "niveaux": niveaux,
+        "elements": sorted({TAGS[t] for t in types if t in TAGS}),
+        "verifiee": False,
+        "vitesse_attaque": 100.0 + asm,
+    }
+    if conversion:
+        out["conversion"] = {"physique": conversion}
+    return out
+
+
+# Classes d'armes du jeu (RePoE `item_class`) -> classes affichées en jeu.
+CLASSES_ARMES = {
+    "Claw": "Claws",
+    "Dagger": "Daggers",
+    "One Hand Sword": "One Hand Swords",
+    "One Hand Axe": "One Hand Axes",
+    "One Hand Mace": "One Hand Maces",
+    "Spear": "Spears",
+    "Flail": "Flails",
+    "Two Hand Sword": "Two Hand Swords",
+    "Two Hand Axe": "Two Hand Axes",
+    "Two Hand Mace": "Two Hand Maces",
+    "Warstaff": "Quarterstaves",
+    "Bow": "Bows",
+    "Crossbow": "Crossbows",
+    "Talisman": "Talismans",
+}
+
+
+def armes(bases: dict) -> dict:
+    """Bases d'armes : dégâts physiques, temps d'attaque, critique."""
+    out = {}
+    for b in bases.values():
+        classe = CLASSES_ARMES.get(b.get("item_class"))
+        p = b.get("properties") or {}
+        name = (b.get("name") or "").strip()
+        if not classe or not name or not p.get("attack_time"):
+            continue
+        out[name] = {
+            "classe": classe,
+            "physique": [float(p.get("physical_damage_min") or 0), float(p.get("physical_damage_max") or 0)],
+            "temps_attaque": p["attack_time"] / 1000,
+            "critique": (p.get("critical_strike_chance") or 0) / 100,
+        }
     return dict(sorted(out.items()))
 
 
@@ -208,6 +296,7 @@ def write(path: Path, obj) -> None:
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--skills", type=Path, required=True)
+    p.add_argument("--bases", type=Path, help="base_items.json de RePoE (armes)")
     p.add_argument("--tree", type=Path, required=True)
     p.add_argument("--tree-version", required=True)
     p.add_argument("--out", type=Path, required=True)
@@ -219,6 +308,8 @@ def main(argv: list[str] | None = None) -> int:
             "actives": actives(skills),
             "supports": supports(skills),
         }
+        if a.bases:
+            gemmes["armes"] = armes(json.loads(a.bases.read_text(encoding="utf-8")))
         arbre = {"version": a.tree_version, "passifs": tree(tree_data)}
     except (DonneesError, KeyError, TypeError, ValueError) as e:
         print(f"erreur : {e}", file=sys.stderr)
@@ -227,7 +318,8 @@ def main(argv: list[str] | None = None) -> int:
     write(a.out / "gemmes.json", gemmes)
     write(a.out / "arbre.json", arbre)
     print(
-        f"{len(gemmes['actives'])} sorts, {len(gemmes['supports'])} supports, "
+        f"{len(gemmes['actives'])} compétences, {len(gemmes.get('armes', {}))} armes, "
+        f"{len(gemmes['supports'])} supports, "
         f"{len(arbre['passifs'])} passifs "
         f"(arbre {a.tree_version})"
     )

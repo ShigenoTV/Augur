@@ -74,7 +74,7 @@ pub fn to_delta(c: &Comparaison, ms: u32) -> ItemDelta {
         mechanics.push(note_avec(
             "formule-generique",
             vec![format!(
-                "{} : dégâts de base, cadence et critique du jeu ; ses effets propres (projectiles, zones, chaînes, conditions) ne sont pas comptés",
+                "{} : dégâts de base (ou de l'arme), vitesse et critique du jeu ; ses effets propres (projectiles, zones, chaînes, conditions) ne sont pas comptés",
                 c.competence
             )],
         ));
@@ -152,7 +152,16 @@ pub fn evaluate(
     let debut = Instant::now();
     let nom = item.name.as_deref().unwrap_or(&item.base_type);
     let lignes: Vec<String> = item.mods.iter().map(|m| m.text.clone()).collect();
-    let resultat = comparaison::comparer(build, &item.item_class, nom, &lignes);
+    let resultat = comparaison::comparer_objet(
+        build,
+        &comparaison::ObjetCompare {
+            classe: &item.item_class,
+            nom,
+            base: Some(&item.base_type),
+            qualite: item.quality.map(f64::from),
+            lignes: &lignes,
+        },
+    );
     let ms = u32::try_from(debut.elapsed().as_millis()).unwrap_or(u32::MAX);
     match resultat {
         Ok(c) => Ok(to_delta(&c, ms)),

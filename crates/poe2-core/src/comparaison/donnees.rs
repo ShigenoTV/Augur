@@ -17,8 +17,13 @@ use crate::calc::stats::TypeDegats;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct NiveauGemme {
-    /// Dégâts de base min et max par type (« foudre », « feu »…).
+    /// Dégâts de base min et max par type (« foudre », « feu »…) ; vide pour
+    /// une attaque, dont les dégâts viennent de l'arme.
+    #[serde(default)]
     pub degats: BTreeMap<String, [f64; 2]>,
+    /// Attaque : dégâts de l'arme, en % (« Attack Damage: 250% of base »).
+    #[serde(default)]
+    pub multiplicateur: Option<f64>,
     #[serde(default)]
     pub chaines: Option<f64>,
 }
@@ -45,12 +50,52 @@ pub struct GemmeActive {
     /// Tags d'élément du sort, pour les bonus de niveaux (« Fire Spell Skills »).
     #[serde(default)]
     pub elements: Vec<String>,
-    /// Archétype vérifié en jeu ; sinon, formule générique d'un sort à impact.
+    /// Archétype vérifié en jeu ; sinon, formule générique.
     #[serde(default)]
     pub verifiee: bool,
+    /// « sort » (défaut) ou « attaque ».
+    #[serde(default)]
+    pub genre: Option<String>,
+    /// Attaque : vitesse de la gemme en % de celle de l'arme (« Attack Speed: 90% of base »).
+    #[serde(default = "cent")]
+    pub vitesse_attaque: f64,
+    /// Conversion propre à la compétence, en % : `{ physique: { foudre: 80 } }`.
+    #[serde(default)]
+    pub conversion: BTreeMap<String, BTreeMap<String, f64>>,
+}
+
+fn cent() -> f64 {
+    100.0
+}
+
+/// Base d'arme : dégâts physiques, temps d'attaque (s), critique (%).
+#[derive(Debug, Clone, Deserialize)]
+pub struct BaseArme {
+    pub classe: String,
+    pub physique: [f64; 2],
+    pub temps_attaque: f64,
+    pub critique: f64,
 }
 
 impl GemmeActive {
+    pub fn est_attaque(&self) -> bool {
+        self.genre.as_deref() == Some("attaque")
+    }
+
+    pub fn conversion(&self) -> BTreeMap<TypeDegats, BTreeMap<TypeDegats, f64>> {
+        self.conversion
+            .iter()
+            .filter_map(|(src, c)| {
+                let src = TypeDegats::depuis_nom(src)?;
+                let c = c
+                    .iter()
+                    .filter_map(|(t, v)| TypeDegats::depuis_nom(t).map(|t| (t, *v)))
+                    .collect();
+                Some((src, c))
+            })
+            .collect()
+    }
+
     pub fn elements(&self) -> Vec<TypeDegats> {
         self.elements
             .iter()
@@ -74,6 +119,20 @@ impl GemmeActive {
 pub struct Gemmes {
     pub actives: BTreeMap<String, GemmeActive>,
     pub supports: BTreeMap<String, Vec<String>>,
+    #[serde(default)]
+    pub armes: BTreeMap<String, BaseArme>,
+}
+
+impl Gemmes {
+    /// Base d'arme d'après le nom de base (un objet magique l'entoure de ses
+    /// affixes : « Heavy Gemini Bow of Skill »). Le nom le plus long gagne.
+    pub fn base_arme(&self, nom: &str) -> Option<(&str, &BaseArme)> {
+        self.armes
+            .iter()
+            .filter(|(b, _)| nom.contains(b.as_str()))
+            .max_by_key(|(b, _)| b.len())
+            .map(|(b, a)| (b.as_str(), a))
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -119,6 +178,16 @@ mod tests {
                 .contains_key(&TypeDegats::Feu)
         );
         assert!(gemmes().actives.len() > 50);
+        let la = &gemmes().actives["LightningArrowPlayer"];
+        assert!(la.est_attaque());
+        assert_eq!(la.vitesse_attaque, 90.0);
+        assert_eq!(la.niveau(20).unwrap().1.multiplicateur, Some(250.0));
+        assert_eq!(
+            la.conversion()[&TypeDegats::Physique][&TypeDegats::Foudre],
+            80.0
+        );
+        let (nom, arc) = gemmes().base_arme("Heavy Gemini Bow of Skill").unwrap();
+        assert_eq!((nom, arc.classe.as_str()), ("Gemini Bow", "Bows"));
         assert_eq!(lb.niveau(99).unwrap().0, 40);
         assert_eq!(lb.niveau(0).unwrap().0, 1);
         let arc = &gemmes().actives["ArcPlayer"];

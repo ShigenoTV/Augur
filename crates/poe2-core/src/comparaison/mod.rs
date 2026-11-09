@@ -14,6 +14,7 @@
 //! traduit est compté dans le [`Rapport`] : le résultat est alors
 //! « approximatif », jamais présenté comme exact.
 
+pub mod arme;
 pub mod donnees;
 pub mod traduction;
 
@@ -35,7 +36,9 @@ pub fn competence_supportee(skill_id: &str) -> bool {
 pub enum ErreurComparaison {
     #[error("aucune compétence active dans le build")]
     AucuneCompetence,
-    #[error("Augur ne calcule pas encore le DPS de {0} (seulement les sorts à impact)")]
+    #[error(
+        "Augur ne calcule pas encore le DPS de {0} (seulement les sorts à impact et les attaques)"
+    )]
     CompetenceNonSupportee(String),
     #[error("objet non comparé : {0}")]
     EmplacementNonSupporte(String),
@@ -72,6 +75,20 @@ impl Rapport {
             && !self.arbre_autre_version
             && !self.formule_generique
     }
+}
+
+/// Objet copié en jeu, comparé à l'équipement.
+#[derive(Debug, Clone, Copy)]
+pub struct ObjetCompare<'a> {
+    /// Classe du jeu (« Wands », « Bows »…).
+    pub classe: &'a str,
+    pub nom: &'a str,
+    /// Base (« Gemini Bow ») : sert aux armes, dont les dégâts viennent de la base.
+    pub base: Option<&'a str>,
+    /// Qualité en %, si l'objet en a.
+    pub qualite: Option<f64>,
+    /// Lignes de mods telles qu'affichées.
+    pub lignes: &'a [String],
 }
 
 /// Résultat de [`comparer`].
@@ -204,7 +221,7 @@ fn modeliser(
     groupe: usize,
     gemme: &GemmePob,
     retires: &[&str],
-    candidat: Option<(&str, &[String])>,
+    candidat: Option<&ObjetCompare>,
     rapport: &mut Rapport,
 ) -> Result<(Personnage, u32), ErreurComparaison> {
     let donnees = donnees::gemmes();
@@ -213,6 +230,8 @@ fn modeliser(
         .get(&gemme.skill_id)
         .ok_or_else(|| ErreurComparaison::CompetenceNonSupportee(gemme.nom.clone()))?;
     let mut acc = Accumulateur::default();
+    // Arme de la main droite : ses dégâts portent les attaques.
+    let mut arme_principale: Option<arme::Arme> = None;
 
     for o in build
         .objets
@@ -224,15 +243,48 @@ fn modeliser(
             o.nom.as_deref().unwrap_or("objet"),
             o.emplacement
         );
-        for l in lignes_objet(o) {
+        let lignes = lignes_objet(o);
+        let base = o
+            .base
+            .as_deref()
+            .or(o.nom.as_deref())
+            .and_then(|b| donnees.base_arme(b));
+        if let Some((nom_base, b)) = base {
+            if o.emplacement == "Weapon 1" {
+                arme_principale = Some(arme::construire(
+                    nom_base,
+                    b,
+                    arme::qualite(&o.texte),
+                    lignes.iter().copied(),
+                ));
+            }
+        }
+        for l in lignes {
+            if base.is_some() && arme::local(l).is_some() {
+                continue;
+            }
             if acc.ligne(l, &source) {
                 rapport.mods_non_traduits.push(format!("{source} : {l}"));
             }
         }
     }
-    if let Some((nom, lignes)) = candidat {
-        let source = format!("{nom} (objet comparé)");
-        for l in lignes {
+    if let Some(c) = candidat {
+        let source = format!("{} (objet comparé)", c.nom);
+        let base = c.base.or(Some(c.nom)).and_then(|b| donnees.base_arme(b));
+        if let Some((nom_base, b)) = base {
+            if retires.contains(&"Weapon 1") {
+                arme_principale = Some(arme::construire(
+                    nom_base,
+                    b,
+                    c.qualite.unwrap_or(0.0),
+                    c.lignes.iter().map(String::as_str),
+                ));
+            }
+        }
+        for l in c.lignes {
+            if base.is_some() && arme::local(l).is_some() {
+                continue;
+            }
             if acc.ligne(l, &source) {
                 rapport.mods_candidat_non_traduits.push(l.clone());
             }
@@ -289,19 +341,45 @@ fn modeliser(
     let (niveau, data) = active
         .niveau(niveau_voulu)
         .ok_or_else(|| ErreurComparaison::Calcul(format!("{} sans données", active.nom)))?;
-    let competence = Competence {
-        nom: format!("{} (niveau {niveau})", active.nom),
-        genre: GenreCompetence::Sort,
-        temps_incantation: active.temps_incantation,
-        critique_base: active.critique_base,
-        efficacite_degats_ajoutes: 100.0,
-        degats: data.degats(),
-        conversion: Default::default(),
-        gain: Default::default(),
-        chaines_base: data.chaines,
-        qualite: gemme.qualite as f64,
-        chaines_par_qualite: active.chaines_par_qualite,
-        infusion: active.infusion.clone(),
+    let nom = format!("{} (niveau {niveau})", active.nom);
+    let competence = if active.est_attaque() {
+        let a = arme_principale.ok_or_else(|| {
+            ErreurComparaison::CompetenceNonSupportee(format!("{} (sans arme reconnue)", gemme.nom))
+        })?;
+        let mult = data.multiplicateur.unwrap_or(100.0);
+        Competence {
+            nom,
+            genre: GenreCompetence::Attaque,
+            temps_incantation: a.temps_attaque / (active.vitesse_attaque / 100.0),
+            critique_base: a.critique,
+            efficacite_degats_ajoutes: mult,
+            degats: a
+                .degats
+                .iter()
+                .map(|(t, [min, max])| (*t, [min * mult / 100.0, max * mult / 100.0]))
+                .collect(),
+            conversion: active.conversion(),
+            gain: Default::default(),
+            chaines_base: None,
+            qualite: gemme.qualite as f64,
+            chaines_par_qualite: 0.0,
+            infusion: None,
+        }
+    } else {
+        Competence {
+            nom,
+            genre: GenreCompetence::Sort,
+            temps_incantation: active.temps_incantation,
+            critique_base: active.critique_base,
+            efficacite_degats_ajoutes: 100.0,
+            degats: data.degats(),
+            conversion: active.conversion(),
+            gain: Default::default(),
+            chaines_base: data.chaines,
+            qualite: gemme.qualite as f64,
+            chaines_par_qualite: active.chaines_par_qualite,
+            infusion: active.infusion.clone(),
+        }
     };
     Ok((
         Personnage {
@@ -330,14 +408,32 @@ fn dps(perso: &Personnage) -> Result<f64, ErreurComparaison> {
 }
 
 /// Compare un objet (classe du jeu, nom, lignes de mods telles qu'affichées)
-/// à l'équipement du build. Pour une bague, l'emplacement retenu est celui
-/// où l'objet rapporte le plus.
+/// à l'équipement du build, sans base ni qualité connues.
 pub fn comparer(
     build: &BuildPob,
     classe: &str,
     nom: &str,
     lignes: &[String],
 ) -> Result<Comparaison, ErreurComparaison> {
+    comparer_objet(
+        build,
+        &ObjetCompare {
+            classe,
+            nom,
+            base: None,
+            qualite: None,
+            lignes,
+        },
+    )
+}
+
+/// Compare un objet à l'équipement du build. Pour une bague, l'emplacement
+/// retenu est celui où l'objet rapporte le plus.
+pub fn comparer_objet(
+    build: &BuildPob,
+    objet: &ObjetCompare,
+) -> Result<Comparaison, ErreurComparaison> {
+    let classe = objet.classe;
     let (groupe, gemme, supportee) =
         competence_comparee(build).ok_or(ErreurComparaison::AucuneCompetence)?;
     if !supportee {
@@ -363,14 +459,8 @@ pub fn comparer(
         rapport.lignes_passifs_non_traduites.clear();
         rapport.passifs_inconnus = 0;
         rapport.supports_non_modelises.clear();
-        let (apres, niveau_apres) = modeliser(
-            build,
-            groupe,
-            gemme,
-            &retires,
-            Some((nom, lignes)),
-            &mut rapport,
-        )?;
+        let (apres, niveau_apres) =
+            modeliser(build, groupe, gemme, &retires, Some(objet), &mut rapport)?;
         // Ce qui manque avant ou après rend le résultat approximatif.
         for m in &rapport_avant.mods_non_traduits {
             if !rapport.mods_non_traduits.contains(m) {
@@ -619,6 +709,71 @@ Implicits: 0
         assert_eq!(c.niveau_apres, 23);
     }
 
+    const ARC_BOW: &str = r#"<Item id="1">Rarity: RARE
+Storm Song
+Gemini Bow
+Quality: 20
+Implicits: 0
+Adds 10 to 20 Physical Damage
+80% increased Physical Damage
+10% increased Attack Speed
+</Item>
+<ItemSet id="1"><Slot name="Weapon 1" itemId="1"/></ItemSet>"#;
+
+    #[test]
+    fn calcule_une_attaque_avec_l_arme() {
+        let b = build_sort("Lightning Arrow", "LightningArrowPlayer", ARC_BOW);
+        let c = comparer(&b, "Amulets", "X", &lignes(&["20% increased Attack Speed"])).unwrap();
+        // Arc : Gemini Bow (39-72), +10-20, +100 % (80 + qualité 20) = 98-184.
+        // Lightning Arrow niveau 20 : 250 %, 80 % converti en foudre, vitesse 90 %.
+        let la = &donnees::gemmes().actives["LightningArrowPlayer"];
+        assert_eq!(la.niveau(20).unwrap().1.multiplicateur, Some(250.0));
+        let gb = &donnees::gemmes().armes["Gemini Bow"];
+        let moyenne = (98.0 + 184.0) / 2.0 * 2.5;
+        let cadence = |vit: f64| {
+            let c = 1.0 / (gb.temps_attaque / 1.1 / 0.9) * vit;
+            (c * 100.0 + 1e-9).round() / 100.0
+        };
+        let crit = 1.0 + gb.critique / 100.0;
+        let attendu = moyenne * crit * cadence(1.0);
+        assert!(
+            (c.dps_avant / attendu - 1.0).abs() < 1e-6,
+            "{} / {attendu}",
+            c.dps_avant
+        );
+        assert!((c.dps_apres / (moyenne * crit * cadence(1.2)) - 1.0).abs() < 1e-6);
+        // Les mods locaux de l'arc ne sont ni comptés deux fois ni signalés.
+        assert!(c.rapport.mods_non_traduits.is_empty(), "{:?}", c.rapport);
+    }
+
+    #[test]
+    fn une_nouvelle_arme_remplace_les_degats_de_base() {
+        let b = build_sort("Lightning Arrow", "LightningArrowPlayer", ARC_BOW);
+        let mieux = lignes(&[
+            "Adds 30 to 60 Physical Damage",
+            "150% increased Physical Damage",
+        ]);
+        let c = comparer_objet(
+            &b,
+            &ObjetCompare {
+                classe: "Bows",
+                nom: "Doom Fletch",
+                base: Some("Gemini Bow"),
+                qualite: Some(20.0),
+                lignes: &mieux,
+            },
+        )
+        .unwrap();
+        assert_eq!(c.remplace.as_deref(), Some("Storm Song"));
+        assert!(c.dps_apres > c.dps_avant * 1.3, "{c:?}");
+        // Sans arme reconnue, l'attaque n'est pas calculée.
+        let sans = build_sort("Lightning Arrow", "LightningArrowPlayer", "");
+        assert!(matches!(
+            comparer(&sans, "Amulets", "X", &[]),
+            Err(ErreurComparaison::CompetenceNonSupportee(_))
+        ));
+    }
+
     #[test]
     fn refuse_les_cas_non_couverts() {
         let b = build(BAGUETTE, "", "");
@@ -628,13 +783,13 @@ Implicits: 0
         ));
         let orb = pob::lire_xml(
             r#"<PathOfBuilding2><Build level="1" className="Witch" mainSocketGroup="1"/>
-<Skills activeSkillSet="1"><SkillSet id="1"><Skill enabled="true"><Gem nameSpec="Lightning Arrow" skillId="LightningArrowPlayer" level="20"/></Skill></SkillSet></Skills></PathOfBuilding2>"#,
+<Skills activeSkillSet="1"><SkillSet id="1"><Skill enabled="true"><Gem nameSpec="Raise Zombie" skillId="RaiseZombiePlayer" level="20"/></Skill></SkillSet></Skills></PathOfBuilding2>"#,
         )
         .unwrap();
         assert_eq!(
             comparer(&orb, "Wands", "X", &[]),
             Err(ErreurComparaison::CompetenceNonSupportee(
-                "Lightning Arrow".into()
+                "Raise Zombie".into()
             ))
         );
     }

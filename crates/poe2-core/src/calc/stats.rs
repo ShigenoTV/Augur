@@ -79,6 +79,16 @@ impl TypeDegats {
         format!("added_{}_damage_max", self.cle())
     }
 
+    /// Dégâts ajoutés aux attaques (« Adds X to Y Fire Damage to Attacks »),
+    /// distincts de ceux des sorts.
+    pub fn stat_ajoutes_attaque_min(self) -> String {
+        format!("attack_added_{}_damage_min", self.cle())
+    }
+
+    pub fn stat_ajoutes_attaque_max(self) -> String {
+        format!("attack_added_{}_damage_max", self.cle())
+    }
+
     pub fn stat_penetration(self) -> String {
         format!("{}_penetration", self.cle())
     }
@@ -97,6 +107,8 @@ pub const DAMAGE: &str = "damage";
 pub const SPELL_DAMAGE: &str = "spell_damage";
 pub const ELEMENTAL_DAMAGE: &str = "elemental_damage";
 pub const CAST_SPEED: &str = "cast_speed";
+pub const ATTACK_DAMAGE: &str = "attack_damage";
+pub const ATTACK_SPEED: &str = "attack_speed";
 pub const CRITICAL_HIT_CHANCE: &str = "critical_hit_chance";
 pub const CRITICAL_DAMAGE_BONUS: &str = "critical_damage_bonus";
 pub const SPELL_CRITICAL_HIT_CHANCE: &str = "spell_critical_hit_chance";
@@ -144,6 +156,8 @@ pub fn stats_connues() -> Vec<String> {
         SPELL_DAMAGE,
         ELEMENTAL_DAMAGE,
         CAST_SPEED,
+        ATTACK_DAMAGE,
+        ATTACK_SPEED,
         CRITICAL_HIT_CHANCE,
         CRITICAL_DAMAGE_BONUS,
         SPELL_CRITICAL_HIT_CHANCE,
@@ -168,6 +182,8 @@ pub fn stats_connues() -> Vec<String> {
         v.push(t.stat_degats());
         v.push(t.stat_ajoutes_min());
         v.push(t.stat_ajoutes_max());
+        v.push(t.stat_ajoutes_attaque_min());
+        v.push(t.stat_ajoutes_attaque_max());
         v.push(t.stat_penetration());
         v.push(t.stat_resistance());
         v.push(t.stat_resistance_max());

@@ -41,6 +41,9 @@ pub use trace::{Contribution, Trace};
 pub enum GenreCompetence {
     #[default]
     Sort,
+    /// Attaque : dégâts de base déjà tirés de l'arme (`degats`), cadence
+    /// tirée du temps d'attaque (`temps_incantation`), stats d'attaque.
+    Attaque,
 }
 
 fn cent() -> f64 {
@@ -53,7 +56,8 @@ pub struct Competence {
     pub nom: String,
     #[serde(rename = "type", default)]
     pub genre: GenreCompetence,
-    /// Temps d'incantation de base, en secondes.
+    /// Temps d'incantation de base, en secondes (pour une attaque : temps
+    /// d'attaque de l'arme, mods locaux et vitesse de la gemme compris).
     pub temps_incantation: f64,
     /// Chance de critique de base, en pourcentage.
     pub critique_base: f64,

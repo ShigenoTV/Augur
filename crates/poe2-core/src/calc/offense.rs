@@ -23,7 +23,7 @@ use super::moddb::ModDb;
 use super::modifier::TypeModificateur;
 use super::stats::{self, TypeDegats};
 use super::trace::{Contribution, Trace, nombre};
-use super::{Cible, Competence};
+use super::{Cible, Competence, GenreCompetence};
 
 /// Bonus de dégâts critiques de base de PoE 2, en pourcentage.
 pub const BONUS_CRITIQUE_BASE: f64 = 100.0;
@@ -40,8 +40,12 @@ pub struct Offense {
     pub incantations_par_seconde: Trace,
 }
 
-fn stats_degats(t: TypeDegats) -> Vec<String> {
-    let mut v = vec![stats::DAMAGE.to_string(), stats::SPELL_DAMAGE.to_string()];
+fn stats_degats(t: TypeDegats, genre: GenreCompetence) -> Vec<String> {
+    let propre = match genre {
+        GenreCompetence::Sort => stats::SPELL_DAMAGE,
+        GenreCompetence::Attaque => stats::ATTACK_DAMAGE,
+    };
+    let mut v = vec![stats::DAMAGE.to_string(), propre.to_string()];
     if t.est_elementaire() {
         v.push(stats::ELEMENTAL_DAMAGE.to_string());
     }
@@ -60,8 +64,10 @@ fn degats_avant_conversion(
     t: TypeDegats,
 ) -> Option<([f64; 2], Trace)> {
     let [gmin, gmax] = comp.degats.get(&t).copied().unwrap_or([0.0, 0.0]);
-    let smin = t.stat_ajoutes_min();
-    let smax = t.stat_ajoutes_max();
+    let (smin, smax) = match comp.genre {
+        GenreCompetence::Sort => (t.stat_ajoutes_min(), t.stat_ajoutes_max()),
+        GenreCompetence::Attaque => (t.stat_ajoutes_attaque_min(), t.stat_ajoutes_attaque_max()),
+    };
     let amin = db.somme(TypeModificateur::Added, &[smin.as_str()]);
     let amax = db.somme(TypeModificateur::Added, &[smax.as_str()]);
     if gmin == 0.0 && gmax == 0.0 && amin.valeur == 0.0 && amax.valeur == 0.0 {
@@ -228,11 +234,12 @@ fn trace_repartition(libelle: &str, m: &BTreeMap<TypeDegats, [f64; 2]>) -> Trace
 /// Applique increased et more du type final aux dégâts d'un type.
 fn degats_type(
     db: &ModDb,
+    genre: GenreCompetence,
     t: TypeDegats,
     [bmin, bmax]: [f64; 2],
     origine: Vec<Trace>,
 ) -> (f64, f64, Trace) {
-    let s = stats_degats(t);
+    let s = stats_degats(t, genre);
     let s = refs(&s);
     let t_inc = db.trace_increased("increased", &s);
     let t_more = db.trace_more("more", &s);
@@ -353,7 +360,7 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
         if let Some(tc) = &t_conversion {
             origine.push(tc.clone());
         }
-        let (min, max, trace_type) = degats_type(db, t, base, origine);
+        let (min, max, trace_type) = degats_type(db, comp.genre, t, base, origine);
         let moyenne = (min + max) / 2.0;
         let mitig = mitigation_cible(db, cible, t, moyenne);
         let apres = moyenne * mitig.valeur;
@@ -375,10 +382,25 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
         .avec_enfants(enfants_net);
 
     // 5 : critique.
+    let (stats_chance, stats_bonus, base_crit): (&[&str], &[&str], _) = match comp.genre {
+        GenreCompetence::Sort => (
+            &[stats::CRITICAL_HIT_CHANCE, stats::SPELL_CRITICAL_HIT_CHANCE],
+            &[
+                stats::CRITICAL_DAMAGE_BONUS,
+                stats::SPELL_CRITICAL_DAMAGE_BONUS,
+            ],
+            "critique de base de la gemme",
+        ),
+        GenreCompetence::Attaque => (
+            &[stats::CRITICAL_HIT_CHANCE],
+            &[stats::CRITICAL_DAMAGE_BONUS],
+            "critique de base de l'arme",
+        ),
+    };
     let chance = db.evaluer(
         "chance de critique (brute)",
-        &[stats::CRITICAL_HIT_CHANCE, stats::SPELL_CRITICAL_HIT_CHANCE],
-        Some((comp.critique_base, "critique de base de la gemme")),
+        stats_chance,
+        Some((comp.critique_base, base_crit)),
     );
     let chance_plafonnee = chance.valeur.clamp(0.0, 100.0);
     let chance_critique = Trace::feuille("chance de critique", chance_plafonnee)
@@ -386,10 +408,7 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
         .avec_enfant(chance);
     let bonus_critique = db.evaluer(
         "bonus de dégâts critiques",
-        &[
-            stats::CRITICAL_DAMAGE_BONUS,
-            stats::SPELL_CRITICAL_DAMAGE_BONUS,
-        ],
+        stats_bonus,
         Some((BONUS_CRITIQUE_BASE, "bonus critique de base")),
     );
     let mult_crit = 1.0 + chance_plafonnee / 100.0 * bonus_critique.valeur / 100.0;
@@ -407,7 +426,10 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
     } else {
         0.0
     };
-    let s = [stats::CAST_SPEED];
+    let s = [match comp.genre {
+        GenreCompetence::Sort => stats::CAST_SPEED,
+        GenreCompetence::Attaque => stats::ATTACK_SPEED,
+    }];
     let t_inc = db.trace_increased("increased", &s);
     let t_more = db.trace_more("more", &s);
     let cadence = base_cadence * t_inc.valeur * t_more.valeur;

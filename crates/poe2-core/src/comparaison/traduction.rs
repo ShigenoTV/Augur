@@ -139,9 +139,9 @@ fn motifs() -> &'static Motifs {
         let r = |s: String| Regex::new(&s).unwrap();
         Motifs {
             degats: r(format!(
-                r"^{n}% (increased|reduced) (?:(Spell|Elemental|Lightning|Fire|Cold|Chaos|Physical) )?Damage$"
+                r"^{n}% (increased|reduced) (?:(Spell|Attack|Elemental|Lightning|Fire|Cold|Chaos|Physical) )?Damage$"
             )),
-            vitesse: r(format!(r"^{n}% (increased|reduced) Cast Speed$")),
+            vitesse: r(format!(r"^{n}% (increased|reduced) (Cast|Attack) Speed$")),
             critique: r(format!(
                 r"^{n}% (increased|reduced) Critical Hit Chance( for Spells)?$"
             )),
@@ -149,7 +149,7 @@ fn motifs() -> &'static Motifs {
                 r"^{n}% (increased|reduced) Critical (Spell )?Damage Bonus( for Spells)?$"
             )),
             ajoutes: r(format!(
-                r"^Adds {n} to {n} (Physical|Fire|Cold|Lightning|Chaos) Damage to Spells$"
+                r"^Adds {n} to {n} (Physical|Fire|Cold|Lightning|Chaos) Damage to (Spells|Attacks)$"
             )),
             gain: r(format!(
                 r"^(?:Supported Skills )?Gain {n}% of (?:(Physical|Fire|Cold|Lightning|Chaos|Elemental) )?Damage as [Ee]xtra (Physical|Fire|Cold|Lightning|Chaos) Damage$"
@@ -165,7 +165,7 @@ fn motifs() -> &'static Motifs {
                 r"^Supported (?:Spells|Skills) deal {n}% (more|less|increased|reduced) (?:(Spell|Elemental|Physical|Fire|Cold|Lightning|Chaos) )?[Dd]amage(?: with Hits)?( while you are above (\d+)% of your Maximum Mana)?$"
             )),
             support_stat: r(format!(
-                r"^Supported (?:Spells|Skills) have {n}% (more|less|increased|reduced) (Cast Speed|Critical Hit Chance|Critical Damage Bonus)$"
+                r"^Supported (?:Spells|Skills) have {n}% (more|less|increased|reduced) (Cast Speed|Attack Speed|Critical Hit Chance|Critical Damage Bonus)$"
             )),
             pertinent: r(
                 r"(?i)damage|critical|cast speed|level of all|spell".to_string(),
@@ -196,6 +196,7 @@ pub fn traduire(ligne: &str, source: &str) -> Traduction {
         let stat = match c.get(3).map(|x| x.as_str()) {
             None => stats::DAMAGE.to_string(),
             Some("Spell") => stats::SPELL_DAMAGE.to_string(),
+            Some("Attack") => stats::ATTACK_DAMAGE.to_string(),
             Some("Elemental") => stats::ELEMENTAL_DAMAGE.to_string(),
             Some(t) => type_degats(t)
                 .map(TypeDegats::stat_degats)
@@ -209,8 +210,13 @@ pub fn traduire(ligne: &str, source: &str) -> Traduction {
         )]);
     }
     if let Some(c) = m.vitesse.captures(&l) {
+        let stat = if &c[3] == "Attack" {
+            stats::ATTACK_SPEED
+        } else {
+            stats::CAST_SPEED
+        };
         return mods(vec![Modificateur::new(
-            stats::CAST_SPEED,
+            stat,
             TypeModificateur::Increased,
             nombre(&c[1]) * signe(&c[2]),
             source,
@@ -246,19 +252,14 @@ pub fn traduire(ligne: &str, source: &str) -> Traduction {
         let Some(t) = type_degats(&c[3]) else {
             return Traduction::NonTraduite;
         };
+        let (smin, smax) = if &c[4] == "Attacks" {
+            (t.stat_ajoutes_attaque_min(), t.stat_ajoutes_attaque_max())
+        } else {
+            (t.stat_ajoutes_min(), t.stat_ajoutes_max())
+        };
         return mods(vec![
-            Modificateur::new(
-                t.stat_ajoutes_min(),
-                TypeModificateur::Added,
-                nombre(&c[1]),
-                source,
-            ),
-            Modificateur::new(
-                t.stat_ajoutes_max(),
-                TypeModificateur::Added,
-                nombre(&c[2]),
-                source,
-            ),
+            Modificateur::new(smin, TypeModificateur::Added, nombre(&c[1]), source),
+            Modificateur::new(smax, TypeModificateur::Added, nombre(&c[2]), source),
         ]);
     }
     if let Some(c) = m.gain.captures(&l) {
@@ -322,6 +323,7 @@ pub fn traduire(ligne: &str, source: &str) -> Traduction {
     if let Some(c) = m.support_stat.captures(&l) {
         let stat = match &c[3] {
             "Cast Speed" => stats::CAST_SPEED,
+            "Attack Speed" => stats::ATTACK_SPEED,
             "Critical Hit Chance" => stats::CRITICAL_HIT_CHANCE,
             _ => stats::CRITICAL_DAMAGE_BONUS,
         };
@@ -482,13 +484,32 @@ mod tests {
     }
 
     #[test]
+    fn traduit_les_mods_d_attaque() {
+        let un = |l: &str| match traduire(l, "t") {
+            Traduction::Mods(v) => v,
+            autre => panic!("{l} : {autre:?}"),
+        };
+        assert_eq!(
+            un("10% increased Attack Damage")[0].stat,
+            stats::ATTACK_DAMAGE
+        );
+        assert_eq!(
+            un("12% increased Attack Speed")[0].stat,
+            stats::ATTACK_SPEED
+        );
+        let a = un("Adds 3 to 6 Fire Damage to Attacks");
+        assert_eq!(a[0].stat, TypeDegats::Feu.stat_ajoutes_attaque_min());
+        let s = un("Adds 3 to 6 Fire Damage to Spells");
+        assert_eq!(s[0].stat, TypeDegats::Feu.stat_ajoutes_min());
+    }
+
+    #[test]
     fn classe_le_reste() {
         for l in [
             "+119 to maximum Life",
             "+42% to Fire Resistance",
             "35% increased Movement Speed",
             "Minions deal 10% increased Damage",
-            "10% increased Attack Damage",
             "Rarity: RARE",
             "Item Level: 82",
             "Grants Skill: Level 18 Spellslinger",
