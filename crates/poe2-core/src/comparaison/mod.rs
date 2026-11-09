@@ -2,7 +2,9 @@
 //! importé de Path of Building : « que m'apporte cet objet ? ».
 //!
 //! Le personnage est reconstruit pour le moteur à partir du build PoB :
-//! gemme active (Lightning Bolt ou Arc, données RePoE au niveau effectif),
+//! gemme active (tout sort à impact des données RePoE, au niveau effectif ;
+//! Lightning Bolt et Arc sont vérifiés en jeu, les autres suivent la formule
+//! générique d'un sort qui touche),
 //! supports, mods des objets équipés et passifs alloués, chaque ligne de
 //! texte passant par [`traduction`]. On calcule le DPS avec l'équipement
 //! actuel, puis avec l'objet copié à la place de celui de son emplacement.
@@ -23,14 +25,17 @@ use crate::calc::{self, Competence, Conditions, GenreCompetence, Modificateur, P
 use crate::pob::{BuildPob, GemmePob, ObjetPob};
 use traduction::{Niveaux, Traduction, traduire};
 
-/// Compétences dont le moteur sait calculer le DPS (archétypes vérifiés).
-pub const COMPETENCES_SUPPORTEES: &[&str] = &["LightningBoltPlayer", "ArcPlayer"];
+/// Le moteur sait-il calculer le DPS de cette compétence ? Tous les sorts à
+/// impact des données embarquées (Lightning Bolt et Arc vérifiés en jeu).
+pub fn competence_supportee(skill_id: &str) -> bool {
+    donnees::gemmes().actives.contains_key(skill_id)
+}
 
 #[derive(Debug, Error, PartialEq)]
 pub enum ErreurComparaison {
     #[error("aucune compétence active dans le build")]
     AucuneCompetence,
-    #[error("Augur ne calcule pas encore le DPS de {0} (seulement Lightning Bolt et Arc)")]
+    #[error("Augur ne calcule pas encore le DPS de {0} (seulement les sorts à impact)")]
     CompetenceNonSupportee(String),
     #[error("objet non comparé : {0}")]
     EmplacementNonSupporte(String),
@@ -53,6 +58,8 @@ pub struct Rapport {
     pub supports_non_modelises: BTreeSet<String>,
     /// L'arbre du build n'est pas celui des données embarquées.
     pub arbre_autre_version: bool,
+    /// Sort calculé par la formule générique (pas un archétype vérifié en jeu).
+    pub formule_generique: bool,
 }
 
 impl Rapport {
@@ -63,6 +70,7 @@ impl Rapport {
             && self.passifs_inconnus == 0
             && self.supports_non_modelises.is_empty()
             && !self.arbre_autre_version
+            && !self.formule_generique
     }
 }
 
@@ -86,7 +94,7 @@ pub struct Comparaison {
 /// archétype vérifié, sinon le premier groupe actif qui en contient un,
 /// sinon la compétence principale telle quelle (`false` : non supportée).
 pub fn competence_comparee(build: &BuildPob) -> Option<(usize, &GemmePob, bool)> {
-    let supportee = |g: &GemmePob| COMPETENCES_SUPPORTEES.contains(&g.skill_id.as_str());
+    let supportee = |g: &GemmePob| competence_supportee(&g.skill_id);
     let principale = build.groupe_principal.zip(build.competence_principale());
     if let Some((i, g)) = principale
         && supportee(g)
@@ -181,11 +189,7 @@ impl Accumulateur {
     fn ligne(&mut self, ligne: &str, source: &str) -> bool {
         match traduire(ligne, source) {
             Traduction::Mods(v) => self.mods.extend(v),
-            Traduction::Niveaux(n) => {
-                self.niveaux.toutes += n.toutes;
-                self.niveaux.sorts += n.sorts;
-                self.niveaux.foudre += n.foudre;
-            }
+            Traduction::Niveaux(n) => self.niveaux.ajouter(&n),
             Traduction::NonTraduite => return true,
             Traduction::SansEffet => {}
         }
@@ -280,7 +284,8 @@ fn modeliser(
         }
     }
 
-    let niveau_voulu = gemme.niveau as i32 + acc.niveaux.pour_sort_de_foudre();
+    rapport.formule_generique = !active.verifiee;
+    let niveau_voulu = gemme.niveau as i32 + acc.niveaux.pour_sort(&active.elements());
     let (niveau, data) = active
         .niveau(niveau_voulu)
         .ok_or_else(|| ErreurComparaison::Calcul(format!("{} sans données", active.nom)))?;
@@ -290,7 +295,7 @@ fn modeliser(
         temps_incantation: active.temps_incantation,
         critique_base: active.critique_base,
         efficacite_degats_ajoutes: 100.0,
-        degats: [(calc::stats::TypeDegats::Foudre, data.foudre)].into(),
+        degats: data.degats(),
         conversion: Default::default(),
         gain: Default::default(),
         chaines_base: data.chaines,
@@ -552,6 +557,68 @@ Implicits: 0
         assert_eq!(c.remplace.as_deref(), Some("Doom Song"));
     }
 
+    fn build_sort(gemme: &str, skill_id: &str, objets: &str) -> BuildPob {
+        pob::lire_xml(&format!(
+            r#"<PathOfBuilding2><Build level="90" className="Sorceress" mainSocketGroup="1"/>
+<Skills activeSkillSet="1"><SkillSet id="1"><Skill enabled="true" mainActiveSkill="1">
+<Gem nameSpec="{gemme}" skillId="{skill_id}" level="20" quality="0"/>
+</Skill></SkillSet></Skills>
+<Items activeItemSet="1">{objets}</Items></PathOfBuilding2>"#
+        ))
+        .unwrap()
+    }
+
+    #[test]
+    fn calcule_un_sort_quelconque_par_la_formule_generique() {
+        let b = build_sort("Fireball", "FireballPlayer", BAGUETTE);
+        let c = comparer(
+            &b,
+            "Wands",
+            "Ember Song",
+            &lignes(&[
+                "100% increased Fire Damage",
+                "+2 to Level of all Fire Spell Skills",
+            ]),
+        )
+        .unwrap();
+        // La baguette actuelle n'apporte rien au feu, sauf +1 niveau de sort.
+        assert_eq!((c.niveau_avant, c.niveau_apres), (21, 22));
+        assert!(c.dps_avant > 0.0);
+        assert!(c.dps_apres > c.dps_avant * 1.9, "{c:?}");
+        assert!(c.rapport.formule_generique);
+        assert!(!c.rapport.complet());
+        // Les dégâts de base viennent des données du jeu, au niveau effectif.
+        let fb = &donnees::gemmes().actives["FireballPlayer"];
+        let [min, max] = fb.niveau(21).unwrap().1.degats["feu"];
+        let cadence = 1.0 / fb.temps_incantation;
+        assert!(
+            c.dps_avant > (min + max) / 2.0 * cadence * 0.9,
+            "{}",
+            c.dps_avant
+        );
+    }
+
+    #[test]
+    fn niveaux_d_un_autre_element_sans_effet() {
+        let b = build_sort("Frostbolt", "FrostboltPlayer", "");
+        let c = comparer(
+            &b,
+            "Amulets",
+            "X",
+            &lignes(&["+3 to Level of all Lightning Spell Skills"]),
+        )
+        .unwrap();
+        assert_eq!((c.niveau_avant, c.niveau_apres), (20, 20));
+        let c = comparer(
+            &b,
+            "Amulets",
+            "X",
+            &lignes(&["+3 to Level of all Cold Spell Skills"]),
+        )
+        .unwrap();
+        assert_eq!(c.niveau_apres, 23);
+    }
+
     #[test]
     fn refuse_les_cas_non_couverts() {
         let b = build(BAGUETTE, "", "");
@@ -561,13 +628,13 @@ Implicits: 0
         ));
         let orb = pob::lire_xml(
             r#"<PathOfBuilding2><Build level="1" className="Witch" mainSocketGroup="1"/>
-<Skills activeSkillSet="1"><SkillSet id="1"><Skill enabled="true"><Gem nameSpec="Orb of Storms" skillId="OrbOfStormsPlayer" level="20"/></Skill></SkillSet></Skills></PathOfBuilding2>"#,
+<Skills activeSkillSet="1"><SkillSet id="1"><Skill enabled="true"><Gem nameSpec="Lightning Arrow" skillId="LightningArrowPlayer" level="20"/></Skill></SkillSet></Skills></PathOfBuilding2>"#,
         )
         .unwrap();
         assert_eq!(
             comparer(&orb, "Wands", "X", &[]),
             Err(ErreurComparaison::CompetenceNonSupportee(
-                "Orb of Storms".into()
+                "Lightning Arrow".into()
             ))
         );
     }

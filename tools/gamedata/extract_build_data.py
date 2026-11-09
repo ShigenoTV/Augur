@@ -9,8 +9,10 @@ Entrées :
 
 Sortie (JSON canonique, déterministe) :
 
-    crates/poe2-core/data/gemmes.json   Lightning Bolt et Arc par niveau, et
-                                        le texte des effets de chaque support
+    crates/poe2-core/data/gemmes.json   chaque sort à dégâts par niveau
+                                        (Lightning Bolt et Arc vérifiés en jeu,
+                                        les autres en formule générique), et le
+                                        texte des effets de chaque support
     crates/poe2-core/data/arbre.json    texte des stats de chaque passif
 
 Utilisation :
@@ -29,8 +31,19 @@ import re
 import sys
 from pathlib import Path
 
-# Compétences dont le moteur sait calculer le DPS (archétypes vérifiés).
+# Archétypes vérifiés en jeu : obligatoires dans skills.json.
 ACTIVES = {"LightningBoltPlayer": "Lightning Bolt", "ArcPlayer": "Arc"}
+
+# Types de dégâts du jeu -> clés du moteur.
+ELEMENTS = {
+    "physical": "physique",
+    "fire": "feu",
+    "cold": "froid",
+    "lightning": "foudre",
+    "chaos": "chaos",
+}
+# Tags de compétence -> élément (bonus de niveaux « Fire Spell Skills »…).
+TAGS = {"Physical": "physique", "Fire": "feu", "Cold": "froid", "Lightning": "foudre", "Chaos": "chaos"}
 
 # « [Chain|Chains] » -> « Chains », « [Lightning] » -> « Lightning ».
 BRACKET = re.compile(r"\[([^\]|]+)(?:\|([^\]]+))?\]")
@@ -57,28 +70,59 @@ def _stat_value(stat_set: dict, level: dict, stat_id: str) -> float | None:
     return float(static["value"]) if "value" in static else None
 
 
-def active(skills: dict, skill_id: str, name: str) -> dict:
+def _degats(stat_set: dict, level: dict) -> dict:
+    """Dégâts de base du sort à ce niveau, par type ({} s'il n'en a pas)."""
+    out = {}
+    for jeu, cle in ELEMENTS.items():
+        dmin = _stat_value(stat_set, level, f"spell_minimum_base_{jeu}_damage")
+        dmax = _stat_value(stat_set, level, f"spell_maximum_base_{jeu}_damage")
+        if dmin is not None and dmax is not None and dmax > 0:
+            out[cle] = [dmin, dmax]
+    return out
+
+
+def _set_de_degats(s: dict) -> dict | None:
+    """Premier jeu de stats qui porte des dégâts de sort à chaque niveau.
+
+    Le premier est souvent celui de l'impact ; certains sorts (Frostflame Nova,
+    Galvanic Field…) le mettent en second, derrière un effet sans dégâts.
+    """
+    for st in s.get("stat_sets") or []:
+        levels = st.get("per_level") or {}
+        if levels and all(_degats(st, lv) for lv in levels.values()):
+            return st
+    return None
+
+
+def active(skills: dict, skill_id: str, name: str, verifiee: bool = True) -> dict:
     s = skills.get(skill_id)
     if not isinstance(s, dict):
         raise DonneesError(f"compétence {skill_id} absente de skills.json")
-    stat_set = s["stat_sets"][0]
+    stat_set = s["stat_sets"][0] if verifiee else _set_de_degats(s)
+    if stat_set is None:
+        raise DonneesError(f"{skill_id} : aucun jeu de stats avec des dégâts")
     static = stat_set["static"]
     niveaux = {}
     for lvl, data in sorted(stat_set["per_level"].items(), key=lambda kv: int(kv[0])):
-        dmin = _stat_value(stat_set, data, "spell_minimum_base_lightning_damage")
-        dmax = _stat_value(stat_set, data, "spell_maximum_base_lightning_damage")
-        if dmin is None or dmax is None:
+        degats = _degats(stat_set, data)
+        if not degats:
             raise DonneesError(f"{skill_id} niveau {lvl} : dégâts absents")
-        n = {"foudre": [dmin, dmax]}
+        n = {"degats": degats}
         chains = _stat_value(stat_set, data, "number_of_chains")
         if chains is not None:
             n["chaines"] = chains
         niveaux[lvl] = n
+    types = ((s.get("active_skill") or {}).get("types")) or []
+    elements = sorted({TAGS[t] for t in types if t in TAGS})
+    if not elements:
+        elements = sorted({e for n in niveaux.values() for e in n["degats"]})
     out = {
         "nom": name,
         "temps_incantation": s["cast_time"] / 1000,
-        "critique_base": static["crit_chance"] / 100,
+        "critique_base": static.get("crit_chance", 0) / 100,
         "niveaux": niveaux,
+        "elements": elements,
+        "verifiee": verifiee,
     }
     for q in static.get("quality_stats") or []:
         per_mille = (q.get("stats") or {}).get("number_of_chains")
@@ -92,6 +136,36 @@ def active(skills: dict, skill_id: str, name: str) -> dict:
             "chaines": ids["arc_chains_gained_from_infusion_consumption"]["value"],
         }
     return out
+
+
+def sort_generique(skill_id: str, s: dict) -> str | None:
+    """Nom du sort si c'est une gemme de joueur à dégâts calculable, sinon None."""
+    if not skill_id.endswith("Player") or s.get("is_support"):
+        return None
+    if skill_id.startswith(("GS", "GT", "Mtx", "Archnemesis")):
+        return None
+    a = s.get("active_skill") or {}
+    name = (a.get("display_name") or "").strip()
+    if not name or "[" in name or "Spell" not in (a.get("types") or []):
+        return None
+    if not s.get("cast_time"):
+        return None  # canalisé ou sans temps d'incantation : cadence inconnue
+    try:
+        return name if _set_de_degats(s) is not None else None
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def actives(skills: dict) -> dict:
+    """Archétypes vérifiés, puis tous les autres sorts à dégâts (formule générique)."""
+    out = {k: active(skills, k, v) for k, v in ACTIVES.items()}
+    for skill_id, s in skills.items():
+        if skill_id in out or not isinstance(s, dict):
+            continue
+        name = sort_generique(skill_id, s)
+        if name:
+            out[skill_id] = active(skills, skill_id, name, verifiee=False)
+    return dict(sorted(out.items()))
 
 
 def supports(skills: dict) -> dict:
@@ -142,7 +216,7 @@ def main(argv: list[str] | None = None) -> int:
         skills = json.loads(a.skills.read_text(encoding="utf-8"))
         tree_data = json.loads(a.tree.read_text(encoding="utf-8-sig"))
         gemmes = {
-            "actives": {k: active(skills, k, v) for k, v in ACTIVES.items()},
+            "actives": actives(skills),
             "supports": supports(skills),
         }
         arbre = {"version": a.tree_version, "passifs": tree(tree_data)}
@@ -153,7 +227,8 @@ def main(argv: list[str] | None = None) -> int:
     write(a.out / "gemmes.json", gemmes)
     write(a.out / "arbre.json", arbre)
     print(
-        f"{len(gemmes['supports'])} supports, {len(arbre['passifs'])} passifs "
+        f"{len(gemmes['actives'])} sorts, {len(gemmes['supports'])} supports, "
+        f"{len(arbre['passifs'])} passifs "
         f"(arbre {a.tree_version})"
     )
     return 0

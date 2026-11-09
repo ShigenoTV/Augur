@@ -48,6 +48,7 @@ const mechanics: Record<string, string> = {
   "mods-equipement-non-traduits": "Certains mods de ton équipement ne sont pas comptés",
   "passifs-non-traduits": "Certains passifs ne sont pas comptés",
   "supports-non-modelises": "Certains supports ne sont pas comptés",
+  "formule-generique": "Sort pas encore vérifié en jeu (calcul générique)",
   "arbre-autre-version": "Build fait sur une autre version de l'arbre",
 };
 

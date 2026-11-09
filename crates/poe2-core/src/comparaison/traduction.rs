@@ -22,14 +22,34 @@ pub struct Niveaux {
     pub toutes: i32,
     /// « +N to Level of all Spell Skills ».
     pub sorts: i32,
-    /// « +N to Level of all Lightning Spell Skills » (et « Lightning Skills »).
-    pub foudre: i32,
+    /// « +N to Level of all Elemental Spell Skills » : feu, froid, foudre.
+    pub elementaires: i32,
+    /// « +N to Level of all Fire Spell Skills » (et « Fire Skills »…), par
+    /// type dans l'ordre de [`TypeDegats::TOUS`].
+    pub par_type: [i32; 5],
 }
 
 impl Niveaux {
-    /// Niveaux gagnés par un sort de foudre.
-    pub fn pour_sort_de_foudre(&self) -> i32 {
-        self.toutes + self.sorts + self.foudre
+    /// Niveaux gagnés par un sort portant ces tags d'élément. Un sort à
+    /// plusieurs éléments (Comet : feu et froid) profite du meilleur bonus
+    /// propre à un élément, pas de leur somme.
+    pub fn pour_sort(&self, elements: &[TypeDegats]) -> i32 {
+        let elementaire = elements.iter().any(|t| t.est_elementaire());
+        let propre = elements
+            .iter()
+            .map(|t| self.par_type[t.index()])
+            .max()
+            .unwrap_or(0);
+        self.toutes + self.sorts + if elementaire { self.elementaires } else { 0 } + propre
+    }
+
+    pub fn ajouter(&mut self, autre: &Niveaux) {
+        self.toutes += autre.toutes;
+        self.sorts += autre.sorts;
+        self.elementaires += autre.elementaires;
+        for (a, b) in self.par_type.iter_mut().zip(autre.par_type) {
+            *a += b;
+        }
     }
 }
 
@@ -135,7 +155,7 @@ fn motifs() -> &'static Motifs {
                 r"^Gain {n}% of (?:(Physical|Fire|Cold|Lightning|Chaos|Elemental) )?Damage as Extra (Physical|Fire|Cold|Lightning|Chaos) Damage$"
             )),
             niveaux: r(
-                r"^\+(\d+) to Level of all (Spell |Lightning Spell |Lightning |Elemental Spell |)Skills$"
+                r"^\+(\d+) to Level of all (Spell |Elemental Spell |(?:(Physical|Fire|Cold|Lightning|Chaos) (?:Spell )?)|)Skills$"
                     .to_string(),
             ),
             penetration: r(format!(
@@ -264,12 +284,11 @@ pub fn traduire(ligne: &str, source: &str) -> Traduction {
     if let Some(c) = m.niveaux.captures(&l) {
         let n: i32 = c[1].parse().unwrap_or(0);
         let mut niv = Niveaux::default();
-        match &c[2] {
-            "" => niv.toutes = n,
-            "Spell " => niv.sorts = n,
-            "Lightning Spell " | "Lightning " => niv.foudre = n,
-            // Sorts élémentaires : la foudre en fait partie.
-            "Elemental Spell " => niv.foudre = n,
+        match (&c[2], c.get(3).and_then(|t| type_degats(t.as_str()))) {
+            ("", _) => niv.toutes = n,
+            ("Spell ", _) => niv.sorts = n,
+            ("Elemental Spell ", _) => niv.elementaires = n,
+            (_, Some(t)) => niv.par_type[t.index()] = n,
             _ => return Traduction::NonTraduite,
         }
         return Traduction::Niveaux(niv);
@@ -420,7 +439,7 @@ mod tests {
     #[test]
     fn traduit_les_niveaux() {
         let niv = |l: &str| match traduire(l, "t") {
-            Traduction::Niveaux(n) => n.pour_sort_de_foudre(),
+            Traduction::Niveaux(n) => n.pour_sort(&[TypeDegats::Foudre]),
             autre => panic!("{autre:?}"),
         };
         assert_eq!(niv("+1 to Level of all Spell Skills"), 1);
@@ -431,10 +450,14 @@ mod tests {
             traduire("+2 to Level of all Minion Skills", "t"),
             Traduction::SansEffet
         );
-        assert_eq!(
-            traduire("+2 to Level of all Cold Spell Skills", "t"),
-            Traduction::NonTraduite
-        );
+        let froid = match traduire("+2 to Level of all Cold Spell Skills", "t") {
+            Traduction::Niveaux(n) => n,
+            autre => panic!("{autre:?}"),
+        };
+        assert_eq!(froid.pour_sort(&[TypeDegats::Foudre]), 0);
+        assert_eq!(froid.pour_sort(&[TypeDegats::Froid]), 2);
+        assert_eq!(froid.pour_sort(&[TypeDegats::Feu, TypeDegats::Froid]), 2);
+        assert_eq!(niv("+2 to Level of all Elemental Spell Skills"), 2);
     }
 
     #[test]

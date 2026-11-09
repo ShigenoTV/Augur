@@ -1,7 +1,8 @@
 //! Données de jeu embarquées pour la comparaison d'objets, produites par
 //! `tools/gamedata/extract_build_data.py` :
 //!
-//! - `data/gemmes.json` : Lightning Bolt et Arc par niveau (RePoE), et le
+//! - `data/gemmes.json` : chaque sort à dégâts par niveau (RePoE ; Lightning
+//!   Bolt et Arc vérifiés en jeu, les autres en formule générique), et le
 //!   texte des effets de chaque support ;
 //! - `data/arbre.json` : texte des stats de chaque passif (arbre de Path of
 //!   Building PoE 2, licence MIT, données d'origine GGG).
@@ -12,12 +13,23 @@ use std::sync::OnceLock;
 use serde::Deserialize;
 
 use crate::calc::Infusion;
+use crate::calc::stats::TypeDegats;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct NiveauGemme {
-    pub foudre: [f64; 2],
+    /// Dégâts de base min et max par type (« foudre », « feu »…).
+    pub degats: BTreeMap<String, [f64; 2]>,
     #[serde(default)]
     pub chaines: Option<f64>,
+}
+
+impl NiveauGemme {
+    pub fn degats(&self) -> BTreeMap<TypeDegats, [f64; 2]> {
+        self.degats
+            .iter()
+            .filter_map(|(k, v)| TypeDegats::depuis_nom(k).map(|t| (t, *v)))
+            .collect()
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -30,9 +42,22 @@ pub struct GemmeActive {
     pub chaines_par_qualite: f64,
     #[serde(default)]
     pub infusion: Option<Infusion>,
+    /// Tags d'élément du sort, pour les bonus de niveaux (« Fire Spell Skills »).
+    #[serde(default)]
+    pub elements: Vec<String>,
+    /// Archétype vérifié en jeu ; sinon, formule générique d'un sort à impact.
+    #[serde(default)]
+    pub verifiee: bool,
 }
 
 impl GemmeActive {
+    pub fn elements(&self) -> Vec<TypeDegats> {
+        self.elements
+            .iter()
+            .filter_map(|e| TypeDegats::depuis_nom(e))
+            .collect()
+    }
+
     /// Niveau borné aux niveaux connus (1 à 40 dans RePoE).
     pub fn niveau(&self, n: i32) -> Option<(u32, &NiveauGemme)> {
         let max = self
@@ -81,7 +106,19 @@ mod tests {
     fn donnees_lisibles() {
         let lb = &gemmes().actives["LightningBoltPlayer"];
         let (n, d) = lb.niveau(20).unwrap();
-        assert_eq!((n, d.foudre), (20, [30.0, 565.0]));
+        assert_eq!((n, d.degats["foudre"]), (20, [30.0, 565.0]));
+        assert!(lb.verifiee);
+        let fb = &gemmes().actives["FireballPlayer"];
+        assert!(!fb.verifiee);
+        assert_eq!(fb.elements(), vec![TypeDegats::Feu]);
+        assert!(
+            fb.niveau(20)
+                .unwrap()
+                .1
+                .degats()
+                .contains_key(&TypeDegats::Feu)
+        );
+        assert!(gemmes().actives.len() > 50);
         assert_eq!(lb.niveau(99).unwrap().0, 40);
         assert_eq!(lb.niveau(0).unwrap().0, 1);
         let arc = &gemmes().actives["ArcPlayer"];

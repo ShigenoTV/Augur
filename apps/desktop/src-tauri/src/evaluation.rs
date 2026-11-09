@@ -70,6 +70,15 @@ fn unsupported(slot: &str, ms: u32) -> ItemDelta {
 pub fn to_delta(c: &Comparaison, ms: u32) -> ItemDelta {
     let r = &c.rapport;
     let mut mechanics = vec![note("formules-supposees")];
+    if r.formule_generique {
+        mechanics.push(note_avec(
+            "formule-generique",
+            vec![format!(
+                "{} : dégâts de base, cadence et critique du jeu ; ses effets propres (projectiles, zones, chaînes, conditions) ne sont pas comptés",
+                c.competence
+            )],
+        ));
+    }
     if !r.mods_candidat_non_traduits.is_empty() {
         mechanics.push(note_avec(
             "mods-objet-non-traduits",
@@ -254,8 +263,21 @@ Implicits: 0
     }
 
     #[test]
-    fn archetype_non_couvert() {
+    fn sort_generique_approximatif() {
         let b = build(r#"<Gem nameSpec="Fireball" skillId="FireballPlayer" level="20"/>"#);
+        let d = evaluate(Some(&b), &baguette()).unwrap();
+        assert_eq!(d.support, SupportLevel::Approximate);
+        assert!(
+            d.mechanics
+                .iter()
+                .any(|n| n.mechanic == "formule-generique")
+        );
+    }
+
+    #[test]
+    fn archetype_non_couvert() {
+        let b =
+            build(r#"<Gem nameSpec="Lightning Arrow" skillId="LightningArrowPlayer" level="20"/>"#);
         let d = evaluate(Some(&b), &baguette()).unwrap();
         assert_eq!(d.support, SupportLevel::Unsupported);
         assert_eq!(d.slot, "weapon1");

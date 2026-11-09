@@ -53,6 +53,39 @@ SKILLS = {
             }
         ],
     },
+    "FireballPlayer": {
+        "cast_time": 1000,
+        "is_support": False,
+        "active_skill": {"display_name": "Fireball", "types": ["Spell", "Projectile", "Fire"]},
+        "stat_sets": [
+            {
+                "static": {
+                    "crit_chance": 900,
+                    "stats": [
+                        {"id": "spell_minimum_base_fire_damage", "type": "float"},
+                        {"id": "spell_maximum_base_fire_damage", "type": "float"},
+                    ],
+                },
+                "per_level": {"1": {"stats": [{"value": 4}, {"value": 7}]}},
+            }
+        ],
+    },
+    # Écartés : canalisé (sans temps d'incantation), sort sans dégâts, interne.
+    "IncinerateChannelPlayer": {
+        "cast_time": 0,
+        "active_skill": {"display_name": "Burn", "types": ["Spell", "Fire"]},
+        "stat_sets": [],
+    },
+    "BlinkPlayer": {
+        "cast_time": 500,
+        "active_skill": {"display_name": "Blink", "types": ["Spell"]},
+        "stat_sets": [{"static": {"stats": []}, "per_level": {"1": {"stats": []}}}],
+    },
+    "GSShrineFirePlayer": {
+        "cast_time": 500,
+        "active_skill": {"display_name": "", "types": ["Spell"]},
+        "stat_sets": [],
+    },
     "SupportZenithPlayerTwo": {
         "is_support": True,
         "stat_sets": [
@@ -88,11 +121,16 @@ def test_extraction(tmp_path: Path) -> None:
     g = json.loads((out / "gemmes.json").read_text(encoding="utf-8"))
     lb = g["actives"]["LightningBoltPlayer"]
     assert lb["temps_incantation"] == 0.85 and lb["critique_base"] == 10
-    assert lb["niveaux"]["20"] == {"foudre": [30.0, 565.0]}
+    assert lb["niveaux"]["20"] == {"degats": {"foudre": [30.0, 565.0]}}
+    assert lb["verifiee"] is True
     arc = g["actives"]["ArcPlayer"]
-    assert arc["niveaux"]["20"] == {"foudre": [20.0, 386.0], "chaines": 9.0}
+    assert arc["niveaux"]["20"] == {"degats": {"foudre": [20.0, 386.0]}, "chaines": 9.0}
     assert arc["chaines_par_qualite"] == 0.1
     assert arc["infusion"] == {"element": "foudre", "degats_more": 200, "chaines": 6}
+    assert sorted(g["actives"]) == ["ArcPlayer", "FireballPlayer", "LightningBoltPlayer"]
+    fb = g["actives"]["FireballPlayer"]
+    assert fb["verifiee"] is False and fb["elements"] == ["feu"]
+    assert fb["niveaux"]["1"] == {"degats": {"feu": [4.0, 7.0]}}
     assert g["supports"]["SupportZenithPlayerTwo"] == [
         "Supported Spells deal 30% more Damage while you are above 90% of your Maximum Mana"
     ]

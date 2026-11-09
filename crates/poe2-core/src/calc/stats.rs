@@ -38,6 +38,16 @@ impl TypeDegats {
         }
     }
 
+    /// Rang dans [`TypeDegats::TOUS`].
+    pub fn index(self) -> usize {
+        self as usize
+    }
+
+    /// Inverse de [`TypeDegats::nom`].
+    pub fn depuis_nom(nom: &str) -> Option<TypeDegats> {
+        TypeDegats::TOUS.into_iter().find(|t| t.nom() == nom)
+    }
+
     /// Fragment anglais utilisé dans les identifiants de stats.
     pub fn cle(self) -> &'static str {
         match self {
