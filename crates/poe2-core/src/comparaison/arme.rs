@@ -144,6 +144,25 @@ pub fn construire<'a>(
     }
 }
 
+/// Deux armes tenues ensemble : les attaques alternent entre les mains
+/// (supposé), soit la moyenne des dégâts, du temps d'attaque et du critique.
+pub fn double(a: &Arme, b: &Arme) -> Arme {
+    let mut degats: BTreeMap<TypeDegats, [f64; 2]> = BTreeMap::new();
+    for arme in [a, b] {
+        for (t, [min, max]) in &arme.degats {
+            let e = degats.entry(*t).or_insert([0.0; 2]);
+            e[0] += min / 2.0;
+            e[1] += max / 2.0;
+        }
+    }
+    Arme {
+        base: format!("{} + {}", a.base, b.base),
+        degats,
+        temps_attaque: (a.temps_attaque + b.temps_attaque) / 2.0,
+        critique: (a.critique + b.critique) / 2.0,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -174,6 +193,20 @@ mod tests {
         assert!(!a.degats.contains_key(&TypeDegats::Feu));
         assert!((a.temps_attaque - 0.87 / 1.15).abs() < 1e-9);
         assert_eq!(a.critique, 7.5);
+    }
+
+    #[test]
+    fn deux_armes_alternent() {
+        let a = construire("Gemini Bow", &arc(), 0.0, []);
+        let mut b = a.clone();
+        b.degats.insert(TypeDegats::Feu, [10.0, 20.0]);
+        b.temps_attaque = 0.5;
+        b.critique = 7.0;
+        let d = double(&a, &b);
+        assert_eq!(d.degats[&TypeDegats::Physique], [39.0, 72.0]);
+        assert_eq!(d.degats[&TypeDegats::Feu], [5.0, 10.0]);
+        assert!((d.temps_attaque - (0.87 + 0.5) / 2.0).abs() < 1e-9);
+        assert_eq!(d.critique, 6.0);
     }
 
     #[test]

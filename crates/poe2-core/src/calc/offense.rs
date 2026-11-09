@@ -38,14 +38,25 @@ pub struct Offense {
     pub chance_critique: Trace,
     pub bonus_critique: Trace,
     pub incantations_par_seconde: Trace,
+    /// DPS des dégâts dans le temps de la compétence, s'il y en a (déjà
+    /// compris dans `dps`).
+    pub dps_dot: Option<Trace>,
 }
 
 fn stats_degats(t: TypeDegats, genre: GenreCompetence) -> Vec<String> {
     let propre = match genre {
         GenreCompetence::Sort => stats::SPELL_DAMAGE,
         GenreCompetence::Attaque => stats::ATTACK_DAMAGE,
+        // Les mods du personnage ne touchent pas ses minions.
+        GenreCompetence::MinionAttaque | GenreCompetence::MinionSort => {
+            return vec![stats::MINION_DAMAGE.to_string()];
+        }
     };
-    let mut v = vec![stats::DAMAGE.to_string(), propre.to_string()];
+    let mut v = vec![
+        stats::DAMAGE.to_string(),
+        stats::HIT_DAMAGE.to_string(),
+        propre.to_string(),
+    ];
     if t.est_elementaire() {
         v.push(stats::ELEMENTAL_DAMAGE.to_string());
     }
@@ -67,6 +78,10 @@ fn degats_avant_conversion(
     let (smin, smax) = match comp.genre {
         GenreCompetence::Sort => (t.stat_ajoutes_min(), t.stat_ajoutes_max()),
         GenreCompetence::Attaque => (t.stat_ajoutes_attaque_min(), t.stat_ajoutes_attaque_max()),
+        // Aucun dégât ajouté du personnage pour ses minions.
+        GenreCompetence::MinionAttaque | GenreCompetence::MinionSort => {
+            (String::new(), String::new())
+        }
     };
     let amin = db.somme(TypeModificateur::Added, &[smin.as_str()]);
     let amax = db.somme(TypeModificateur::Added, &[smax.as_str()]);
@@ -326,7 +341,11 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
             traces_avant.insert(t, tr);
         }
     }
-    let (conv2, gains2, contrib2) = etape_equipement(db);
+    let (conv2, gains2, contrib2) = if comp.genre.est_minion() {
+        Default::default()
+    } else {
+        etape_equipement(db)
+    };
     let gains1 = gains_competence(comp);
     let sans_conversion =
         comp.conversion.is_empty() && gains1.is_empty() && conv2.is_empty() && gains2.is_empty();
@@ -396,6 +415,11 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
             &[stats::CRITICAL_DAMAGE_BONUS],
             "critique de base de l'arme",
         ),
+        GenreCompetence::MinionAttaque | GenreCompetence::MinionSort => (
+            &[stats::MINION_CRITICAL_HIT_CHANCE],
+            &[stats::MINION_CRITICAL_DAMAGE_BONUS],
+            "critique de base des minions (supposé)",
+        ),
     };
     let chance = db.evaluer(
         "chance de critique (brute)",
@@ -429,6 +453,8 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
     let s = [match comp.genre {
         GenreCompetence::Sort => stats::CAST_SPEED,
         GenreCompetence::Attaque => stats::ATTACK_SPEED,
+        GenreCompetence::MinionAttaque => stats::MINION_ATTACK_SPEED,
+        GenreCompetence::MinionSort => stats::MINION_CAST_SPEED,
     }];
     let s: &[&str] = if comp.cadence_fixe { &[] } else { &s };
     let t_inc = db.trace_increased("increased", s);
@@ -447,17 +473,31 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
     let t_cadence_affichee = Trace::feuille("incantations par seconde (panneau)", cadence_affichee)
         .avec_formule(format!("arrondi à 2 décimales de {}", nombre(cadence)))
         .avec_enfant(incantations_par_seconde.clone());
-    let dps = Trace::feuille(
+    let dps_coups = net * mult_crit * cadence_affichee;
+    let dps_dot = dps_dot(db, comp, cible);
+    let mut dps = Trace::feuille(
         format!("DPS de {}", comp.nom),
-        net * mult_crit * cadence_affichee,
+        dps_coups + dps_dot.as_ref().map_or(0.0, |t| t.valeur),
     )
-    .avec_formule(format!(
-        "{} × {} × {}",
-        nombre(net),
-        nombre(mult_crit),
-        nombre(cadence_affichee)
-    ))
+    .avec_formule(match &dps_dot {
+        None => format!(
+            "{} × {} × {}",
+            nombre(net),
+            nombre(mult_crit),
+            nombre(cadence_affichee)
+        ),
+        Some(d) => format!(
+            "{} × {} × {} + {} (dégâts dans le temps)",
+            nombre(net),
+            nombre(mult_crit),
+            nombre(cadence_affichee),
+            nombre(d.valeur)
+        ),
+    })
     .avec_enfants([coup_moyen.clone(), t_crit, t_cadence_affichee]);
+    if let Some(d) = &dps_dot {
+        dps = dps.avec_enfant(d.clone());
+    }
 
     Offense {
         par_type_brut,
@@ -468,5 +508,59 @@ pub fn calculer(db: &ModDb, comp: &Competence, cible: &Cible) -> Offense {
         chance_critique,
         bonus_critique,
         incantations_par_seconde,
+        dps_dot,
     }
+}
+
+/// Dégâts dans le temps de la compétence, par seconde, sur la cible (fiche
+/// « dégâts dans le temps », supposé) : base × increased × more des stats
+/// `damage`, `damage_over_time`, du type (et `spell_damage` si la compétence
+/// le permet), × (1 − résistance). Ni critique, ni pénétration, ni armure ;
+/// un seul effet actif à la fois.
+fn dps_dot(db: &ModDb, comp: &Competence, cible: &Cible) -> Option<Trace> {
+    if comp.dot.is_empty() {
+        return None;
+    }
+    let mut total = 0.0;
+    let mut enfants = Vec::new();
+    for (t, base) in &comp.dot {
+        let mut s = vec![
+            stats::DAMAGE.to_string(),
+            stats::DAMAGE_OVER_TIME.to_string(),
+            t.stat_degats(),
+            t.stat_degats_dot(),
+        ];
+        if t.est_elementaire() {
+            s.push(stats::ELEMENTAL_DAMAGE.to_string());
+        }
+        if comp.dot_sort {
+            s.push(stats::SPELL_DAMAGE.to_string());
+        }
+        let s = refs(&s);
+        let t_inc = db.trace_increased("increased", &s);
+        let t_more = db.trace_more("more", &s);
+        let res = if *t == TypeDegats::Physique {
+            0.0
+        } else {
+            cible.resistances.get(t).copied().unwrap_or(0.0)
+        };
+        let v = base * t_inc.valeur * t_more.valeur * (1.0 - res / 100.0);
+        total += v;
+        enfants.push(
+            Trace::feuille(format!("dégâts {} dans le temps par seconde", t.nom()), v)
+                .avec_formule(format!(
+                    "{} × {} × {} × (1 − {}%)",
+                    nombre(*base),
+                    nombre(t_inc.valeur),
+                    nombre(t_more.valeur),
+                    nombre(res)
+                ))
+                .avec_enfants([t_inc, t_more]),
+        );
+    }
+    Some(
+        Trace::feuille("DPS des dégâts dans le temps", total)
+            .avec_formule("Σ par type, un seul effet actif à la fois (supposé)")
+            .avec_enfants(enfants),
+    )
 }

@@ -68,7 +68,7 @@ export function CharacterCard() {
           </p>
           {!info.skillSupported && (
             <p className="text-xs text-signal-loss">
-              Augur ne calcule encore que les sorts à impact et les attaques : le gain de DPS ne sera pas affiché pour cette
+              Augur ne calcule que les compétences qui infligent des dégâts (sorts, attaques, minions) : le gain de DPS ne sera pas affiché pour cette
               compétence.
             </p>
           )}

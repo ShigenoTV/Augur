@@ -189,7 +189,7 @@ mod tests {
         pob::lire_xml(&xml).unwrap()
     }
 
-    const ORB: &str = r#"<Skill enabled="true"><Gem nameSpec="Summon Infernal Hound" skillId="SummonInfernalHoundPlayer" level="20"/></Skill>"#;
+    const ORB: &str = r#"<Skill enabled="true"><Gem nameSpec="Herald of Ash" skillId="HeraldOfAshPlayer" level="20"/></Skill>"#;
     const ARC: &str = r#"<Skill enabled="true"><Gem nameSpec="Arc" skillId="ArcPlayer" level="21" quality="20"/><Gem nameSpec="Zenith II" skillId="SupportZenithPlayerTwo"/></Skill>"#;
 
     #[test]
@@ -208,7 +208,7 @@ mod tests {
     fn garde_la_principale_si_aucun_archetype() {
         let b = build(ORB, 1);
         let info = describe(&b, "t".into());
-        assert_eq!(info.skill.as_ref().unwrap().name, "Summon Infernal Hound");
+        assert_eq!(info.skill.as_ref().unwrap().name, "Herald of Ash");
         assert!(!info.skill_supported);
     }
 }

@@ -2,9 +2,9 @@
 //! importé de Path of Building : « que m'apporte cet objet ? ».
 //!
 //! Le personnage est reconstruit pour le moteur à partir du build PoB :
-//! gemme active (tout sort à impact des données RePoE, au niveau effectif ;
-//! Lightning Bolt et Arc sont vérifiés en jeu, les autres suivent la formule
-//! générique d'un sort qui touche),
+//! gemme active (sorts, attaques et minions des données RePoE, au niveau
+//! effectif ; Lightning Bolt et Arc sont vérifiés en jeu, les autres suivent
+//! une formule générique, dégâts dans le temps compris),
 //! supports, mods des objets équipés et passifs alloués, chaque ligne de
 //! texte passant par [`traduction`]. On calcule le DPS avec l'équipement
 //! actuel, puis avec l'objet copié à la place de celui de son emplacement.
@@ -37,7 +37,7 @@ pub enum ErreurComparaison {
     #[error("aucune compétence active dans le build")]
     AucuneCompetence,
     #[error(
-        "Augur ne calcule pas encore le DPS de {0} (seulement les sorts à impact et les attaques)"
+        "Augur ne calcule pas encore le DPS de {0} (seulement les sorts, les attaques et les minions qui infligent des dégâts)"
     )]
     CompetenceNonSupportee(String),
     #[error("objet non comparé : {0}")]
@@ -65,6 +65,12 @@ pub struct Rapport {
     pub formule_generique: bool,
     /// Sort déclenché : cadence supposée (temps de recharge, sinon 1 par seconde).
     pub cadence_supposee: Option<f64>,
+    /// Gemme de minions : DPS relatif (dégâts d'un minion allié à son niveau).
+    pub minion_relatif: bool,
+    /// La compétence a des dégâts dans le temps (un seul effet actif supposé).
+    pub dot_suppose: bool,
+    /// Deux armes : les attaques alternent entre les mains (supposé).
+    pub double_arme: bool,
 }
 
 impl Rapport {
@@ -77,6 +83,9 @@ impl Rapport {
             && !self.arbre_autre_version
             && !self.formule_generique
             && self.cadence_supposee.is_none()
+            && !self.minion_relatif
+            && !self.dot_suppose
+            && !self.double_arme
     }
 }
 
@@ -136,8 +145,11 @@ pub fn emplacements(classe: &str) -> Option<(&'static [&'static str], &'static [
     const W1: &[&str] = &["Weapon 1"];
     const W2: &[&str] = &["Weapon 2"];
     Some(match classe {
-        "Wands" | "Daggers" | "Claws" | "Spears" | "Flails" | "One Hand Maces"
-        | "One Hand Swords" | "One Hand Axes" => (W1, &[]),
+        "Wands" => (W1, &[]),
+        // Une arme à une main peut aussi remplacer celle de la main gauche
+        // quand le build en tient deux (voir `tient_deux_armes`).
+        "Daggers" | "Claws" | "Spears" | "Flails" | "One Hand Maces" | "One Hand Swords"
+        | "One Hand Axes" => (&["Weapon 1", "Weapon 2"], &[]),
         // Un sceptre se tient dans l'une ou l'autre main, à côté d'une baguette
         // par exemple (règle de Path of Building) : il n'apporte souvent que de
         // l'Esprit et ne doit pas être comparé qu'à l'arme qui porte le DPS.
@@ -178,6 +190,20 @@ fn main_gauche_libre(build: &BuildPob) -> bool {
         .filter(|b| b.tags.iter().any(|t| t == "twohand"))
         // Les objets magiques portent leurs affixes autour du nom de base.
         .any(|b| noms.iter().any(|n| n.contains(b.nom.as_str())))
+}
+
+/// Le build tient-il une arme (connue des données) dans chaque main ?
+fn tient_deux_armes(build: &BuildPob) -> bool {
+    let donnees = donnees::gemmes();
+    ["Weapon 1", "Weapon 2"].iter().all(|e| {
+        build.objet(e).is_some_and(|o| {
+            o.base
+                .as_deref()
+                .or(o.nom.as_deref())
+                .and_then(|b| donnees.base_arme(b))
+                .is_some()
+        })
+    })
 }
 
 /// Emplacements qui comptent pour le personnage : ni set d'armes de
@@ -233,8 +259,13 @@ fn modeliser(
         .get(&gemme.skill_id)
         .ok_or_else(|| ErreurComparaison::CompetenceNonSupportee(gemme.nom.clone()))?;
     let mut acc = Accumulateur::default();
-    // Arme de la main droite : ses dégâts portent les attaques.
-    let mut arme_principale: Option<arme::Arme> = None;
+    // Armes des deux mains : leurs dégâts portent les attaques.
+    let mut armes: [Option<arme::Arme>; 2] = [None, None];
+    let main = |e: &str| match e {
+        "Weapon 1" => Some(0),
+        "Weapon 2" => Some(1),
+        _ => None,
+    };
 
     for o in build
         .objets
@@ -252,15 +283,13 @@ fn modeliser(
             .as_deref()
             .or(o.nom.as_deref())
             .and_then(|b| donnees.base_arme(b));
-        if let Some((nom_base, b)) = base {
-            if o.emplacement == "Weapon 1" {
-                arme_principale = Some(arme::construire(
-                    nom_base,
-                    b,
-                    arme::qualite(&o.texte),
-                    lignes.iter().copied(),
-                ));
-            }
+        if let (Some((nom_base, b)), Some(i)) = (base, main(&o.emplacement)) {
+            armes[i] = Some(arme::construire(
+                nom_base,
+                b,
+                arme::qualite(&o.texte),
+                lignes.iter().copied(),
+            ));
         }
         for l in lignes {
             if base.is_some() && arme::local(l).is_some() {
@@ -275,8 +304,8 @@ fn modeliser(
         let source = format!("{} (objet comparé)", c.nom);
         let base = c.base.or(Some(c.nom)).and_then(|b| donnees.base_arme(b));
         if let Some((nom_base, b)) = base {
-            if retires.contains(&"Weapon 1") {
-                arme_principale = Some(arme::construire(
+            if let Some(i) = retires.iter().find_map(|e| main(e)) {
+                armes[i] = Some(arme::construire(
                     nom_base,
                     b,
                     c.qualite.unwrap_or(0.0),
@@ -341,15 +370,56 @@ fn modeliser(
 
     rapport.formule_generique = !active.verifiee;
     rapport.cadence_supposee = active.declenche.then_some(active.temps_incantation);
-    let niveau_voulu = gemme.niveau as i32 + acc.niveaux.pour_sort(&active.elements());
+    rapport.minion_relatif = active.est_minion();
+    let bonus = if active.est_minion() {
+        acc.niveaux.pour_minion()
+    } else {
+        acc.niveaux.pour_sort(&active.elements())
+    };
+    let niveau_voulu = gemme.niveau as i32 + bonus;
     let (niveau, data) = active
         .niveau(niveau_voulu)
         .ok_or_else(|| ErreurComparaison::Calcul(format!("{} sans données", active.nom)))?;
     let nom = format!("{} (niveau {niveau})", active.nom);
-    let competence = if active.est_attaque() {
-        let a = arme_principale.ok_or_else(|| {
-            ErreurComparaison::CompetenceNonSupportee(format!("{} (sans arme reconnue)", gemme.nom))
-        })?;
+    let dot = data.dot();
+    rapport.dot_suppose = !dot.is_empty();
+    let competence = if active.est_minion() {
+        Competence {
+            nom: format!("{} (minions, niveau {})", active.nom, (2 * niveau).min(100)),
+            genre: if active.genre.as_deref() == Some("minion_sort") {
+                GenreCompetence::MinionSort
+            } else {
+                GenreCompetence::MinionAttaque
+            },
+            temps_incantation: active.temps_incantation,
+            critique_base: active.critique_base,
+            efficacite_degats_ajoutes: 100.0,
+            degats: data.degats(),
+            conversion: Default::default(),
+            gain: Default::default(),
+            chaines_base: None,
+            qualite: gemme.qualite as f64,
+            chaines_par_qualite: 0.0,
+            infusion: None,
+            cadence_fixe: false,
+            dot: Default::default(),
+            dot_sort: false,
+        }
+    } else if active.est_attaque() {
+        // La main droite d'abord ; avec deux armes, les attaques alternent.
+        let a = match armes {
+            [Some(a), Some(b)] => {
+                rapport.double_arme = true;
+                arme::double(&a, &b)
+            }
+            [Some(a), None] => a,
+            _ => {
+                return Err(ErreurComparaison::CompetenceNonSupportee(format!(
+                    "{} (sans arme reconnue)",
+                    gemme.nom
+                )));
+            }
+        };
         let mult = data.multiplicateur.unwrap_or(100.0);
         Competence {
             nom,
@@ -369,6 +439,8 @@ fn modeliser(
             chaines_par_qualite: 0.0,
             infusion: None,
             cadence_fixe: false,
+            dot,
+            dot_sort: active.dot_sort,
         }
     } else {
         Competence {
@@ -385,6 +457,8 @@ fn modeliser(
             chaines_par_qualite: active.chaines_par_qualite,
             infusion: active.infusion.clone(),
             cadence_fixe: active.declenche,
+            dot,
+            dot_sort: active.dot_sort,
         }
     };
     Ok((
@@ -455,6 +529,9 @@ pub fn comparer_objet(
     let mut meilleur: Option<Comparaison> = None;
     for emplacement in choix {
         if *emplacement == "Weapon 2" && classe == "Sceptres" && !main_gauche_libre(build) {
+            continue;
+        }
+        if *emplacement == "Weapon 2" && classe != "Sceptres" && !tient_deux_armes(build) {
             continue;
         }
         let mut retires = vec![*emplacement];
@@ -806,6 +883,114 @@ Adds 10 to 20 Physical Damage
     }
 
     #[test]
+    fn sort_de_degats_dans_le_temps() {
+        let b = build_sort("Contagion", "ContagionPlayer", "");
+        let base = donnees::gemmes().actives["ContagionPlayer"]
+            .niveau(20)
+            .unwrap()
+            .1
+            .dot()[&crate::calc::TypeDegats::Chaos];
+        let avec = |l: &str| comparer(&b, "Amulets", "X", &lignes(&[l])).unwrap();
+        let c = avec("30% increased Cast Speed");
+        // Un seul effet actif : la vitesse d'incantation n'y change rien.
+        assert!((c.dps_avant - base).abs() < 1e-9, "{c:?}");
+        assert!((c.dps_apres - base).abs() < 1e-9);
+        assert!(c.rapport.dot_suppose && !c.rapport.complet());
+        let c = avec("40% increased Chaos Damage over Time");
+        assert!((c.dps_apres / c.dps_avant - 1.4).abs() < 1e-9);
+        // Contagion profite des mods de dégâts des sorts.
+        let c = avec("20% increased Spell Damage");
+        assert!((c.dps_apres / c.dps_avant - 1.2).abs() < 1e-9);
+    }
+
+    #[test]
+    fn coup_et_degats_dans_le_temps_s_additionnent() {
+        let b = build_sort("Essence Drain", "EssenceDrainPlayer", "");
+        let ed = donnees::gemmes().actives["EssenceDrainPlayer"]
+            .niveau(20)
+            .unwrap()
+            .1
+            .clone();
+        assert!(!ed.degats().is_empty() && !ed.dot().is_empty());
+        let c = comparer(&b, "Amulets", "X", &lignes(&["30% increased Cast Speed"])).unwrap();
+        // Seule la part des coups profite de la vitesse.
+        assert!(
+            c.dps_apres > c.dps_avant && c.dps_apres < c.dps_avant * 1.3,
+            "{c:?}"
+        );
+    }
+
+    #[test]
+    fn minions_par_leurs_seuls_mods() {
+        let b = build_sort("Raise Zombie", "RaiseZombiePlayer", "");
+        let avec = |l: &str| comparer(&b, "Amulets", "X", &lignes(&[l])).unwrap();
+        let c = avec("Minions deal 50% increased Damage");
+        // Minion de niveau 40 (gemme 20) : dégâts d'un allié de ce niveau,
+        // critique de base 5 %, une action par seconde.
+        let n40 = donnees::gemmes().actives["RaiseZombiePlayer"]
+            .niveau(20)
+            .unwrap()
+            .1
+            .degats()[&crate::calc::TypeDegats::Physique][0];
+        assert!((c.dps_avant - n40 * 1.05).abs() < 1e-6, "{c:?}");
+        assert!((c.dps_apres / c.dps_avant - 1.5).abs() < 1e-9);
+        assert!(c.rapport.minion_relatif && !c.rapport.complet());
+        // Les mods du personnage ne touchent pas ses minions.
+        let c = avec("50% increased Spell Damage");
+        assert_eq!(c.dps_apres, c.dps_avant);
+        let c = avec("Minions have 20% increased Attack Speed");
+        assert!((c.dps_apres / c.dps_avant - 1.2).abs() < 1e-9);
+        let c = avec("+2 to Level of all Minion Skills");
+        assert_eq!(c.niveau_apres, 22);
+        assert!(c.dps_apres > c.dps_avant * 1.2);
+    }
+
+    #[test]
+    fn deux_armes_et_main_gauche() {
+        let objets = r#"<Item id="1">Rarity: RARE
+Gloom Edge
+Cinquedea
+Implicits: 0
+Adds 20 to 40 Physical Damage
+</Item>
+<Item id="2">Rarity: NORMAL
+Arcane Dirk
+</Item>
+<ItemSet id="1"><Slot name="Weapon 1" itemId="1"/><Slot name="Weapon 2" itemId="2"/></ItemSet>"#;
+        let b = build_sort("Lightning Arrow", "LightningArrowPlayer", objets);
+        let neuve = lignes(&["Adds 30 to 60 Physical Damage"]);
+        let c = comparer_objet(
+            &b,
+            &ObjetCompare {
+                classe: "Daggers",
+                nom: "Doom Fang",
+                base: Some("Cinquedea"),
+                qualite: None,
+                lignes: &neuve,
+            },
+        )
+        .unwrap();
+        // L'arme neuve rapporte plus à la place de la plus faible, à gauche.
+        assert_eq!(c.emplacement, "Weapon 2");
+        assert!(c.dps_apres > c.dps_avant, "{c:?}");
+        assert!(c.rapport.double_arme);
+        // Une seule arme : la main gauche n'est pas proposée.
+        let seule = build_sort("Lightning Arrow", "LightningArrowPlayer", ARC_BOW);
+        let c = comparer_objet(
+            &seule,
+            &ObjetCompare {
+                classe: "Daggers",
+                nom: "Doom Fang",
+                base: Some("Cinquedea"),
+                qualite: None,
+                lignes: &neuve,
+            },
+        )
+        .unwrap();
+        assert_eq!(c.emplacement, "Weapon 1");
+    }
+
+    #[test]
     fn refuse_les_cas_non_couverts() {
         let b = build(BAGUETTE, "", "");
         assert!(matches!(
@@ -814,13 +999,13 @@ Adds 10 to 20 Physical Damage
         ));
         let orb = pob::lire_xml(
             r#"<PathOfBuilding2><Build level="1" className="Witch" mainSocketGroup="1"/>
-<Skills activeSkillSet="1"><SkillSet id="1"><Skill enabled="true"><Gem nameSpec="Raise Zombie" skillId="RaiseZombiePlayer" level="20"/></Skill></SkillSet></Skills></PathOfBuilding2>"#,
+<Skills activeSkillSet="1"><SkillSet id="1"><Skill enabled="true"><Gem nameSpec="Herald of Ash" skillId="HeraldOfAshPlayer" level="20"/></Skill></SkillSet></Skills></PathOfBuilding2>"#,
         )
         .unwrap();
         assert_eq!(
             comparer(&orb, "Wands", "X", &[]),
             Err(ErreurComparaison::CompetenceNonSupportee(
-                "Raise Zombie".into()
+                "Herald of Ash".into()
             ))
         );
     }

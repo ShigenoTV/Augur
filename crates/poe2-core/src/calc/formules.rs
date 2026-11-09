@@ -239,6 +239,8 @@ fn competence(nom: &str) -> Competence {
         qualite: 0.0,
         chaines_par_qualite: 0.0,
         cadence_fixe: false,
+        dot: Default::default(),
+        dot_sort: false,
         infusion: None,
     }
 }
