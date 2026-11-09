@@ -22,14 +22,34 @@ pub struct Niveaux {
     pub toutes: i32,
     /// « +N to Level of all Spell Skills ».
     pub sorts: i32,
-    /// « +N to Level of all Lightning Spell Skills » (et « Lightning Skills »).
-    pub foudre: i32,
+    /// « +N to Level of all Elemental Spell Skills » : feu, froid, foudre.
+    pub elementaires: i32,
+    /// « +N to Level of all Fire Spell Skills » (et « Fire Skills »…), par
+    /// type dans l'ordre de [`TypeDegats::TOUS`].
+    pub par_type: [i32; 5],
 }
 
 impl Niveaux {
-    /// Niveaux gagnés par un sort de foudre.
-    pub fn pour_sort_de_foudre(&self) -> i32 {
-        self.toutes + self.sorts + self.foudre
+    /// Niveaux gagnés par un sort portant ces tags d'élément. Un sort à
+    /// plusieurs éléments (Comet : feu et froid) profite du meilleur bonus
+    /// propre à un élément, pas de leur somme.
+    pub fn pour_sort(&self, elements: &[TypeDegats]) -> i32 {
+        let elementaire = elements.iter().any(|t| t.est_elementaire());
+        let propre = elements
+            .iter()
+            .map(|t| self.par_type[t.index()])
+            .max()
+            .unwrap_or(0);
+        self.toutes + self.sorts + if elementaire { self.elementaires } else { 0 } + propre
+    }
+
+    pub fn ajouter(&mut self, autre: &Niveaux) {
+        self.toutes += autre.toutes;
+        self.sorts += autre.sorts;
+        self.elementaires += autre.elementaires;
+        for (a, b) in self.par_type.iter_mut().zip(autre.par_type) {
+            *a += b;
+        }
     }
 }
 
@@ -119,9 +139,9 @@ fn motifs() -> &'static Motifs {
         let r = |s: String| Regex::new(&s).unwrap();
         Motifs {
             degats: r(format!(
-                r"^{n}% (increased|reduced) (?:(Spell|Elemental|Lightning|Fire|Cold|Chaos|Physical) )?Damage$"
+                r"^{n}% (increased|reduced) (?:(Spell|Attack|Elemental|Lightning|Fire|Cold|Chaos|Physical) )?Damage$"
             )),
-            vitesse: r(format!(r"^{n}% (increased|reduced) Cast Speed$")),
+            vitesse: r(format!(r"^{n}% (increased|reduced) (Cast|Attack) Speed$")),
             critique: r(format!(
                 r"^{n}% (increased|reduced) Critical Hit Chance( for Spells)?$"
             )),
@@ -129,23 +149,23 @@ fn motifs() -> &'static Motifs {
                 r"^{n}% (increased|reduced) Critical (Spell )?Damage Bonus( for Spells)?$"
             )),
             ajoutes: r(format!(
-                r"^Adds {n} to {n} (Physical|Fire|Cold|Lightning|Chaos) Damage to Spells$"
+                r"^Adds {n} to {n} (Physical|Fire|Cold|Lightning|Chaos) Damage to (Spells|Attacks)$"
             )),
             gain: r(format!(
-                r"^Gain {n}% of (?:(Physical|Fire|Cold|Lightning|Chaos|Elemental) )?Damage as Extra (Physical|Fire|Cold|Lightning|Chaos) Damage$"
+                r"^(?:Supported Skills )?Gain {n}% of (?:(Physical|Fire|Cold|Lightning|Chaos|Elemental) )?Damage as [Ee]xtra (Physical|Fire|Cold|Lightning|Chaos) Damage$"
             )),
             niveaux: r(
-                r"^\+(\d+) to Level of all (Spell |Lightning Spell |Lightning |Elemental Spell |)Skills$"
+                r"^\+(\d+) to Level of all (Spell |Elemental Spell |(?:(Physical|Fire|Cold|Lightning|Chaos) (?:Spell )?)|)Skills$"
                     .to_string(),
             ),
             penetration: r(format!(
                 r"^Damage Penetrates {n}% (Fire|Cold|Lightning|Chaos) Resistance$"
             )),
             support_degats: r(format!(
-                r"^Supported (?:Spells|Skills) deal {n}% (more|less|increased|reduced) (?:(Spell|Elemental|Lightning) )?Damage( while you are above (\d+)% of your Maximum Mana)?$"
+                r"^Supported (?:Spells|Skills) deal {n}% (more|less|increased|reduced) (?:(Spell|Elemental|Physical|Fire|Cold|Lightning|Chaos) )?[Dd]amage(?: with Hits)?( while you are above (\d+)% of your Maximum Mana)?$"
             )),
             support_stat: r(format!(
-                r"^Supported (?:Spells|Skills) have {n}% (more|less|increased|reduced) (Cast Speed|Critical Hit Chance|Critical Damage Bonus)$"
+                r"^Supported (?:Spells|Skills) have {n}% (more|less|increased|reduced) (Cast Speed|Attack Speed|Critical Hit Chance|Critical Damage Bonus)$"
             )),
             pertinent: r(
                 r"(?i)damage|critical|cast speed|level of all|spell".to_string(),
@@ -176,6 +196,7 @@ pub fn traduire(ligne: &str, source: &str) -> Traduction {
         let stat = match c.get(3).map(|x| x.as_str()) {
             None => stats::DAMAGE.to_string(),
             Some("Spell") => stats::SPELL_DAMAGE.to_string(),
+            Some("Attack") => stats::ATTACK_DAMAGE.to_string(),
             Some("Elemental") => stats::ELEMENTAL_DAMAGE.to_string(),
             Some(t) => type_degats(t)
                 .map(TypeDegats::stat_degats)
@@ -189,8 +210,13 @@ pub fn traduire(ligne: &str, source: &str) -> Traduction {
         )]);
     }
     if let Some(c) = m.vitesse.captures(&l) {
+        let stat = if &c[3] == "Attack" {
+            stats::ATTACK_SPEED
+        } else {
+            stats::CAST_SPEED
+        };
         return mods(vec![Modificateur::new(
-            stats::CAST_SPEED,
+            stat,
             TypeModificateur::Increased,
             nombre(&c[1]) * signe(&c[2]),
             source,
@@ -226,19 +252,14 @@ pub fn traduire(ligne: &str, source: &str) -> Traduction {
         let Some(t) = type_degats(&c[3]) else {
             return Traduction::NonTraduite;
         };
+        let (smin, smax) = if &c[4] == "Attacks" {
+            (t.stat_ajoutes_attaque_min(), t.stat_ajoutes_attaque_max())
+        } else {
+            (t.stat_ajoutes_min(), t.stat_ajoutes_max())
+        };
         return mods(vec![
-            Modificateur::new(
-                t.stat_ajoutes_min(),
-                TypeModificateur::Added,
-                nombre(&c[1]),
-                source,
-            ),
-            Modificateur::new(
-                t.stat_ajoutes_max(),
-                TypeModificateur::Added,
-                nombre(&c[2]),
-                source,
-            ),
+            Modificateur::new(smin, TypeModificateur::Added, nombre(&c[1]), source),
+            Modificateur::new(smax, TypeModificateur::Added, nombre(&c[2]), source),
         ]);
     }
     if let Some(c) = m.gain.captures(&l) {
@@ -264,12 +285,11 @@ pub fn traduire(ligne: &str, source: &str) -> Traduction {
     if let Some(c) = m.niveaux.captures(&l) {
         let n: i32 = c[1].parse().unwrap_or(0);
         let mut niv = Niveaux::default();
-        match &c[2] {
-            "" => niv.toutes = n,
-            "Spell " => niv.sorts = n,
-            "Lightning Spell " | "Lightning " => niv.foudre = n,
-            // Sorts élémentaires : la foudre en fait partie.
-            "Elemental Spell " => niv.foudre = n,
+        match (&c[2], c.get(3).and_then(|t| type_degats(t.as_str()))) {
+            ("", _) => niv.toutes = n,
+            ("Spell ", _) => niv.sorts = n,
+            ("Elemental Spell ", _) => niv.elementaires = n,
+            (_, Some(t)) => niv.par_type[t.index()] = n,
             _ => return Traduction::NonTraduite,
         }
         return Traduction::Niveaux(niv);
@@ -303,6 +323,7 @@ pub fn traduire(ligne: &str, source: &str) -> Traduction {
     if let Some(c) = m.support_stat.captures(&l) {
         let stat = match &c[3] {
             "Cast Speed" => stats::CAST_SPEED,
+            "Attack Speed" => stats::ATTACK_SPEED,
             "Critical Hit Chance" => stats::CRITICAL_HIT_CHANCE,
             _ => stats::CRITICAL_DAMAGE_BONUS,
         };
@@ -420,7 +441,7 @@ mod tests {
     #[test]
     fn traduit_les_niveaux() {
         let niv = |l: &str| match traduire(l, "t") {
-            Traduction::Niveaux(n) => n.pour_sort_de_foudre(),
+            Traduction::Niveaux(n) => n.pour_sort(&[TypeDegats::Foudre]),
             autre => panic!("{autre:?}"),
         };
         assert_eq!(niv("+1 to Level of all Spell Skills"), 1);
@@ -431,10 +452,14 @@ mod tests {
             traduire("+2 to Level of all Minion Skills", "t"),
             Traduction::SansEffet
         );
-        assert_eq!(
-            traduire("+2 to Level of all Cold Spell Skills", "t"),
-            Traduction::NonTraduite
-        );
+        let froid = match traduire("+2 to Level of all Cold Spell Skills", "t") {
+            Traduction::Niveaux(n) => n,
+            autre => panic!("{autre:?}"),
+        };
+        assert_eq!(froid.pour_sort(&[TypeDegats::Foudre]), 0);
+        assert_eq!(froid.pour_sort(&[TypeDegats::Froid]), 2);
+        assert_eq!(froid.pour_sort(&[TypeDegats::Feu, TypeDegats::Froid]), 2);
+        assert_eq!(niv("+2 to Level of all Elemental Spell Skills"), 2);
     }
 
     #[test]
@@ -459,13 +484,32 @@ mod tests {
     }
 
     #[test]
+    fn traduit_les_mods_d_attaque() {
+        let un = |l: &str| match traduire(l, "t") {
+            Traduction::Mods(v) => v,
+            autre => panic!("{l} : {autre:?}"),
+        };
+        assert_eq!(
+            un("10% increased Attack Damage")[0].stat,
+            stats::ATTACK_DAMAGE
+        );
+        assert_eq!(
+            un("12% increased Attack Speed")[0].stat,
+            stats::ATTACK_SPEED
+        );
+        let a = un("Adds 3 to 6 Fire Damage to Attacks");
+        assert_eq!(a[0].stat, TypeDegats::Feu.stat_ajoutes_attaque_min());
+        let s = un("Adds 3 to 6 Fire Damage to Spells");
+        assert_eq!(s[0].stat, TypeDegats::Feu.stat_ajoutes_min());
+    }
+
+    #[test]
     fn classe_le_reste() {
         for l in [
             "+119 to maximum Life",
             "+42% to Fire Resistance",
             "35% increased Movement Speed",
             "Minions deal 10% increased Damage",
-            "10% increased Attack Damage",
             "Rarity: RARE",
             "Item Level: 82",
             "Grants Skill: Level 18 Spellslinger",
@@ -482,5 +526,25 @@ mod tests {
         ] {
             assert_eq!(traduire(l, "t"), Traduction::NonTraduite, "{l}");
         }
+    }
+
+    #[test]
+    fn traduit_les_effets_de_supports_courants() {
+        let un = |l: &str| match traduire(l, "t") {
+            Traduction::Mods(v) if v.len() == 1 => v[0].clone(),
+            autre => panic!("{l} : {autre:?}"),
+        };
+        let m = un("Supported Skills deal 25% less Damage with Hits");
+        assert_eq!((m.stat.as_str(), m.valeur), (stats::DAMAGE, -25.0));
+        assert_eq!(m.kind, TypeModificateur::More);
+        let m = un("Supported Skills deal 30% more Physical Damage");
+        assert_eq!(m.stat, TypeDegats::Physique.stat_degats());
+        let m = un("Supported Skills Gain 10% of Damage as extra Chaos Damage");
+        assert_eq!(m.stat, stats::stat_gain_tous(TypeDegats::Chaos));
+        let m = un("Supported Skills Gain 15% of Cold Damage as Extra Chaos Damage");
+        assert_eq!(
+            m.stat,
+            stats::stat_gain(TypeDegats::Froid, TypeDegats::Chaos)
+        );
     }
 }

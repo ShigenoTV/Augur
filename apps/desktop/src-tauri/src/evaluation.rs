@@ -70,6 +70,25 @@ fn unsupported(slot: &str, ms: u32) -> ItemDelta {
 pub fn to_delta(c: &Comparaison, ms: u32) -> ItemDelta {
     let r = &c.rapport;
     let mut mechanics = vec![note("formules-supposees")];
+    if r.formule_generique {
+        mechanics.push(note_avec(
+            "formule-generique",
+            vec![format!(
+                "{} : dégâts de base (ou de l'arme), vitesse et critique du jeu ; ses effets propres (projectiles, zones, chaînes, conditions) ne sont pas comptés",
+                c.competence
+            )],
+        ));
+    }
+    if let Some(t) = r.cadence_supposee {
+        mechanics.push(note_avec(
+            "cadence-declenchement",
+            vec![format!(
+                "{} est déclenché : cadence supposée d'un déclenchement toutes les {} s (temps de recharge du jeu, sinon 1 par seconde). Le DPS affiché en dépend, mais l'écart en % entre les deux objets reste juste",
+                c.competence,
+                format!("{t}").replace('.', ",")
+            )],
+        ));
+    }
     if !r.mods_candidat_non_traduits.is_empty() {
         mechanics.push(note_avec(
             "mods-objet-non-traduits",
@@ -143,7 +162,16 @@ pub fn evaluate(
     let debut = Instant::now();
     let nom = item.name.as_deref().unwrap_or(&item.base_type);
     let lignes: Vec<String> = item.mods.iter().map(|m| m.text.clone()).collect();
-    let resultat = comparaison::comparer(build, &item.item_class, nom, &lignes);
+    let resultat = comparaison::comparer_objet(
+        build,
+        &comparaison::ObjetCompare {
+            classe: &item.item_class,
+            nom,
+            base: Some(&item.base_type),
+            qualite: item.quality.map(f64::from),
+            lignes: &lignes,
+        },
+    );
     let ms = u32::try_from(debut.elapsed().as_millis()).unwrap_or(u32::MAX);
     match resultat {
         Ok(c) => Ok(to_delta(&c, ms)),
@@ -254,8 +282,21 @@ Implicits: 0
     }
 
     #[test]
-    fn archetype_non_couvert() {
+    fn sort_generique_approximatif() {
         let b = build(r#"<Gem nameSpec="Fireball" skillId="FireballPlayer" level="20"/>"#);
+        let d = evaluate(Some(&b), &baguette()).unwrap();
+        assert_eq!(d.support, SupportLevel::Approximate);
+        assert!(
+            d.mechanics
+                .iter()
+                .any(|n| n.mechanic == "formule-generique")
+        );
+    }
+
+    #[test]
+    fn archetype_non_couvert() {
+        let b =
+            build(r#"<Gem nameSpec="Lightning Arrow" skillId="LightningArrowPlayer" level="20"/>"#);
         let d = evaluate(Some(&b), &baguette()).unwrap();
         assert_eq!(d.support, SupportLevel::Unsupported);
         assert_eq!(d.slot, "weapon1");

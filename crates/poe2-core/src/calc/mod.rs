@@ -41,6 +41,9 @@ pub use trace::{Contribution, Trace};
 pub enum GenreCompetence {
     #[default]
     Sort,
+    /// Attaque : dégâts de base déjà tirés de l'arme (`degats`), cadence
+    /// tirée du temps d'attaque (`temps_incantation`), stats d'attaque.
+    Attaque,
 }
 
 fn cent() -> f64 {
@@ -53,7 +56,8 @@ pub struct Competence {
     pub nom: String,
     #[serde(rename = "type", default)]
     pub genre: GenreCompetence,
-    /// Temps d'incantation de base, en secondes.
+    /// Temps d'incantation de base, en secondes (pour une attaque : temps
+    /// d'attaque de l'arme, mods locaux et vitesse de la gemme compris).
     pub temps_incantation: f64,
     /// Chance de critique de base, en pourcentage.
     pub critique_base: f64,
@@ -83,6 +87,11 @@ pub struct Competence {
     /// Infusion consommée par la compétence si possible (Arc : foudre).
     #[serde(default)]
     pub infusion: Option<Infusion>,
+    /// Compétence déclenchée : sa cadence ne dépend pas de la vitesse
+    /// d'incantation ou d'attaque (`temps_incantation` = temps de recharge,
+    /// ou 1 s par convention).
+    #[serde(default)]
+    pub cadence_fixe: bool,
 }
 
 /// Effet d'une infusion consommée (Arc : « 200% more damage » et « Chain 6
