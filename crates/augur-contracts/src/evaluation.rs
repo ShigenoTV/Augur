@@ -44,6 +44,10 @@ pub struct MechanicNote {
     /// Identifiant de la fiche mécanique (ex. « electrocute-buildup »).
     pub mechanic: String,
     pub confidence: Confidence,
+    /// Ce qui est en cause, ligne par ligne (mods, passifs, supports ignorés
+    /// par le calcul), pour savoir quoi traduire en priorité.
+    #[serde(default)]
+    pub details: Vec<String>,
 }
 
 /// Résultat de `evaluate_item`.

@@ -9,4 +9,9 @@ export type MechanicNote = {
 /**
  * Identifiant de la fiche mécanique (ex. « electrocute-buildup »).
  */
-mechanic: string, confidence: Confidence, };
+mechanic: string, confidence: Confidence, 
+/**
+ * Ce qui est en cause, ligne par ligne (mods, passifs, supports ignorés
+ * par le calcul), pour savoir quoi traduire en priorité.
+ */
+details: Array<string>, };
