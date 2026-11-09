@@ -24,7 +24,11 @@ pub fn get_overlay_state(
         game_focused: game_window::game_is_foreground(),
         character: character.summary(),
         last_item,
-        data_patch: None,
+        // Version du jeu des données embarquées (RePoE), vide si elles ne se chargent pas.
+        data_patch: poe2_core::forge::atelier::donnees()
+            .ok()
+            .map(|d| d.repoe_version.clone())
+            .filter(|v| !v.is_empty()),
     }
 }
 

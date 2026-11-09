@@ -214,7 +214,7 @@ function App() {
           <div className="mt-auto space-y-1.5 px-4">
             <Status ok={Boolean(state?.gameFocused)} label={state?.gameFocused ? "Jeu au premier plan" : "Jeu non détecté"} />
             <Status ok={logSummary.ok} label={logSummary.label} />
-            <Status ok={Boolean(state?.dataPatch)} label={state?.dataPatch ? `Données ${state.dataPatch}` : "Données de jeu : à venir"} />
+            <Status ok={Boolean(state?.dataPatch)} label={state?.dataPatch ? `Données du jeu : ${state.dataPatch}` : "Données du jeu indisponibles"} />
             <button
               type="button"
               onClick={() => void updates.check()}
