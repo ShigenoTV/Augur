@@ -94,7 +94,7 @@ export const upgradeDelta: ItemDelta = {
   ehp: { before: 9_840, after: 9_840 },
   resistances: [],
   spirit: null,
-  mechanics: [{ mechanic: "shock-buildup", confidence: "confirmed" }],
+  mechanics: [{ mechanic: "shock-buildup", confidence: "confirmed", details: [] }],
   computeMs: 38,
 };
 
@@ -124,8 +124,13 @@ export const approximateDelta: ItemDelta = {
   resistances: [],
   spirit: null,
   mechanics: [
-    { mechanic: "electrocute-buildup", confidence: "assumed" },
-    { mechanic: "weapon-set-passives", confidence: "measured" },
+    { mechanic: "electrocute-buildup", confidence: "assumed", details: [] },
+    { mechanic: "weapon-set-passives", confidence: "measured", details: [] },
+    {
+      mechanic: "supports-non-modelises",
+      confidence: "assumed",
+      details: ["Lightning Infusion", "Overcharge"],
+    },
   ],
   computeMs: 52,
 };

@@ -32,9 +32,14 @@ pub fn slot_id(emplacement: &str) -> String {
 }
 
 fn note(mechanic: &str) -> MechanicNote {
+    note_avec(mechanic, Vec::new())
+}
+
+fn note_avec(mechanic: &str, details: Vec<String>) -> MechanicNote {
     MechanicNote {
         mechanic: mechanic.to_string(),
         confidence: Confidence::Assumed,
+        details,
     }
 }
 
@@ -66,16 +71,42 @@ pub fn to_delta(c: &Comparaison, ms: u32) -> ItemDelta {
     let r = &c.rapport;
     let mut mechanics = vec![note("formules-supposees")];
     if !r.mods_candidat_non_traduits.is_empty() {
-        mechanics.push(note("mods-objet-non-traduits"));
+        mechanics.push(note_avec(
+            "mods-objet-non-traduits",
+            r.mods_candidat_non_traduits.clone(),
+        ));
     }
     if !r.mods_non_traduits.is_empty() {
-        mechanics.push(note("mods-equipement-non-traduits"));
+        mechanics.push(note_avec(
+            "mods-equipement-non-traduits",
+            r.mods_non_traduits.clone(),
+        ));
     }
     if r.passifs_non_traduits > 0 || r.passifs_inconnus > 0 {
-        mechanics.push(note("passifs-non-traduits"));
+        let mut details: Vec<String> = r
+            .lignes_passifs_non_traduites
+            .iter()
+            .map(|(l, n)| {
+                if *n > 1 {
+                    format!("{l} (×{n})")
+                } else {
+                    l.clone()
+                }
+            })
+            .collect();
+        if r.passifs_inconnus > 0 {
+            details.push(format!(
+                "{} passifs absents de l'arbre d'Augur",
+                r.passifs_inconnus
+            ));
+        }
+        mechanics.push(note_avec("passifs-non-traduits", details));
     }
     if !r.supports_non_modelises.is_empty() {
-        mechanics.push(note("supports-non-modelises"));
+        mechanics.push(note_avec(
+            "supports-non-modelises",
+            r.supports_non_modelises.iter().cloned().collect(),
+        ));
     }
     if r.arbre_autre_version {
         mechanics.push(note("arbre-autre-version"));
@@ -194,6 +225,32 @@ Implicits: 0
         assert_eq!(d.support, SupportLevel::Approximate);
         assert!((d.dps.after / d.dps.before - 2.0 / 1.2).abs() < 1e-9);
         assert_eq!((d.ehp.before, d.ehp.after), (0.0, 0.0));
+    }
+
+    #[test]
+    fn detaille_ce_que_le_calcul_ignore() {
+        let b = build(
+            r#"<Gem nameSpec="Arc" skillId="ArcPlayer" level="20"/><Gem nameSpec="Mystery" skillId="SupportMysteryPlayer" level="1"/>"#,
+        );
+        let mut objet = baguette();
+        objet.mods.push(ItemMod {
+            text: "Triggered Spells deal 16% increased Spell Damage".into(),
+            ..objet.mods[0].clone()
+        });
+        let d = evaluate(Some(&b), &objet).unwrap();
+        let details = |m: &str| {
+            d.mechanics
+                .iter()
+                .find(|n| n.mechanic == m)
+                .map(|n| n.details.clone())
+                .unwrap_or_default()
+        };
+        assert_eq!(
+            details("mods-objet-non-traduits"),
+            vec!["Triggered Spells deal 16% increased Spell Damage"]
+        );
+        assert_eq!(details("supports-non-modelises"), vec!["Mystery"]);
+        assert!(details("formules-supposees").is_empty());
     }
 
     #[test]

@@ -1,4 +1,5 @@
-import type { Confidence, ItemDelta, PriceEstimate, StatDelta } from "../types";
+import { useState } from "react";
+import type { Confidence, ItemDelta, MechanicNote, PriceEstimate, StatDelta } from "../types";
 import { cx } from "../lib/cx";
 import { formatNumber, formatSignedNumber, formatSignedPercent } from "../lib/format";
 import { elementLabel, mechanicLabel, slotLabel } from "../lib/labels";
@@ -35,6 +36,52 @@ const confidenceLabel: Record<Confidence, { text: string; className: string }> =
   measured: { text: "mesuré", className: "text-signal-info" },
   assumed: { text: "supposé", className: "text-signal-warn" },
 };
+
+/** Lignes affichées avant « et N autres », pour garder l'overlay compact. */
+const MAX_DETAILS = 12;
+
+/** Une mécanique du cadre « approximatif » ; un clic déplie ce qu'elle ignore. */
+function NoteRow({ note }: { note: MechanicNote }) {
+  const [open, setOpen] = useState(false);
+  const details = note.details ?? [];
+  const label = (
+    <>
+      <span>
+        {mechanicLabel(note.mechanic)}
+        {details.length > 0 && <span className="text-text-subtle"> ({details.length})</span>}
+      </span>
+      <span className={cx("shrink-0", confidenceLabel[note.confidence].className)}>
+        {confidenceLabel[note.confidence].text}
+      </span>
+    </>
+  );
+  if (details.length === 0) {
+    return <li className="flex justify-between gap-2">{label}</li>;
+  }
+  const shown = details.slice(0, MAX_DETAILS);
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full justify-between gap-2 text-left hover:text-text"
+      >
+        {label}
+      </button>
+      {open && (
+        <ul className="mb-1 ml-2 mt-0.5 space-y-0.5 border-l border-ink-700 pl-2 text-2xs text-text-subtle">
+          {shown.map((d, i) => (
+            <li key={i} className="break-words">
+              {d}
+            </li>
+          ))}
+          {details.length > shown.length && <li>et {details.length - shown.length} autres</li>}
+        </ul>
+      )}
+    </li>
+  );
+}
 
 type RowKind = "relative" | "points";
 
@@ -178,12 +225,7 @@ export function DeltaPanel({ delta, price, exaltedPerDivine }: DeltaPanelProps) 
           </p>
           <ul className="space-y-0.5">
             {notes.map((n) => (
-              <li key={n.mechanic} className="flex justify-between gap-2">
-                <span>{mechanicLabel(n.mechanic)}</span>
-                <span className={cx("shrink-0", confidenceLabel[n.confidence].className)}>
-                  {confidenceLabel[n.confidence].text}
-                </span>
-              </li>
+              <NoteRow key={n.mechanic} note={n} />
             ))}
           </ul>
         </div>

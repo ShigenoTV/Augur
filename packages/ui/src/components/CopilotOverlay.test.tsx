@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { NOW, overlayStates } from "../fixtures";
 import { CopilotOverlay } from "./CopilotOverlay";
@@ -12,6 +12,14 @@ describe("CopilotOverlay", () => {
       expect(container.firstChild).not.toBeNull();
     });
   }
+
+  it("déplie ce que le calcul approximatif ignore", () => {
+    const s = overlayStates.find((o) => o.id === "approximate")!.state;
+    render(<CopilotOverlay state={s} now={NOW} />);
+    expect(screen.queryByText("Overcharge")).toBeNull();
+    fireEvent.click(screen.getByText(/supports ne sont pas comptés/));
+    expect(screen.getByText("Overcharge")).toBeTruthy();
+  });
 
   it("ne rend rien quand l'overlay est masqué", () => {
     const { container } = render(<CopilotOverlay state={{ status: "hidden" }} />);

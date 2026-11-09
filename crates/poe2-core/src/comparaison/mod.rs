@@ -46,6 +46,8 @@ pub struct Rapport {
     /// Lignes de l'objet comparé non traduites.
     pub mods_candidat_non_traduits: Vec<String>,
     pub passifs_non_traduits: usize,
+    /// Lignes de passifs non traduites, sans doublon, avec leur nombre.
+    pub lignes_passifs_non_traduites: Vec<(String, usize)>,
     pub passifs_inconnus: usize,
     /// Supports dont un effet n'est pas modélisé.
     pub supports_non_modelises: BTreeSet<String>,
@@ -245,6 +247,11 @@ fn modeliser(
                 for l in lignes {
                     if acc.ligne(l, &source) {
                         rapport.passifs_non_traduits += 1;
+                        let lignes = &mut rapport.lignes_passifs_non_traduites;
+                        match lignes.iter_mut().find(|(t, _)| t == l) {
+                            Some((_, n)) => *n += 1,
+                            None => lignes.push((l.clone(), 1)),
+                        }
                     }
                 }
             }
@@ -348,6 +355,7 @@ pub fn comparer(
         let mut rapport = rapport_avant.clone();
         rapport.mods_non_traduits.clear();
         rapport.passifs_non_traduits = 0;
+        rapport.lignes_passifs_non_traduites.clear();
         rapport.passifs_inconnus = 0;
         rapport.supports_non_modelises.clear();
         let (apres, niveau_apres) = modeliser(
