@@ -164,8 +164,6 @@ pub enum ErreurPool {
     BaseNonSupportee(String),
     #[error("page de poids poe2db absente du relevé : {0}")]
     PageAbsente(String),
-    #[error("le mod {0} appartient à plusieurs groupes d'exclusion, non géré par le moteur")]
-    GroupesMultiples(String),
     #[error("trop d'affixes ou de groupes pour le moteur (65 535 au plus)")]
     TropGrand,
 }
@@ -307,9 +305,6 @@ pub fn construire_pool_avec(
 
     let cible = |m: &ModTable| cibles.contains(&m.id.as_str());
     let affixe = |m: &ModTable, group, family_id, ti: usize, weight| -> Result<Affix, ErreurPool> {
-        if m.groupes.len() > 1 {
-            return Err(ErreurPool::GroupesMultiples(m.id.clone()));
-        }
         Ok(Affix {
             id: m.id.clone(),
             name: m.nom.clone(),
@@ -328,6 +323,8 @@ pub fn construire_pool_avec(
             tags: 0,
             desecrated: false,
             cap_shift: (0, 0),
+            // renseignés une fois tous les groupes numérotés (voir plus bas)
+            extra_groups: Vec::new(),
         })
     };
 
@@ -379,12 +376,13 @@ pub fn construire_pool_avec(
     // étiquettes de la base) : groupe d'exclusion partagé, famille à part.
     let groupes: Vec<&str> = par_groupe.keys().copied().collect();
     let mut familles_en_plus: BTreeMap<(&str, &str), Vec<&ModTable>> = BTreeMap::new();
-    // Un mod à plusieurs groupes d'exclusion (Alloys hybrides, ex. vitesse d'attaque ET d'incantation)
-    // n'est pas modélisé : il reste hors du pool, et l'Alloy qui le pose n'est pas proposé.
+    // Un mod à plusieurs groupes d'exclusion (Alloys hybrides : Swift Alloy sur anneau et gants,
+    // Transcendent Alloy sur arme d'attaque) est rangé sous son premier groupe ; les autres sont
+    // renseignés dans `Affix::extra_groups` une fois tous les groupes numérotés.
     for m in mods
         .mods
         .iter()
-        .filter(|m| cible(m) && m.groupes.len() <= 1 && !candidats.iter().any(|c| c.id == m.id))
+        .filter(|m| cible(m) && !candidats.iter().any(|c| c.id == m.id))
     {
         familles_en_plus
             .entry((m.groupe.as_str(), m.famille.as_str()))
@@ -411,6 +409,38 @@ pub fn construire_pool_avec(
         paliers.sort_by(|a, b| b.niveau.cmp(&a.niveau).then_with(|| a.id.cmp(&b.id)));
         for (ti, m) in paliers.iter().enumerate() {
             affixes.push(affixe(m, group, family_id, ti, 0)?);
+        }
+    }
+    // Autres groupes des mods à plusieurs groupes : numéro du groupe s'il existe sur la base, sinon un
+    // nouveau numéro (le groupe n'a alors aucun autre mod ici, mais deux cibles peuvent le partager).
+    let mut groupes_autres: Vec<&str> = Vec::new();
+    let par_id: BTreeMap<&str, &ModTable> = mods
+        .mods
+        .iter()
+        .filter(|m| m.groupes.len() > 1)
+        .map(|m| (m.id.as_str(), m))
+        .collect();
+    for a in affixes.iter_mut() {
+        let Some(m) = par_id.get(a.id.as_str()) else {
+            continue;
+        };
+        for g in m.groupes.iter().filter(|g| **g != m.groupe) {
+            let gi = if let Some(i) = groupes.iter().position(|x| x == g) {
+                i
+            } else if let Some(i) = groupes_en_plus.iter().position(|x| x == g) {
+                groupes.len() + i
+            } else {
+                if !groupes_autres.contains(&g.as_str()) {
+                    groupes_autres.push(g);
+                }
+                groupes.len()
+                    + groupes_en_plus.len()
+                    + groupes_autres.iter().position(|x| x == g).unwrap_or(0)
+            };
+            let gi = GroupId::try_from(gi).map_err(|_| ErreurPool::TropGrand)?;
+            if gi != a.group && !a.extra_groups.contains(&gi) {
+                a.extra_groups.push(gi);
+            }
         }
     }
     if affixes.len() > usize::from(u16::MAX) {

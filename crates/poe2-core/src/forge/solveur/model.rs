@@ -255,7 +255,7 @@ impl Model {
                 .iter()
                 .filter(|a| a.weight > 0 && a.req_ilvl <= ilvl && a.desecrated == desecrated)
             {
-                if goal.group_index(a.group).is_some() {
+                if a.groups().any(|g| goal.group_index(g).is_some()) {
                     continue;
                 }
                 let v = if a.slot == Slot::Prefix {
@@ -488,6 +488,7 @@ impl Model {
                 a.tags,
                 a.desecrated,
                 a.cap_shift,
+                &a.extra_groups,
             )
                 .hash(&mut h);
         }

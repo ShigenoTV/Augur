@@ -457,6 +457,18 @@ fn actions_essences(
                 .get(&e.id)
                 .filter(|p| p.is_finite() && **p >= 0.0)?;
             let hors = |i: &u16| matches!(goal.classify(pool, *i), Class::Other);
+            // Alloy hybride (mod à plusieurs groupes d'exclusion : Swift Alloy sur anneau et gants,
+            // Transcendent Alloy sur arme d'attaque) : proposé seulement quand son mod est voulu. Hors
+            // objectif, il ne servirait que de remplisseur, que l'état abstrait du solveur ne sait pas
+            // suivre (il bloque des groupes que des mauvais affixes anonymes peuvent déjà occuper).
+            let hybride_inutile = |i: &u16| {
+                !pool.affixes[*i as usize].extra_groups.is_empty()
+                    && (!matches!(goal.classify(pool, *i), Class::Wanted(_))
+                        || goal.zones(pool, *i).len() > 1)
+            };
+            if autres.iter().chain([&premier]).any(hybride_inutile) {
+                return None;
+            }
             if autres.iter().chain([&premier]).all(hors) && !autres.is_empty() {
                 return None;
             }
@@ -993,6 +1005,249 @@ mod tests {
             "Runic Alloy",
         );
         egal(&retires, &["IncreasedLife1", "FireResist1"]);
+    }
+
+    /// Alloys hybrides (mod à plusieurs groupes d'exclusion), mêmes issues que l'émulateur de Craft of
+    /// Exile (`poe2_essence` puis Exalt, 3 000 essais par cas le 09/11/2026, relevés dans la PR) : refusé dès
+    /// qu'un mod de l'objet partage un de ses groupes, sinon posé (un mod retiré au hasard) ; une fois posé,
+    /// aucun mod de ses groupes n'est plus tiré.
+    #[test]
+    fn alloys_hybrides_comme_craft_of_exile() {
+        use crate::forge::moteur::{DrawFilter, ItemState, Mod, Outcome};
+        use rand::SeedableRng;
+        let d = donnees().unwrap();
+        let pool_de = |base: &str| {
+            let b = bases()
+                .unwrap()
+                .into_iter()
+                .find(|b| b.nom == base)
+                .unwrap();
+            let (_, pb) = pool(&b.id, 80).unwrap();
+            (b.classe, pb.pool)
+        };
+        let idx = |p: &crate::forge::moteur::AffixPool, id: &str| {
+            p.affixes
+                .iter()
+                .position(|a| a.id == id)
+                .unwrap_or_else(|| panic!("{id} absent")) as u16
+        };
+        let objet = |p: &crate::forge::moteur::AffixPool, mods: &[&str], crafted: &[&str]| {
+            let mut it = ItemState::new(Rarity::Rare, 80);
+            for (m, c) in mods
+                .iter()
+                .map(|m| (m, false))
+                .chain(crafted.iter().map(|m| (m, true)))
+            {
+                it.push(Mod {
+                    idx: idx(p, m),
+                    fractured: false,
+                    crafted: c,
+                });
+            }
+            it
+        };
+        // (refus, retraits) sur 3 000 essais
+        let essai = |base: &str, mods: &[&str], alloy: &str| {
+            let (classe, p) = pool_de(base);
+            let e = d.essences.iter().find(|e| e.nom == alloy).unwrap();
+            let cible = idx(&p, &e.cibles[&classe][0]);
+            assert!(!p.affixes[cible as usize].extra_groups.is_empty());
+            let c = Currency {
+                id: e.id.clone(),
+                label: e.nom.clone(),
+                kind: CurrencyKind::Essence,
+                min_mod_level: 0,
+                add_slot: None,
+                remove_slot: None,
+                target: Some(cible),
+                alt_target: None,
+                more_targets: vec![],
+                require_tag: None,
+                remove_desecrated_only: false,
+                remove_lowest_level: false,
+                requires_rare: e.sur_rare(),
+                unit_cost: 1.0,
+            };
+            let mut rng = rand::rngs::SmallRng::seed_from_u64(9);
+            let (mut refus, mut retires) = (0u32, BTreeMap::new());
+            for _ in 0..3000 {
+                let mut it = objet(&p, mods, &[]);
+                if p.apply(&mut it, &c, &mut rng) == Outcome::NotApplicable {
+                    refus += 1;
+                    continue;
+                }
+                assert!(it.mods().iter().any(|m| m.crafted && m.idx == cible));
+                let ids: Vec<&str> = it
+                    .mods()
+                    .iter()
+                    .map(|m| p.affixes[m.idx as usize].id.as_str())
+                    .collect();
+                let parti = mods.iter().find(|m| !ids.contains(m)).unwrap();
+                *retires.entry(parti.to_string()).or_insert(0u32) += 1;
+            }
+            (refus, retires)
+        };
+        let egal = |m: &BTreeMap<String, u32>, ids: &[&str]| {
+            assert_eq!(m.len(), ids.len(), "{m:?}");
+            for id in ids {
+                let f = f64::from(m[*id]) / 3000.0;
+                assert!((f - 1.0 / ids.len() as f64).abs() < 0.05, "{id} {f} {m:?}");
+            }
+        };
+        // Transcendent Alloy (Force, Dextérité et Intelligence) : refusé sur un arc à Dextérité
+        let t = "Transcendent Alloy";
+        let (refus, _) = essai(
+            "Crude Bow",
+            &["Dexterity1", "LocalCriticalStrikeChance1"],
+            t,
+        );
+        assert_eq!(refus, 3000);
+        let suffixes = [
+            "LocalIncreasedAttackSpeed1",
+            "LocalCriticalStrikeChance1",
+            "LifeGainedFromEnemyDeath1",
+        ];
+        let (refus, retires) = essai("Crude Bow", &suffixes, t);
+        assert_eq!(refus, 0);
+        egal(&retires, &suffixes);
+        // Swift Alloy : vitesse d'attaque sur anneau (refusé avec la vitesse d'incantation), vitesse
+        // d'incantation sur gants (refusé avec la vitesse d'attaque)
+        let s = "Swift Alloy";
+        let (refus, _) = essai("Iron Ring", &["IncreasedLife1", "CastSpeedJewellery1"], s);
+        assert_eq!(refus, 3000);
+        let (refus, retires) = essai("Iron Ring", &["IncreasedLife1", "FireResist1"], s);
+        assert_eq!(refus, 0);
+        egal(&retires, &["IncreasedLife1", "FireResist1"]);
+        let (refus, _) = essai(
+            "Suede Bracers",
+            &["IncreasedLife1", "IncreasedAttackSpeed1"],
+            s,
+        );
+        assert_eq!(refus, 3000);
+        let (refus, retires) = essai("Suede Bracers", &["IncreasedLife1", "FireResist1"], s);
+        assert_eq!(refus, 0);
+        egal(&retires, &["IncreasedLife1", "FireResist1"]);
+
+        // Exalt sur un arc qui porte le mod du Transcendent Alloy : jamais de Dextérité (8 % des tirages
+        // sinon) ; parts des autres familles comme chez Craft of Exile (à 2 points près)
+        let (_, p) = pool_de("Crude Bow");
+        let it = objet(
+            &p,
+            &[],
+            &["AlloyAttributeIncreasedLocalPhysicalDamageHybrid1"],
+        );
+        let mut part: BTreeMap<String, f64> = BTreeMap::new();
+        for (i, q) in p.distribution(&it, &DrawFilter::default()) {
+            // famille au sens de Craft of Exile : identifiant du mod sans son numéro de palier
+            let id = p.affixes[i as usize]
+                .id
+                .trim_end_matches(|c: char| c.is_ascii_digit());
+            *part.entry(id.to_string()).or_default() += q;
+        }
+        assert!(!part.keys().any(|f| f.contains("Dexterity")), "{part:?}");
+        for (famille, n) in [
+            ("LocalAddedLightningDamage", 292.0),
+            ("LocalAddedPhysicalDamage", 211.0),
+            ("ManaGainedFromEnemyDeath", 218.0),
+            ("LocalIncreasedAttackSpeed", 131.0),
+            ("LocalIncreasedPhysicalDamagePercent", 130.0),
+        ] {
+            let q = part.get(famille).copied().unwrap_or(0.0);
+            assert!((q - n / 3000.0).abs() < 0.02, "{famille} {q} {part:?}");
+        }
+    }
+
+    /// Alloys hybrides dans un plan : le mod voulu n'existe que par l'Alloy.
+    #[test]
+    fn plan_avec_les_alloys_hybrides() {
+        plan_par("Ring", 80, "increased Attack Speed", "swift-alloy", 20.0);
+        plan_par("Gloves", 80, "increased Cast Speed", "swift-alloy", 20.0);
+        plan_par("Bow", 80, "to all Attributes", "transcendent-alloy", 20.0);
+    }
+
+    /// Alloy hybride avec d'autres mods voulus : les mods tirés de ses autres groupes (Dextérité sur un
+    /// arc, vitesse d'attaque sur des gants) le bloquent ; le moteur exact confirme le coût du solveur.
+    #[test]
+    fn plan_alloy_hybride_et_autres_mods() {
+        let cas = |base: &str, textes: &[&str], alloy: &str| {
+            let id = bases()
+                .unwrap()
+                .into_iter()
+                .find(|b| b.nom == base)
+                .unwrap()
+                .id;
+            let a = affixes(&id, 80).unwrap();
+            let voulus = textes
+                .iter()
+                .map(|t| {
+                    let g = a
+                        .affixes
+                        .iter()
+                        .find(|g| g.libelle.contains(t))
+                        .unwrap_or_else(|| panic!("{t} absent"));
+                    WantedAffix {
+                        group: g.group,
+                        family: g.family,
+                        max_tier: 4,
+                    }
+                })
+                .collect();
+            let demande = DemandePlan {
+                base_id: id,
+                ilvl: 80,
+                voulus,
+                exclues: vec![],
+            };
+            let mut table = TablePrix::indicative();
+            table.saisir(&[(alloy.to_string(), 20.0)].into()).unwrap();
+            let (r, _) = planifier(&demande, &table, &AtomicBool::new(false)).unwrap();
+            let achats: Vec<&str> = r.plan.shopping.iter().map(|s| s.id.as_str()).collect();
+            assert!(achats.contains(&alloy), "{achats:?}");
+            let mc = r.plan.mc.as_ref().unwrap();
+            assert!(
+                (mc.mean_cost - r.plan.expected_cost).abs() < 0.05 * r.plan.expected_cost,
+                "{base} : solveur {} / moteur {}",
+                r.plan.expected_cost,
+                mc.mean_cost
+            );
+        };
+        cas(
+            "Crude Bow",
+            &["to all Attributes", "increased Physical Damage"],
+            "transcendent-alloy",
+        );
+        cas(
+            "Suede Bracers",
+            &["increased Cast Speed", "maximum Life"],
+            "swift-alloy",
+        );
+
+        // le mod du Transcendent Alloy et la Dextérité s'excluent : objectif refusé
+        let id = bases()
+            .unwrap()
+            .into_iter()
+            .find(|b| b.nom == "Crude Bow")
+            .unwrap()
+            .id;
+        let a = affixes(&id, 80).unwrap();
+        let voulu = |t: &str| {
+            let g = a.affixes.iter().find(|g| g.libelle.contains(t)).unwrap();
+            WantedAffix {
+                group: g.group,
+                family: g.family,
+                max_tier: u8::MAX,
+            }
+        };
+        let demande = DemandePlan {
+            base_id: id,
+            ilvl: 80,
+            voulus: vec![voulu("to all Attributes"), voulu("to Dexterity")],
+            exclues: vec![],
+        };
+        assert!(matches!(
+            planifier(&demande, &TablePrix::indicative(), &AtomicBool::new(false)),
+            Err(ErreurAtelier::Objectif(_))
+        ));
     }
 
     #[test]

@@ -149,6 +149,7 @@ pub(crate) mod tests {
             tags: 0,
             desecrated: false,
             cap_shift: (0, 0),
+            extra_groups: Vec::new(),
         }
     }
     pub fn cur(kind: CurrencyKind) -> Currency {

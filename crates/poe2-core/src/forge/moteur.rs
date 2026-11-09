@@ -58,6 +58,24 @@ pub struct Affix {
     /// Liquid Contempt : préfixe « +1 Suffix Modifier allowed » = (0, 1)). (0, 0) pour un mod ordinaire.
     #[serde(default)]
     pub cap_shift: (i8, i8),
+    /// Autres groupes d'exclusion du mod, en plus de `group` (Alloys hybrides : Swift Alloy sur anneau
+    /// « vitesse d'attaque » qui prend aussi le groupe vitesse d'incantation, Transcendent Alloy qui prend
+    /// Force, Dextérité et Intelligence). Deux mods s'excluent dès qu'ils partagent un groupe (règle de
+    /// l'émulateur de Craft of Exile : familles en commun). Vide pour un mod ordinaire.
+    #[serde(default)]
+    pub extra_groups: Vec<GroupId>,
+}
+
+impl Affix {
+    /// Tous les groupes d'exclusion du mod : `group` puis `extra_groups`.
+    pub fn groups(&self) -> impl Iterator<Item = GroupId> + '_ {
+        std::iter::once(self.group).chain(self.extra_groups.iter().copied())
+    }
+
+    /// Les deux mods partagent-ils un groupe d'exclusion (ne peuvent pas coexister) ?
+    pub fn conflicts(&self, other: &Affix) -> bool {
+        self.groups().any(|g| other.groups().any(|h| h == g))
+    }
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -327,9 +345,16 @@ impl AffixPool {
         let open_p = self.count(item, Slot::Prefix) < cap_p;
         let open_s = self.count(item, Slot::Suffix) < cap_s;
 
-        let mut held = [GroupId::MAX; 6];
-        for (i, m) in item.mods().iter().enumerate() {
-            held[i] = self.affixes[m.idx as usize].group;
+        // groupes pris (6 mods au plus, chacun dans quelques groupes) : tableau fixe, sans allocation
+        let mut held = [GroupId::MAX; 24];
+        for (i, g) in item
+            .mods()
+            .iter()
+            .flat_map(|m| self.affixes[m.idx as usize].groups())
+            .take(held.len())
+            .enumerate()
+        {
+            held[i] = g;
         }
         let sous_min = self.sous_niveau_min(item.ilvl, f.min_mod_level);
 
@@ -344,7 +369,7 @@ impl AffixPool {
                     Slot::Suffix => open_s,
                 }
                 && f.force_slot.is_none_or(|s| s == a.slot)
-                && !held.contains(&a.group)
+                && !a.groups().any(|g| held.contains(&g))
         }
     }
 
@@ -518,10 +543,10 @@ impl AffixPool {
                 // affixe garanti sans place ou en conflit de groupe : l'objet reste tel quel
                 let before = *item;
                 let groupe_pris = |item: &ItemState, t: AffixIdx| {
-                    let g = self.affixes[t as usize].group;
+                    let a = &self.affixes[t as usize];
                     item.mods()
                         .iter()
-                        .any(|m| self.affixes[m.idx as usize].group == g)
+                        .any(|m| self.affixes[m.idx as usize].conflicts(a))
                 };
                 let place = |item: &ItemState, t: AffixIdx| {
                     let mut rare = *item;
