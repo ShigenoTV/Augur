@@ -51,19 +51,26 @@ impl Goal {
                 wanted.len()
             ));
         }
+        // Chaque voulu occupe une « zone » : tous les groupes d'exclusion de son mod (un seul pour un
+        // mod ordinaire ; plusieurs pour un Alloy hybride, ex. Transcendent Alloy : Force, Dextérité et
+        // Intelligence). Tout mod qui touche la zone sans être accepté la bloque.
         let mut by_group = HashMap::new();
         let mut slots = Vec::new();
         for (k, w) in wanted.iter().enumerate() {
-            if by_group.insert(w.group, k).is_some() {
-                return Err("deux affixes voulus appartiennent au même groupe".into());
-            }
-            let slot = pool
+            let a = pool
                 .affixes
                 .iter()
                 .find(|a| a.group == w.group && a.family_id == w.family)
-                .map(|a| a.slot)
                 .ok_or_else(|| format!("groupe {} absent du pool de cette base", w.group))?;
-            slots.push(slot);
+            for g in a.groups() {
+                if by_group.insert(g, k).is_some() {
+                    return Err(
+                        "deux affixes voulus s'excluent (même groupe d'exclusion) : objectif impossible"
+                            .into(),
+                    );
+                }
+            }
+            slots.push(a.slot);
         }
         let p = slots.iter().filter(|s| **s == Slot::Prefix).count();
         let s = slots.len() - p;
@@ -100,12 +107,31 @@ impl Goal {
 
     #[inline]
     pub fn classify(&self, pool: &AffixPool, idx: AffixIdx) -> Class {
-        let g = pool.affixes[idx as usize].group;
-        match self.by_group.get(&g) {
+        let a = &pool.affixes[idx as usize];
+        let zone = if a.extra_groups.is_empty() {
+            self.by_group.get(&a.group).copied()
+        } else {
+            a.groups().find_map(|g| self.by_group.get(&g).copied())
+        };
+        match zone {
             None => Class::Other,
-            Some(&k) if self.accepted[k][idx as usize] => Class::Wanted(k),
-            Some(&k) => Class::Blocked(k),
+            Some(k) if self.accepted[k][idx as usize] => Class::Wanted(k),
+            Some(k) => Class::Blocked(k),
         }
+    }
+
+    /// Zones des voulus que le mod touche (par un de ses groupes d'exclusion), sans doublon. Plus d'une
+    /// seulement pour un mod à plusieurs groupes (ex. Transcendent Alloy face à Force ET Dextérité voulues).
+    pub fn zones(&self, pool: &AffixPool, idx: AffixIdx) -> Vec<usize> {
+        let mut v: Vec<usize> = Vec::new();
+        for g in pool.affixes[idx as usize].groups() {
+            if let Some(&k) = self.by_group.get(&g)
+                && !v.contains(&k)
+            {
+                v.push(k);
+            }
+        }
+        v
     }
 
     pub fn group_index(&self, g: GroupId) -> Option<usize> {

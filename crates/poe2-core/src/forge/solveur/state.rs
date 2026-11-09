@@ -126,7 +126,17 @@ pub fn project(goal: &Goal, pool: &AffixPool, item: &ItemState) -> Option<MacroS
                 if m.fractured {
                     return None;
                 }
-                s.blocked |= 1 << k;
+                if s.blocked >> k & 1 == 1 {
+                    // second mod qui bloque la même zone (possible seulement pour une zone à plusieurs
+                    // groupes, ex. Force ET Dextérité face au Transcendent Alloy voulu) : la zone est déjà
+                    // bloquée, ce mod compte comme un mauvais affixe de son côté
+                    match pool.affixes[m.idx as usize].slot {
+                        Slot::Prefix => s.bad_p += 1,
+                        Slot::Suffix => s.bad_s += 1,
+                    }
+                } else {
+                    s.blocked |= 1 << k;
+                }
             }
             Class::Other => {
                 if m.fractured {

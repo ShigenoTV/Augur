@@ -78,8 +78,8 @@ une source de prix d'objets (même blocage OAuth).
    `donnees/essences-coe.json`). Depuis le 08/11 aussi les Essences à plusieurs mods possibles (Infinite,
    Enhancement, Greater Battle, Abyss) et les 13 Alloys ; une Essence ou un Alloy n'est proposé que s'il a un
    prix (poe.ninja, catégories `Essences` et `Verisium`, ou saisie). Les mods à plusieurs groupes d'exclusion
-   (Swift Alloy sur anneau et gants, Transcendent Alloy sur arme d'attaque) ne sont pas modélisés : ces Alloys ne
-   sont pas proposés sur ces classes. Désécration et Liquid Emotions restent hors catalogue (pas de poids des mods
+   (Swift Alloy sur anneau et gants, Transcendent Alloy sur arme d'attaque) sont gérés depuis le 09/11 (voir
+   « Alloys hybrides » plus bas). Désécration et Liquid Emotions restent hors catalogue (pas de poids des mods
    désacralisés).
 4. **Prix** (`forge::prix`, `forge::ninja`, commandes `get_forge_prices` / `set_forge_prices` /
    `reset_forge_prices` / `refresh_forge_prices`) : table de prix enregistrée dans `forge-prix.json` (dossier de
@@ -135,5 +135,16 @@ peut poser un % d'évasion sur un casque d'armure). Sur un Rare, un mod est ensu
 ce côté est plein**, au hasard sinon, puis le mod est posé. Vérifié le 08/11 sur 6 cas × 3 000 essais lancés
 dans l'émulateur (test `memes_tirages_que_craft_of_exile`). Le niveau d'objet n'est pas regardé : un mod garanti au-dessus du niveau d'objet, ou réservé aux Essences
 (% de vie des armures de corps…), entre dans le pool avec un poids nul et peut être visé.
+
+**Alloys hybrides** (09/11) : le mod du Swift Alloy sur anneau (vitesse d'attaque) et sur gants (vitesse
+d'incantation) prend les deux groupes vitesse d'attaque ET vitesse d'incantation ; celui du Transcendent Alloy sur
+arme d'attaque (attributs et % de dégâts physiques) prend Force, Dextérité et Intelligence. Règle de l'émulateur :
+deux mods s'excluent dès qu'ils ont **un groupe en commun** (`Affix::extra_groups` dans le moteur). Donc l'Alloy est
+refusé si l'objet porte un mod de l'un de ces groupes (l'objet reste tel quel, comme pour une Essence), et une fois posé, aucun mod de ces groupes n'est plus tiré. Vérifié le 09/11 dans l'émulateur, 7 cas ×
+3 000 essais (test `alloys_hybrides_comme_craft_of_exile`). Dans le solveur, un mod voulu à plusieurs groupes
+occupe une « zone » : tout mod de l'un de ses groupes la bloque (un second bloqueur, ex. Force ET Dextérité, compte
+comme un mauvais affixe). Ces Alloys ne sont proposés que quand leur mod est voulu : hors objectif, l'état
+abstrait du solveur ne sait pas quels mauvais affixes les bloqueraient. Un objectif qui veut à la fois le mod
+hybride et un mod de l'un de ses groupes (Transcendent + Dextérité) est refusé.
 
 `tools/theorycraft/coe_controle.py` vérifie aussi, base par base, les mods écartés par chaque niveau minimum.

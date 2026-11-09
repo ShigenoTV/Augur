@@ -18,6 +18,7 @@ fn aff(id: String, group: u16, slot: Slot, tier: u8, w: u32) -> Affix {
         tags: 0,
         desecrated: false,
         cap_shift: (0, 0),
+        extra_groups: Vec::new(),
     }
 }
 
@@ -457,4 +458,62 @@ fn refused_currency_is_not_charged_and_stops_the_trial() {
     assert!(censored);
     assert_eq!((cost, abandons), (0.0, 0));
     assert!(steps <= 64, "essai interrompu après {steps} étapes");
+}
+
+/// Mod voulu à plusieurs groupes (Transcendent Alloy : Force, Dextérité, Intelligence) : tout mod de l'un de
+/// ses groupes bloque la zone ; un second bloqueur compte comme un mauvais affixe, pour garder le bon
+/// nombre de mods.
+#[test]
+fn zone_d_un_mod_a_plusieurs_groupes() {
+    let mut voulu = aff("Alloy".into(), 1, Slot::Suffix, 1, 0);
+    voulu.extra_groups = vec![2, 3];
+    let pool = AffixPool::new(vec![
+        voulu,
+        aff("Dex".into(), 2, Slot::Suffix, 1, 100),
+        aff("Int".into(), 3, Slot::Suffix, 1, 100),
+        aff("Vie".into(), 4, Slot::Prefix, 1, 100),
+    ]);
+    let goal = Goal::new(
+        &pool,
+        &[WantedAffix {
+            group: 1,
+            family: 0,
+            max_tier: 1,
+        }],
+    )
+    .unwrap();
+    assert_eq!(goal.classify(&pool, 0), Class::Wanted(0));
+    assert_eq!(goal.classify(&pool, 1), Class::Blocked(0));
+    assert_eq!(goal.classify(&pool, 2), Class::Blocked(0));
+    assert_eq!(goal.classify(&pool, 3), Class::Other);
+    let mut it = ItemState::new(Rarity::Rare, 80);
+    for idx in [1, 2, 3] {
+        it.push(Mod {
+            idx,
+            fractured: false,
+            crafted: false,
+        });
+    }
+    let s = state::project(&goal, &pool, &it).unwrap();
+    assert_eq!((s.blocked, s.bad_s, s.bad_p), (1, 1, 1));
+    assert_eq!(s.total(), 3);
+    // deux voulus dont les groupes se recouvrent : objectif refusé
+    assert!(
+        Goal::new(
+            &pool,
+            &[
+                WantedAffix {
+                    group: 1,
+                    family: 0,
+                    max_tier: 1,
+                },
+                WantedAffix {
+                    group: 2,
+                    family: 0,
+                    max_tier: 1,
+                },
+            ],
+        )
+        .is_err()
+    );
 }
