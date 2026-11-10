@@ -369,6 +369,14 @@ pub fn get_forge_affixes(
     poe2_core::forge::atelier::affixes(&base_id, ilvl).map_err(crate::forge::error)
 }
 
+/// Objet de départ collé dans le panneau Forge (Ctrl+Alt+C en jeu) : base, niveau et mods lus.
+#[tauri::command]
+pub fn analyze_forge_item(
+    texte: String,
+) -> Result<poe2_core::forge::atelier::ObjetDepart, AppError> {
+    poe2_core::forge::atelier::analyser_objet(&texte).map_err(crate::forge::error)
+}
+
 #[tauri::command]
 pub fn get_forge_catalogue() -> Vec<poe2_core::forge::atelier::EntreeCatalogue> {
     poe2_core::forge::atelier::catalogue()

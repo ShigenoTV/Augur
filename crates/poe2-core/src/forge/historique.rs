@@ -125,6 +125,7 @@ mod tests {
                 max_tier: 2,
             }],
             exclues: vec![],
+            objet_depart: None,
         }
     }
 

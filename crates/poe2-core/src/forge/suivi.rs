@@ -7,8 +7,9 @@
 //! désacralisé ou artisanal) compte comme un mauvais mod de son côté : il prend une place sans
 //! servir l'objectif.
 
-use super::moteur::{AffixIdx, ItemState, Mod, Rarity, Slot};
-use super::solveur::{Advice, Model, Solution, advise};
+use super::moteur::{AffixIdx, AffixPool, ItemState, Mod, Rarity, Slot};
+use super::objectif::{Class, Goal};
+use super::solveur::{Advice, MacroState, Model, Solution, advise};
 use crate::parser::{Affixe, GenreMod, ModObjet, Objet, Rarete};
 use serde::Serialize;
 
@@ -154,11 +155,10 @@ fn grouper(objet: &Objet) -> Vec<ModGroupe<'_>> {
 }
 
 /// Affixe du pool qui correspond à un mod de l'objet.
-fn retrouver(model: &Model, g: &ModGroupe) -> Option<AffixIdx> {
+fn retrouver(pool: &AffixPool, g: &ModGroupe) -> Option<AffixIdx> {
     let nom = g.nom?.to_lowercase();
     let lignes: Vec<String> = g.lignes.iter().map(|l| gabarit(&l.texte)).collect();
-    let candidats: Vec<(usize, &super::moteur::Affix)> = model
-        .pool
+    let candidats: Vec<(usize, &super::moteur::Affix)> = pool
         .affixes
         .iter()
         .enumerate()
@@ -183,17 +183,24 @@ fn retrouver(model: &Model, g: &ModGroupe) -> Option<AffixIdx> {
     choisi.and_then(|(i, _)| AffixIdx::try_from(i).ok())
 }
 
-/// Prochaine étape du plan actif pour l'objet copié.
-pub fn conseiller(actif: &PlanActif, objet: &Objet) -> Result<ConseilForge, ErreurSuivi> {
-    let base = objet.base.as_str();
-    let meme_base = match objet.rarete {
-        // Un objet magique s'affiche avec ses affixes autour du nom de la base.
-        Rarete::Magique => base.contains(actif.base_nom.as_str()),
-        _ => base == actif.base_nom,
-    };
-    if !meme_base {
-        return Err(ErreurSuivi::AutreBase(actif.base_nom.clone()));
-    }
+/// Objet copié en jeu, rapproché du pool d'une base.
+#[derive(Clone, Debug)]
+pub struct ObjetLu {
+    /// Mods retrouvés dans le pool (les autres sont comptés dans `inconnus`).
+    pub item: ItemState,
+    /// Mods non retrouvés (préfixes, suffixes) : mauvais mods de leur côté.
+    pub inconnus: (u8, u8),
+    pub mods: Vec<ModLu>,
+}
+
+/// Rapproche les mods de l'objet du pool (rareté, corruption et copie avancée vérifiées ; la base,
+/// non). Avec un objectif, chaque mod dit s'il en remplit un affixe.
+pub fn lire_objet(
+    pool: &AffixPool,
+    goal: Option<&Goal>,
+    ilvl: u8,
+    objet: &Objet,
+) -> Result<ObjetLu, ErreurSuivi> {
     let rarity = match objet.rarete {
         Rarete::Normal => Rarity::Normal,
         Rarete::Magique => Rarity::Magic,
@@ -212,7 +219,7 @@ pub fn conseiller(actif: &PlanActif, objet: &Objet) -> Result<ConseilForge, Erre
         return Err(ErreurSuivi::CopieSimple);
     }
 
-    let mut item = ItemState::new(rarity, actif.ilvl);
+    let mut item = ItemState::new(rarity, ilvl);
     let (mut inconnus_p, mut inconnus_s) = (0u8, 0u8);
     let mut mods = Vec::new();
     for g in &groupes {
@@ -221,7 +228,7 @@ pub fn conseiller(actif: &PlanActif, objet: &Objet) -> Result<ConseilForge, Erre
             .lignes
             .iter()
             .any(|l| matches!(l.genre, GenreMod::Desacralise | GenreMod::Artisanal));
-        let idx = (!artisanal).then(|| retrouver(&actif.model, g)).flatten();
+        let idx = (!artisanal).then(|| retrouver(pool, g)).flatten();
         let texte = g
             .lignes
             .iter()
@@ -243,10 +250,10 @@ pub fn conseiller(actif: &PlanActif, objet: &Objet) -> Result<ConseilForge, Erre
                     fractured: fracture,
                     crafted: false,
                 });
-                match actif.model.goal.classify(&actif.model.pool, i) {
-                    super::objectif::Class::Wanted(k) => lu.voulu = u8::try_from(k).ok(),
-                    super::objectif::Class::Blocked(_) => lu.tier_trop_bas = true,
-                    super::objectif::Class::Other => {}
+                match goal.map(|goal| goal.classify(pool, i)) {
+                    Some(Class::Wanted(k)) => lu.voulu = u8::try_from(k).ok(),
+                    Some(Class::Blocked(_)) => lu.tier_trop_bas = true,
+                    _ => {}
                 }
             }
             _ => match g.slot {
@@ -256,17 +263,47 @@ pub fn conseiller(actif: &PlanActif, objet: &Objet) -> Result<ConseilForge, Erre
         }
         mods.push(lu);
     }
+    Ok(ObjetLu {
+        item,
+        inconnus: (inconnus_p, inconnus_s),
+        mods,
+    })
+}
 
-    let mut etat = actif.model.project(&item).ok_or(ErreurSuivi::HorsPlan)?;
-    etat.bad_p += inconnus_p;
-    etat.bad_s += inconnus_s;
+/// État abstrait de l'objet lu pour le modèle (mods inconnus comptés comme mauvais mods). `None` :
+/// hors de ce que le solveur sait représenter (mod fracturé hors objectif).
+pub fn etat(model: &Model, lu: &ObjetLu) -> Option<MacroState> {
+    let mut etat = model.project(&lu.item)?;
+    etat.bad_p += lu.inconnus.0;
+    etat.bad_s += lu.inconnus.1;
+    Some(etat)
+}
+
+/// Prochaine étape du plan actif pour l'objet copié.
+pub fn conseiller(actif: &PlanActif, objet: &Objet) -> Result<ConseilForge, ErreurSuivi> {
+    let base = objet.base.as_str();
+    let meme_base = match objet.rarete {
+        // Un objet magique s'affiche avec ses affixes autour du nom de la base.
+        Rarete::Magique => base.contains(actif.base_nom.as_str()),
+        _ => base == actif.base_nom,
+    };
+    if !meme_base {
+        return Err(ErreurSuivi::AutreBase(actif.base_nom.clone()));
+    }
+    let lu = lire_objet(
+        &actif.model.pool,
+        Some(&actif.model.goal),
+        actif.ilvl,
+        objet,
+    )?;
+    let etat = etat(&actif.model, &lu).ok_or(ErreurSuivi::HorsPlan)?;
     let conseil =
         advise(&actif.model, &actif.sol, &etat, &actif.labels).ok_or(ErreurSuivi::HorsPlan)?;
     Ok(ConseilForge {
         base_nom: actif.base_nom.clone(),
         labels: actif.labels.clone(),
         cout_plan: actif.expected_cost,
-        mods,
+        mods: lu.mods,
         ilvl_objet: objet.niveau_objet,
         ilvl_plan: actif.ilvl,
         conseil,
