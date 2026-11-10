@@ -53,6 +53,7 @@ const mechanics: Record<string, string> = {
   "minion-relatif": "Minions : DPS relatif (le % reste juste)",
   "degats-dans-le-temps": "Dégâts dans le temps : un seul effet actif supposé",
   "double-arme": "Deux armes : attaques en alternance supposées",
+  ailments: "Ailments (ignite, poison, saignement) : calcul moyen supposé",
   "arbre-autre-version": "Build fait sur une autre version de l'arbre",
 };
 

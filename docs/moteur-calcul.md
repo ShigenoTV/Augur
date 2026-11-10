@@ -45,11 +45,12 @@ recevoir une fiche mécanique et des cas golden mesurés en jeu.
 | Chaînes (fiche 09, **mesuré**) | `nombre_chaines` = plancher((chaînes de base du niveau + plancher(qualité × chaînes par qualité) + `number_of_chains` added) × increased × Π more) ; Dominus' Grasp = `number_of_chains` more +100 |
 | Infusion (fiche 09, I-17) | `competence.infusion` (élément, dégâts more, chaînes). `conditions.infusion` : `panneau` par défaut (dégâts infusés, chaînes sans l'infusion, comme le panneau du jeu), `active` (dégâts et chaînes), `absente` (rien : DPS réel d'un build sans source d'infusion) |
 | Modificateurs conditionnels | `condition: { mana_min_pct: 90 }` (Zenith II) : actif si `conditions.mana_pct` (100 par défaut, mana plein comme le panneau) ≥ 90 ; la borne incluse est supposée |
+| Ailments à dégâts (`calc::ailments`, supposé) | ignite (20 % du feu du coup par s, 4 s), poison (20 % du physique et du chaos, 2 s), saignement (15 % du physique, 5 s) ; base = dégâts du coup avant mitigation, critiques compris. Chance : `<ailment>_chance` (added, × increased × more, avec `ailment_chance`) ; pour l'ignite, + Flammability = 20 × feu du coup / seuil d'ailment de la cible (`cible.seuil_ailments`, sinon table de Path of Building au niveau `cible.niveau`, par défaut niveau du perso plafonné à 85). Actifs = min(chance × coups/s × durée, maximum) ; maximum 1, poison 1 + `poison_stacks`. × magnitude (`<ailment>_magnitude`, `ailment_magnitude`) × vitesse (`<ailment>_faster`) × (1 − résistance feu ou chaos). Cible immobile (saignement non doublé). Sorties `dps_ignite`, `dps_poison`, `dps_saignement`, `chance_*`, `dps_ailments` et `dps_total` = `dps` + ailments ; `dps` reste le DPS du panneau |
 | Arrondis | seulement la cadence du DPS (ci-dessus) ; les autres relèvent de l'affichage et des tolérances |
 
 ## Pas encore couvert
 
-Attaques, dégâts dans le temps et ailments, buildup (Electrocute, Freeze),
+Mesure en jeu des ailments, saignement aggravé ou sur cible en mouvement, buildup (Electrocute, Freeze),
 Spirit et réservations, blocage, Heavy Stun, effet de la déflexion sur les
 dégâts, plancher de 1 dégât par instance après armure (poe2wiki),
 tables de correspondance `stat_id` → stat interne. Un cas golden qui en

@@ -258,3 +258,23 @@ def test_competence_absente(tmp_path: Path) -> None:
     tree.write_text(json.dumps(TREE), encoding="utf-8")
     args = ["--skills", str(skills), "--tree", str(tree), "--tree-version", "0_5", "--out", str(tmp_path)]
     assert eb.main(args) == 1
+
+
+def test_ailments_de_la_gemme() -> None:
+    st = {
+        "static": {
+            "stats": [
+                {"id": "base_chance_to_poison_on_hit_%", "type": "float"},
+                {"id": "active_skill_ignite_chance_+%_final", "value": 200},
+                {"id": "never_ignite", "type": "flag"},
+                {"id": "base_chance_to_inflict_bleeding_%", "value": 0},
+            ]
+        },
+    }
+    lvl = {"stats": [{"value": 30}, None, None, None]}
+    assert eb._ailments(st, lvl) == [
+        ["poison_chance", "added", 30.0],
+        ["ignite_chance", "more", 200.0],
+        ["ignite_chance", "more", -100.0],
+    ]
+    assert eb._ailments({"static": {"stats": []}}, {}) == []

@@ -71,6 +71,9 @@ pub struct Rapport {
     pub dot_suppose: bool,
     /// Deux armes : les attaques alternent entre les mains (supposé).
     pub double_arme: bool,
+    /// Ailments à dégâts comptés (« ignite », « poison », « saignement »),
+    /// avant ou après l'objet : modèle moyen supposé.
+    pub ailments: BTreeSet<String>,
 }
 
 impl Rapport {
@@ -86,6 +89,7 @@ impl Rapport {
             && !self.minion_relatif
             && !self.dot_suppose
             && !self.double_arme
+            && self.ailments.is_empty()
     }
 }
 
@@ -461,12 +465,18 @@ fn modeliser(
             dot_sort: active.dot_sort,
         }
     };
+    let mut modificateurs = acc.mods;
+    if !active.est_minion() {
+        modificateurs.extend(data.ailments.iter().map(|(stat, kind, v)| {
+            Modificateur::new(stat.clone(), *kind, *v, format!("Gemme : {}", active.nom))
+        }));
+    }
     Ok((
         Personnage {
             niveau: Some(build.niveau),
             classe: Some(build.classe_affichee().to_string()),
             competence: Some(competence),
-            modificateurs: acc.mods,
+            modificateurs,
             penalite_campagne: 0.0,
             objets: Vec::new(),
         },
@@ -474,7 +484,8 @@ fn modeliser(
     ))
 }
 
-fn dps(perso: &Personnage) -> Result<f64, ErreurComparaison> {
+/// DPS total (coups, dégâts dans le temps, ailments), et les ailments comptés.
+fn dps(perso: &Personnage) -> Result<(f64, BTreeSet<String>), ErreurComparaison> {
     let r = calc::calculer(perso, &Conditions::default()).map_err(|e| {
         ErreurComparaison::Calcul(
             e.iter()
@@ -483,8 +494,18 @@ fn dps(perso: &Personnage) -> Result<f64, ErreurComparaison> {
                 .join(" ; "),
         )
     })?;
-    r.valeur("dps")
-        .ok_or_else(|| ErreurComparaison::Calcul("DPS non calculé".into()))
+    let total = r
+        .valeur("dps_total")
+        .ok_or_else(|| ErreurComparaison::Calcul("DPS non calculé".into()))?;
+    let ailments = calc::ailments::Ailment::TOUS
+        .iter()
+        .filter(|a| {
+            r.valeur(&format!("dps_{}", a.nom()))
+                .is_some_and(|v| v > 0.0)
+        })
+        .map(|a| a.nom().to_string())
+        .collect();
+    Ok((total, ailments))
 }
 
 /// Compare un objet (classe du jeu, nom, lignes de mods telles qu'affichées)
@@ -524,7 +545,7 @@ pub fn comparer_objet(
 
     let mut rapport_avant = Rapport::default();
     let (avant, niveau_avant) = modeliser(build, groupe, gemme, &[], None, &mut rapport_avant)?;
-    let dps_avant = dps(&avant)?;
+    let (dps_avant, ailments_avant) = dps(&avant)?;
 
     let mut meilleur: Option<Comparaison> = None;
     for emplacement in choix {
@@ -553,6 +574,8 @@ pub fn comparer_objet(
         rapport
             .supports_non_modelises
             .extend(rapport_avant.supports_non_modelises.iter().cloned());
+        let (dps_apres, ailments_apres) = dps(&apres)?;
+        rapport.ailments = ailments_avant.union(&ailments_apres).cloned().collect();
         let c = Comparaison {
             emplacement: emplacement.to_string(),
             remplace: build.objet(emplacement).and_then(|o| o.nom.clone()),
@@ -560,7 +583,7 @@ pub fn comparer_objet(
             niveau_avant,
             niveau_apres,
             dps_avant,
-            dps_apres: dps(&apres)?,
+            dps_apres,
             rapport,
         };
         if meilleur.as_ref().is_none_or(|m| c.dps_apres > m.dps_apres) {
@@ -901,6 +924,43 @@ Adds 10 to 20 Physical Damage
         // Contagion profite des mods de dégâts des sorts.
         let c = avec("20% increased Spell Damage");
         assert!((c.dps_apres / c.dps_avant - 1.2).abs() < 1e-9);
+    }
+
+    #[test]
+    fn ailments_comptes_dans_le_dps() {
+        // Fireball : ses coups de feu enflamment (Flammability) ; la magnitude
+        // de l'ignite n'agit que sur l'ignite.
+        let b = build_sort("Fireball", "FireballPlayer", BAGUETTE);
+        let c = comparer(
+            &b,
+            "Amulets",
+            "X",
+            &lignes(&["30% increased Ignite Magnitude"]),
+        )
+        .unwrap();
+        assert!(c.rapport.ailments.contains("ignite"), "{:?}", c.rapport);
+        assert!(!c.rapport.complet());
+        assert!(
+            c.dps_apres > c.dps_avant && c.dps_apres < c.dps_avant * 1.3,
+            "{c:?}"
+        );
+        // Saignement : seulement avec une chance explicite, sur la part physique.
+        let b = build_sort("Lightning Arrow", "LightningArrowPlayer", ARC_BOW);
+        let sans = comparer(&b, "Amulets", "X", &lignes(&["10% increased Attack Speed"])).unwrap();
+        assert!(
+            !sans.rapport.ailments.contains("saignement"),
+            "{:?}",
+            sans.rapport
+        );
+        let avec = comparer(
+            &b,
+            "Amulets",
+            "X",
+            &lignes(&["25% chance to inflict Bleeding on Hit"]),
+        )
+        .unwrap();
+        assert!(avec.rapport.ailments.contains("saignement"));
+        assert!(avec.dps_apres > avec.dps_avant, "{avec:?}");
     }
 
     #[test]

@@ -150,6 +150,18 @@ pub const DAMAGE_TAKEN: &str = "damage_taken";
 /// +N times », `more` pour « Chain 100% more times » (Dominus' Grasp).
 pub const NUMBER_OF_CHAINS: &str = "number_of_chains";
 
+/// Ailments à dégâts (ignite, poison, saignement), voir `calc::ailments`.
+/// Chance d'infliger : `added` = chance de base en points (« 20% chance to
+/// Poison on Hit ») ; `increased`/`more` la multiplient (pour l'ignite :
+/// « Flammability Magnitude »).
+pub const AILMENT_CHANCE: &str = "ailment_chance";
+/// Magnitude des ailments à dégâts (« Magnitude of Damaging Ailments »).
+pub const AILMENT_MAGNITUDE: &str = "ailment_magnitude";
+/// Durée des ailments à dégâts (« Duration of Damaging Ailments »).
+pub const AILMENT_DURATION: &str = "ailment_duration";
+/// Ailments supplémentaires actifs à la fois (« +1 of your Poisons »).
+pub const POISON_STACKS: &str = "poison_stacks";
+
 /// Conversion de l'étape 2 : `convert_<source>_damage_to_<cible>` (en %).
 pub fn stat_conversion(source: TypeDegats, cible: TypeDegats) -> String {
     format!("convert_{}_damage_to_{}", source.cle(), cible.cle())
@@ -197,10 +209,19 @@ pub fn stats_connues() -> Vec<String> {
         ENERGY_SHIELD_RECHARGE_RATE,
         FASTER_ENERGY_SHIELD_RECHARGE_START,
         NUMBER_OF_CHAINS,
+        AILMENT_CHANCE,
+        AILMENT_MAGNITUDE,
+        AILMENT_DURATION,
+        POISON_STACKS,
     ]
     .iter()
     .map(|s| s.to_string())
     .collect();
+    for a in ["ignite", "poison", "bleed"] {
+        for suffixe in ["chance", "magnitude", "duration", "faster"] {
+            v.push(format!("{a}_{suffixe}"));
+        }
+    }
     for t in TypeDegats::TOUS {
         v.push(t.stat_degats());
         v.push(t.stat_degats_dot());

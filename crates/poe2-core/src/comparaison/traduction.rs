@@ -206,11 +206,168 @@ fn motifs() -> &'static Motifs {
     })
 }
 
+/// Lignes des ailments à dégâts (ignite, poison, saignement) : chance,
+/// magnitude, durée, vitesse, nombre de poisons. Les lignes conditionnelles
+/// (« against Bleeding Enemies », « with Critical Hits »…) ne sont pas
+/// reconnues et restent sans effet, comme avant.
+fn ailment(l: &str, source: &str) -> Option<Vec<Modificateur>> {
+    static M: OnceLock<[Regex; 9]> = OnceLock::new();
+    let n = r"(\d+(?:\.\d+)?)";
+    let m = M.get_or_init(|| {
+        let r = |s: String| Regex::new(&s).unwrap();
+        [
+            r(format!(
+                r"^(?:Supported Skills have )?{n}% (increased|reduced|more|less) Flammability Magnitude$"
+            )),
+            r(format!(
+                r"^(?:Supported Skills have )?{n}% (increased|reduced|more|less) chance to inflict Ailments$"
+            )),
+            r(format!(
+                r"^(?:Supported Skills have )?{n}% chance to (Poison|inflict Bleeding|Ignite)(?: on Hit)?$"
+            )),
+            r(format!(
+                r"^{n}% (increased|reduced) (?:Ignite Magnitude|Magnitude of (Ignite|Poison|Bleeding|Ailments|Damaging Ailments) you inflict)$"
+            )),
+            r(format!(
+                r"^{n}% (more|less) Magnitude of (Ignite|Poison|Bleeding) inflicted (?:with|by) Supported Skills$"
+            )),
+            r(format!(
+                r"^(?:Supported Skills have )?{n}% (increased|reduced|more|less) (Poison|Bleeding|Ignite) Duration(?: on Enemies)?$"
+            )),
+            r(format!(
+                r"^{n}% (increased|reduced|more|less) Duration of (Damaging Ailments on Enemies|Ignite, Shock and Chill on Enemies|Supported Skills and Damaging Ailments they inflict)$"
+            )),
+            r(format!(
+                r"^(Ignites|Bleeding|Poisons?|Damaging Ailments) (?:you inflict |from Supported Skills )?deals? [Dd]amage {n}% faster$"
+            )),
+            r(
+                r"^(?i:Supported (?:Skills|Attacks) cannot) (Ignite|Poison|cause Bleeding|inflict Bleeding|inflict Elemental Ailments|inflict Freeze, Shock or Ignite)$"
+                    .to_string(),
+            ),
+        ]
+    });
+    let cle = |mot: &str| match mot {
+        "Ignite" | "Ignites" => Some("ignite"),
+        "Poison" | "Poisons" => Some("poison"),
+        "Bleeding" | "inflict Bleeding" | "cause Bleeding" => Some("bleed"),
+        _ => None,
+    };
+    let un = |stat: String, kind: TypeModificateur, v: f64| {
+        Some(vec![Modificateur::new(stat, kind, v, source)])
+    };
+    if let Some(c) = m[0].captures(l) {
+        return un(
+            "ignite_chance".into(),
+            genre(&c[2]),
+            nombre(&c[1]) * signe(&c[2]),
+        );
+    }
+    if let Some(c) = m[1].captures(l) {
+        return un(
+            stats::AILMENT_CHANCE.into(),
+            genre(&c[2]),
+            nombre(&c[1]) * signe(&c[2]),
+        );
+    }
+    if let Some(c) = m[2].captures(l) {
+        return un(
+            format!("{}_chance", cle(&c[2])?),
+            TypeModificateur::Added,
+            nombre(&c[1]),
+        );
+    }
+    if let Some(c) = m[3].captures(l) {
+        let stat = match c.get(3).map(|x| x.as_str()) {
+            None => "ignite_magnitude".to_string(),
+            Some("Ailments" | "Damaging Ailments") => stats::AILMENT_MAGNITUDE.to_string(),
+            Some(a) => format!("{}_magnitude", cle(a)?),
+        };
+        return un(stat, genre(&c[2]), nombre(&c[1]) * signe(&c[2]));
+    }
+    if let Some(c) = m[4].captures(l) {
+        return un(
+            format!("{}_magnitude", cle(&c[3])?),
+            genre(&c[2]),
+            nombre(&c[1]) * signe(&c[2]),
+        );
+    }
+    if let Some(c) = m[5].captures(l) {
+        return un(
+            format!("{}_duration", cle(&c[3])?),
+            genre(&c[2]),
+            nombre(&c[1]) * signe(&c[2]),
+        );
+    }
+    if let Some(c) = m[6].captures(l) {
+        let stat = if c[3].starts_with("Ignite") {
+            "ignite_duration".to_string()
+        } else {
+            stats::AILMENT_DURATION.to_string()
+        };
+        return un(stat, genre(&c[2]), nombre(&c[1]) * signe(&c[2]));
+    }
+    if let Some(c) = m[7].captures(l) {
+        let v = nombre(&c[2]);
+        let cles: Vec<&str> = match cle(&c[1]) {
+            Some(k) => vec![k],
+            None => vec!["ignite", "poison", "bleed"],
+        };
+        return Some(
+            cles.into_iter()
+                .map(|k| {
+                    Modificateur::new(
+                        format!("{k}_faster"),
+                        TypeModificateur::Increased,
+                        v,
+                        source,
+                    )
+                })
+                .collect(),
+        );
+    }
+    if let Some(c) = m[8].captures(l) {
+        let cles: Vec<&str> = match &c[1] {
+            "inflict Elemental Ailments" | "inflict Freeze, Shock or Ignite" => vec!["ignite"],
+            autre => vec![cle(autre)?],
+        };
+        return Some(
+            cles.into_iter()
+                .map(|k| {
+                    Modificateur::new(
+                        format!("{k}_chance"),
+                        TypeModificateur::More,
+                        -100.0,
+                        source,
+                    )
+                })
+                .collect(),
+        );
+    }
+    static PILES: OnceLock<Regex> = OnceLock::new();
+    let piles = PILES.get_or_init(|| {
+        Regex::new(
+            r"^Targets can be affected by \+(\d+) (?:of your Poisons|Poisons from Supported Skills) at the same time$",
+        )
+        .unwrap()
+    });
+    if let Some(c) = piles.captures(l) {
+        return un(
+            stats::POISON_STACKS.into(),
+            TypeModificateur::Added,
+            nombre(&c[1]),
+        );
+    }
+    None
+}
+
 /// Traduit une ligne de mod (déjà affichée par le jeu ou par PoB).
 pub fn traduire(ligne: &str, source: &str) -> Traduction {
     let l = nettoyer(ligne);
     if l.is_empty() || l.starts_with("Grants Skill:") {
         return Traduction::SansEffet;
+    }
+    if let Some(v) = ailment(&l, source) {
+        return Traduction::Mods(v);
     }
     // Effets qui recopient ou ajoutent d'autres mods : impossibles à chiffrer ici.
     if l.starts_with("Reflects ") || l.starts_with("Allocates ") {
@@ -669,6 +826,206 @@ mod tests {
         assert_eq!(
             m.stat,
             stats::stat_gain(TypeDegats::Froid, TypeDegats::Chaos)
+        );
+    }
+
+    #[test]
+    fn traduit_les_ailments() {
+        let cas: &[(&str, &str, TypeModificateur, f64)] = &[
+            (
+                "39% increased Flammability Magnitude",
+                "ignite_chance",
+                TypeModificateur::Increased,
+                39.0,
+            ),
+            (
+                "Supported Skills have 150% more Flammability Magnitude",
+                "ignite_chance",
+                TypeModificateur::More,
+                150.0,
+            ),
+            (
+                "Supported Skills have 25% less Flammability Magnitude",
+                "ignite_chance",
+                TypeModificateur::More,
+                -25.0,
+            ),
+            (
+                "10% increased chance to inflict Ailments",
+                "ailment_chance",
+                TypeModificateur::Increased,
+                10.0,
+            ),
+            (
+                "Supported Skills have 100% more chance to inflict Ailments",
+                "ailment_chance",
+                TypeModificateur::More,
+                100.0,
+            ),
+            (
+                "13% chance to Poison on Hit",
+                "poison_chance",
+                TypeModificateur::Added,
+                13.0,
+            ),
+            (
+                "17% chance to inflict Bleeding on Hit",
+                "bleed_chance",
+                TypeModificateur::Added,
+                17.0,
+            ),
+            (
+                "Supported Skills have 50% chance to inflict Bleeding",
+                "bleed_chance",
+                TypeModificateur::Added,
+                50.0,
+            ),
+            (
+                "Supported Skills have 30% chance to Poison on Hit",
+                "poison_chance",
+                TypeModificateur::Added,
+                30.0,
+            ),
+            (
+                "17% increased Ignite Magnitude",
+                "ignite_magnitude",
+                TypeModificateur::Increased,
+                17.0,
+            ),
+            (
+                "18% increased Magnitude of Poison you inflict",
+                "poison_magnitude",
+                TypeModificateur::Increased,
+                18.0,
+            ),
+            (
+                "9% increased Magnitude of Bleeding you inflict",
+                "bleed_magnitude",
+                TypeModificateur::Increased,
+                9.0,
+            ),
+            (
+                "8% increased Magnitude of Ailments you inflict",
+                "ailment_magnitude",
+                TypeModificateur::Increased,
+                8.0,
+            ),
+            (
+                "4% increased Magnitude of Damaging Ailments you inflict",
+                "ailment_magnitude",
+                TypeModificateur::Increased,
+                4.0,
+            ),
+            (
+                "75% more Magnitude of Ignite inflicted with Supported Skills",
+                "ignite_magnitude",
+                TypeModificateur::More,
+                75.0,
+            ),
+            (
+                "100% more Magnitude of Bleeding inflicted with Supported Skills",
+                "bleed_magnitude",
+                TypeModificateur::More,
+                100.0,
+            ),
+            (
+                "8% increased Poison Duration",
+                "poison_duration",
+                TypeModificateur::Increased,
+                8.0,
+            ),
+            (
+                "6% increased Ignite Duration on Enemies",
+                "ignite_duration",
+                TypeModificateur::Increased,
+                6.0,
+            ),
+            (
+                "Supported Skills have 20% less Poison Duration",
+                "poison_duration",
+                TypeModificateur::More,
+                -20.0,
+            ),
+            (
+                "9% increased Duration of Damaging Ailments on Enemies",
+                "ailment_duration",
+                TypeModificateur::Increased,
+                9.0,
+            ),
+            (
+                "15% increased Duration of Ignite, Shock and Chill on Enemies",
+                "ignite_duration",
+                TypeModificateur::Increased,
+                15.0,
+            ),
+            (
+                "Ignites you inflict deal Damage 10% faster",
+                "ignite_faster",
+                TypeModificateur::Increased,
+                10.0,
+            ),
+            (
+                "Ignites from Supported Skills deal Damage 15% faster",
+                "ignite_faster",
+                TypeModificateur::Increased,
+                15.0,
+            ),
+            (
+                "Bleeding you inflict deals Damage 5% faster",
+                "bleed_faster",
+                TypeModificateur::Increased,
+                5.0,
+            ),
+            (
+                "Targets can be affected by +1 of your Poisons at the same time",
+                "poison_stacks",
+                TypeModificateur::Added,
+                1.0,
+            ),
+            (
+                "Targets can be affected by +1 Poisons from Supported Skills at the same time",
+                "poison_stacks",
+                TypeModificateur::Added,
+                1.0,
+            ),
+            (
+                "Supported Skills cannot Ignite",
+                "ignite_chance",
+                TypeModificateur::More,
+                -100.0,
+            ),
+            (
+                "Supported Attacks cannot cause Bleeding",
+                "bleed_chance",
+                TypeModificateur::More,
+                -100.0,
+            ),
+            (
+                "Supported Skills Cannot inflict Freeze, Shock or Ignite",
+                "ignite_chance",
+                TypeModificateur::More,
+                -100.0,
+            ),
+        ];
+        for (ligne, stat, kind, v) in cas {
+            let m = un(ligne);
+            assert_eq!(
+                (m.stat.as_str(), m.kind, m.valeur),
+                (*stat, *kind, *v),
+                "{ligne}"
+            );
+        }
+        match traduire("Damaging Ailments deal damage 10% faster", "t") {
+            Traduction::Mods(v) => assert_eq!(v.len(), 3),
+            autre => panic!("{autre:?}"),
+        }
+        // Conditionnelles : toujours sans effet.
+        assert_eq!(
+            traduire(
+                "15% increased Magnitude of Bleeding you inflict with Critical Hits",
+                "t"
+            ),
+            Traduction::SansEffet
         );
     }
 }

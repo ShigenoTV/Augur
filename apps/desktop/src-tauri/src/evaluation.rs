@@ -102,8 +102,19 @@ pub fn to_delta(c: &Comparaison, ms: u32) -> ItemDelta {
         mechanics.push(note_avec(
             "degats-dans-le-temps",
             vec![format!(
-                "{} : dégâts dans le temps comptés pour un seul effet actif à la fois ; les ailments (ignite, poison, saignement) ne sont pas encore comptés",
+                "{} : dégâts dans le temps comptés pour un seul effet actif à la fois",
                 c.competence
+            )],
+        ));
+    }
+    if !r.ailments.is_empty() {
+        let noms: Vec<&str> = r.ailments.iter().map(String::as_str).collect();
+        mechanics.push(note_avec(
+            "ailments",
+            vec![format!(
+                "{} compté{} dans le DPS : cible immobile de ton niveau (85 au plus), un seul ignite et un seul saignement actifs à la fois, poison selon tes mods ; moyenne de Path of Building, pas encore mesurée en jeu",
+                noms.join(", "),
+                if noms.len() > 1 { "s" } else { "" }
             )],
         ));
     }
