@@ -8,15 +8,17 @@
 //! gemme et ajoutés, increased/more par type, critique, vitesse
 //! d'incantation, résistances et pénétration de la cible), plus les
 //! mitigations défensives de base. Depuis : conversions, attaques, minions
-//! (indice relatif) et dégâts dans le temps propres à la compétence. Les
-//! ailments (ignite, poison, saignement) ne sont pas encore couverts : un
-//! cas golden qui en dépend doit être marqué « non supporté ».
+//! (indice relatif), dégâts dans le temps propres à la compétence et
+//! ailments à dégâts (ignite, poison, saignement, [`ailments`]). `dps` reste
+//! le DPS du panneau du jeu (coups et dégâts dans le temps de la
+//! compétence) ; `dps_total` y ajoute les ailments.
 //!
 //! Deuxième archétype (Arc, fiche 09) : nombre de chaînes (base du niveau,
 //! qualité, `number_of_chains`), infusion consommée par la compétence,
 //! modificateurs conditionnels (Zenith II : mana au-dessus de 90 %) et
 //! cadence affichée par le panneau du jeu (arrondie à 2 décimales).
 
+pub mod ailments;
 pub mod defense;
 pub mod formules;
 pub mod golden;
@@ -177,6 +179,13 @@ pub struct Cible {
     pub resistances: BTreeMap<TypeDegats, f64>,
     #[serde(default)]
     pub armure: f64,
+    /// Niveau de la cible, pour son seuil d'ailment. Sans valeur : niveau du
+    /// personnage plafonné à 85 (85 si inconnu).
+    #[serde(default)]
+    pub niveau: Option<u32>,
+    /// Seuil d'ailment de la cible, s'il est connu (remplace celui du niveau).
+    #[serde(default)]
+    pub seuil_ailments: Option<f64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
@@ -374,12 +383,59 @@ pub fn calculer(perso: &Personnage, cond: &Conditions) -> Result<Resultats, Vec<
 
     if let Some(comp) = &perso.competence {
         let o = offense::calculer(&db, comp, &cond.cible);
-        ins("dps", o.dps);
+        ins("dps", o.dps.clone());
         ins("coup_moyen", o.coup_moyen);
         ins("coup_moyen_brut", o.coup_moyen_brut);
-        ins("chance_critique", o.chance_critique);
-        ins("bonus_degats_critiques", o.bonus_critique);
-        ins("incantations_par_seconde", o.incantations_par_seconde);
+        ins("chance_critique", o.chance_critique.clone());
+        ins("bonus_degats_critiques", o.bonus_critique.clone());
+        ins(
+            "incantations_par_seconde",
+            o.incantations_par_seconde.clone(),
+        );
+        let mut total = o.dps.valeur;
+        let mut t_total = Trace::feuille("DPS total (ailments compris)", 0.0);
+        let mut formule = vec![trace::nombre(o.dps.valeur)];
+        t_total = t_total.avec_enfant(o.dps.clone());
+        if !comp.genre.est_minion() {
+            let niveau = cond.cible.niveau.unwrap_or_else(|| {
+                perso
+                    .niveau
+                    .unwrap_or(ailments::NIVEAU_CIBLE_MAX)
+                    .min(ailments::NIVEAU_CIBLE_MAX)
+            });
+            let seuil = cond
+                .cible
+                .seuil_ailments
+                .unwrap_or_else(|| ailments::seuil_monstre(niveau));
+            let coups = ailments::Coups {
+                par_type: &o.par_type_brut,
+                chance_critique: o.chance_critique.valeur,
+                bonus_critique: o.bonus_critique.valeur,
+                cadence: offense::arrondi_cadence(o.incantations_par_seconde.valeur),
+            };
+            let liste = ailments::calculer(&db, &coups, &cond.cible, seuil);
+            if !liste.is_empty() {
+                let somme: f64 = liste.iter().map(|a| a.dps.valeur).sum();
+                ins(
+                    "dps_ailments",
+                    Trace::feuille("DPS des ailments", somme)
+                        .avec_formule(format!(
+                            "Σ ignite, poison, saignement ; cible de niveau {niveau}, seuil d'ailment {}",
+                            trace::nombre(seuil)
+                        ))
+                        .avec_enfants(liste.iter().map(|a| a.dps.clone())),
+                );
+            }
+            for a in liste {
+                total += a.dps.valeur;
+                formule.push(trace::nombre(a.dps.valeur));
+                t_total = t_total.avec_enfant(a.dps.clone());
+                ins(&format!("chance_{}", a.ailment.nom()), a.chance);
+                ins(&format!("dps_{}", a.ailment.nom()), a.dps);
+            }
+        }
+        t_total.valeur = total;
+        ins("dps_total", t_total.avec_formule(formule.join(" + ")));
         if let Some(t) = o.dps_dot {
             ins("dps_dot", t);
         }

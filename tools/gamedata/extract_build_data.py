@@ -71,6 +71,49 @@ def _stat_value(stat_set: dict, level: dict, stat_id: str) -> float | None:
     return float(static["value"]) if "value" in static else None
 
 
+# Stats de gemme des ailments à dégâts -> (stat du moteur, nature) ; la
+# valeur est celle du niveau. Les drapeaux (sans valeur) valent la constante.
+AILMENTS = {
+    "base_chance_to_poison_on_hit_%": ("poison_chance", "added"),
+    "chance_to_poison_on_hit_with_attacks_%": ("poison_chance", "added"),
+    "poison_chance_+%": ("poison_chance", "increased"),
+    "base_chance_to_inflict_bleeding_%": ("bleed_chance", "added"),
+    "bleed_on_hit_with_attacks_%": ("bleed_chance", "added"),
+    "base_chance_to_ignite_%": ("ignite_chance", "added"),
+    "ignite_chance_+%": ("ignite_chance", "increased"),
+    "active_skill_ignite_chance_+%_final": ("ignite_chance", "more"),
+    "base_ignite_effect_+%": ("ignite_magnitude", "increased"),
+    "active_skill_ignite_effect_+%_final": ("ignite_magnitude", "more"),
+    "active_skill_bleeding_effect_+%_final": ("bleed_magnitude", "more"),
+    "ignite_duration_+%": ("ignite_duration", "increased"),
+    "base_bleed_duration_+%": ("bleed_duration", "increased"),
+}
+DRAPEAUX_AILMENTS = {
+    "global_poison_on_hit": ("poison_chance", "added", 100.0),
+    "attacks_inflict_bleeding_on_hit": ("bleed_chance", "added", 100.0),
+    "global_bleed_on_hit": ("bleed_chance", "added", 100.0),
+    "always_ignite": ("ignite_chance", "added", 100.0),
+    "never_ignite": ("ignite_chance", "more", -100.0),
+    "active_skill_never_freeze_shock_ignite": ("ignite_chance", "more", -100.0),
+    "cannot_poison": ("poison_chance", "more", -100.0),
+    "cannot_cause_bleeding": ("bleed_chance", "more", -100.0),
+}
+
+
+def _ailments(stat_set: dict, level: dict) -> list:
+    """Effets de la gemme sur les ailments à dégâts : [stat, nature, valeur]."""
+    out = []
+    ids = {x.get("id") for x in (stat_set.get("static") or {}).get("stats") or []}
+    for stat_id, (stat, nature) in AILMENTS.items():
+        v = _stat_value(stat_set, level, stat_id)
+        if v:
+            out.append([stat, nature, v])
+    for stat_id, (stat, nature, v) in DRAPEAUX_AILMENTS.items():
+        if stat_id in ids:
+            out.append([stat, nature, v])
+    return out
+
+
 def _degats(stat_set: dict, level: dict) -> dict:
     """Dégâts de base du sort à ce niveau, par type ({} s'il n'en a pas)."""
     out = {}
@@ -156,6 +199,9 @@ def active(skills: dict, skill_id: str, name: str, verifiee: bool = True) -> dic
         if not degats and not sans_coup:
             raise DonneesError(f"{skill_id} niveau {lvl} : dégâts absents")
         n = {"degats": degats}
+        ailments = _ailments(stat_set, data)
+        if ailments:
+            n["ailments"] = ailments
         chains = _stat_value(stat_set, data, "number_of_chains")
         if chains is not None:
             n["chaines"] = chains
@@ -316,6 +362,9 @@ def attaque(skill_id: str, s: dict) -> dict | None:
     niveaux = {}
     for lvl, data in sorted(st["per_level"].items(), key=lambda kv: int(kv[0])):
         niveaux[lvl] = {"degats": {}, "multiplicateur": float(data.get("damage_multiplier") or 100)}
+        ailments = _ailments(st, data)
+        if ailments:
+            niveaux[lvl]["ailments"] = ailments
     conversion = {}
     for jeu, cle in ELEMENTS.items():
         x = ids.get(CONVERSION + jeu)

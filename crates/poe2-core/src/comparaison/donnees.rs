@@ -12,8 +12,8 @@ use std::sync::OnceLock;
 
 use serde::Deserialize;
 
-use crate::calc::Infusion;
 use crate::calc::stats::TypeDegats;
+use crate::calc::{Infusion, TypeModificateur};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct NiveauGemme {
@@ -29,6 +29,10 @@ pub struct NiveauGemme {
     /// Dégâts dans le temps de base, par seconde et par type.
     #[serde(default)]
     pub dot: BTreeMap<String, f64>,
+    /// Effets de la gemme sur les ailments à dégâts : (stat du moteur,
+    /// nature, valeur), par exemple `["ignite_chance", "more", 200]`.
+    #[serde(default)]
+    pub ailments: Vec<(String, TypeModificateur, f64)>,
 }
 
 impl NiveauGemme {
