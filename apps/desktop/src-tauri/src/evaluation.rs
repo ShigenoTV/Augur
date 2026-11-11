@@ -1,16 +1,18 @@
 //! `evaluate_item` : gain de DPS de l'objet copié pour le personnage importé
 //! (calcul de `poe2_core::comparaison`), converti vers le contrat `ItemDelta`.
 //!
-//! Seul le DPS est calculé pour l'instant : l'EHP est renvoyé à zéro
-//! (avant = après = 0) et l'overlay masque alors sa ligne.
+//! Défense : EHP (moyenne des plus gros coups encaissables) et résistances,
+//! étalonnés sur les stats exportées par Path of Building quand elles y sont
+//! (`poe2_core::comparaison::defense`).
 
 use std::time::Instant;
 
-use poe2_core::comparaison::{self, Comparaison, ErreurComparaison};
+use poe2_core::calc::stats::TypeDegats;
+use poe2_core::comparaison::{self, Comparaison, ErreurComparaison, defense};
 
 use crate::contracts::{
-    AppError, Confidence, ErrorCode, ItemDelta, MechanicNote, ParsedItem, StatDelta, SupportLevel,
-    app_error,
+    AppError, Confidence, Element, ErrorCode, ItemDelta, MechanicNote, ParsedItem, ResistanceDelta,
+    StatDelta, SupportLevel, app_error,
 };
 
 /// Identifiant de contrat d'un emplacement PoB (libellés dans `@augur/ui`).
@@ -63,6 +65,73 @@ fn unsupported(slot: &str, ms: u32) -> ItemDelta {
         mechanics: Vec::new(),
         compute_ms: ms,
     }
+}
+
+fn element(t: TypeDegats) -> Option<Element> {
+    Some(match t {
+        TypeDegats::Feu => Element::Fire,
+        TypeDegats::Froid => Element::Cold,
+        TypeDegats::Foudre => Element::Lightning,
+        TypeDegats::Chaos => Element::Chaos,
+        TypeDegats::Physique => return None,
+    })
+}
+
+/// Nombre entier à la française (« 4 210 »).
+fn entier(v: f64) -> String {
+    let n = v.round() as i64;
+    let s = n.abs().to_string();
+    let mut out = String::new();
+    for (i, c) in s.chars().enumerate() {
+        if i > 0 && (s.len() - i).is_multiple_of(3) {
+            out.push('\u{202f}');
+        }
+        out.push(c);
+    }
+    if n < 0 { format!("−{out}") } else { out }
+}
+
+/// Résistances (plafonnées, arrondies comme en jeu) et note sur l'EHP.
+fn defense_delta(d: &defense::DefenseComparee) -> (StatDelta, Vec<ResistanceDelta>, MechanicNote) {
+    let resistances = d
+        .avant
+        .resistances
+        .iter()
+        .zip(&d.apres.resistances)
+        .filter_map(|(av, ap)| {
+            Some(ResistanceDelta {
+                element: element(av.type_degats)?,
+                before: av.valeur().floor(),
+                after: ap.valeur().floor(),
+                cap: ap.maximale.floor(),
+            })
+        })
+        .collect();
+    let ligne = |nom: &str, a: f64, b: f64| format!("{nom} : {} → {}", entier(a), entier(b));
+    let mut details = vec![
+        "EHP : moyenne des plus gros coups encaissables (physique avec l'armure, feu, froid, foudre et chaos avec tes résistances), sans esquive ni blocage".to_string(),
+        ligne("Vie", d.avant.vie, d.apres.vie),
+        ligne(
+            "Bouclier d'énergie",
+            d.avant.bouclier_energie,
+            d.apres.bouclier_energie,
+        ),
+        ligne("Armure", d.avant.armure, d.apres.armure),
+        ligne("Évasion", d.avant.evasion, d.apres.evasion),
+    ];
+    details.push(if d.etalonnee {
+        "Valeurs actuelles reprises de ton export Path of Building ; l'écart de l'objet est calculé par Augur".to_string()
+    } else {
+        "Ton code Path of Building n'a pas de stats exportées : résistances comptées avec la pénalité de fin de campagne (−60 %) mais sans les bonus de quêtes. Réexporte ton build depuis Path of Building pour des valeurs exactes".to_string()
+    });
+    (
+        StatDelta {
+            before: d.avant.ehp(),
+            after: d.apres.ehp(),
+        },
+        resistances,
+        note_avec("defense", details),
+    )
 }
 
 /// Convertit une comparaison du moteur. Toujours « approximatif » : les
@@ -168,6 +237,8 @@ pub fn to_delta(c: &Comparaison, ms: u32) -> ItemDelta {
     if r.arbre_autre_version {
         mechanics.push(note("arbre-autre-version"));
     }
+    let (ehp, resistances, note_defense) = defense_delta(&c.defense);
+    mechanics.push(note_defense);
     let weapon_set = matches!(c.emplacement.as_str(), "Weapon 1" | "Weapon 2").then_some(1);
     ItemDelta {
         slot: slot_id(&c.emplacement),
@@ -178,11 +249,24 @@ pub fn to_delta(c: &Comparaison, ms: u32) -> ItemDelta {
             before: c.dps_avant,
             after: c.dps_apres,
         },
-        ehp: zero(),
-        resistances: Vec::new(),
+        ehp,
+        resistances,
         spirit: None,
         mechanics,
         compute_ms: ms,
+    }
+}
+
+/// Défenses calculées d'une pièce d'armure, lues dans les propriétés du
+/// texte copié (« Energy Shield: 245 (augmented) »).
+fn defenses_locales(item: &ParsedItem) -> defense::DefensesLocales {
+    match poe2_core::parser::parser(&item.raw_text) {
+        Ok(o) => defense::DefensesLocales::depuis_proprietes(
+            o.proprietes
+                .iter()
+                .map(|p| (p.nom.as_str(), p.valeur.as_str())),
+        ),
+        Err(_) => defense::DefensesLocales::default(),
     }
 }
 
@@ -208,6 +292,7 @@ pub fn evaluate(
             base: Some(&item.base_type),
             qualite: item.quality.map(f64::from),
             lignes: &lignes,
+            defenses: defenses_locales(item),
         },
     );
     let ms = u32::try_from(debut.elapsed().as_millis()).unwrap_or(u32::MAX);
@@ -290,7 +375,10 @@ Implicits: 0
         assert_eq!(d.equipped_name.as_deref(), Some("Old"));
         assert_eq!(d.support, SupportLevel::Approximate);
         assert!((d.dps.after / d.dps.before - 2.0 / 1.2).abs() < 1e-9);
-        assert_eq!((d.ehp.before, d.ehp.after), (0.0, 0.0));
+        // La baguette ne change aucune défense.
+        assert!(d.ehp.before > 0.0);
+        assert_eq!(d.ehp.before, d.ehp.after);
+        assert_eq!(d.resistances.len(), 4);
     }
 
     #[test]
@@ -345,6 +433,46 @@ Implicits: 0
             r#"<Gem nameSpec="Contagion" skillId="ContagionPlayer" level="20"/>"#,
             "degats-dans-le-temps"
         ));
+    }
+
+    #[test]
+    fn ehp_et_resistances_d_une_armure() {
+        let b = build(r#"<Gem nameSpec="Arc" skillId="ArcPlayer" level="20"/>"#);
+        let robe = ParsedItem {
+            raw_text: "Item Class: Body Armours\nRarity: Rare\nStorm Shell\nVile Robe\n--------\nEnergy Shield: 250 (augmented)\n--------\nItem Level: 80\n--------\n+100 to maximum Life\n+40% to Fire Resistance\n".into(),
+            item_class: "Body Armours".into(),
+            name: Some("Storm Shell".into()),
+            base_type: "Vile Robe".into(),
+            mods: ["+100 to maximum Life", "+40% to Fire Resistance"]
+                .iter()
+                .map(|t| ItemMod {
+                    text: (*t).into(),
+                    ..baguette().mods[0].clone()
+                })
+                .collect(),
+            ..baguette()
+        };
+        let d = evaluate(Some(&b), &robe).unwrap();
+        assert_eq!(d.slot, "bodyArmour");
+        assert!(d.ehp.after > d.ehp.before);
+        let feu = d
+            .resistances
+            .iter()
+            .find(|r| r.element == Element::Fire)
+            .unwrap();
+        assert_eq!((feu.before, feu.after, feu.cap), (-60.0, -20.0, 75.0));
+        let note = d
+            .mechanics
+            .iter()
+            .find(|n| n.mechanic == "defense")
+            .unwrap();
+        assert!(
+            note.details
+                .iter()
+                .any(|l| l == "Bouclier d'énergie : 0 → 250"),
+            "{:?}",
+            note.details
+        );
     }
 
     #[test]

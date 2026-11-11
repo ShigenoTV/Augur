@@ -55,6 +55,7 @@ const mechanics: Record<string, string> = {
   "double-arme": "Deux armes : attaques en alternance supposées",
   ailments: "Ailments (ignite, poison, saignement) : calcul moyen supposé",
   "arbre-autre-version": "Build fait sur une autre version de l'arbre",
+  defense: "EHP et résistances : vie, bouclier, armure (détail)",
 };
 
 export function mechanicLabel(id: string): string {
