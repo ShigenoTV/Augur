@@ -178,7 +178,14 @@ export type ForgePrices = {
   sources: Record<string, ForgePriceSource>;
 };
 export type ForgeWanted = { group: number; family: number; maxTier: number };
-export type ForgePlanRequest = { baseId: string; ilvl: number; voulus: ForgeWanted[]; exclues: string[] };
+export type ForgePlanRequest = {
+  baseId: string;
+  ilvl: number;
+  voulus: ForgeWanted[];
+  exclues: string[];
+  /** Texte d'un objet déjà en possession (Ctrl+Alt+C) d'où repartir ; absent : base neuve. */
+  objetDepart?: string | null;
+};
 export type ForgeItemSummary = {
   rarity: ForgeRarity;
   heldWanted: number[];
@@ -252,6 +259,8 @@ export type ForgePlanResult = {
   prix: { id: string; prix: number; source: ForgePriceSource }[];
   ligue: string | null;
   attribution: ForgeAttribution;
+  /** Mods de l'objet de départ tels que Forge les a compris ; null : base neuve. */
+  depart: ForgeReadMod[] | null;
 };
 
 export type ForgeAdviceOutcome = { label: string; probability: number; kind: "success" | "failure"; costToGo: number | null };
@@ -281,6 +290,15 @@ export type ForgeTip = {
   ilvlObjet: number | null;
   ilvlPlan: number;
   conseil: ForgeAdvice;
+};
+/** Objet de départ collé dans le panneau, lu par Forge (atelier::analyser_objet). */
+export type ForgeStartItem = {
+  baseId: string;
+  baseNom: string;
+  classe: string;
+  ilvl: number | null;
+  rarete: ForgeRarity;
+  mods: ForgeReadMod[];
 };
 export type ForgeTracking = { baseNom: string; ilvl: number; labels: string[] };
 /** Plans calculés (crates/poe2-core/src/forge/historique.rs). */
@@ -335,6 +353,7 @@ export const commands = {
   clearCharacter: () => invoke<void>("clear_character"),
   getForgeBases: () => invoke<ForgeBase[]>("get_forge_bases"),
   getForgeAffixes: (baseId: string, ilvl: number) => invoke<ForgeAffixes>("get_forge_affixes", { baseId, ilvl }),
+  analyzeForgeItem: (texte: string) => invoke<ForgeStartItem>("analyze_forge_item", { texte }),
   getForgeCatalogue: () => invoke<ForgeCatalogueEntry[]>("get_forge_catalogue"),
   planForgeCraft: (demande: ForgePlanRequest) => invoke<ForgePlanResult>("plan_forge_craft", { demande }),
   getForgeAdvice: () => invoke<ForgeTip | null>("get_forge_advice"),

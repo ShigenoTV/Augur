@@ -114,6 +114,7 @@ pub fn run() {
             commands::refresh_forge_prices,
             commands::get_forge_bases,
             commands::get_forge_affixes,
+            commands::analyze_forge_item,
             commands::get_forge_catalogue,
             commands::plan_forge_craft,
             commands::get_forge_advice,

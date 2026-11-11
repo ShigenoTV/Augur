@@ -15,6 +15,7 @@ import {
   type ForgePlanResult,
   type ForgePrices,
   type ForgeSlot,
+  type ForgeStartItem,
   type ForgeTracking,
   type ForgeWanted,
 } from "../bridge";
@@ -127,6 +128,102 @@ function AffixColumn({
         })}
       </ul>
     </div>
+  );
+}
+
+/** Objet de départ lu, avec le texte collé (envoyé tel quel au calcul). */
+type Depart = { texte: string; objet: ForgeStartItem };
+
+const RARETE: Record<ForgeStartItem["rarete"], string> = { normal: "Normal", magic: "Magique", rare: "Rare" };
+
+/**
+ * Objet de départ : un objet déjà en possession, copié avec Ctrl+Alt+C en jeu, d'où le plan repart
+ * au lieu d'une base neuve (comme dans l'ancienne appli de craft). « Analyser » choisit sa base et son
+ * niveau d'objet.
+ */
+function StartItemPicker({
+  depart,
+  onDepart,
+}: {
+  depart: Depart | null;
+  onDepart: (d: Depart | null) => void;
+}) {
+  const [texte, setTexte] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function analyser() {
+    setBusy(true);
+    setError(null);
+    try {
+      onDepart({ texte, objet: await commands.analyzeForgeItem(texte) });
+    } catch (err) {
+      setError(message(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <details className="rounded-panel border border-ink-700 bg-ink-950 px-3 py-2 text-xs">
+      <summary className="cursor-pointer text-sm text-text-primary">
+        Objet de départ {depart ? "(objet existant)" : "(base neuve)"}
+      </summary>
+      <div className="mt-2 space-y-2">
+        <p className="text-text-subtle">
+          Colle le texte d'un objet déjà en ta possession (<span className="font-mono">Ctrl+Alt+C</span> en jeu) pour que le
+          plan reparte de là où tu en es, au lieu d'une base neuve. Laisse vide pour repartir d'une base neuve, comme avant.
+        </p>
+        {depart ? (
+          <div className="space-y-1.5">
+            <p className="text-text-muted">
+              <span className="text-text-primary">{depart.objet.baseNom}</span> {RARETE[depart.objet.rarete]}
+              {depart.objet.ilvl !== null && <> · niveau {depart.objet.ilvl}</>} · {depart.objet.mods.length} mod(s)
+            </p>
+            {depart.objet.mods.length > 0 && (
+              <ul className="space-y-0.5">
+                {depart.objet.mods.map((m, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="w-14 shrink-0 text-text-subtle">{m.slot === "prefix" ? "Préfixe" : "Suffixe"}</span>
+                    <span className={m.reconnu ? "text-text-primary" : "text-text-subtle"}>
+                      {m.texte}
+                      {m.fracture && <span className="ml-1 text-accent">(fracturé)</span>}
+                      {!m.reconnu && <span className="ml-1 text-signal-warn">non reconnu : compté comme un mauvais mod</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                onDepart(null);
+                setTexte("");
+              }}
+              className="rounded-chip border border-ink-600 px-2 py-0.5 text-text-primary hover:bg-ink-800"
+            >
+              Repartir d'une base neuve
+            </button>
+          </div>
+        ) : (
+          <>
+            <textarea
+              rows={5}
+              value={texte}
+              onChange={(e) => setTexte(e.target.value)}
+              placeholder="Colle ici le texte de l'objet…"
+              className={`${input} w-full font-mono`}
+            />
+            <div className="flex items-center gap-2">
+              <button type="button" disabled={busy || !texte.trim()} onClick={() => void analyser()} className={btnSecondary}>
+                {busy ? "Analyse…" : "Analyser"}
+              </button>
+              {error && <span className="text-signal-loss">{error}</span>}
+            </div>
+          </>
+        )}
+      </div>
+    </details>
   );
 }
 
@@ -295,6 +392,11 @@ function HistoryView({
               <td className="py-1 pr-2 text-text-primary">
                 {e.baseNom} <span className="text-text-subtle">(niv. {e.demande.ilvl})</span>
                 {historique.suivi === e.id && <span className="ml-1 text-[10px] uppercase text-accent">suivi</span>}
+                {e.demande.objetDepart && (
+                  <span className="ml-1 text-[10px] uppercase text-text-subtle" title="Calculé depuis un objet déjà en possession">
+                    objet existant
+                  </span>
+                )}
               </td>
               <td className="py-1 pr-2 text-text-muted">{e.labels.map(libelleCourt).join(", ")}</td>
               <td className="whitespace-nowrap py-1 pr-2 text-right font-mono text-text-primary">{cout(e.cout)}</td>
@@ -343,7 +445,11 @@ function PlanView({ result }: { result: ForgePlanResult }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 rounded-panel border border-ink-700 bg-ink-950">
-        <Stat label="Coût moyen" value={cout(plan.expectedCost + plan.baseCost)} hint={`base neuve comprise (${cout(plan.baseCost)})`} />
+        {result.depart ? (
+          <Stat label="Coût moyen" value={cout(plan.expectedCost)} hint="depuis ton objet" />
+        ) : (
+          <Stat label="Coût moyen" value={cout(plan.expectedCost + plan.baseCost)} hint={`base neuve comprise (${cout(plan.baseCost)})`} />
+        )}
         <Stat label="Une fois sur deux" value={cout(mc?.medianCost)} hint={mc ? `médiane de ${formatCount(mc.trials)} crafts simulés` : undefined} />
         <Stat label="Budget sûr (9 sur 10)" value={cout(mc?.p90Cost)} hint={mc ? `99 sur 100 : ${cout(mc.p99Cost)}` : undefined} />
         <Stat
@@ -444,6 +550,7 @@ export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onRegla
   const [affixes, setAffixes] = useState<ForgeAffixes | null>(null);
   const [voulus, setVoulus] = useState<ForgeWanted[]>([]);
   const [exclues, setExclues] = useState<string[]>([]);
+  const [depart, setDepart] = useState<Depart | null>(null);
   const [result, setResult] = useState<ForgePlanResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -506,7 +613,7 @@ export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onRegla
     setVoulus((v) => v.map((w) => (cleAffixe(w) === cleAffixe(a) ? { ...w, maxTier: tier } : w)));
   }
 
-  async function calculer(demande: ForgePlanRequest = { baseId, ilvl, voulus, exclues }) {
+  async function calculer(demande: ForgePlanRequest = { baseId, ilvl, voulus, exclues, objetDepart: depart?.texte ?? null }) {
     setBusy(true);
     setError(null);
     setResult(null);
@@ -528,6 +635,14 @@ export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onRegla
     setIlvl(e.demande.ilvl);
     setVoulus(e.demande.voulus);
     setExclues(e.demande.exclues);
+    const texte = e.demande.objetDepart;
+    setDepart(null);
+    if (texte) {
+      void commands
+        .analyzeForgeItem(texte)
+        .then((objet) => setDepart({ texte, objet }))
+        .catch(() => undefined);
+    }
     setOnglet("plan");
     void calculer(e.demande);
   }
@@ -611,6 +726,7 @@ export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onRegla
                   setClasse(e.target.value);
                   setBaseId("");
                   setVoulus([]);
+                  setDepart(null);
                 }}
                 className={input}
               >
@@ -630,6 +746,7 @@ export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onRegla
                 onChange={(e) => {
                   setBaseId(e.target.value);
                   setVoulus([]);
+                  setDepart(null);
                 }}
                 className={`${input} w-56`}
               >
@@ -648,12 +765,30 @@ export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onRegla
                 min={1}
                 max={100}
                 value={ilvl}
-                onChange={(e) => setIlvl(Math.min(100, Math.max(1, Number(e.target.value) || 1)))}
+                onChange={(e) => {
+                  setIlvl(Math.min(100, Math.max(1, Number(e.target.value) || 1)));
+                  // L'objet de départ garde son niveau d'objet.
+                  if (depart?.objet.ilvl != null) setDepart(null);
+                }}
                 className={`${input} w-20`}
               />
             </label>
             <span className="pb-1 text-xs text-text-subtle">{bases.length} bases avec des poids connus</span>
           </div>
+
+          <StartItemPicker
+            depart={depart}
+            onDepart={(d) => {
+              setDepart(d);
+              setResult(null);
+              if (!d) return;
+              // L'objet choisit la base et le niveau d'objet ; on garde les affixes voulus si la base ne change pas.
+              setClasse(d.objet.classe);
+              if (d.objet.baseId !== baseId) setVoulus([]);
+              setBaseId(d.objet.baseId);
+              if (d.objet.ilvl !== null) setIlvl(d.objet.ilvl);
+            }}
+          />
 
           {affixes && (
             <>
@@ -693,7 +828,7 @@ export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onRegla
                   {busy ? "Calcul en cours…" : "Calculer le plan"}
                 </button>
                 <span className="text-xs text-text-subtle">
-                  {voulus.length === 0 ? "Coche les affixes voulus (3 préfixes et 3 suffixes au plus)." : `${voulus.length} affixe(s) voulu(s), depuis une base neuve.`}
+                  {voulus.length === 0 ? "Coche les affixes voulus (3 préfixes et 3 suffixes au plus)." : `${voulus.length} affixe(s) voulu(s), depuis ${depart ? "ton objet" : "une base neuve"}.`}
                 </span>
               </div>
             </>

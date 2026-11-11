@@ -18,7 +18,7 @@ use super::solveur::{
     Action, ActionKind, CraftPlan, GoalItem, MacroState, Model, PlanConfig, PlanInputs,
     SolveConfig, build_plan, solve, verify_policy,
 };
-use super::suivi::PlanActif;
+use super::suivi::{self, ErreurSuivi, ModLu, PlanActif, lire_objet};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::Read;
@@ -99,6 +99,8 @@ pub enum ErreurAtelier {
     Prix(String),
     #[error("calcul impossible : {0}")]
     Solveur(String),
+    #[error("objet de départ : {0}")]
+    ObjetDepart(String),
 }
 
 fn charger() -> Result<DonneesForge, String> {
@@ -382,6 +384,19 @@ pub struct DemandePlan {
     /// Essences).
     #[serde(default)]
     pub exclues: Vec<String>,
+    /// Texte d'un objet déjà en possession (Ctrl+Alt+C en jeu) d'où repartir, au lieu d'une base
+    /// neuve. Absent ou vide : base neuve.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub objet_depart: Option<String>,
+}
+
+impl DemandePlan {
+    fn texte_depart(&self) -> Option<&str> {
+        self.objet_depart
+            .as_deref()
+            .map(str::trim)
+            .filter(|t| !t.is_empty())
+    }
 }
 
 /// Prix d'une monnaie, d'un Omen ou de la base achetés par le plan, avec sa source.
@@ -406,6 +421,8 @@ pub struct ResultatPlan {
     pub prix: Vec<PrixUtilise>,
     pub ligue: Option<String>,
     pub attribution: Attribution,
+    /// Mods de l'objet de départ tels que Forge les a compris (`None` : base neuve).
+    pub depart: Option<Vec<ModLu>>,
 }
 
 fn actives(exclues: &[String]) -> BTreeSet<String> {
@@ -537,7 +554,135 @@ fn source_des_prix(table: &TablePrix) -> String {
     format!("Prix en Exalted : {}", parts.join(", "))
 }
 
-/// Calcule le plan de craft optimal depuis une base neuve, avec les prix effectifs de `table`.
+/// Objet déjà en possession, lu pour le panneau (bouton « Analyser »).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ObjetDepart {
+    pub base_id: String,
+    pub base_nom: String,
+    pub classe: String,
+    /// Niveau d'objet lu sur l'objet (absent de certaines copies).
+    pub ilvl: Option<u32>,
+    pub rarete: Rarity,
+    pub mods: Vec<ModLu>,
+}
+
+fn lire_texte(texte: &str) -> Result<crate::parser::Objet, ErreurAtelier> {
+    crate::parser::parser(texte).map_err(|e| ErreurAtelier::ObjetDepart(e.to_string()))
+}
+
+/// Base de Forge de l'objet : nom exact, ou pour un objet magique le nom de base le plus long contenu
+/// dans son nom (« Athlete's Ornate Cuffs of the Fox »).
+fn base_de(objet: &crate::parser::Objet) -> Result<BaseForge, ErreurAtelier> {
+    let nom = objet.base.as_str();
+    let magique = objet.rarete == crate::parser::Rarete::Magique;
+    bases()?
+        .into_iter()
+        .filter(|b| b.nom == nom || (magique && nom.contains(b.nom.as_str())))
+        .max_by_key(|b| b.nom.len())
+        .ok_or_else(|| {
+            ErreurAtelier::ObjetDepart(format!(
+                "base « {nom} » inconnue de Forge (ou sans poids connus)"
+            ))
+        })
+}
+
+fn erreur_suivi(e: ErreurSuivi) -> ErreurAtelier {
+    ErreurAtelier::ObjetDepart(e.to_string())
+}
+
+/// Lit un objet collé (Ctrl+Alt+C) : sa base, son niveau d'objet et ses mods retrouvés dans le pool. Les
+/// valeurs des mods ne servent pas (seuls le nom d'affixe, le texte et le tier) : peu importe que la copie
+/// affiche les valeurs avant ou après qualité.
+pub fn analyser_objet(texte: &str) -> Result<ObjetDepart, ErreurAtelier> {
+    let objet = lire_texte(texte)?;
+    let b = base_de(&objet)?;
+    let ilvl = objet.niveau_objet.filter(|n| (1..=100).contains(n));
+    let (_, pb) = pool(&b.id, ilvl.unwrap_or(100))?;
+    let lu = lire_objet(&pb.pool, None, ilvl.unwrap_or(100) as u8, &objet).map_err(erreur_suivi)?;
+    Ok(ObjetDepart {
+        base_id: b.id,
+        base_nom: b.nom,
+        classe: b.classe,
+        ilvl,
+        rarete: lu.item.rarity,
+        mods: lu.mods,
+    })
+}
+
+/// Objet de départ de la demande, rapproché du modèle : état abstrait de départ, objet pour la
+/// vérification sur le moteur exact (`None` si un mod inconnu ne s'y remplace pas), mods lus.
+fn depart(
+    demande: &DemandePlan,
+    texte: &str,
+    model: &Model,
+) -> Result<(MacroState, Option<ItemState>, Vec<ModLu>), ErreurAtelier> {
+    let objet = lire_texte(texte)?;
+    let b = base_de(&objet)?;
+    if b.id != demande.base_id {
+        return Err(ErreurAtelier::ObjetDepart(format!(
+            "c'est un objet {}, pas la base choisie",
+            b.nom
+        )));
+    }
+    if let Some(n) = objet.niveau_objet
+        && n != demande.ilvl
+    {
+        return Err(ErreurAtelier::ObjetDepart(format!(
+            "niveau d'objet {n}, différent du niveau choisi ({})",
+            demande.ilvl
+        )));
+    }
+    let lu =
+        lire_objet(&model.pool, Some(&model.goal), model.ilvl, &objet).map_err(erreur_suivi)?;
+    let etat = suivi::etat(model, &lu).ok_or_else(|| {
+        ErreurAtelier::ObjetDepart(
+            "un mod fracturé hors objectif : l'objectif est inatteignable sur cet objet".into(),
+        )
+    })?;
+    let item = remplacer_inconnus(model, &lu, &etat);
+    Ok((etat, item, lu.mods))
+}
+
+/// Objet pour le moteur exact : chaque mod inconnu (sans poids, désacralisé, artisanal) remplacé par un
+/// mod hors objectif du même côté, sans conflit de groupe. `None` si l'objet obtenu ne se projette pas
+/// sur le même état que l'objet lu.
+fn remplacer_inconnus(model: &Model, lu: &suivi::ObjetLu, etat: &MacroState) -> Option<ItemState> {
+    let mut item = lu.item;
+    for (slot, n) in [(Slot::Prefix, lu.inconnus.0), (Slot::Suffix, lu.inconnus.1)] {
+        for _ in 0..n {
+            let pris: BTreeSet<GroupId> = item
+                .mods()
+                .iter()
+                .flat_map(|m| {
+                    let a = &model.pool.affixes[m.idx as usize];
+                    std::iter::once(a.group).chain(a.extra_groups.iter().copied())
+                })
+                .collect();
+            let i = model.pool.affixes.iter().enumerate().position(|(k, a)| {
+                a.slot == slot
+                    && a.weight > 0
+                    && !a.desecrated
+                    && a.cap_shift == (0, 0)
+                    && a.extra_groups.is_empty()
+                    && !pris.contains(&a.group)
+                    && u16::try_from(k)
+                        .is_ok_and(|k| matches!(model.goal.classify(&model.pool, k), Class::Other))
+            })?;
+            if item.mods().len() >= 6 {
+                return None;
+            }
+            item.push(super::moteur::Mod {
+                idx: u16::try_from(i).ok()?,
+                fractured: false,
+                crafted: false,
+            });
+        }
+    }
+    (model.project(&item).as_ref() == Some(etat)).then_some(item)
+}
+
+/// Calcule le plan de craft optimal depuis une base neuve (ou l'objet de départ de la demande), avec les prix effectifs de `table`.
 /// Rend aussi le plan « actif », que l'overlay suit sur l'objet en cours de craft
 /// ([`super::suivi`]).
 pub fn planifier(
@@ -586,7 +731,17 @@ pub fn planifier(
 
     let labels: Vec<String> = goal_items.iter().map(|g| g.label.clone()).collect();
     let model = Model::new(pool, goal, ilvl, acts, prix_base, revente);
-    let depart = MacroState::empty(Rarity::Normal);
+    let (depart, objet_mc, mods_depart) = match demande.texte_depart() {
+        Some(texte) => {
+            let (etat, item, mods) = self::depart(demande, texte, &model)?;
+            (etat, item, Some(mods))
+        }
+        None => (
+            MacroState::empty(Rarity::Normal),
+            Some(ItemState::new(Rarity::Normal, ilvl)),
+            None,
+        ),
+    };
     let sol = solve(&model, &[depart], &SolveConfig::default(), annuler)
         .map_err(ErreurAtelier::Solveur)?;
     let mut plan = build_plan(
@@ -603,15 +758,27 @@ pub fn planifier(
         &PlanConfig::default(),
     )
     .map_err(ErreurAtelier::Solveur)?;
-    plan.mc = verify_policy(
-        &model,
-        &sol,
-        ItemState::new(Rarity::Normal, ilvl),
-        ESSAIS_VERIFICATION,
-        10_000,
-        GRAINE_VERIFICATION,
-        |_, _| true,
-    );
+    if mods_depart.is_some() {
+        // L'objet de départ est déjà payé : seules les bases neuves après un abandon s'achètent.
+        for l in plan.shopping.iter_mut().filter(|l| l.id == "__base") {
+            l.expected_count -= 1.0;
+            l.expected_cost -= prix_base;
+            l.label = "Bases neuves (après un abandon)".into();
+        }
+        plan.shopping
+            .retain(|l| l.id != "__base" || l.expected_count > 1e-9);
+    }
+    plan.mc = objet_mc.and_then(|item| {
+        verify_policy(
+            &model,
+            &sol,
+            item,
+            ESSAIS_VERIFICATION,
+            10_000,
+            GRAINE_VERIFICATION,
+            |_, _| true,
+        )
+    });
 
     // Prix réellement utilisés par le plan (achats moyens), avec leur source.
     let mut utilises: BTreeSet<&str> = BTreeSet::new();
@@ -641,6 +808,7 @@ pub fn planifier(
         ligue: table.marche.as_ref().map(|m| m.ligue.clone()),
         attribution: attribution(d),
         plan,
+        depart: mods_depart,
     };
     let base_nom = base(d, &demande.base_id)?.nom.clone();
     let actif = PlanActif {
@@ -718,6 +886,7 @@ mod tests {
             ilvl: 75,
             voulus: vec![voulu("maximum Life"), voulu("Fire Resistance")],
             exclues: vec![],
+            objet_depart: None,
         };
         let debut = std::time::Instant::now();
         let (r, _) = planifier(&demande, &table, &AtomicBool::new(false)).unwrap();
@@ -761,6 +930,7 @@ mod tests {
                 max_tier: u8::MAX,
             }],
             exclues: vec![],
+            objet_depart: None,
         };
         let annuler = AtomicBool::new(false);
         let mut table = TablePrix::indicative();
@@ -814,6 +984,7 @@ mod tests {
                 max_tier: u8::MAX,
             }],
             exclues: vec![],
+            objet_depart: None,
         };
         let mut table = TablePrix::indicative();
         table.saisir(&[(id.to_string(), prix)].into()).unwrap();
@@ -1197,6 +1368,7 @@ mod tests {
                 ilvl: 80,
                 voulus,
                 exclues: vec![],
+                objet_depart: None,
             };
             let mut table = TablePrix::indicative();
             table.saisir(&[(alloy.to_string(), 20.0)].into()).unwrap();
@@ -1243,6 +1415,7 @@ mod tests {
             ilvl: 80,
             voulus: vec![voulu("to all Attributes"), voulu("to Dexterity")],
             exclues: vec![],
+            objet_depart: None,
         };
         assert!(matches!(
             planifier(&demande, &TablePrix::indicative(), &AtomicBool::new(false)),
@@ -1311,6 +1484,7 @@ mod tests {
             ilvl: 45,
             voulus: vec![voulu("maximum Life"), voulu("Fire Resistance")],
             exclues: vec![],
+            objet_depart: None,
         };
         let (r, actif) =
             planifier(&demande, &TablePrix::indicative(), &AtomicBool::new(false)).unwrap();
