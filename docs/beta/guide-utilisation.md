@@ -108,9 +108,20 @@ Une map où tu es revenu après un portail compte-t-elle bien pour une seule ?
 
 ## Signaler un bug
 
-Le plus simple : un **ticket GitHub** sur
-<https://github.com/ShigenoTV/Augur/issues/new/choose>, modèle **« Bug de la bêta »**.
-Il faut un compte GitHub (gratuit). Le formulaire te guide.
+Le plus simple : le bouton **« Signaler un bug »** en bas de la barre latérale
+d'Augur (ou Réglages → Signaler un bug). Tu remplis trois champs, Augur ouvre
+dans ton navigateur un **ticket GitHub** prérempli avec ta version, celle des
+données du jeu et un diagnostic sans donnée personnelle (pas de chemin, pas de
+nom de personnage). Tu relis, tu ajoutes une capture si besoin, et tu cliques
+sur « Create » : rien n'est envoyé avant. Il faut un compte GitHub (gratuit).
+
+Sans passer par Augur : <https://github.com/ShigenoTV/Augur/issues/new/choose>,
+modèle **« Signaler un bug »**.
+
+Réglages → **Diagnostic** affiche le journal d'Augur (démarrage, journal du jeu,
+mises à jour, erreurs) et le bouton **« Copier le diagnostic »** pour le coller
+dans un ticket ou un message. Le journal est aussi écrit dans
+`%LOCALAPPDATA%\com.shigenotv.augur\logs\augur.log`.
 
 Sans compte GitHub, envoie directement à Max les mêmes informations :
 

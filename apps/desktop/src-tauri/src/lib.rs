@@ -11,11 +11,13 @@ use std::sync::Mutex;
 
 use tauri::{AppHandle, Manager, WindowEvent};
 
+mod bug_report;
 mod character;
 mod client_log;
 mod clipboard;
 mod commands;
 pub mod contracts;
+mod diag_log;
 mod evaluation;
 mod forge;
 mod forge_prices;
@@ -65,6 +67,7 @@ pub fn show_main_window(app: &AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    diag_log::init();
     tauri::Builder::default()
         // En premier : une seconde instance réveille la première au lieu de démarrer.
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -125,9 +128,16 @@ pub fn run() {
             commands::stop_forge_tracking,
             commands::get_forge_history,
             commands::delete_forge_history_entry,
+            commands::get_diagnostic,
+            commands::copy_diagnostic,
+            commands::open_bug_report,
         ])
         .setup(|app| {
             let handle = app.handle();
+            if let Ok(dir) = handle.path().app_log_dir() {
+                diag_log::attach_file(&dir);
+            }
+            log::info!("démarrage d'Augur v{}", handle.package_info().version);
             app.manage(settings::SettingsStore::load(handle));
             app.manage(character::CharacterState::load(handle));
             app.manage(ledger::LedgerState::open(handle));

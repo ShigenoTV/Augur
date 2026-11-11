@@ -82,6 +82,7 @@ pub struct UpdateProgress {
 pub struct PendingUpdate(Mutex<Option<Update>>);
 
 fn updater_error(err: impl std::fmt::Display) -> AppError {
+    log::warn!("vérification des mises à jour impossible : {err}");
     app_error(
         ErrorCode::Network,
         format!("Impossible de vérifier les mises à jour pour le moment ({err})."),
