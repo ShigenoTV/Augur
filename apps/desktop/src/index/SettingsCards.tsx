@@ -76,11 +76,67 @@ export function LeagueCard({ settings, onSettings }: { settings: Settings | null
   );
 }
 
+/** Budget de la recherche d'upgrades (Alt+U dans l'overlay), en exalts. */
+export function UpgradeBudgetCard({ settings, onSettings }: { settings: Settings | null; onSettings: (s: Settings) => void }) {
+  const [saisie, setSaisie] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const valeur = saisie ?? (settings?.upgradeBudget ? String(settings.upgradeBudget) : "");
+
+  async function enregistrer() {
+    setError(null);
+    setInfo(null);
+    const texte = valeur.trim();
+    const budget = texte === "" ? null : Number(texte);
+    if (budget !== null && (!Number.isInteger(budget) || budget < 0)) {
+      setError("Indique un nombre entier d'exalts, ou laisse vide pour chercher sans limite.");
+      return;
+    }
+    try {
+      onSettings(await commands.setUpgradeBudget(budget || null));
+      setSaisie(null);
+      setInfo(budget ? `Budget enregistré : ${budget} exalts au plus.` : "Recherche sans limite de prix.");
+    } catch (err) {
+      setError(message(err));
+    }
+  }
+
+  return (
+    <div className="space-y-3 text-sm">
+      <p className="text-text-muted">
+        Prix maximum des objets proposés par la recherche d'upgrades (sur le site de trade, dans la ligue souhaitée).
+      </p>
+      <div className="flex items-center gap-2">
+        <input
+          inputMode="numeric"
+          value={valeur}
+          disabled={!settings}
+          onChange={(e) => setSaisie(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && void enregistrer()}
+          placeholder="sans limite"
+          aria-label="Budget en exalts"
+          className={`${champ} w-32 disabled:opacity-50`}
+        />
+        <span className="text-text-muted">exalts</span>
+        <button type="button" onClick={() => void enregistrer()} disabled={!settings} className={btnSecondary}>
+          Enregistrer
+        </button>
+      </div>
+      {info && <p className="text-xs text-signal-gain">{info}</p>}
+      {error && (
+        <StatePanel icon="alert" title="Budget non enregistré" variant="warn">
+          {error}
+        </StatePanel>
+      )}
+    </div>
+  );
+}
+
 type Champ = keyof ShortcutSettings;
 
 const LIGNES: { id: Champ; action: string }[] = [
   { id: "closeOverlay", action: "Fermer l'overlay" },
-  { id: "upgradeSearch", action: "Chercher un meilleur objet (sprint 3)" },
+  { id: "upgradeSearch", action: "Chercher un meilleur objet (recherche de trade pondérée)" },
 ];
 
 /** Raccourcis de l'overlay : Échap et Alt+U modifiables, Ctrl+C et Ctrl+Alt+C fixés par le jeu. */

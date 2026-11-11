@@ -22,6 +22,8 @@ pub struct Settings {
     pub league: Option<String>,
     /// Raccourcis de l'overlay, modifiables (voir `shortcuts.rs`).
     pub shortcuts: ShortcutSettings,
+    /// Budget de la recherche d'upgrades, en exalts (`None` : sans limite).
+    pub upgrade_budget: Option<u32>,
 }
 
 impl Settings {

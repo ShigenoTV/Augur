@@ -32,6 +32,7 @@ mod shortcuts;
 mod time;
 mod tray;
 mod updates;
+mod upgrade_search;
 
 pub const MAIN_WINDOW: &str = "main";
 
@@ -87,6 +88,8 @@ pub fn run() {
             commands::get_settings,
             commands::get_leagues,
             commands::set_league,
+            commands::set_upgrade_budget,
+            commands::open_upgrade_search,
             commands::set_shortcuts,
             commands::set_update_channel,
             commands::get_client_log_status,

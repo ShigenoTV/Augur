@@ -17,6 +17,7 @@
 pub mod arme;
 pub mod defense;
 pub mod donnees;
+pub mod recherche;
 pub mod traduction;
 
 use std::collections::BTreeSet;

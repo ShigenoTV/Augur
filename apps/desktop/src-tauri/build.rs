@@ -16,6 +16,8 @@ fn main() {
             "set_client_log_path",
             "get_leagues",
             "set_league",
+            "set_upgrade_budget",
+            "open_upgrade_search",
             "set_shortcuts",
             "get_measure_status",
             "start_measure_session",
