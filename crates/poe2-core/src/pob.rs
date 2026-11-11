@@ -9,6 +9,7 @@
 //! Le code est une entrée non fiable (collé par le joueur) : la taille du code
 //! et celle du XML décompressé sont bornées, et rien ici ne panique.
 
+use std::collections::BTreeMap;
 use std::io::Read;
 
 use base64::Engine as _;
@@ -114,6 +115,9 @@ pub struct BuildPob {
     pub passifs: Vec<u32>,
     /// Version de l'arbre passif (« 0_4 »).
     pub version_arbre: Option<String>,
+    /// Stats calculées par Path of Building (`<PlayerStat stat="Life"
+    /// value="4210"/>`) : vie, résistances, EHP… Vide si l'export n'en a pas.
+    pub stats: BTreeMap<String, f64>,
 }
 
 impl BuildPob {
@@ -252,6 +256,13 @@ pub fn lire_xml(xml: &str) -> Result<BuildPob, ErreurPob> {
         .unwrap_or(0);
 
     let (passifs, version_arbre) = lire_arbre(racine);
+    let stats = enfants(build, "PlayerStat")
+        .filter_map(|n| {
+            let v: f64 = n.attribute("value")?.trim().parse().ok()?;
+            v.is_finite()
+                .then(|| (n.attribute("stat").unwrap_or("").to_string(), v))
+        })
+        .collect();
 
     Ok(BuildPob {
         niveau,
@@ -263,6 +274,7 @@ pub fn lire_xml(xml: &str) -> Result<BuildPob, ErreurPob> {
         objets: lire_objets(racine, &passifs),
         passifs,
         version_arbre,
+        stats,
     })
 }
 
@@ -496,6 +508,7 @@ Implicits: 0
         assert_eq!(b.classe_affichee(), "Infernalist");
         assert_eq!(b.passifs, vec![47359, 18348, 29240]);
         assert_eq!(b.version_arbre.as_deref(), Some("0_4"));
+        assert_eq!(b.stats.get("TotalDPS"), Some(&1234.0));
         let arc = b.competence_principale().unwrap();
         assert_eq!((arc.nom.as_str(), arc.niveau, arc.qualite), ("Arc", 21, 20));
         let supports: Vec<_> = b

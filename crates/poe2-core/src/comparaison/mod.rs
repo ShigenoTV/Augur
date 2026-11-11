@@ -15,7 +15,9 @@
 //! « approximatif », jamais présenté comme exact.
 
 pub mod arme;
+pub mod defense;
 pub mod donnees;
+pub mod recherche;
 pub mod traduction;
 
 use std::collections::BTreeSet;
@@ -105,6 +107,9 @@ pub struct ObjetCompare<'a> {
     pub qualite: Option<f64>,
     /// Lignes de mods telles qu'affichées.
     pub lignes: &'a [String],
+    /// Défenses déjà calculées de l'objet (pièce d'armure), lues dans ses
+    /// propriétés ; vides sinon.
+    pub defenses: defense::DefensesLocales,
 }
 
 /// Résultat de [`comparer`].
@@ -120,6 +125,8 @@ pub struct Comparaison {
     pub niveau_apres: u32,
     pub dps_avant: f64,
     pub dps_apres: f64,
+    /// Vie, bouclier d'énergie, résistances et EHP avant et après.
+    pub defense: defense::DefenseComparee,
     pub rapport: Rapport,
 }
 
@@ -484,6 +491,38 @@ fn modeliser(
     ))
 }
 
+/// Bilan défensif du build (objets, passifs alloués), les emplacements
+/// `retires` remplacés par le `candidat`.
+fn bilan_defense(
+    build: &BuildPob,
+    retires: &[&str],
+    candidat: Option<&ObjetCompare>,
+) -> defense::Bilan {
+    let mut b = defense::Bilan::default();
+    for o in build
+        .objets
+        .iter()
+        .filter(|o| compte(&o.emplacement) && !retires.contains(&o.emplacement.as_str()))
+    {
+        b.objet(
+            defense::DefensesLocales::depuis_texte_pob(&o.texte),
+            lignes_objet(o),
+        );
+    }
+    if let Some(c) = candidat {
+        b.objet(c.defenses, c.lignes.iter().map(String::as_str));
+    }
+    let arbre = donnees::arbre();
+    for id in &build.passifs {
+        if let Some(lignes) = arbre.passifs.get(&id.to_string()) {
+            for l in lignes {
+                b.ligne(l, false);
+            }
+        }
+    }
+    b
+}
+
 /// DPS total (coups, dégâts dans le temps, ailments), et les ailments comptés.
 fn dps(perso: &Personnage) -> Result<(f64, BTreeSet<String>), ErreurComparaison> {
     let r = calc::calculer(perso, &Conditions::default()).map_err(|e| {
@@ -524,6 +563,7 @@ pub fn comparer(
             base: None,
             qualite: None,
             lignes,
+            defenses: Default::default(),
         },
     )
 }
@@ -546,6 +586,7 @@ pub fn comparer_objet(
     let mut rapport_avant = Rapport::default();
     let (avant, niveau_avant) = modeliser(build, groupe, gemme, &[], None, &mut rapport_avant)?;
     let (dps_avant, ailments_avant) = dps(&avant)?;
+    let bilan_avant = bilan_defense(build, &[], None);
 
     let mut meilleur: Option<Comparaison> = None;
     for emplacement in choix {
@@ -576,6 +617,7 @@ pub fn comparer_objet(
             .extend(rapport_avant.supports_non_modelises.iter().cloned());
         let (dps_apres, ailments_apres) = dps(&apres)?;
         rapport.ailments = ailments_avant.union(&ailments_apres).cloned().collect();
+        let bilan_apres = bilan_defense(build, &retires, Some(objet));
         let c = Comparaison {
             emplacement: emplacement.to_string(),
             remplace: build.objet(emplacement).and_then(|o| o.nom.clone()),
@@ -584,9 +626,18 @@ pub fn comparer_objet(
             niveau_apres,
             dps_avant,
             dps_apres,
+            defense: defense::comparer(build, &bilan_avant, &bilan_apres),
             rapport,
         };
-        if meilleur.as_ref().is_none_or(|m| c.dps_apres > m.dps_apres) {
+        // À DPS égal (une bague de résistances), l'emplacement où l'EHP est
+        // le meilleur.
+        let mieux = |m: &Comparaison| {
+            let ecart = c.dps_apres - m.dps_apres;
+            ecart > 1e-9 * m.dps_apres.abs().max(1.0)
+                || (ecart.abs() <= 1e-9 * m.dps_apres.abs().max(1.0)
+                    && c.defense.apres.ehp() > m.defense.apres.ehp())
+        };
+        if meilleur.as_ref().is_none_or(mieux) {
             meilleur = Some(c);
         }
     }
@@ -596,6 +647,7 @@ pub fn comparer_objet(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::calc::stats::TypeDegats;
     use crate::pob;
 
     fn build(objets: &str, supports: &str, passifs: &str) -> BuildPob {
@@ -892,6 +944,7 @@ Adds 10 to 20 Physical Damage
                 base: Some("Gemini Bow"),
                 qualite: Some(20.0),
                 lignes: &mieux,
+                defenses: Default::default(),
             },
         )
         .unwrap();
@@ -1027,6 +1080,7 @@ Arcane Dirk
                 base: Some("Cinquedea"),
                 qualite: None,
                 lignes: &neuve,
+                defenses: Default::default(),
             },
         )
         .unwrap();
@@ -1044,6 +1098,7 @@ Arcane Dirk
                 base: Some("Cinquedea"),
                 qualite: None,
                 lignes: &neuve,
+                defenses: Default::default(),
             },
         )
         .unwrap();
@@ -1068,5 +1123,91 @@ Arcane Dirk
                 "Herald of Ash".into()
             ))
         );
+    }
+
+    const ARMURE: &str = r#"<Item id="1">Rarity: RARE
+Doom Song
+Withered Wand
+Implicits: 0
+60% increased Lightning Damage
+</Item>
+<Item id="2">Rarity: RARE
+Grim Shell
+Vile Robe
+Energy Shield: 300
+Quality: 20
+Implicits: 0
++60 to maximum Energy Shield
++50 to maximum Life
++30% to Fire Resistance
+</Item>
+<ItemSet id="1"><Slot name="Weapon 1" itemId="1"/><Slot name="Body Armour" itemId="2"/></ItemSet>"#;
+
+    fn armure_candidate(lignes: &[String]) -> ObjetCompare<'_> {
+        ObjetCompare {
+            classe: "Body Armours",
+            nom: "Storm Shell",
+            base: Some("Vile Robe"),
+            qualite: None,
+            lignes,
+            defenses: defense::DefensesLocales {
+                bouclier_energie: 400.0,
+                ..Default::default()
+            },
+        }
+    }
+
+    #[test]
+    fn defense_d_une_armure() {
+        let b = build(ARMURE, "", "");
+        let l = lignes(&[
+            "+90 to maximum Energy Shield",
+            "+20 to maximum Life",
+            "+10% to Fire Resistance",
+        ]);
+        let c = comparer_objet(&b, &armure_candidate(&l)).unwrap();
+        assert_eq!(c.emplacement, "Body Armour");
+        let d = &c.defense;
+        assert!(!d.etalonnee);
+        // Les lignes locales de bouclier sont déjà dans les 300 / 400.
+        assert_eq!(d.avant.bouclier_energie, 300.0);
+        assert_eq!(d.apres.bouclier_energie, 400.0);
+        assert_eq!(d.apres.vie - d.avant.vie, -30.0);
+        let feu = |x: &defense::Defenses| x.resistance(TypeDegats::Feu).unwrap().valeur();
+        assert_eq!((feu(&d.avant), feu(&d.apres)), (-30.0, -50.0));
+        assert!(d.apres.ehp() > 0.0);
+    }
+
+    #[test]
+    fn defense_etalonnee_sur_les_stats_de_pob() {
+        let mut b = build(ARMURE, "", "");
+        for (k, v) in [
+            ("Life", 4000.0),
+            ("EnergyShield", 1500.0),
+            ("FireResist", 75.0),
+            ("FireResistOverCap", 15.0),
+            ("ColdResist", 60.0),
+            ("ColdResistOverCap", 0.0),
+            ("LightningResist", 75.0),
+            ("ChaosResist", 10.0),
+        ] {
+            b.stats.insert(k.into(), v);
+        }
+        let l = lignes(&["+20 to maximum Life"]);
+        let c = comparer_objet(&b, &armure_candidate(&l)).unwrap();
+        let d = &c.defense;
+        assert!(d.etalonnee);
+        assert_eq!((d.avant.vie, d.apres.vie), (4000.0, 3970.0));
+        assert_eq!(
+            (d.avant.bouclier_energie, d.apres.bouclier_energie),
+            (1500.0, 1600.0)
+        );
+        // Feu : 90 non plafonné, −30 de l'armure retirée : 60, sous le plafond.
+        let feu_av = d.avant.resistance(TypeDegats::Feu).unwrap();
+        let feu_ap = d.apres.resistance(TypeDegats::Feu).unwrap();
+        assert_eq!((feu_av.valeur(), feu_av.maximale), (75.0, 75.0));
+        assert_eq!((feu_ap.valeur(), feu_ap.maximale), (60.0, 75.0));
+        let froid = d.apres.resistance(TypeDegats::Froid).unwrap();
+        assert_eq!(froid.valeur(), 60.0);
     }
 }

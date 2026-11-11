@@ -10,8 +10,9 @@ mode **fenêtré sans bordure**.
 | Overlay sur Ctrl+C : lecture de l'objet (nom, base, mods, tiers) | ✅ à tester |
 | Import du personnage par code Path of Building | ✅ à tester à partir de la v0.1.5 |
 | Overlay : gain de DPS pour **Lightning Bolt** et **Arc** | ✅ à tester à partir de la v0.1.5, chiffre marqué « ≈ » (approximatif) ; en v0.1.4 l'overlay affiche « Aucun personnage importé » |
-| Overlay : gain d'EHP (défense) | ⏳ pas encore |
+| Overlay : EHP et résistances (vie, bouclier d'énergie, armure, évasion, résistances) | ✅ à tester à partir de la prochaine version ; plus juste si ton code PoB est réexporté depuis Path of Building (il contient alors tes stats) |
 | Overlay : prix estimé | ⏳ pas encore |
+| Overlay : recherche d'upgrades (Alt+U) : recherche de trade pondérée ouverte dans le navigateur, budget dans Réglages | ✅ à tester à partir de la prochaine version ([détail](../copilot/recherche-upgrades.md)) |
 | Session de mesures (export des objets, codes PoB, zones) | ✅ à tester |
 | Atlas Ledger (temps en map, maps par heure) | ✅ à tester |
 | Forge : coût d'un craft (panneau) et prochaine étape du plan dans l'overlay (Ctrl+Alt+C) | ✅ à tester à partir de la v0.1.6 |

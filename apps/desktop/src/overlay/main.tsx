@@ -18,6 +18,24 @@ function Overlay() {
   const [forge, setForge] = useState<ForgeView | null>(null);
   // Raccourcis choisis dans Réglages, relus à chaque objet copié.
   const [raccourcis, setRaccourcis] = useState(SHORTCUTS_PAR_DEFAUT);
+  // Recherche d'upgrades (Alt+U) : objet affiché et résultat de la dernière demande.
+  const shown = useRef<CopilotView>(view);
+  shown.current = view;
+  const [search, setSearch] = useState<{ ok: boolean; text: string } | null>(null);
+  const openSearch = () => {
+    const v = shown.current;
+    if (v.status !== "ready" || !v.delta || v.delta.support === "unsupported") return;
+    setSearch({ ok: true, text: "Préparation de la recherche…" });
+    void commands
+      .openUpgradeSearch(v.item)
+      .then((r) =>
+        setSearch({
+          ok: true,
+          text: `Recherche ouverte dans ton navigateur${r.withDps ? "" : " (défense seule)"} : ${r.stats.slice(0, 3).join(", ")}${r.stats.length > 3 ? "…" : ""}`,
+        }),
+      )
+      .catch((error: unknown) => setSearch({ ok: false, text: isAppError(error) ? error.message : String(error) }));
+  };
   const hotkeys = { close: afficherRaccourci(raccourcis.closeOverlay), upgradeSearch: afficherRaccourci(raccourcis.upgradeSearch) };
 
   useEffect(() => {
@@ -35,6 +53,7 @@ function Overlay() {
     const unlisten = [
       on.itemCopied((item) => {
         const id = ++run.current;
+        setSearch(null);
         void commands
           .getSettings()
           .then((s) => setRaccourcis(s.shortcuts))
@@ -85,9 +104,7 @@ function Overlay() {
         setForge(null);
         setView({ status: "hidden" });
       }),
-      on.upgradeSearchRequested(() => {
-        // Recherche d'upgrades sous budget : sprint 3 (trade depuis le client).
-      }),
+      on.upgradeSearchRequested(() => openSearch()),
     ];
     return () => unlisten.forEach((p) => void p.then((f) => f()));
   }, []);
@@ -115,7 +132,15 @@ function Overlay() {
       {forge ? (
         <ForgeTipPanel view={forge} fermer={hotkeys.close} onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)} />
       ) : (
-        <CopilotOverlay state={view} hotkeys={hotkeys} onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)} />
+        <CopilotOverlay
+          state={view}
+          hotkeys={hotkeys}
+          onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)}
+          onUpgradeSearch={openSearch}
+        />
+      )}
+      {search && !forge && (
+        <p className={`mt-1 max-w-[360px] text-[11px] ${search.ok ? "text-text-subtle" : "text-signal-loss"}`}>{search.text}</p>
       )}
     </div>
   );

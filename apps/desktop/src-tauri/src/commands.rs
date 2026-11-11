@@ -102,6 +102,49 @@ pub fn set_league(
     })
 }
 
+/// Budget de la recherche d'upgrades, en exalts. `None` ou 0 : sans limite.
+#[tauri::command]
+pub fn set_upgrade_budget(
+    app: AppHandle,
+    store: State<'_, crate::settings::SettingsStore>,
+    budget: Option<u32>,
+) -> Result<crate::settings::Settings, AppError> {
+    let budget = budget.filter(|b| *b > 0);
+    store
+        .update(&app, |s| s.upgrade_budget = budget)
+        .map_err(|e| {
+            app_error(
+                crate::contracts::ErrorCode::Internal,
+                format!("Réglage non enregistré ({e})."),
+            )
+        })
+}
+
+/// Recherche d'upgrades (Alt+U) : ouvre dans le navigateur une recherche de
+/// trade pondérée pour l'emplacement de l'objet copié. Aucune requête n'est
+/// envoyée par Augur.
+#[tauri::command]
+pub fn open_upgrade_search(
+    character: State<'_, crate::character::CharacterState>,
+    store: State<'_, crate::settings::SettingsStore>,
+    item: ParsedItem,
+) -> Result<crate::upgrade_search::UpgradeSearch, AppError> {
+    let settings = store.get();
+    let preparer = |b: Option<&poe2_core::pob::BuildPob>| {
+        crate::upgrade_search::preparer(
+            b,
+            &item.item_class,
+            settings.league(),
+            settings.upgrade_budget,
+        )
+    };
+    let recherche = character
+        .with_build(|b| preparer(Some(b)))
+        .unwrap_or_else(|| preparer(None))?;
+    crate::upgrade_search::ouvrir(&recherche.url)?;
+    Ok(recherche)
+}
+
 /// Raccourcis de l'overlay. Si l'overlay est affiché, les anciennes touches
 /// sont libérées et les nouvelles prises tout de suite.
 #[tauri::command]

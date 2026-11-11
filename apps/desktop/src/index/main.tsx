@@ -15,7 +15,7 @@ import { commands, isAppError, isTauri, on, type ClientLogStatus, type Settings 
 import { CharacterCard } from "./CharacterCard";
 import { ClientLogCard } from "./ClientLogCard";
 import { BugReportCard, DiagnosticCard } from "./DiagnosticCards";
-import { LeagueCard, ShortcutsCard } from "./SettingsCards";
+import { LeagueCard, ShortcutsCard, UpgradeBudgetCard } from "./SettingsCards";
 import { afficherRaccourci, SHORTCUTS_PAR_DEFAUT } from "./shortcuts";
 import { summarizeClientLog } from "./clientLog";
 import { ForgeCard } from "./ForgeCard";
@@ -270,7 +270,7 @@ function App() {
                     <Kbd>{afficherRaccourci(raccourcis.closeOverlay)}</Kbd> ferme l'overlay (actif seulement quand il est affiché)
                   </li>
                   <li>
-                    <Kbd>{afficherRaccourci(raccourcis.upgradeSearch)}</Kbd> cherche un meilleur objet (sprint 3)
+                    <Kbd>{afficherRaccourci(raccourcis.upgradeSearch)}</Kbd> cherche un meilleur objet pour cet emplacement (ouvre le site de trade)
                   </li>
                 </ul>
                 <button type="button" onClick={() => ouvrir("reglages")} className="mt-2 text-xs text-accent hover:underline">
@@ -344,6 +344,9 @@ function App() {
             </Card>
             <Card title="Ligue souhaitée">
               <LeagueCard settings={settings} onSettings={setSettings} />
+            </Card>
+            <Card title="Budget de la recherche d'upgrades">
+              <UpgradeBudgetCard settings={settings} onSettings={setSettings} />
             </Card>
             <Card title="Raccourcis de l'overlay">
               <ShortcutsCard settings={settings} onSettings={setSettings} />
