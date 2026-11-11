@@ -45,6 +45,9 @@ fn main() {
             "get_forge_advice",
             "get_forge_tracking",
             "stop_forge_tracking",
+            "get_diagnostic",
+            "copy_diagnostic",
+            "open_bug_report",
         ]),
     ))
     .expect("échec du build Tauri");

@@ -1,6 +1,6 @@
-name: Bug de la bêta
-description: Quelque chose ne marche pas dans Augur (overlay, mesures, Atlas Ledger, installation, mises à jour).
-title: "[Bêta] "
+name: Signaler un bug
+description: Quelque chose ne marche pas dans Augur (overlay, Forge, Atlas Ledger, installation, mises à jour). Le plus simple : bouton « Signaler un bug » dans Augur.
+title: "[Bug] "
 labels: ["bêta", "bug"]
 body:
   - type: markdown
@@ -16,12 +16,13 @@ body:
         - Installation ou SmartScreen / antivirus
         - Overlay (Ctrl+C sur un objet)
         - Objet mal lu ou « Objet non reconnu »
+        - Personnage (import Path of Building)
+        - Forge
         - Session de mesures
         - Atlas Ledger
+        - Réglages
         - Mises à jour
         - Autre
-    validations:
-      required: true
   - type: input
     id: version
     attributes:
@@ -37,8 +38,6 @@ body:
       options:
         - Windows 11
         - Windows 10
-    validations:
-      required: true
   - type: textarea
     id: etapes
     attributes:
@@ -61,6 +60,12 @@ body:
     attributes:
       label: Texte de l'objet (si un objet est en cause)
       description: En jeu, Ctrl+C (ou Ctrl+Alt+C) sur l'objet, puis colle ici.
+      render: text
+  - type: textarea
+    id: diagnostic
+    attributes:
+      label: Diagnostic d'Augur
+      description: Rempli par le bouton « Signaler un bug » d'Augur (Réglages → Diagnostic → Copier le diagnostic). Aucune donnée personnelle.
       render: text
   - type: textarea
     id: captures

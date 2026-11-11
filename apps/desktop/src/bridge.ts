@@ -320,6 +320,19 @@ export function isAppError(value: unknown): value is AppError {
   return typeof value === "object" && value !== null && "code" in value && "message" in value;
 }
 
+/** Diagnostic de Réglages (apps/desktop/src-tauri/src/commands.rs). */
+export type Diagnostic = { resume: string; journal: string[] };
+
+/** Ticket de bug prérempli (apps/desktop/src-tauri/src/bug_report.rs). */
+export type BugReport = {
+  titre: string;
+  module: string;
+  etapes: string;
+  attendu: string;
+  objet: string;
+  diagnostic: string;
+};
+
 export const commands = {
   parseClipboardItem: (text: string) => invoke<ParsedItem>("parse_clipboard_item", { text }),
   getOverlayState: () => invoke<OverlayState>("get_overlay_state"),
@@ -340,6 +353,9 @@ export const commands = {
   stopMeasureSession: () => invoke<MeasureStatus>("stop_measure_session"),
   addMeasureNote: (text: string) => invoke<MeasureStatus>("add_measure_note", { text }),
   copyMeasureExport: () => invoke<void>("copy_measure_export"),
+  getDiagnostic: () => invoke<Diagnostic>("get_diagnostic"),
+  copyDiagnostic: () => invoke<void>("copy_diagnostic"),
+  openBugReport: (report: BugReport) => invoke<{ truncated: boolean }>("open_bug_report", { report }),
   getLedgerStatus: () => invoke<LedgerStatus>("get_ledger_status"),
   startLedgerSession: () => invoke<LedgerStatus>("start_ledger_session"),
   stopLedgerSession: () => invoke<LedgerStatus>("stop_ledger_session"),

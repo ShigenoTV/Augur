@@ -430,3 +430,51 @@ pub fn get_forge_tracking(
 pub fn stop_forge_tracking(app: AppHandle, planner: State<'_, crate::forge::ForgePlanner>) {
     planner.arreter(&app);
 }
+
+/// Diagnostic affiché dans Réglages : résumé technique et journal d'Augur.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Diagnostic {
+    pub resume: String,
+    pub journal: Vec<String>,
+}
+
+#[tauri::command]
+pub fn get_diagnostic(app: AppHandle) -> Diagnostic {
+    Diagnostic {
+        resume: crate::bug_report::diagnostic(&app),
+        journal: crate::diag_log::lines(),
+    }
+}
+
+/// Copie le résumé et le journal complet dans le presse-papier.
+#[tauri::command]
+pub fn copy_diagnostic(app: AppHandle) -> Result<(), AppError> {
+    let mut text = crate::bug_report::diagnostic(&app);
+    let journal = crate::diag_log::lines();
+    text.push_str("\n\nJournal :\n");
+    if journal.is_empty() {
+        text.push_str("(vide)");
+    } else {
+        text.push_str(&journal.join("\n"));
+    }
+    arboard::Clipboard::new()
+        .and_then(|mut c| c.set_text(text))
+        .map_err(|e| {
+            app_error(
+                crate::contracts::ErrorCode::Internal,
+                format!("Presse-papier indisponible ({e})."),
+            )
+        })
+}
+
+/// Ouvre dans le navigateur le ticket GitHub prérempli (le joueur le relit et l'envoie lui-même).
+#[tauri::command]
+pub fn open_bug_report(
+    report: crate::bug_report::BugReport,
+) -> Result<crate::bug_report::BugReportOpened, AppError> {
+    let (url, truncated) = crate::bug_report::issue_url(&report)?;
+    crate::bug_report::open_in_browser(&url)?;
+    log::info!("ticket de bug préparé dans le navigateur");
+    Ok(crate::bug_report::BugReportOpened { truncated })
+}

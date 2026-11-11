@@ -14,6 +14,7 @@ import { createRoot } from "react-dom/client";
 import { commands, isAppError, isTauri, on, type ClientLogStatus, type Settings } from "../bridge";
 import { CharacterCard } from "./CharacterCard";
 import { ClientLogCard } from "./ClientLogCard";
+import { BugReportCard, DiagnosticCard } from "./DiagnosticCards";
 import { LeagueCard, ShortcutsCard } from "./SettingsCards";
 import { afficherRaccourci, SHORTCUTS_PAR_DEFAUT } from "./shortcuts";
 import { summarizeClientLog } from "./clientLog";
@@ -26,9 +27,9 @@ import { useUpdates } from "./useUpdates";
 /** Pas de canal bêta tant que les mises à jour passent par GitHub Releases (voir src-tauri/src/updates.rs). */
 const BETA_AVAILABLE = false;
 
-function Card({ title, children }: { title: string; children: ReactNode }) {
+function Card({ title, id, children }: { title: string; id?: string; children: ReactNode }) {
   return (
-    <section className="rounded-panel border border-ink-700 bg-ink-900 p-4">
+    <section id={id} className="scroll-mt-6 rounded-panel border border-ink-700 bg-ink-900 p-4">
       <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-subtle">{title}</h2>
       {children}
     </section>
@@ -59,7 +60,7 @@ const PAGES: { id: PageId; nom: string; desc: string; groupe: 0 | 1 }[] = [
   },
   { id: "ledger", nom: "Atlas Ledger", desc: "Suivi de tes sessions de farm de cartes et historique.", groupe: 0 },
   { id: "outils", nom: "Outils", desc: "Session de mesures et banc d'essai du parseur.", groupe: 1 },
-  { id: "reglages", nom: "Réglages", desc: "Journal du jeu, ligue souhaitée, raccourcis et mises à jour d'Augur.", groupe: 1 },
+  { id: "reglages", nom: "Réglages", desc: "Journal du jeu, ligue souhaitée, raccourcis, mises à jour, diagnostic et signalement de bug.", groupe: 1 },
 ];
 
 const CLE_PAGE = "augur.page";
@@ -94,6 +95,12 @@ function App() {
     } catch {
       // Stockage indisponible : la page n'est pas retenue.
     }
+  }
+
+  function signalerBug() {
+    ouvrir("reglages");
+    // Après l'affichage de la page Réglages.
+    setTimeout(() => document.getElementById("signaler-bug")?.scrollIntoView({ behavior: "smooth" }), 0);
   }
 
   // Ctrl+1 à Ctrl+5 : changer de page.
@@ -226,6 +233,13 @@ function App() {
                 : updates.update.phase === "upToDate"
                   ? "Augur est à jour"
                   : "Rechercher une mise à jour"}
+            </button>
+            <button
+              type="button"
+              onClick={signalerBug}
+              className="w-full whitespace-nowrap rounded-chip border border-ink-600 px-1 py-1 text-[11px] text-text-primary hover:bg-ink-800"
+            >
+              Signaler un bug
             </button>
           </div>
         </aside>
@@ -365,6 +379,12 @@ function App() {
               <p className="mt-2 text-xs text-text-subtle">
                 Les mises à jour sont signées et vérifiées avant installation. Rien ne s'installe sans ton accord.
               </p>
+            </Card>
+            <Card title="Diagnostic">
+              <DiagnosticCard actif={page === "reglages"} />
+            </Card>
+            <Card title="Signaler un bug" id="signaler-bug">
+              <BugReportCard actif={page === "reglages"} />
             </Card>
           </div>
         </main>
