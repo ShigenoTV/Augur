@@ -44,6 +44,17 @@ export type Settings = {
   /** Ligue poe.ninja des prix de la Forge ; null : ligue par défaut (DEFAULT_LEAGUE). */
   league: string | null;
   shortcuts: ShortcutSettings;
+  /** Budget de la recherche d'upgrades, en exalts ; null : sans limite. */
+  upgradeBudget: number | null;
+};
+
+/** Recherche d'upgrades ouverte dans le navigateur (Alt+U). */
+export type UpgradeSearch = {
+  url: string;
+  /** Stats pondérées, de la plus forte à la plus faible. */
+  stats: string[];
+  /** Le DPS a compté ; sinon la défense seule. */
+  withDps: boolean;
 };
 
 /** Doit rester égale à DEFAULT_LEAGUE (src-tauri/src/settings.rs). */
@@ -334,6 +345,7 @@ export const commands = {
   setClientLogPath: (path: string | null) => invoke<Settings>("set_client_log_path", { path }),
   getLeagues: () => invoke<string[]>("get_leagues"),
   setLeague: (league: string | null) => invoke<Settings>("set_league", { league }),
+  setUpgradeBudget: (budget: number | null) => invoke<Settings>("set_upgrade_budget", { budget }),
   setShortcuts: (shortcuts: ShortcutSettings) => invoke<Settings>("set_shortcuts", { shortcuts }),
   getMeasureStatus: () => invoke<MeasureStatus>("get_measure_status"),
   startMeasureSession: () => invoke<MeasureStatus>("start_measure_session"),
@@ -367,6 +379,7 @@ export const commands = {
   refreshForgePrices: (ligue: string | null) => invoke<ForgePrices>("refresh_forge_prices", { ligue }),
   // Commandes du chantier Architecture / moteur, branchées dès leur fusion.
   evaluateItem: (item: ParsedItem) => invoke<ItemDelta>("evaluate_item", { item }),
+  openUpgradeSearch: (item: ParsedItem) => invoke<UpgradeSearch>("open_upgrade_search", { item }),
   estimatePrice: (item: ParsedItem) => invoke<PriceEstimate>("estimate_price", { item }),
 };
 

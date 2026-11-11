@@ -19,6 +19,7 @@
     "allow-set-client-log-path",
     "allow-get-leagues",
     "allow-set-league",
+    "allow-set-upgrade-budget",
     "allow-set-shortcuts",
     "allow-get-measure-status",
     "allow-start-measure-session",
