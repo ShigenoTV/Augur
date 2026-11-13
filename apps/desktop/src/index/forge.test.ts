@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { ForgeAffix, ForgePlan } from "../bridge";
+import type { ForgeAffix, ForgePlan, ForgeVerify } from "../bridge";
 import {
   arbre,
+  chanceSousBudget,
+  comparerAchat,
+  deviseSaisie,
+  versExalts,
   basesParClasse,
   dateReleve,
   decrireEtat,
@@ -161,5 +165,52 @@ describe("arbre de décision", () => {
     const t = arbre(plan, 4, 3);
     expect(t.noeuds.map((n) => n.id)).toEqual(["r", "a", "b"]);
     expect(t.autres.r).toEqual({ n: 3, p: 0.2 });
+  });
+});
+
+describe("crafter ou acheter", () => {
+  // 201 quantiles (0 %, 0,5 %, …, 100 %) d'un coût qui monte de 0 à 200 ex.
+  const mc: ForgeVerify = {
+    trials: 1000,
+    meanCost: 100,
+    medianCost: 100,
+    p90Cost: 180,
+    p99Cost: 198,
+    meanSteps: 10,
+    meanAbandons: 1,
+    censored: 0,
+    costQuantiles: Array.from({ length: 201 }, (_, i) => i),
+  };
+  const plan = { expectedCost: 100, baseCost: 5, mc } as unknown as ForgePlan;
+
+  it("lit les quantiles comme le cœur Rust", () => {
+    expect(chanceSousBudget(mc, -1)).toBe(0);
+    expect(chanceSousBudget(mc, 100)).toBe(0.5);
+    expect(chanceSousBudget(mc, 100.4)).toBe(0.5);
+    expect(chanceSousBudget(mc, 500)).toBe(1);
+    expect(chanceSousBudget({ ...mc, censored: 1000 }, 500)).toBe(0.5);
+  });
+
+  it("donne le verdict avec une marge de 10 %", () => {
+    const acheter = comparerAchat(plan, false, 50);
+    expect(acheter.coutCraft).toBe(105);
+    expect(acheter.verdict).toBe("acheter");
+    expect(acheter.ecart).toBe(-55);
+    // 50 ex d'achat moins 5 de base : 45 ex de craft au plus.
+    expect(acheter.chanceCraftMoinsCher).toBeCloseTo(45 / 200);
+    expect(comparerAchat(plan, false, 300).verdict).toBe("crafter");
+    expect(comparerAchat(plan, false, 110).verdict).toBe("equivalent");
+    // Depuis un objet déjà en possession : pas de base neuve.
+    expect(comparerAchat(plan, true, 300).coutCraft).toBe(100);
+    expect(comparerAchat({ ...plan, mc: null }, false, 300).chanceCraftMoinsCher).toBeNull();
+  });
+
+  it("convertit le prix saisi dans la monnaie d'affichage", () => {
+    const div = { devise: "divine" as const, taux: { exalt: 1, chaos: 0, divine: 600 } };
+    expect(versExalts(2, div)).toBe(1200);
+    expect(deviseSaisie(div)).toBe("div");
+    const sansTaux = { devise: "chaos" as const, taux: { exalt: 1, chaos: 0, divine: 0 } };
+    expect(versExalts(2, sansTaux)).toBe(2);
+    expect(deviseSaisie(sansTaux)).toBe("ex");
   });
 });

@@ -8,6 +8,7 @@ import {
   type ForgeAffix,
   type ForgeAffixes,
   type ForgeBase,
+  type ForgeBuySearch,
   type ForgeCatalogueEntry,
   type ForgeHistory,
   type ForgeHistoryEntry,
@@ -23,7 +24,9 @@ import {
   SLOT_LABEL,
   basesParClasse,
   cleAffixe,
+  comparerAchat,
   dateReleve,
+  deviseSaisie,
   decrireEtat,
   etapes,
   formatCount,
@@ -32,6 +35,7 @@ import {
   libelleCourt,
   lirePrix,
   peutAjouter,
+  versExalts,
 } from "./forge";
 import { DecisionTree } from "./DecisionTree";
 import { AffichageContext, useCout } from "./devise";
@@ -430,8 +434,113 @@ function HistoryView({
   );
 }
 
+/** Prix d'achat saisi pour une demande, gardé dans le stockage local (rouvrir le plan le retrouve). */
+const CLE_ACHAT = "augur.forge.achat:";
+function lirePrixAchat(demande: ForgePlanRequest): string {
+  try {
+    return localStorage.getItem(CLE_ACHAT + JSON.stringify(demande)) ?? "";
+  } catch {
+    return "";
+  }
+}
+function garderPrixAchat(demande: ForgePlanRequest, v: string) {
+  try {
+    if (v.trim()) localStorage.setItem(CLE_ACHAT + JSON.stringify(demande), v);
+    else localStorage.removeItem(CLE_ACHAT + JSON.stringify(demande));
+  } catch {
+    // Stockage indisponible : le prix vaut pour cette session.
+  }
+}
+
+/**
+ * « Crafter ou acheter » : le joueur ouvre la recherche de l'objet visé, reporte le prix qu'il y voit,
+ * et Forge le compare au coût moyen du plan.
+ */
+function BuyOrCraft({ result, demande }: { result: ForgePlanResult; demande: ForgePlanRequest }) {
+  const cout = useCout();
+  const { affichage } = useContext(AffichageContext);
+  const [saisie, setSaisie] = useState(() => lirePrixAchat(demande));
+  const [recherche, setRecherche] = useState<ForgeBuySearch | null>(null);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const prix = lirePrix(saisie);
+  const comparaison = prix !== null && prix > 0 ? comparerAchat(result.plan, result.depart !== null, versExalts(prix, affichage)) : null;
+
+  async function chercher() {
+    setErreur(null);
+    try {
+      setRecherche(await commands.openForgeBuySearch(demande));
+    } catch (e) {
+      setErreur(message(e));
+    }
+  }
+
+  const titre =
+    comparaison?.verdict === "crafter"
+      ? `Crafter : environ ${cout(comparaison.ecart)} d'économie en moyenne`
+      : comparaison?.verdict === "acheter"
+        ? `Acheter : environ ${cout(-comparaison.ecart)} d'économie en moyenne`
+        : "Équivalent : l'écart est trop faible pour trancher";
+
+  return (
+    <div className="space-y-2 rounded-panel border border-ink-700 bg-ink-950 p-3 text-xs">
+      <div className="flex flex-wrap items-end gap-3">
+        <span className="text-sm font-semibold text-text-primary">Crafter ou acheter ?</span>
+        <button type="button" onClick={() => void chercher()} className={btnSecondary}>
+          Chercher l'objet à l'achat
+        </button>
+        <label className="flex items-center gap-2 text-text-subtle">
+          Prix d'achat estimé
+          <input
+            value={saisie}
+            inputMode="decimal"
+            placeholder="ex. 150"
+            onChange={(e) => {
+              setSaisie(e.target.value);
+              garderPrixAchat(demande, e.target.value);
+            }}
+            className={`${input} w-24 text-right font-mono`}
+          />
+          <span>{deviseSaisie(affichage)}</span>
+        </label>
+      </div>
+      {recherche && (
+        <p className="text-text-subtle">
+          Recherche ouverte dans ton navigateur ({recherche.filtres} filtre(s), même base, du moins cher au plus cher).
+          Reporte le prix d'un objet qui te convient.
+          {recherche.ignorees.length > 0 && (
+            <span className="text-signal-warn">
+              {" "}
+              Non filtré : {recherche.ignorees.map(libelleCourt).join(", ")} (vérifie-le sur l'annonce).
+            </span>
+          )}
+        </p>
+      )}
+      {erreur && <p className="text-signal-warn">{erreur}</p>}
+      {saisie.trim() !== "" && (prix === null || prix <= 0) && <p className="text-signal-warn">Saisis un prix positif.</p>}
+      {comparaison && (
+        <div className="space-y-0.5">
+          <p
+            className={`text-sm font-semibold ${comparaison.verdict === "equivalent" ? "text-text-primary" : "text-accent"}`}
+          >
+            {titre}
+          </p>
+          <p className="text-text-muted">
+            Craft : {cout(comparaison.coutCraft)} en moyenne{result.depart ? " depuis ton objet" : ", base neuve comprise"} · achat :{" "}
+            {cout(comparaison.coutCraft + comparaison.ecart)}.
+            {comparaison.chanceCraftMoinsCher !== null &&
+              ` Le craft revient moins cher que l'achat dans ${formatPercent(comparaison.chanceCraftMoinsCher)} des crafts simulés.`}
+          </p>
+          <p className="text-[11px] text-text-subtle">
+            Estimation : le coût du craft dépend des prix de l'onglet Prix, le prix d'achat de ta recherche.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Résultat d'un calcul : chiffres clés, puis arbre de décision, étapes ou liste de courses. */
-function PlanView({ result }: { result: ForgePlanResult }) {
+function PlanView({ result, demande }: { result: ForgePlanResult; demande: ForgePlanRequest | null }) {
   const cout = useCout();
   const [vue, setVue] = useState<"arbre" | "etapes" | "courses">("arbre");
   const { plan } = result;
@@ -458,6 +567,8 @@ function PlanView({ result }: { result: ForgePlanResult }) {
           hint={mc ? `${formatCount(mc.meanSteps)} étapes en moyenne` : undefined}
         />
       </div>
+
+      {demande && <BuyOrCraft key={JSON.stringify(demande)} result={result} demande={demande} />}
 
       {!result.complet && (
         <StatePanel icon="alert" title="Coût approximatif" variant="warn">
@@ -552,6 +663,7 @@ export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onRegla
   const [exclues, setExclues] = useState<string[]>([]);
   const [depart, setDepart] = useState<Depart | null>(null);
   const [result, setResult] = useState<ForgePlanResult | null>(null);
+  const [demandeCalculee, setDemandeCalculee] = useState<ForgePlanRequest | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [onglet, setOnglet] = useState<"plan" | "prix" | "historique">("plan");
@@ -619,6 +731,7 @@ export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onRegla
     setResult(null);
     try {
       setResult(await commands.planForgeCraft(demande));
+      setDemandeCalculee(demande);
       setSuivi(await commands.getForgeTracking());
       setHistorique(await commands.getForgeHistory());
     } catch (err) {
@@ -839,7 +952,7 @@ export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onRegla
               {error}
             </StatePanel>
           )}
-          {result && <PlanView result={result} />}
+          {result && <PlanView result={result} demande={demandeCalculee} />}
         </>
       )}
     </div>

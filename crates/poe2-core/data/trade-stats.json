@@ -1,0 +1,1330 @@
+{
+ "sans_stat": [
+  "# to level of all trap skill gems",
+  "#% increased critical hit chance with traps",
+  "#% increased fishing line strength",
+  "#% increased fishing range",
+  "#% increased quantity of fish caught",
+  "#% increased rarity of fish caught",
+  "#% increased trap damage",
+  "#% reduced fishing pool consumption",
+  "#% to chaos damage over time multiplier",
+  "#% to cold damage over time multiplier",
+  "#% to critical damage bonus with traps",
+  "#% to fire damage over time multiplier",
+  "#% to physical damage over time multiplier",
+  "eternal iron hook",
+  "totemic wood lure"
+ ],
+ "schema": 1,
+ "source": "Exiled Exchange 2, renderer/public/data/en/stats.ndjson (https://github.com/Kvan7/Exiled-Exchange-2), licence MIT",
+ "stats": {
+  "# life regeneration per second": {
+   "ids": [
+    "explicit.stat_3325883026"
+   ]
+  },
+  "# maximum stacks of puppet master": {
+   "ids": [
+    "explicit.stat_1484026495"
+   ]
+  },
+  "# metres to dodge roll distance": {
+   "ids": [
+    "explicit.stat_258119672"
+   ]
+  },
+  "# to # physical thorns damage": {
+   "ids": [
+    "explicit.stat_2881298780"
+   ]
+  },
+  "# to accuracy rating": {
+   "ids": [
+    "explicit.stat_691932474",
+    "explicit.stat_803737631"
+   ]
+  },
+  "# to all attributes": {
+   "ids": [
+    "explicit.stat_1379411836",
+    "explicit.stat_2897413282"
+   ]
+  },
+  "# to armour": {
+   "ids": [
+    "explicit.stat_3484657501",
+    "explicit.stat_809229260"
+   ]
+  },
+  "# to dexterity": {
+   "ids": [
+    "explicit.stat_3261801346"
+   ]
+  },
+  "# to evasion rating": {
+   "ids": [
+    "explicit.stat_2144192055",
+    "explicit.stat_53045048"
+   ]
+  },
+  "# to intelligence": {
+   "ids": [
+    "explicit.stat_328541901"
+   ]
+  },
+  "# to level of all attack skills": {
+   "ids": [
+    "explicit.stat_3035140377"
+   ]
+  },
+  "# to level of all chaos spell skills": {
+   "ids": [
+    "explicit.stat_4226189338"
+   ]
+  },
+  "# to level of all cold spell skills": {
+   "ids": [
+    "explicit.stat_2254480358"
+   ]
+  },
+  "# to level of all fire spell skills": {
+   "ids": [
+    "explicit.stat_591105508"
+   ]
+  },
+  "# to level of all lightning spell skills": {
+   "ids": [
+    "explicit.stat_1545858329"
+   ]
+  },
+  "# to level of all mark skills": {
+   "ids": [
+    "explicit.stat_1992191903"
+   ]
+  },
+  "# to level of all melee skills": {
+   "ids": [
+    "explicit.stat_9187492"
+   ]
+  },
+  "# to level of all minion skills": {
+   "ids": [
+    "explicit.stat_2162097452"
+   ]
+  },
+  "# to level of all physical spell skills": {
+   "ids": [
+    "explicit.stat_1600707273"
+   ]
+  },
+  "# to level of all projectile skills": {
+   "ids": [
+    "explicit.stat_1202301673"
+   ]
+  },
+  "# to level of all spell skills": {
+   "ids": [
+    "explicit.stat_124131830"
+   ]
+  },
+  "# to limit for elemental skills": {
+   "ids": [
+    "explicit.stat_1713927892"
+   ]
+  },
+  "# to maximum energy shield": {
+   "ids": [
+    "explicit.stat_3489782002",
+    "explicit.stat_4052037485"
+   ]
+  },
+  "# to maximum life": {
+   "ids": [
+    "explicit.stat_3299347043"
+   ]
+  },
+  "# to maximum mana": {
+   "ids": [
+    "explicit.stat_1050105434"
+   ]
+  },
+  "# to maximum number of elemental infusions": {
+   "ids": [
+    "explicit.stat_4097212302"
+   ]
+  },
+  "# to maximum number of summoned ballista totems": {
+   "ids": [
+    "explicit.stat_1823942939"
+   ]
+  },
+  "# to maximum rage": {
+   "ids": [
+    "explicit.stat_1181501418"
+   ]
+  },
+  "# to maximum runic ward": {
+   "ids": [
+    "explicit.stat_3336230913",
+    "explicit.stat_774059442"
+   ]
+  },
+  "# to spirit": {
+   "ids": [
+    "explicit.stat_2704225257",
+    "explicit.stat_3981240776"
+   ]
+  },
+  "# to strength": {
+   "ids": [
+    "explicit.stat_4080418644"
+   ]
+  },
+  "# to stun threshold": {
+   "ids": [
+    "explicit.stat_915769802"
+   ]
+  },
+  "# to weapon range": {
+   "ids": [
+    "explicit.stat_350598685"
+   ]
+  },
+  "#% additional physical damage reduction": {
+   "ids": [
+    "explicit.stat_3771516363"
+   ]
+  },
+  "#% chance for remnants you pick up to count as picking up an additional remnant": {
+   "ids": [
+    "explicit.stat_3422093970"
+   ]
+  },
+  "#% chance for skills to retain #% of glory on use": {
+   "ids": [
+    "explicit.stat_2749595652"
+   ]
+  },
+  "#% chance to build an additional combo on hit": {
+   "ids": [
+    "explicit.stat_4258524206"
+   ]
+  },
+  "#% chance to chain an additional time": {
+   "ids": [
+    "explicit.stat_1028592286"
+   ]
+  },
+  "#% chance to gain nature's archon when your plants overgrow": {
+   "ids": [
+    "explicit.stat_3518449420"
+   ]
+  },
+  "#% chance to gain onslaught on killing hits with this weapon": {
+   "ids": [
+    "explicit.stat_1881230714"
+   ]
+  },
+  "#% chance to pierce an enemy": {
+   "ids": [
+    "explicit.stat_2321178454"
+   ]
+  },
+  "#% faster curse activation": {
+   "ids": [
+    "explicit.stat_1104825894"
+   ],
+   "negate": true
+  },
+  "#% increased amount of life leeched": {
+   "ids": [
+    "explicit.stat_2112395885"
+   ]
+  },
+  "#% increased archon buff duration": {
+   "ids": [
+    "explicit.stat_2158617060"
+   ]
+  },
+  "#% increased area of effect for attacks": {
+   "ids": [
+    "explicit.stat_1840985759"
+   ]
+  },
+  "#% increased armour": {
+   "ids": [
+    "explicit.stat_1062208444",
+    "explicit.stat_2866361420"
+   ]
+  },
+  "#% increased armour and energy shield": {
+   "ids": [
+    "explicit.stat_3321629045"
+   ]
+  },
+  "#% increased armour and evasion": {
+   "ids": [
+    "explicit.stat_2451402625"
+   ]
+  },
+  "#% increased armour break duration": {
+   "ids": [
+    "explicit.stat_2637470878"
+   ]
+  },
+  "#% increased armour, evasion and energy shield": {
+   "ids": [
+    "explicit.stat_3523867985"
+   ]
+  },
+  "#% increased attack speed": {
+   "ids": [
+    "explicit.stat_210067635",
+    "explicit.stat_681332047"
+   ]
+  },
+  "#% increased attack speed while missing runic ward": {
+   "ids": [
+    "explicit.stat_325171970"
+   ]
+  },
+  "#% increased block chance": {
+   "ids": [
+    "explicit.stat_2481353198",
+    "explicit.stat_4147897060"
+   ]
+  },
+  "#% increased cast speed": {
+   "ids": [
+    "explicit.stat_2891184298"
+   ]
+  },
+  "#% increased cast speed during any flask effect": {
+   "ids": [
+    "explicit.stat_145581225"
+   ]
+  },
+  "#% increased chance to shock": {
+   "ids": [
+    "explicit.stat_293638271"
+   ]
+  },
+  "#% increased chaos damage": {
+   "ids": [
+    "explicit.stat_736967255"
+   ]
+  },
+  "#% increased charm charges gained": {
+   "ids": [
+    "explicit.stat_3585532255"
+   ]
+  },
+  "#% increased charm effect duration": {
+   "ids": [
+    "explicit.stat_1389754388"
+   ]
+  },
+  "#% increased cold damage": {
+   "ids": [
+    "explicit.stat_3291658075"
+   ]
+  },
+  "#% increased cooldown recovery rate": {
+   "ids": [
+    "explicit.stat_1004011302"
+   ]
+  },
+  "#% increased cooldown recovery rate for grenade skills": {
+   "ids": [
+    "explicit.stat_1544773869"
+   ]
+  },
+  "#% increased critical damage bonus": {
+   "ids": [
+    "explicit.stat_3556824919"
+   ]
+  },
+  "#% increased critical damage bonus for attack damage": {
+   "ids": [
+    "explicit.stat_3714003708"
+   ]
+  },
+  "#% increased critical hit chance": {
+   "ids": [
+    "explicit.stat_587431675"
+   ]
+  },
+  "#% increased critical hit chance for attacks": {
+   "ids": [
+    "explicit.stat_2194114101"
+   ]
+  },
+  "#% increased critical hit chance for spells": {
+   "ids": [
+    "explicit.stat_737908626"
+   ]
+  },
+  "#% increased critical spell damage bonus": {
+   "ids": [
+    "explicit.stat_274716455"
+   ]
+  },
+  "#% increased curse duration": {
+   "ids": [
+    "explicit.stat_3824372849"
+   ]
+  },
+  "#% increased curse magnitudes": {
+   "ids": [
+    "explicit.stat_2353576063"
+   ]
+  },
+  "#% increased damage with bow skills": {
+   "ids": [
+    "explicit.stat_1241625305"
+   ]
+  },
+  "#% increased damage with warcries": {
+   "ids": [
+    "explicit.stat_1594812856"
+   ]
+  },
+  "#% increased dexterity": {
+   "ids": [
+    "explicit.stat_4139681126"
+   ]
+  },
+  "#% increased duration of damaging ailments on enemies": {
+   "ids": [
+    "explicit.stat_1829102168"
+   ]
+  },
+  "#% increased effect of arcane surge on you": {
+   "ids": [
+    "explicit.stat_2103650854"
+   ]
+  },
+  "#% increased effect of fully broken armour": {
+   "ids": [
+    "explicit.stat_1879206848"
+   ]
+  },
+  "#% increased effect of socketed augment items": {
+   "ids": [
+    "explicit.stat_2081918629"
+   ]
+  },
+  "#% increased effect of your mark skills": {
+   "ids": [
+    "explicit.stat_712554801"
+   ]
+  },
+  "#% increased elemental damage with attacks": {
+   "ids": [
+    "explicit.stat_387439868"
+   ]
+  },
+  "#% increased energy shield": {
+   "ids": [
+    "explicit.stat_4015621042"
+   ]
+  },
+  "#% increased energy shield recharge rate": {
+   "ids": [
+    "explicit.stat_2339757871"
+   ]
+  },
+  "#% increased evasion and energy shield": {
+   "ids": [
+    "explicit.stat_1999113824"
+   ]
+  },
+  "#% increased evasion rating": {
+   "ids": [
+    "explicit.stat_124859000",
+    "explicit.stat_2106365538"
+   ]
+  },
+  "#% increased explicit chaos modifier magnitudes": {
+   "ids": [
+    "explicit.stat_3196512240"
+   ]
+  },
+  "#% increased explicit cold modifier magnitudes": {
+   "ids": [
+    "explicit.stat_3206904707"
+   ]
+  },
+  "#% increased explicit critical modifier magnitudes": {
+   "ids": [
+    "explicit.stat_2393315299"
+   ]
+  },
+  "#% increased explicit elemental damage modifier magnitudes": {
+   "ids": [
+    "explicit.stat_231689132"
+   ]
+  },
+  "#% increased explicit fire modifier magnitudes": {
+   "ids": [
+    "explicit.stat_3574578302"
+   ]
+  },
+  "#% increased explicit lightning modifier magnitudes": {
+   "ids": [
+    "explicit.stat_3624940721"
+   ]
+  },
+  "#% increased explicit mana modifier magnitudes": {
+   "ids": [
+    "explicit.stat_3514984677"
+   ]
+  },
+  "#% increased explicit physical modifier magnitudes": {
+   "ids": [
+    "explicit.stat_1335369947"
+   ]
+  },
+  "#% increased explicit resistance modifier magnitudes": {
+   "ids": [
+    "explicit.stat_1972391381"
+   ]
+  },
+  "#% increased explicit speed modifier magnitudes": {
+   "ids": [
+    "explicit.stat_363924732"
+   ]
+  },
+  "#% increased exposure effect": {
+   "ids": [
+    "explicit.stat_2074866941"
+   ]
+  },
+  "#% increased fire damage": {
+   "ids": [
+    "explicit.stat_3962278098"
+   ]
+  },
+  "#% increased flammability magnitude": {
+   "ids": [
+    "explicit.stat_2968503605"
+   ]
+  },
+  "#% increased flask charges gained": {
+   "ids": [
+    "explicit.stat_1836676211"
+   ]
+  },
+  "#% increased flask life recovery rate": {
+   "ids": [
+    "explicit.stat_51994685"
+   ]
+  },
+  "#% increased flask mana recovery rate": {
+   "ids": [
+    "explicit.stat_1412217137"
+   ]
+  },
+  "#% increased freeze buildup": {
+   "ids": [
+    "explicit.stat_473429811"
+   ]
+  },
+  "#% increased global armour, evasion and energy shield": {
+   "ids": [
+    "explicit.stat_1177404658"
+   ]
+  },
+  "#% increased glory generation": {
+   "ids": [
+    "explicit.stat_3143918757"
+   ]
+  },
+  "#% increased ignite magnitude": {
+   "ids": [
+    "explicit.stat_3791899485"
+   ]
+  },
+  "#% increased intelligence": {
+   "ids": [
+    "explicit.stat_656461285"
+   ]
+  },
+  "#% increased light radius": {
+   "ids": [
+    "explicit.stat_1263695895"
+   ]
+  },
+  "#% increased lightning damage": {
+   "ids": [
+    "explicit.stat_2231156303"
+   ]
+  },
+  "#% increased magnitude of ailments you inflict": {
+   "ids": [
+    "explicit.stat_1303248024"
+   ]
+  },
+  "#% increased magnitude of bleeding you inflict": {
+   "ids": [
+    "explicit.stat_3166958180"
+   ]
+  },
+  "#% increased magnitude of poison you inflict": {
+   "ids": [
+    "explicit.stat_2487305362"
+   ]
+  },
+  "#% increased mana cost efficiency": {
+   "ids": [
+    "explicit.stat_4101445926"
+   ]
+  },
+  "#% increased mana cost efficiency of spells": {
+   "ids": [
+    "explicit.stat_2653231923"
+   ]
+  },
+  "#% increased mana regeneration rate": {
+   "ids": [
+    "explicit.stat_789117908"
+   ]
+  },
+  "#% increased maximum energy shield": {
+   "ids": [
+    "explicit.stat_2482852589"
+   ]
+  },
+  "#% increased maximum life": {
+   "ids": [
+    "explicit.stat_983749596"
+   ]
+  },
+  "#% increased maximum mana": {
+   "ids": [
+    "explicit.stat_2748665614"
+   ]
+  },
+  "#% increased maximum runic ward": {
+   "ids": [
+    "explicit.stat_4273473110"
+   ]
+  },
+  "#% increased movement speed": {
+   "ids": [
+    "explicit.stat_2250533757"
+   ]
+  },
+  "#% increased movement speed while sprinting": {
+   "ids": [
+    "explicit.stat_3107707789"
+   ]
+  },
+  "#% increased physical damage": {
+   "ids": [
+    "explicit.stat_1509134228"
+   ]
+  },
+  "#% increased presence area of effect": {
+   "ids": [
+    "explicit.stat_101878827"
+   ]
+  },
+  "#% increased projectile damage": {
+   "ids": [
+    "explicit.stat_1839076647"
+   ]
+  },
+  "#% increased projectile speed": {
+   "ids": [
+    "explicit.stat_3759663284"
+   ]
+  },
+  "#% increased quantity of gold dropped by slain enemies": {
+   "ids": [
+    "explicit.stat_3175163625"
+   ]
+  },
+  "#% increased rage cost efficiency": {
+   "ids": [
+    "explicit.stat_2416650879"
+   ]
+  },
+  "#% increased rarity of items found": {
+   "ids": [
+    "explicit.stat_2306002879",
+    "explicit.stat_3917489142"
+   ]
+  },
+  "#% increased runic ward": {
+   "ids": [
+    "explicit.stat_830161081"
+   ]
+  },
+  "#% increased runic ward regeneration rate": {
+   "ids": [
+    "explicit.stat_2392260628"
+   ]
+  },
+  "#% increased skill effect duration": {
+   "ids": [
+    "explicit.stat_3377888098"
+   ]
+  },
+  "#% increased spell damage": {
+   "ids": [
+    "explicit.stat_2974417149"
+   ]
+  },
+  "#% increased spell damage during any flask effect": {
+   "ids": [
+    "explicit.stat_1014398896"
+   ]
+  },
+  "#% increased spell physical damage": {
+   "ids": [
+    "explicit.stat_2768835289"
+   ]
+  },
+  "#% increased spirit": {
+   "ids": [
+    "explicit.stat_1416406066",
+    "explicit.stat_3984865854"
+   ]
+  },
+  "#% increased strength": {
+   "ids": [
+    "explicit.stat_734614379"
+   ]
+  },
+  "#% increased stun duration": {
+   "ids": [
+    "explicit.stat_748522257"
+   ]
+  },
+  "#% increased total power counted by warcries": {
+   "ids": [
+    "explicit.stat_2663359259"
+   ]
+  },
+  "#% increased totem placement speed": {
+   "ids": [
+    "explicit.stat_3374165039"
+   ]
+  },
+  "#% increased warcry cooldown recovery rate": {
+   "ids": [
+    "explicit.stat_4159248054"
+   ]
+  },
+  "#% increased warcry speed": {
+   "ids": [
+    "explicit.stat_1316278494"
+   ]
+  },
+  "#% increased withered magnitude": {
+   "ids": [
+    "explicit.stat_3973629633"
+   ]
+  },
+  "#% of armour also applies to elemental damage": {
+   "ids": [
+    "explicit.stat_3362812763"
+   ]
+  },
+  "#% of cold damage taken recouped as life": {
+   "ids": [
+    "explicit.stat_3679418014"
+   ]
+  },
+  "#% of damage is taken from mana before life": {
+   "ids": [
+    "explicit.stat_458438597"
+   ]
+  },
+  "#% of damage taken recouped as life": {
+   "ids": [
+    "explicit.stat_1444556985"
+   ]
+  },
+  "#% of damage taken recouped as mana": {
+   "ids": [
+    "explicit.stat_472520716"
+   ]
+  },
+  "#% of fire damage taken recouped as life": {
+   "ids": [
+    "explicit.stat_1742651309"
+   ]
+  },
+  "#% of lightning damage taken recouped as life": {
+   "ids": [
+    "explicit.stat_2970621759"
+   ]
+  },
+  "#% of physical damage from hits taken as chaos damage": {
+   "ids": [
+    "explicit.stat_4129825612"
+   ]
+  },
+  "#% reduced attribute requirements": {
+   "ids": [
+    "explicit.stat_3639275092"
+   ],
+   "negate": true
+  },
+  "#% reduced charm charges used": {
+   "ids": [
+    "explicit.stat_1570770415"
+   ],
+   "negate": true
+  },
+  "#% reduced chill duration on you": {
+   "ids": [
+    "explicit.stat_1874553720"
+   ]
+  },
+  "#% reduced duration of ailments on you": {
+   "ids": [
+    "explicit.stat_548070846"
+   ],
+   "negate": true
+  },
+  "#% reduced duration of bleeding on you": {
+   "ids": [
+    "explicit.stat_1692879867"
+   ],
+   "negate": true
+  },
+  "#% reduced flask charges used": {
+   "ids": [
+    "explicit.stat_644456512"
+   ],
+   "negate": true
+  },
+  "#% reduced freeze duration on you": {
+   "ids": [
+    "explicit.stat_2160282525"
+   ]
+  },
+  "#% reduced ignite duration on you": {
+   "ids": [
+    "explicit.stat_986397080"
+   ]
+  },
+  "#% reduced poison duration on you": {
+   "ids": [
+    "explicit.stat_3301100256"
+   ],
+   "negate": true
+  },
+  "#% reduced shock duration on you": {
+   "ids": [
+    "explicit.stat_99927264"
+   ]
+  },
+  "#% reduced slowing potency of debuffs on you": {
+   "ids": [
+    "explicit.stat_924253255"
+   ],
+   "negate": true
+  },
+  "#% surpassing chance to fire an additional arrow": {
+   "ids": [
+    "explicit.stat_2463230181"
+   ]
+  },
+  "#% surpassing chance to fire an additional projectile": {
+   "ids": [
+    "explicit.stat_1347539079"
+   ]
+  },
+  "#% surpassing chance to gain a puppet master stack whenever you use a command skill": {
+   "ids": [
+    "explicit.stat_2840930496"
+   ]
+  },
+  "#% to all elemental resistances": {
+   "ids": [
+    "explicit.stat_2901986750"
+   ]
+  },
+  "#% to all maximum elemental resistances": {
+   "ids": [
+    "explicit.stat_1978899297"
+   ]
+  },
+  "#% to chaos resistance": {
+   "ids": [
+    "explicit.stat_2923486259"
+   ]
+  },
+  "#% to cold and chaos resistances": {
+   "ids": [
+    "explicit.stat_3393628375"
+   ]
+  },
+  "#% to cold resistance": {
+   "ids": [
+    "explicit.stat_4220027924"
+   ]
+  },
+  "#% to critical damage bonus": {
+   "ids": [
+    "explicit.stat_2694482655"
+   ]
+  },
+  "#% to critical hit chance": {
+   "ids": [
+    "explicit.stat_518292764"
+   ]
+  },
+  "#% to fire and chaos resistances": {
+   "ids": [
+    "explicit.stat_378817135"
+   ]
+  },
+  "#% to fire resistance": {
+   "ids": [
+    "explicit.stat_3372524247"
+   ]
+  },
+  "#% to lightning and chaos resistances": {
+   "ids": [
+    "explicit.stat_3465022881"
+   ]
+  },
+  "#% to lightning resistance": {
+   "ids": [
+    "explicit.stat_1671376347"
+   ]
+  },
+  "#% to maximum chaos resistance": {
+   "ids": [
+    "explicit.stat_1301765461"
+   ]
+  },
+  "#% to maximum cold resistance": {
+   "ids": [
+    "explicit.stat_3676141501"
+   ]
+  },
+  "#% to maximum fire resistance": {
+   "ids": [
+    "explicit.stat_4095671657"
+   ]
+  },
+  "#% to maximum lightning resistance": {
+   "ids": [
+    "explicit.stat_1011760251"
+   ]
+  },
+  "#% to maximum quality": {
+   "ids": [
+    "explicit.stat_2039822488"
+   ]
+  },
+  "adds # to # cold damage": {
+   "ids": [
+    "explicit.stat_1037193709"
+   ]
+  },
+  "adds # to # cold damage to attacks": {
+   "ids": [
+    "explicit.stat_4067062424"
+   ]
+  },
+  "adds # to # fire damage": {
+   "ids": [
+    "explicit.stat_709508406"
+   ]
+  },
+  "adds # to # fire damage to attacks": {
+   "ids": [
+    "explicit.stat_1573130764"
+   ]
+  },
+  "adds # to # lightning damage": {
+   "ids": [
+    "explicit.stat_3336890334"
+   ]
+  },
+  "adds # to # lightning damage to attacks": {
+   "ids": [
+    "explicit.stat_1754445556"
+   ]
+  },
+  "adds # to # physical damage": {
+   "ids": [
+    "explicit.stat_1940865751"
+   ]
+  },
+  "adds # to # physical damage to attacks": {
+   "ids": [
+    "explicit.stat_3032590688"
+   ]
+  },
+  "allies in your presence deal # to # added attack cold damage": {
+   "ids": [
+    "explicit.stat_2347036682"
+   ]
+  },
+  "allies in your presence deal # to # added attack fire damage": {
+   "ids": [
+    "explicit.stat_849987426"
+   ]
+  },
+  "allies in your presence deal # to # added attack lightning damage": {
+   "ids": [
+    "explicit.stat_2854751904"
+   ]
+  },
+  "allies in your presence deal # to # added attack physical damage": {
+   "ids": [
+    "explicit.stat_1574590649"
+   ]
+  },
+  "allies in your presence deal #% increased damage": {
+   "ids": [
+    "explicit.stat_1798257884"
+   ]
+  },
+  "allies in your presence have #% increased attack speed": {
+   "ids": [
+    "explicit.stat_1998951374"
+   ]
+  },
+  "allies in your presence have #% increased cast speed": {
+   "ids": [
+    "explicit.stat_289128254"
+   ]
+  },
+  "allies in your presence have #% increased critical damage bonus": {
+   "ids": [
+    "explicit.stat_3057012405"
+   ]
+  },
+  "allies in your presence have #% increased critical hit chance": {
+   "ids": [
+    "explicit.stat_1250712710"
+   ]
+  },
+  "allies in your presence have #% to all elemental resistances": {
+   "ids": [
+    "explicit.stat_3850614073"
+   ]
+  },
+  "allies in your presence regenerate # life per second": {
+   "ids": [
+    "explicit.stat_4010677958"
+   ]
+  },
+  "aura skills have #% increased magnitudes": {
+   "ids": [
+    "explicit.stat_315791320"
+   ]
+  },
+  "bears the mark of the abyssal lord": {
+   "ids": [
+    "explicit.stat_335885735"
+   ]
+  },
+  "causes #% increased stun buildup": {
+   "ids": [
+    "explicit.stat_791928121"
+   ]
+  },
+  "damage penetrates #% elemental resistances": {
+   "ids": [
+    "explicit.stat_2101383955"
+   ]
+  },
+  "damaging ailments deal damage #% faster": {
+   "ids": [
+    "explicit.stat_538241406"
+   ]
+  },
+  "debuffs on you expire #% faster": {
+   "ids": [
+    "explicit.stat_1238227257"
+   ]
+  },
+  "flasks gain # charges per second": {
+   "ids": [
+    "explicit.stat_731781020"
+   ]
+  },
+  "gain # life per enemy hit with attacks": {
+   "ids": [
+    "explicit.stat_2797971005"
+   ]
+  },
+  "gain # life per enemy killed": {
+   "ids": [
+    "explicit.stat_3695891184"
+   ]
+  },
+  "gain # mana per enemy killed": {
+   "ids": [
+    "explicit.stat_1368271171"
+   ]
+  },
+  "gain # rage when hit by an enemy": {
+   "ids": [
+    "explicit.stat_3292710273"
+   ]
+  },
+  "gain #% of damage as extra cold damage": {
+   "ids": [
+    "explicit.stat_2505884597"
+   ]
+  },
+  "gain #% of damage as extra fire damage": {
+   "ids": [
+    "explicit.stat_3015669065"
+   ]
+  },
+  "gain #% of damage as extra fire damage while you are missing runic ward": {
+   "ids": [
+    "explicit.stat_589361270"
+   ]
+  },
+  "gain #% of damage as extra lightning damage": {
+   "ids": [
+    "explicit.stat_3278136794"
+   ]
+  },
+  "gain #% of damage as extra physical damage": {
+   "ids": [
+    "explicit.stat_4019237939"
+   ]
+  },
+  "gain #% of elemental damage as extra cold damage": {
+   "ids": [
+    "explicit.stat_1158842087"
+   ]
+  },
+  "gain deflection rating equal to #% of evasion rating": {
+   "ids": [
+    "explicit.stat_3033371881"
+   ]
+  },
+  "grants # life per enemy hit": {
+   "ids": [
+    "explicit.stat_821021828"
+   ]
+  },
+  "grenade skills fire # additional projectiles": {
+   "ids": [
+    "explicit.stat_1980802737"
+   ]
+  },
+  "grenade skills fire an additional projectile": {
+   "ids": [
+    "explicit.stat_1980802737"
+   ]
+  },
+  "grenade skills have # cooldown use": {
+   "ids": [
+    "explicit.stat_2250681686"
+   ]
+  },
+  "grenade skills have # cooldown uses": {
+   "ids": [
+    "explicit.stat_2250681686"
+   ]
+  },
+  "hits against you have #% reduced critical damage bonus": {
+   "ids": [
+    "explicit.stat_3855016469"
+   ]
+  },
+  "inherent rage loss starts # seconds later": {
+   "ids": [
+    "explicit.stat_3987691524"
+   ]
+  },
+  "leech #% of physical attack damage as life": {
+   "ids": [
+    "explicit.stat_2557965901"
+   ]
+  },
+  "leech #% of physical attack damage as mana": {
+   "ids": [
+    "explicit.stat_707457662"
+   ]
+  },
+  "leech life #% faster": {
+   "ids": [
+    "explicit.stat_1570501432"
+   ]
+  },
+  "leech life #% slower": {
+   "ids": [
+    "explicit.stat_1570501432"
+   ],
+   "negate": true
+  },
+  "leeches #% of physical damage as life": {
+   "ids": [
+    "explicit.stat_55876295"
+   ]
+  },
+  "leeches #% of physical damage as mana": {
+   "ids": [
+    "explicit.stat_669069897"
+   ]
+  },
+  "loads # additional bolts": {
+   "ids": [
+    "explicit.stat_1967051901"
+   ]
+  },
+  "loads an additional bolt": {
+   "ids": [
+    "explicit.stat_1967051901"
+   ]
+  },
+  "mark skills have #% increased skill effect duration": {
+   "ids": [
+    "explicit.stat_2594634307"
+   ]
+  },
+  "mark skills have #% increased use speed": {
+   "ids": [
+    "explicit.stat_1714971114"
+   ]
+  },
+  "minions deal #% increased damage": {
+   "ids": [
+    "explicit.stat_1589917703"
+   ]
+  },
+  "minions deal #% increased damage with command skills": {
+   "ids": [
+    "explicit.stat_3742865955"
+   ]
+  },
+  "minions have #% increased area of effect": {
+   "ids": [
+    "explicit.stat_3811191316"
+   ]
+  },
+  "minions have #% increased attack and cast speed": {
+   "ids": [
+    "explicit.stat_3091578504"
+   ]
+  },
+  "minions have #% increased critical damage bonus": {
+   "ids": [
+    "explicit.stat_1854213750"
+   ]
+  },
+  "minions have #% increased critical hit chance": {
+   "ids": [
+    "explicit.stat_491450213"
+   ]
+  },
+  "minions have #% increased immobilisation buildup": {
+   "ids": [
+    "explicit.stat_1485480327"
+   ]
+  },
+  "minions have #% increased magnitude of damaging ailments": {
+   "ids": [
+    "explicit.stat_953593695"
+   ]
+  },
+  "minions have #% increased maximum life": {
+   "ids": [
+    "explicit.stat_770672621"
+   ]
+  },
+  "minions have #% increased movement speed": {
+   "ids": [
+    "explicit.stat_174664100"
+   ]
+  },
+  "minions have #% to all elemental resistances": {
+   "ids": [
+    "explicit.stat_1423639565"
+   ]
+  },
+  "minions revive #% faster": {
+   "ids": [
+    "explicit.stat_2639966148"
+   ]
+  },
+  "offering skills have #% increased duration": {
+   "ids": [
+    "explicit.stat_2957407601"
+   ]
+  },
+  "on corruption, item gains two enchantments": {
+   "ids": [
+    "explicit.stat_4215035940"
+   ]
+  },
+  "projectiles have #% chance for an additional projectile when forking": {
+   "ids": [
+    "explicit.stat_3003542304"
+   ]
+  },
+  "projectiles have #% chance to chain an additional time from terrain": {
+   "ids": [
+    "explicit.stat_4081947835"
+   ]
+  },
+  "recover # runic ward when a charm is used": {
+   "ids": [
+    "explicit.stat_554145967"
+   ]
+  },
+  "recover # runic ward when you block": {
+   "ids": [
+    "explicit.stat_1568848828"
+   ]
+  },
+  "recover #% of maximum life when you use a warcry": {
+   "ids": [
+    "explicit.stat_1040141381"
+   ]
+  },
+  "remnants can be collected from #% further away": {
+   "ids": [
+    "explicit.stat_3482326075"
+   ]
+  },
+  "skills have #% chance to not remove charges but still count as consuming them": {
+   "ids": [
+    "explicit.stat_2942439603"
+   ]
+  },
+  "spell skills have #% increased area of effect": {
+   "ids": [
+    "explicit.stat_1967040409"
+   ]
+  },
+  "spells have #% increased cooldown recovery rate": {
+   "ids": [
+    "explicit.stat_1493485657"
+   ]
+  },
+  "tempest bells are destroyed after an additional # hits": {
+   "ids": [
+    "explicit.stat_3984146263"
+   ]
+  },
+  "temporary minion skills have # to limit of minions summoned": {
+   "ids": [
+    "explicit.stat_1058934731"
+   ]
+  },
+  "warcry skills have #% increased area of effect": {
+   "ids": [
+    "explicit.stat_2567751411"
+   ]
+  }
+ }
+}

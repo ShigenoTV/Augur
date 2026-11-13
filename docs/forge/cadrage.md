@@ -61,8 +61,9 @@ pour l'instant, voir [api-ggg.md](../architecture/api-ggg.md)). **Décision de M
    User-Agent qui identifie Augur. Un prix absent d'un relevé garde sa dernière cote (même ligue) ;
 3. d'une valeur **indicative** (relevé de septembre 2026 de poe2-craft-assistant).
 
-La base neuve et sa revente n'ont pas de cote : elles restent saisies. La comparaison « craftez ou achetez » attend
-une source de prix d'objets (même blocage OAuth).
+La base neuve et sa revente n'ont pas de cote : elles restent saisies. Les objets Rares n'ont de cote nulle part
+(poe.ninja ne cote que les objets échangeables en vrac ; vérifié le 13/11/2026) : « crafter ou acheter » s'appuie
+donc sur un prix d'achat que le joueur relève lui-même (point 8 ci-dessous).
 
 ## Découpage en PR
 
@@ -104,7 +105,21 @@ une source de prix d'objets (même blocage OAuth).
    demande recalculée remplace son entrée) ; onglet Historique du panneau pour le rouvrir (nouveau calcul) ou le
    supprimer.
 
-Hors périmètre pour l'instant : « craftez ou achetez » (pas de prix d'objets), boucle de validation communautaire.
+8. **Crafter ou acheter** (`forge::achat`, commande `open_forge_buy_search`, demande de Max du 13/11) : sous le
+   plan calculé, « Chercher l'objet à l'achat » ouvre dans le navigateur du joueur la recherche de l'objet visé sur
+   le site de trade (même base, non unique et non corrompu, en ligne, du moins cher au plus cher ; chaque ligne de
+   mod voulu devient un filtre au minimum du tier visé, la borne basse du palier le plus faible accepté ; « Adds X
+   to Y » = moyenne des deux bornes basses ; stat globale ou locale acceptée par un groupe « count » ; stat
+   rangée sous sa forme inverse (« reduced ») en maximum négatif). Augur n'envoie aucune requête au site : le
+   joueur reporte le prix qu'il y voit, dans la monnaie d'affichage. Forge le compare au coût moyen du plan (base
+   neuve comprise, sauf depuis un objet) : « crafter », « acheter », ou « équivalent » sous 10 % d'écart, plus la
+   part des crafts simulés qui coûtent moins que l'achat. Le prix saisi est gardé par demande (stockage local)
+   pour qu'un plan rouvert le retrouve. Identifiants de stats : `crates/poe2-core/data/trade-stats.json`
+   (`tools/gamedata/trade_stats.py`, 257 lignes de mods reliées, 15 sans stat de trade : pêche, pièges, multiplicateurs
+   de dégâts dans le temps). Une ligne sans stat reste hors filtre et le panneau la signale.
+
+Hors périmètre pour l'instant : relevé automatique du prix d'achat (il faudrait interroger le site de trade
+depuis Augur), boucle de validation communautaire.
 
 ## Hypothèses à vérifier
 

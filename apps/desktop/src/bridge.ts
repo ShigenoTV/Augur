@@ -49,6 +49,14 @@ export type Settings = {
 };
 
 /** Recherche d'upgrades ouverte dans le navigateur (Alt+U). */
+/** Recherche « crafter ou acheter » de Forge, ouverte dans le navigateur. */
+export type ForgeBuySearch = {
+  url: string;
+  /** Nombre de filtres de stats posés. */
+  filtres: number;
+  /** Lignes de mods voulus que le site de trade ne sait pas chercher. */
+  ignorees: string[];
+};
 export type UpgradeSearch = {
   url: string;
   /** Stats pondérées, de la plus forte à la plus faible. */
@@ -249,6 +257,8 @@ export type ForgeVerify = {
   meanSteps: number;
   meanAbandons: number;
   censored: number;
+  /** Coût (hors base neuve) aux quantiles 0 %, 0,5 %, …, 100 % des essais réussis. */
+  costQuantiles: number[];
 };
 export type ForgePlan = {
   baseId: string;
@@ -382,6 +392,7 @@ export const commands = {
   getForgeBases: () => invoke<ForgeBase[]>("get_forge_bases"),
   getForgeAffixes: (baseId: string, ilvl: number) => invoke<ForgeAffixes>("get_forge_affixes", { baseId, ilvl }),
   analyzeForgeItem: (texte: string) => invoke<ForgeStartItem>("analyze_forge_item", { texte }),
+  openForgeBuySearch: (demande: ForgePlanRequest) => invoke<ForgeBuySearch>("open_forge_buy_search", { demande }),
   getForgeCatalogue: () => invoke<ForgeCatalogueEntry[]>("get_forge_catalogue"),
   planForgeCraft: (demande: ForgePlanRequest) => invoke<ForgePlanResult>("plan_forge_craft", { demande }),
   getForgeAdvice: () => invoke<ForgeTip | null>("get_forge_advice"),
