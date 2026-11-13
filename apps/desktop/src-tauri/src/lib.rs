@@ -121,6 +121,7 @@ pub fn run() {
             commands::get_forge_bases,
             commands::get_forge_affixes,
             commands::analyze_forge_item,
+            commands::open_forge_buy_search,
             commands::get_forge_catalogue,
             commands::plan_forge_craft,
             commands::get_forge_advice,

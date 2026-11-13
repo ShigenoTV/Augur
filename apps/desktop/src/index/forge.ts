@@ -7,9 +7,10 @@ import type {
   ForgePlan,
   ForgeSlot,
   ForgeTerminalNode,
+  ForgeVerify,
   ForgeWanted,
 } from "../bridge";
-import { formatCout } from "./devise";
+import { DEVISES, formatCout, type Affichage } from "./devise";
 
 /** Places d'un Rare ordinaire (le plafond propre à la base n'est pas encore extrait). */
 export const MAX_PAR_COTE = 3;
@@ -167,4 +168,60 @@ export function arbre(plan: ForgePlan, maxBranches = 4, maxNoeuds = 28): Arbre {
     colonnes: parCol.length,
     lignes: Math.max(...parCol),
   };
+}
+
+/**
+ * Probabilité de finir le craft en dépensant au plus `budget` (hors base neuve) : même lecture
+ * prudente des quantiles que le cœur Rust (`VerifyResult::success_probability`).
+ */
+export function chanceSousBudget(mc: ForgeVerify, budget: number): number {
+  const q = mc.costQuantiles ?? [];
+  const b = budget + Math.abs(budget) * 1e-6;
+  if (q.length < 2 || !(b >= q[0]!)) return 0;
+  let i = 0;
+  while (i + 1 < q.length && q[i + 1]! <= b) i++;
+  const fini = mc.trials / (mc.trials + mc.censored);
+  return (i / (q.length - 1)) * fini;
+}
+
+/** En dessous de cet écart relatif, crafter ou acheter revient au même. */
+export const MARGE_EQUIVALENT = 0.1;
+
+export type VerdictAchat = "crafter" | "acheter" | "equivalent";
+
+export type ComparaisonAchat = {
+  /** Coût moyen du craft, en Exalted (base neuve comprise, sauf depuis un objet). */
+  coutCraft: number;
+  /** Prix d'achat moins coût du craft : positif, crafter fait économiser. */
+  ecart: number;
+  verdict: VerdictAchat;
+  /** Part des crafts simulés qui coûtent moins que l'achat ; null sans simulation. */
+  chanceCraftMoinsCher: number | null;
+};
+
+/**
+ * « Crafter ou acheter » : coût moyen du plan face au prix d'achat estimé (en Exalted). Les deux sont
+ * des estimations ; à moins de 10 % d'écart, le verdict est « équivalent ».
+ */
+export function comparerAchat(plan: ForgePlan, depuisObjet: boolean, prixAchat: number): ComparaisonAchat {
+  const base = depuisObjet ? 0 : plan.baseCost;
+  const coutCraft = plan.expectedCost + base;
+  const ecart = prixAchat - coutCraft;
+  const reference = Math.max(coutCraft, prixAchat);
+  const verdict: VerdictAchat =
+    reference <= 0 || Math.abs(ecart) <= MARGE_EQUIVALENT * reference ? "equivalent" : ecart > 0 ? "crafter" : "acheter";
+  const chanceCraftMoinsCher = plan.mc ? chanceSousBudget(plan.mc, prixAchat - base) : null;
+  return { coutCraft, ecart, verdict, chanceCraftMoinsCher };
+}
+
+/** Prix saisi dans la monnaie d'affichage, converti en Exalted (sans taux connu : déjà en Exalted). */
+export function versExalts(v: number, a: Affichage): number {
+  const taux = a.taux[a.devise];
+  return a.devise === "exalt" || !(taux > 0) ? v : v * taux;
+}
+
+/** Nom court de la monnaie dans laquelle un prix se saisit. */
+export function deviseSaisie(a: Affichage): string {
+  const devise = a.taux[a.devise] > 0 ? a.devise : "exalt";
+  return DEVISES.find((d) => d.id === devise)!.court;
 }

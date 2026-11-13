@@ -420,6 +420,24 @@ pub fn analyze_forge_item(
     poe2_core::forge::atelier::analyser_objet(&texte).map_err(crate::forge::error)
 }
 
+/// « Crafter ou acheter » : ouvre dans le navigateur la recherche de l'objet visé par le plan (même
+/// base, chaque mod voulu au tier visé ou mieux, du moins cher au plus cher), dans la ligue des
+/// Réglages. Aucune requête n'est envoyée par Augur : le joueur reporte le prix qu'il voit.
+#[tauri::command]
+pub fn open_forge_buy_search(
+    store: State<'_, crate::settings::SettingsStore>,
+    demande: poe2_core::forge::atelier::DemandePlan,
+) -> Result<crate::upgrade_search::ForgeBuySearch, AppError> {
+    let r = poe2_core::forge::achat::recherche(&demande).map_err(crate::forge::error)?;
+    let url = crate::upgrade_search::adresse_requete(store.get().league(), &r.requete);
+    crate::upgrade_search::ouvrir(&url)?;
+    Ok(crate::upgrade_search::ForgeBuySearch {
+        url,
+        filtres: r.filtres.len(),
+        ignorees: r.ignorees,
+    })
+}
+
 #[tauri::command]
 pub fn get_forge_catalogue() -> Vec<poe2_core::forge::atelier::EntreeCatalogue> {
     poe2_core::forge::atelier::catalogue()
