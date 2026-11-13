@@ -85,13 +85,28 @@ pub fn requete(r: &Recherche, budget_exalts: Option<u32>) -> Value {
 
 /// Adresse de la recherche sur le site de trade.
 pub fn adresse(r: &Recherche, ligue: &str, budget_exalts: Option<u32>) -> String {
+    adresse_requete(ligue, &requete(r, budget_exalts))
+}
+
+/// Adresse d'une recherche quelconque (`query` + `sort`) dans la ligue.
+pub fn adresse_requete(ligue: &str, requete: &Value) -> String {
     let mut url = reqwest::Url::parse(SITE).expect("adresse du site de trade valide");
     if let Ok(mut segments) = url.path_segments_mut() {
         segments.pop_if_empty().push(ligue);
     }
-    url.query_pairs_mut()
-        .append_pair("q", &requete(r, budget_exalts).to_string());
+    url.query_pairs_mut().append_pair("q", &requete.to_string());
     url.to_string()
+}
+
+/// Recherche « crafter ou acheter » de Forge ouverte, pour le panneau.
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ForgeBuySearch {
+    pub url: String,
+    /// Nombre de filtres de stats posés.
+    pub filtres: usize,
+    /// Lignes de mods voulus que le site de trade ne sait pas chercher.
+    pub ignorees: Vec<String>,
 }
 
 /// Prépare la recherche pour l'objet de classe `classe`.

@@ -12,12 +12,14 @@
 //!   poe2db (mods sans poids listés à part, jamais inventés).
 //! - [`objectif`] : « ces groupes d'affixes, à tel tier ou mieux ».
 //! - [`monte_carlo`] : simulation parallèle, déterministe pour une graine.
+//! - [`achat`] : « crafter ou acheter », recherche de l'objet visé sur le site de trade.
 //! - [`atelier`] : ce que l'appli appelle (données embarquées, bases, affixes, plan).
 //! - [`historique`] : plans calculés, à rouvrir ou supprimer, et plan suivi gardé au redémarrage.
 //! - [`suivi`] : objet copié en jeu (Ctrl+Alt+C) → prochaine étape du plan actif.
 //!
 //! Tout est indexé (`u16`) pour le chemin chaud ; aucune entrée-sortie.
 
+pub mod achat;
 pub mod atelier;
 pub mod catalogue;
 pub mod donnees;
