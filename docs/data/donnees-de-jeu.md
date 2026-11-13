@@ -34,7 +34,8 @@ mods redonne le même blob, que l'application ne retélécharge pas.
    `versions.json` ;
 2. en option, poids et Essences : `--coe` (Craft of Exile, version lue sur le site) et `--poe2db` (relevé poe2db
    complet, lent) ;
-3. `import_repoe.py`, `extract_build_data.py` puis `forge_data.py`, dans un dossier temporaire ;
+3. `import_repoe.py`, `extract_build_data.py`, `forge_data.py` puis `trade_stats.py` (stats du site de trade,
+   depuis le `stats.ndjson` d'Exiled Exchange 2), dans un dossier temporaire ;
 4. rapport des différences entre les données du dépôt et les nouvelles, puis copie des fichiers modifiés
    (sauf avec `--essai`).
 

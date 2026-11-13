@@ -18,7 +18,8 @@ python tools/gamedata/mise_a_jour.py --coe     # + poids et Essences Craft of Ex
 ```
 
 La commande télécharge RePoE et la dernière version d'arbre de Path of Building (`--arbre 1_0` pour en
-forcer une), régénère `gemmes.json`, `arbre.json` et `forge.json.gz` avec les outils de `tools/gamedata/`,
+forcer une), régénère `gemmes.json`, `arbre.json`, `forge.json.gz` puis `trade-stats.json` avec les outils de
+`tools/gamedata/`,
 puis écrit un rapport Markdown des ajouts, retraits et changements (`var/mise-a-jour/rapport-AAAA-MM-JJ.md`) :
 sorts, supports, armes, passifs, mods, bases, Essences et poids, avec les points d'attention (sort vérifié en
 jeu modifié, nouvelle version d'arbre, mods sans poids). Rien n'est écrit si une étape échoue. `--poe2db`
@@ -26,7 +27,7 @@ refait aussi le relevé poe2db (lent : une page toutes les 6 s) ; `--depuis DOSS
 téléchargées. Le workflow manuel « Mise à jour des données » fait la même chose sur GitHub et dépose le
 rapport et les fichiers en artefact. Détail : [docs/data/donnees-de-jeu.md](../../../docs/data/donnees-de-jeu.md).
 
-Régénérer `trade-stats.json` (après `forge.json.gz`) :
+Régénérer `trade-stats.json` seul (après `forge.json.gz` ; la commande ci-dessus le fait déjà) :
 
 ```sh
 curl -sSLO https://raw.githubusercontent.com/Kvan7/Exiled-Exchange-2/master/renderer/public/data/en/stats.ndjson

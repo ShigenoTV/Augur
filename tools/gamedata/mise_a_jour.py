@@ -53,10 +53,14 @@ sys.path[:0] = [str(ICI), str(THEORYCRAFT)]
 import extract_build_data
 import forge_data
 import import_repoe
+import trade_stats
 
 REPOE = "https://repoe-fork.github.io/poe2/"
 POB = "https://raw.githubusercontent.com/PathOfBuildingCommunity/PathOfBuilding-PoE2/dev/src/"
 COE = "https://beta.craftofexile.com/"
+EE2_STATS = (
+    "https://raw.githubusercontent.com/Kvan7/Exiled-Exchange-2/master/renderer/public/data/en/stats.ndjson"
+)
 USER_AGENT = "Augur-donnees/0.1 (+https://github.com/ShigenoTV/Augur)"
 
 FICHIERS_REPOE = ("skills.json", "base_items.json", "mods.min.json", "base_items.min.json")
@@ -66,6 +70,7 @@ EMBARQUES = {
     "crates/poe2-core/data/gemmes.json": "data/gemmes.json",
     "crates/poe2-core/data/arbre.json": "data/arbre.json",
     "crates/poe2-core/data/forge.json.gz": "data/forge.json.gz",
+    "crates/poe2-core/data/trade-stats.json": "data/trade-stats.json",
 }
 POIDS = {
     "tools/theorycraft/donnees/poids-poe2db.json": "theo/poids-poe2db.json",
@@ -126,6 +131,7 @@ def telecharger(dossier: Path, arbre: str, coe: bool, lire=lire_url) -> dict:
         arbre = derniere_version_arbre(lire(POB + "GameVersions.lua").decode("utf-8"))
     versions["arbre"] = arbre
     (dossier / "tree.json").write_bytes(lire(f"{POB}TreeData/{arbre}/tree.json"))
+    (dossier / "stats.ndjson").write_bytes(lire(EE2_STATS))
     if coe:
         v = version_coe(lire(COE + "?game=poe2").decode("utf-8", "replace"))
         versions["coe"] = v
@@ -253,7 +259,20 @@ def regenerer(
             ],
         )
     )  # fmt: skip
+    journal.append(_lancer("stats de trade", lambda _: _trade_stats(sources, travail / "data"), []))
     return [ligne.replace(str(travail), "…") for ligne in journal if ligne]
+
+
+def _trade_stats(sources: Path, data: Path) -> int:
+    """`trade-stats.json` : stats du site de trade des lignes de mods de Forge (`trade_stats.py`)."""
+    with (sources / "stats.ndjson").open(encoding="utf-8") as f:
+        table = trade_stats.table_trade(f)
+    sortie = trade_stats.construire(trade_stats.lignes_forge(data / "forge.json.gz"), table)
+    (data / "trade-stats.json").write_text(
+        json.dumps(sortie, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    print(f"{len(sortie['stats'])} lignes reliées, {len(sortie['sans_stat'])} sans stat de trade")
+    return 0
 
 
 # --- Chargement -------------------------------------------------------------
@@ -274,6 +293,7 @@ def charger(lire_fichier) -> dict:
     arbre = json_de("crates/poe2-core/data/arbre.json") or {}
     forge = json_de("crates/poe2-core/data/forge.json.gz") or {}
     releve = forge.get("releve") or {}
+    trade = json_de("crates/poe2-core/data/trade-stats.json") or {}
     return {
         "repoe": forge.get("repoe_version") or "?",
         "arbre_version": arbre.get("version") or "?",
@@ -287,6 +307,8 @@ def charger(lire_fichier) -> dict:
         "bases": {b["id"]: b for b in (forge.get("bases") or {}).get("bases", [])},
         "essences": {e["id"]: e for e in forge.get("essences", [])},
         "poids": poids_effectifs(releve),
+        "trade": trade.get("stats") or {},
+        "sans_trade": set(trade.get("sans_stat") or []),
     }
 
 
@@ -441,6 +463,7 @@ def rapport(
         "mods": ("Forge : mods", _nom_mod, detail_generique),
         "bases": ("Forge : bases d'objets", _nom_base, detail_generique),
         "essences": ("Forge : Essences et Alloys", _nom_essence, detail_generique),
+        "trade": ("Forge : stats du site de trade", lambda i, _: f"`{i}`", detail_generique),
     }
     diffs = {k: comparer(avant[k], apres[k]) for k in parties}
     diffs["poids"] = comparer(avant["poids"], apres["poids"])
@@ -468,6 +491,13 @@ def rapport(
             f"Craft of Exile ne les ont pas estimés) : "
             + ", ".join(f"`{m}`" for m in sans_poids[:20])
             + (" …" if len(sans_poids) > 20 else "")
+        )
+    sans_trade = sorted(apres["sans_trade"] - avant["sans_trade"])
+    if sans_trade:
+        attention.append(
+            f"{len(sans_trade)} ligne(s) de mod sans stat de trade (hors filtre dans « crafter ou acheter ») : "
+            + ", ".join(f"`{t}`" for t in sans_trade[:20])
+            + (" …" if len(sans_trade) > 20 else "")
         )
     retires_utilises = sorted(
         m

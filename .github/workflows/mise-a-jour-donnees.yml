@@ -43,5 +43,6 @@ jobs:
             crates/poe2-core/data/gemmes.json
             crates/poe2-core/data/arbre.json
             crates/poe2-core/data/forge.json.gz
+            crates/poe2-core/data/trade-stats.json
             tools/theorycraft/donnees/poids-coe.json
             tools/theorycraft/donnees/essences-coe.json

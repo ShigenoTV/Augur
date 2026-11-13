@@ -18,6 +18,13 @@ import mise_a_jour as maj
 from test_extract_build_data import SKILLS, TREE
 
 REPOE_TEST = HERE.parent / "testdata" / "repoe"
+STATS_NDJSON = json.dumps(
+    {
+        "ref": "+# to maximum Life",
+        "matchers": [{"string": "+# to maximum Life"}],
+        "trade": {"ids": {"explicit": ["explicit.stat_3299347043"]}},
+    }
+)
 GAME_VERSIONS = (
     'treeVersionList = { "0_1", "0_4", "0_5" }\nlatestTreeVersion = treeVersionList[#treeVersionList]\n'
 )
@@ -82,6 +89,8 @@ def _etat(**changements) -> dict:
         "bases": {},
         "essences": {"e": {"id": "e", "nom": "Essence of Life", "cibles": {"Ring": ["Ancien1"]}}},
         "poids": {"IncreasedLife9": {"Rings": 1000}, "Ancien1": {"Rings": 500}},
+        "trade": {"# to maximum life": {"ids": ["explicit.stat_3299347043"]}},
+        "sans_trade": set(),
     }
     etat = copy.deepcopy(base)
     etat.update(changements)
@@ -100,6 +109,7 @@ def test_rapport_signale_ce_qui_compte() -> None:
     del apres["poids"]["Ancien1"]
     apres["mods"]["Nouveau1"] = {"id": "Nouveau1", "nom": "New", "slot": "prefix", "texte": "new"}
 
+    apres["sans_trade"] = {"new"}
     texte, resume = maj.rapport(
         avant, apres, "2026-12-12", ["outil : ok"], ["crates/poe2-core/data/gemmes.json"]
     )
@@ -116,6 +126,7 @@ def test_rapport_signale_ce_qui_compte() -> None:
     assert "Sort vérifié en jeu modifié ou retiré (Arc)" in attention
     assert "Nouvelle version d'arbre (0_5 → 1_0)" in attention
     assert "1 mod(s) de Forge sans poids connu" in attention and "`Nouveau1`" in attention
+    assert "1 ligne(s) de mod sans stat de trade" in attention and "`new`" in attention
     assert "Mods retirés encore visés par une Essence : Ancien1" in attention
     assert "- `crates/poe2-core/data/gemmes.json`" in texte
     assert resume["comptes"]["mods"] == {"ajouts": 1, "retraits": 1, "modifs": 0}
@@ -125,7 +136,7 @@ def test_rapport_sans_changement() -> None:
     texte, resume = maj.rapport(_etat(), _etat(), "2026-11-13", fichiers=[])
     assert resume["attention"] == []
     assert "Aucun : les données sont déjà à jour." in texte
-    assert texte.count("Aucun changement.") == 8
+    assert texte.count("Aucun changement.") == 9
 
 
 def test_longues_listes_tronquees() -> None:
@@ -160,6 +171,7 @@ def _faux_reseau(skills: dict, tree: dict, arbres: str = GAME_VERSIONS, repoe: s
         maj.REPOE + "base_items.min.json": (REPOE_TEST / "base_items.min.json").read_bytes(),
         maj.REPOE + "mods.min.json": (REPOE_TEST / "mods.min.json").read_bytes(),
         maj.POB + "GameVersions.lua": arbres.encode(),
+        maj.EE2_STATS: STATS_NDJSON.encode(),
     }
     demandes = []
 
@@ -191,8 +203,10 @@ def test_commande_complete(tmp_path: Path) -> None:
     forge = json.loads(gzip.decompress((racine / "crates/poe2-core/data/forge.json.gz").read_bytes()))
     assert forge["repoe_version"] == "0.5.5.8"
     assert json.loads((racine / "crates/poe2-core/data/arbre.json").read_text())["version"] == "0_5"
+    trade = json.loads((racine / "crates/poe2-core/data/trade-stats.json").read_text(encoding="utf-8"))
+    assert "stats" in trade and "sans_stat" in trade
     premier = _embarques(racine)
-    assert len(premier) == 3
+    assert len(premier) == 4
 
     # Deuxième passage, mêmes sources : rien ne change, sortie déterministe.
     lire, _ = _faux_reseau(SKILLS, TREE)
