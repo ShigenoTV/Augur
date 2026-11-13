@@ -1,0 +1,47 @@
+# Mise à jour des données de jeu (RePoE, arbre PoB, Forge), lancée à la main.
+#
+# Lance `tools/gamedata/mise_a_jour.py`, affiche le rapport des différences dans le résumé du run
+# et le dépose en artefact avec les fichiers régénérés. Lecture seule : ce workflow ne pousse rien
+# et n'ouvre aucune PR ; les fichiers de l'artefact se versent ensuite par une PR normale.
+name: Mise à jour des données
+
+on:
+  workflow_dispatch:
+    inputs:
+      arbre:
+        description: "Version d'arbre PoB (ex. 1_0) ; auto = la dernière annoncée par PoB"
+        default: auto
+      coe:
+        description: "Rafraîchir aussi les poids et Essences Craft of Exile"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  mise-a-jour:
+    name: Régénérer et comparer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Mise à jour des données
+        env:
+          ARBRE: ${{ inputs.arbre }}
+          COE: ${{ inputs.coe && '--coe' || '' }}
+        run: |
+          python tools/gamedata/mise_a_jour.py --arbre "$ARBRE" $COE --rapport rapport.md
+          cat rapport.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: mise-a-jour-donnees
+          path: |
+            rapport.md
+            crates/poe2-core/data/gemmes.json
+            crates/poe2-core/data/arbre.json
+            crates/poe2-core/data/forge.json.gz
+            tools/theorycraft/donnees/poids-coe.json
+            tools/theorycraft/donnees/essences-coe.json

@@ -24,6 +24,31 @@ python tools/datapack/augur_datapack.py build --src var/gamedata --out out --pat
 La sortie est déterministe (JSON canonique, sans date) : un patch qui ne touche pas aux
 mods redonne le même blob, que l'application ne retélécharge pas.
 
+## Mise à jour après un patch (commande unique)
+
+[`tools/gamedata/mise_a_jour.py`](../../tools/gamedata/mise_a_jour.py) enchaîne tout :
+
+1. téléchargement de RePoE (`skills.json`, `base_items.json`, `mods.min.json`, `base_items.min.json`, version
+   lue dans le titre du site) et de l'arbre de Path of Building PoE 2 (dernière version de
+   `src/GameVersions.lua`, ou `--arbre X_Y`) ; sources gardées dans `var/mise-a-jour/sources/` avec
+   `versions.json` ;
+2. en option, poids et Essences : `--coe` (Craft of Exile, version lue sur le site) et `--poe2db` (relevé poe2db
+   complet, lent) ;
+3. `import_repoe.py`, `extract_build_data.py` puis `forge_data.py`, dans un dossier temporaire ;
+4. rapport des différences entre les données du dépôt et les nouvelles, puis copie des fichiers modifiés
+   (sauf avec `--essai`).
+
+Le rapport (`var/mise-a-jour/rapport-AAAA-MM-JJ.md`) donne les versions avant/après, un tableau de comptes
+(ajouts, retraits, changements) et le détail par élément : sorts (champs modifiés, dégâts au niveau 20),
+supports et passifs (lignes ajoutées ou retirées), armes, mods de Forge, bases, Essences, poids par page.
+Points d'attention : sort vérifié en jeu (Arc, Lightning Bolt) modifié, donc cas golden à rejouer ; nouvelle
+version d'arbre ; nouveaux mods sans poids (probabilité indisponible, jamais de poids inventé) ; mod retiré
+encore visé par une Essence. Si une étape échoue (format RePoE changé, Essence qui vise un mod disparu…), la
+commande s'arrête avec le message de l'outil et ne touche à aucun fichier.
+
+Sur GitHub, le workflow manuel « Mise à jour des données » lance la même commande, affiche le rapport dans le
+résumé du run et dépose le rapport et les fichiers régénérés en artefact (il ne pousse rien).
+
 ## Tables
 
 `tables/mods.json` : `{"schema": 1, "mods": [...]}`, un mod par **palier**, trié par `id`.
