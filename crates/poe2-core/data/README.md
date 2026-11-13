@@ -9,26 +9,25 @@ Générées par des scripts de `tools/gamedata/`, jamais modifiées à la main.
 | `trade-stats.json` | « Crafter ou acheter » de Forge (`poe2-core::forge::achat`) : identifiants de stats du site de trade (`explicit.stat_…`) de chaque ligne de mod de `forge.json.gz` | Exiled Exchange 2, `renderer/public/data/en/stats.ndjson` (https://github.com/Kvan7/Exiled-Exchange-2), licence MIT |
 | `arbre.json` | Texte des stats de chaque passif, version d'arbre `0_5` | Path of Building Community PoE 2, `src/TreeData/0_5/tree.json` |
 
-Régénérer après un patch du jeu :
+Régénérer après un patch du jeu, en une commande (depuis la racine du dépôt) :
 
 ```sh
-curl -sSO https://repoe-fork.github.io/poe2/skills.json
-curl -sSO https://repoe-fork.github.io/poe2/base_items.json
-curl -sS -o tree.json https://raw.githubusercontent.com/PathOfBuildingCommunity/PathOfBuilding-PoE2/dev/src/TreeData/0_5/tree.json
-python tools/gamedata/extract_build_data.py --skills skills.json --bases base_items.json --tree tree.json \
-    --tree-version 0_5 --out crates/poe2-core/data
+python tools/gamedata/mise_a_jour.py --essai   # rapport des différences seulement
+python tools/gamedata/mise_a_jour.py           # met à jour les trois fichiers
+python tools/gamedata/mise_a_jour.py --coe     # + poids et Essences Craft of Exile
 ```
 
-Régénérer `forge.json.gz` (tables produites par `tools/gamedata/import_repoe.py`) :
+La commande télécharge RePoE et la dernière version d'arbre de Path of Building (`--arbre 1_0` pour en
+forcer une), régénère `gemmes.json`, `arbre.json`, `forge.json.gz` puis `trade-stats.json` avec les outils de
+`tools/gamedata/`,
+puis écrit un rapport Markdown des ajouts, retraits et changements (`var/mise-a-jour/rapport-AAAA-MM-JJ.md`) :
+sorts, supports, armes, passifs, mods, bases, Essences et poids, avec les points d'attention (sort vérifié en
+jeu modifié, nouvelle version d'arbre, mods sans poids). Rien n'est écrit si une étape échoue. `--poe2db`
+refait aussi le relevé poe2db (lent : une page toutes les 6 s) ; `--depuis DOSSIER` repart de sources déjà
+téléchargées. Le workflow manuel « Mise à jour des données » fait la même chose sur GitHub et dépose le
+rapport et les fichiers en artefact. Détail : [docs/data/donnees-de-jeu.md](../../../docs/data/donnees-de-jeu.md).
 
-```sh
-python tools/gamedata/forge_data.py --tables var/gamedata/tables \
-    --poids tools/theorycraft/donnees/poids-poe2db.json \
-    --complement tools/theorycraft/donnees/poids-coe.json \
-    --essences tools/theorycraft/donnees/essences-coe.json --out crates/poe2-core/data/forge.json.gz
-```
-
-Régénérer `trade-stats.json` (après `forge.json.gz`) :
+Régénérer `trade-stats.json` seul (après `forge.json.gz` ; la commande ci-dessus le fait déjà) :
 
 ```sh
 curl -sSLO https://raw.githubusercontent.com/Kvan7/Exiled-Exchange-2/master/renderer/public/data/en/stats.ndjson
