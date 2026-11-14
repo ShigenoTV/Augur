@@ -4,14 +4,30 @@
 // Hors Windows, ces éléments ne servent qu'aux tests.
 #![cfg_attr(not(windows), allow(dead_code))]
 
-/// Titre de la fenêtre du client PoE 2.
-pub const GAME_TITLE: &str = "Path of Exile 2";
-/// Classe de fenêtre du client (partagée avec PoE 1, d'où la vérification du titre).
+use crate::game::Game;
+
+/// Classe de fenêtre du client (la même pour PoE 1 et PoE 2, d'où la vérification du titre).
 pub const GAME_CLASS: &str = "POEWindowClass";
 
-/// Vrai si une fenêtre (titre, classe) est celle du jeu.
+/// Jeu dont une fenêtre (titre, classe) est le client, s'il y en a un.
+pub fn game_of_window(title: &str, class: &str) -> Option<Game> {
+    let title = title.trim();
+    if title == Game::Poe2.window_title()
+        || (class == GAME_CLASS && title.contains(Game::Poe2.window_title()))
+    {
+        Some(Game::Poe2)
+    } else if title == Game::Poe1.window_title()
+        || (class == GAME_CLASS && title.starts_with("Path of Exile"))
+    {
+        Some(Game::Poe1)
+    } else {
+        None
+    }
+}
+
+/// Vrai si une fenêtre (titre, classe) est celle du jeu actif.
 pub fn is_game_window(title: &str, class: &str) -> bool {
-    title == GAME_TITLE || (class == GAME_CLASS && title.contains("Path of Exile 2"))
+    game_of_window(title, class) == Some(crate::game::active())
 }
 
 #[cfg(windows)]
@@ -101,9 +117,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn reconnait_la_fenetre_du_jeu() {
-        assert!(is_game_window("Path of Exile 2", "POEWindowClass"));
-        assert!(!is_game_window("Path of Exile", "POEWindowClass"));
-        assert!(!is_game_window("Discord", "Chrome_WidgetWin_1"));
+    fn reconnait_la_fenetre_de_chaque_jeu() {
+        assert_eq!(
+            game_of_window("Path of Exile 2", "POEWindowClass"),
+            Some(Game::Poe2)
+        );
+        assert_eq!(game_of_window("Path of Exile 2", "Autre"), Some(Game::Poe2));
+        assert_eq!(
+            game_of_window("Path of Exile", "POEWindowClass"),
+            Some(Game::Poe1)
+        );
+        assert_eq!(game_of_window("Path of Exile", "Autre"), Some(Game::Poe1));
+        assert_eq!(
+            game_of_window("Path of Exile 2 Wiki - Chrome", "Chrome_WidgetWin_1"),
+            None
+        );
+        assert_eq!(
+            game_of_window("Path of Exile Wiki - Chrome", "Chrome_WidgetWin_1"),
+            None
+        );
+        assert_eq!(game_of_window("Discord", "Chrome_WidgetWin_1"), None);
     }
 }

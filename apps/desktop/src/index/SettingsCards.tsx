@@ -1,6 +1,7 @@
 import { Kbd, StatePanel } from "@augur/ui";
 import { useEffect, useState, type KeyboardEvent } from "react";
 import { commands, DEFAULT_LEAGUE, isAppError, isTauri, type Settings, type ShortcutSettings } from "../bridge";
+import { jeuActif, ligueDuJeu, ligueParDefaut } from "./game";
 import { afficherRaccourci, lireTouche, SHORTCUTS_PAR_DEFAUT } from "./shortcuts";
 
 const champ =
@@ -13,8 +14,8 @@ const message = (err: unknown) => (isAppError(err) ? err.message : String(err));
 const LIGUES_SECOURS = [DEFAULT_LEAGUE, "Standard"];
 
 /** Liste déroulante : ligues de poe.ninja, plus la ligue enregistrée si elle n'y est plus. */
-export function optionsLigues(poeNinja: string[] | null, actuelle: string): string[] {
-  const liste = poeNinja && poeNinja.length > 0 ? [...poeNinja] : [...LIGUES_SECOURS];
+export function optionsLigues(poeNinja: string[] | null, actuelle: string, secours: string[] = LIGUES_SECOURS): string[] {
+  const liste = poeNinja && poeNinja.length > 0 ? [...poeNinja] : [...secours];
   if (!liste.includes(actuelle)) liste.unshift(actuelle);
   return liste;
 }
@@ -25,22 +26,31 @@ export function LeagueCard({ settings, onSettings }: { settings: Settings | null
   const [horsLigne, setHorsLigne] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-  const actuelle = settings?.league ?? DEFAULT_LEAGUE;
+  const game = jeuActif(settings);
+  const actuelle = ligueDuJeu(settings);
+  const parDefaut = ligueParDefaut(game);
 
+  // La liste dépend du jeu actif (poe.ninja a une liste par jeu).
   useEffect(() => {
-    if (!isTauri()) return;
+    if (!isTauri() || !settings) return;
+    setLigues(null);
+    setHorsLigne(false);
     commands
       .getLeagues()
       .then(setLigues)
       .catch(() => setHorsLigne(true));
-  }, []);
+  }, [game, settings === null]);
 
   async function choisir(league: string) {
     setError(null);
     setInfo(null);
     try {
-      onSettings(await commands.setLeague(league === DEFAULT_LEAGUE ? null : league));
-      setInfo("Ligue enregistrée. Actualise les prix dans la Forge pour charger son relevé.");
+      onSettings(await commands.setLeague(league === parDefaut ? null : league));
+      setInfo(
+        game === "poe1"
+          ? "Ligue PoE 1 enregistrée."
+          : "Ligue enregistrée. Actualise les prix dans la Forge pour charger son relevé.",
+      );
     } catch (err) {
       setError(message(err));
     }
@@ -48,7 +58,11 @@ export function LeagueCard({ settings, onSettings }: { settings: Settings | null
 
   return (
     <div className="space-y-3 text-sm">
-      <p className="text-text-muted">Les prix de la Forge sont relevés sur poe.ninja pour cette ligue.</p>
+      <p className="text-text-muted">
+        {game === "poe1"
+          ? "Ligue de PoE 1 : elle servira aux prix et à la recherche sur le site de trade."
+          : "Les prix de la Forge sont relevés sur poe.ninja pour cette ligue."}
+      </p>
       <select
         value={actuelle}
         disabled={!settings}
@@ -56,10 +70,10 @@ export function LeagueCard({ settings, onSettings }: { settings: Settings | null
         aria-label="Ligue souhaitée"
         className={`${champ} w-64 disabled:opacity-50`}
       >
-        {optionsLigues(ligues, actuelle).map((l) => (
+        {optionsLigues(ligues, actuelle, game === "poe1" ? [parDefaut] : LIGUES_SECOURS).map((l) => (
           <option key={l} value={l}>
             {l}
-            {l === DEFAULT_LEAGUE ? " (par défaut)" : ""}
+            {l === parDefaut ? " (par défaut)" : ""}
           </option>
         ))}
       </select>

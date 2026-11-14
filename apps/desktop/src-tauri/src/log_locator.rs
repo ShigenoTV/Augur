@@ -10,7 +10,7 @@
 
 use std::path::{Path, PathBuf};
 
-pub const GAME_FOLDER: &str = "Path of Exile 2";
+use crate::game::Game;
 
 /// `<dossier>\logs\Client.txt`.
 pub fn log_in(game_dir: &Path) -> PathBuf {
@@ -51,8 +51,8 @@ pub fn parse_library_folders(vdf: &str) -> Vec<PathBuf> {
         .collect()
 }
 
-fn steam_game_dir(library: &Path) -> PathBuf {
-    library.join("steamapps").join("common").join(GAME_FOLDER)
+fn steam_game_dir(library: &Path, game: Game) -> PathBuf {
+    library.join("steamapps").join("common").join(game.folder())
 }
 
 /// Racines Steam probables : registre Windows, puis emplacements par défaut.
@@ -67,35 +67,37 @@ fn steam_roots() -> Vec<PathBuf> {
 }
 
 /// Emplacements par défaut sur chaque disque (D:\SteamLibrary, etc.).
-fn default_dirs() -> Vec<PathBuf> {
+fn default_dirs(game: Game) -> Vec<PathBuf> {
+    let folder = game.folder();
     let mut dirs = Vec::new();
     for drive in 'C'..='H' {
         let root = format!(r"{drive}:\");
         let root = Path::new(&root);
-        dirs.push(steam_game_dir(&root.join("SteamLibrary")));
-        dirs.push(steam_game_dir(&root.join("Steam")));
+        dirs.push(steam_game_dir(&root.join("SteamLibrary"), game));
+        dirs.push(steam_game_dir(&root.join("Steam"), game));
         dirs.push(steam_game_dir(
             &root.join("Program Files (x86)").join("Steam"),
+            game,
         ));
         dirs.push(
             root.join("Program Files (x86)")
                 .join("Grinding Gear Games")
-                .join(GAME_FOLDER),
+                .join(folder),
         );
         dirs.push(
             root.join("Program Files")
                 .join("Grinding Gear Games")
-                .join(GAME_FOLDER),
+                .join(folder),
         );
-        dirs.push(root.join("Grinding Gear Games").join(GAME_FOLDER));
-        dirs.push(root.join("Games").join(GAME_FOLDER));
-        dirs.push(root.join(GAME_FOLDER));
+        dirs.push(root.join("Grinding Gear Games").join(folder));
+        dirs.push(root.join("Games").join(folder));
+        dirs.push(root.join(folder));
     }
     dirs
 }
 
-/// Tous les chemins candidats, dans l'ordre de priorité, sans doublon.
-pub fn candidates(user_path: Option<&str>) -> Vec<PathBuf> {
+/// Tous les chemins candidats d'un jeu, dans l'ordre de priorité, sans doublon.
+pub fn candidates(game: Game, user_path: Option<&str>) -> Vec<PathBuf> {
     let mut out: Vec<PathBuf> = Vec::new();
     let mut push = |p: PathBuf| {
         if !out
@@ -116,15 +118,15 @@ pub fn candidates(user_path: Option<&str>) -> Vec<PathBuf> {
             push(log_in(&dir));
         }
         for root in steam_roots() {
-            push(log_in(&steam_game_dir(&root)));
+            push(log_in(&steam_game_dir(&root, game)));
             let vdf = root.join("steamapps").join("libraryfolders.vdf");
             if let Ok(text) = std::fs::read_to_string(vdf) {
                 for library in parse_library_folders(&text) {
-                    push(log_in(&steam_game_dir(&library)));
+                    push(log_in(&steam_game_dir(&library, game)));
                 }
             }
         }
-        for dir in default_dirs() {
+        for dir in default_dirs(game) {
             push(log_in(&dir));
         }
     }
@@ -132,8 +134,8 @@ pub fn candidates(user_path: Option<&str>) -> Vec<PathBuf> {
 }
 
 /// Premier candidat qui existe, et la liste complète pour le diagnostic.
-pub fn locate(user_path: Option<&str>) -> (Option<PathBuf>, Vec<PathBuf>) {
-    let all = candidates(user_path);
+pub fn locate(game: Game, user_path: Option<&str>) -> (Option<PathBuf>, Vec<PathBuf>) {
+    let all = candidates(game, user_path);
     let found = all.iter().find(|p| p.is_file()).cloned();
     (found, all)
 }
@@ -235,8 +237,26 @@ mod tests {
             .join("Steam")
             .join("steamapps")
             .join("common")
-            .join(GAME_FOLDER);
-        assert!(default_dirs().contains(&expected));
+            .join("Path of Exile 2");
+        assert!(default_dirs(Game::Poe2).contains(&expected));
+    }
+
+    #[test]
+    fn cherche_poe1_dans_son_propre_dossier() {
+        let steam = Path::new(r"C:\")
+            .join("Program Files (x86)")
+            .join("Steam")
+            .join("steamapps")
+            .join("common")
+            .join("Path of Exile");
+        let autonome = Path::new(r"C:\")
+            .join("Program Files (x86)")
+            .join("Grinding Gear Games")
+            .join("Path of Exile");
+        let dirs = default_dirs(Game::Poe1);
+        assert!(dirs.contains(&steam));
+        assert!(dirs.contains(&autonome));
+        assert!(!dirs.iter().any(|d| d.ends_with("Path of Exile 2")));
     }
 
     #[test]
@@ -245,7 +265,7 @@ mod tests {
         let log = log_in(dir.path());
         std::fs::create_dir_all(log.parent().unwrap()).unwrap();
         std::fs::write(&log, "").unwrap();
-        let (found, all) = locate(Some(&dir.path().display().to_string()));
+        let (found, all) = locate(Game::Poe2, Some(&dir.path().display().to_string()));
         assert_eq!(found, Some(log.clone()));
         assert_eq!(all.first(), Some(&log));
     }

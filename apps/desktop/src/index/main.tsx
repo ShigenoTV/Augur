@@ -11,7 +11,8 @@ import {
 } from "@augur/ui";
 import { StrictMode, useEffect, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { commands, isAppError, isTauri, on, type ClientLogStatus, type Settings } from "../bridge";
+import { commands, isAppError, isTauri, on, type ClientLogStatus, type Game, type Settings } from "../bridge";
+import { JEUX, jeuActif } from "./game";
 import { CharacterCard } from "./CharacterCard";
 import { ClientLogCard } from "./ClientLogCard";
 import { BugReportCard, DiagnosticCard } from "./DiagnosticCards";
@@ -44,6 +45,42 @@ function Status({ ok, label }: { ok: boolean; label: string }) {
       </span>
       {label}
     </p>
+  );
+}
+
+/** Sélecteur « POE 1 / POE 2 », en haut de la barre latérale. */
+function GameSwitch({ game, disabled, onChoose }: { game: Game; disabled: boolean; onChoose: (g: Game) => void }) {
+  return (
+    <div className="flex overflow-hidden rounded-chip border border-ink-600 text-xs" role="radiogroup" aria-label="Jeu">
+      {JEUX.map((j) => {
+        const actif = game === j.id;
+        return (
+          <button
+            key={j.id}
+            type="button"
+            role="radio"
+            aria-checked={actif}
+            disabled={disabled}
+            onClick={() => !actif && onChoose(j.id)}
+            className={`flex-1 px-1 py-1.5 font-semibold disabled:opacity-50 ${actif ? "bg-accent text-accent-ink" : "text-text-muted hover:bg-ink-800"}`}
+          >
+            {j.nom}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Module pas encore disponible pour PoE 1. */
+function BientotPoe1({ module }: { module: string }) {
+  return (
+    <section className="rounded-panel border border-ink-700 bg-ink-900 p-4">
+      <StatePanel icon="flat" title={`${module} : bientôt pour PoE 1`}>
+        Ce module ne connaît encore que Path of Exile 2. Repasse sur « POE 2 » en haut à gauche pour l'utiliser.
+        L'Atlas Ledger et les réglages fonctionnent déjà avec PoE 1.
+      </StatePanel>
+    </section>
   );
 }
 
@@ -85,8 +122,20 @@ function App() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [dernier, setDernier] = useState<{ item: ParsedItem; a: Date } | null>(null);
   const [page, setPage] = useState<PageId>(pageInitiale);
+  const [erreurJeu, setErreurJeu] = useState<string | null>(null);
   const updates = useUpdates();
   const affichage = useAffichage();
+  const game = jeuActif(settings);
+  const poe1 = game === "poe1";
+
+  async function choisirJeu(g: Game) {
+    setErreurJeu(null);
+    try {
+      setSettings(await commands.setGame(g));
+    } catch (err) {
+      setErreurJeu(isAppError(err) ? err.message : String(err));
+    }
+  }
 
   function ouvrir(p: PageId) {
     setPage(p);
@@ -187,6 +236,10 @@ function App() {
           <div className="mb-4 px-4">
             <p className="font-display text-xl font-semibold text-accent">Augur</p>
             <p className="text-xs text-text-subtle">{state ? `v${state.appVersion}` : "Upgrade Copilot"}</p>
+            <div className="mt-3">
+              <GameSwitch game={game} disabled={!settings} onChoose={(g) => void choisirJeu(g)} />
+              {erreurJeu && <p className="mt-1.5 text-[11px] text-signal-warn">{erreurJeu}</p>}
+            </div>
           </div>
           <nav aria-label="Modules">
             {PAGES.filter((p) => p.groupe === 0).map((p) => lien(p, PAGES.indexOf(p)))}
@@ -194,7 +247,7 @@ function App() {
             {PAGES.filter((p) => p.groupe === 1).map((p) => lien(p, PAGES.indexOf(p)))}
           </nav>
 
-          <div className="mt-5 px-4">
+          <div className="mt-5 px-4" hidden={poe1}>
             <p className="mb-1.5 text-xs text-text-subtle">Coûts affichés en</p>
             <div className="flex overflow-hidden rounded-chip border border-ink-600 text-xs" role="radiogroup" aria-label="Monnaie des coûts">
               {DEVISES.map((d) => {
@@ -253,7 +306,11 @@ function App() {
           <UpdateBanner update={updates.visible} onInstall={() => void updates.install()} onLater={updates.later} />
 
           {/* Les pages restent montées : changer de page ne perd ni un plan Forge ni une session Ledger. */}
-          <div hidden={page !== "copilot"} className="space-y-4">
+          {page === "copilot" && poe1 && <BientotPoe1 module="Copilot" />}
+          {page === "forge" && poe1 && <BientotPoe1 module="Forge" />}
+          {page === "outils" && poe1 && <BientotPoe1 module="Outils" />}
+
+          <div hidden={page !== "copilot" || poe1} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Card title="Personnage">
                 <CharacterCard />
@@ -297,15 +354,16 @@ function App() {
             </Card>
           </div>
 
-          <div hidden={page !== "forge"}>
+          <div hidden={page !== "forge" || poe1}>
             <ForgeCard ligue={settings?.league ?? null} onReglages={() => ouvrir("reglages")} />
           </div>
 
           <div hidden={page !== "ledger"}>
-            <LedgerCard />
+            {/* Un historique par jeu : changer de jeu recharge la carte. */}
+            <LedgerCard key={game} />
           </div>
 
-          <div hidden={page !== "outils"} className="space-y-4">
+          <div hidden={page !== "outils" || poe1} className="space-y-4">
             <Card title="Session de mesures">
               <MeasureCard />
             </Card>
@@ -340,14 +398,16 @@ function App() {
 
           <div hidden={page !== "reglages"} className="space-y-4">
             <Card title="Journal du jeu (Client.txt)">
-              <ClientLogCard status={clientLog} settings={settings} onSettings={setSettings} />
+              <ClientLogCard key={game} status={clientLog} settings={settings} onSettings={setSettings} />
             </Card>
             <Card title="Ligue souhaitée">
               <LeagueCard settings={settings} onSettings={setSettings} />
             </Card>
-            <Card title="Budget de la recherche d'upgrades">
-              <UpgradeBudgetCard settings={settings} onSettings={setSettings} />
-            </Card>
+            {!poe1 && (
+              <Card title="Budget de la recherche d'upgrades">
+                <UpgradeBudgetCard settings={settings} onSettings={setSettings} />
+              </Card>
+            )}
             <Card title="Raccourcis de l'overlay">
               <ShortcutsCard settings={settings} onSettings={setSettings} />
             </Card>

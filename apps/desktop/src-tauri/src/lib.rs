@@ -21,6 +21,7 @@ mod diag_log;
 mod evaluation;
 mod forge;
 mod forge_prices;
+mod game;
 mod game_window;
 pub mod item_text;
 mod ledger;
@@ -89,6 +90,7 @@ pub fn run() {
             commands::check_for_update,
             commands::install_update,
             commands::get_settings,
+            commands::set_game,
             commands::get_leagues,
             commands::set_league,
             commands::set_upgrade_budget,
@@ -140,6 +142,8 @@ pub fn run() {
             }
             log::info!("démarrage d'Augur v{}", handle.package_info().version);
             app.manage(settings::SettingsStore::load(handle));
+            // Avant le Ledger et le suivi de Client.txt, qui dépendent du jeu actif.
+            game::set_active(handle.state::<settings::SettingsStore>().get().game);
             app.manage(character::CharacterState::load(handle));
             app.manage(ledger::LedgerState::open(handle));
             app.manage(forge_prices::ForgePrices::load(handle));

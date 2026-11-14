@@ -1,7 +1,7 @@
 //! Commandes Tauri exposées à l'interface. Chaque commande est soumise aux
 //! permissions déclarées dans `build.rs` et `capabilities/`.
 
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::contracts::{AppError, CONTRACT_VERSION, OverlayState, ParsedItem, app_error};
 use crate::{AppState, game_window, item_text, overlay};
@@ -81,10 +81,42 @@ pub fn set_update_channel(
 /// Ligues proposées par poe.ninja, pour la liste de Réglages.
 #[tauri::command]
 pub async fn get_leagues(app: AppHandle) -> Result<Vec<String>, AppError> {
-    crate::forge_prices::leagues(&app.package_info().version.to_string()).await
+    crate::forge_prices::leagues(
+        &app.package_info().version.to_string(),
+        crate::game::active(),
+    )
+    .await
 }
 
-/// Ligue poe.ninja des prix de la Forge. `None` ou vide : ligue par défaut.
+/// Change le jeu actif (sélecteur « POE 1 / POE 2 »). Refusé pendant une
+/// session Atlas Ledger. Le suivi de `Client.txt` passe de lui-même au
+/// journal du nouveau jeu.
+#[tauri::command]
+pub fn set_game(
+    app: AppHandle,
+    store: State<'_, crate::settings::SettingsStore>,
+    ledger: State<'_, crate::ledger::LedgerState>,
+    game: crate::game::Game,
+) -> Result<crate::settings::Settings, AppError> {
+    if store.get().game == game && crate::game::active() == game {
+        return Ok(store.get());
+    }
+    ledger
+        .switch_game(&app, game)
+        .map_err(|m| app_error(crate::contracts::ErrorCode::Internal, m))?;
+    let settings = store.update(&app, |s| s.game = game).map_err(|e| {
+        app_error(
+            crate::contracts::ErrorCode::Internal,
+            format!("Réglage non enregistré ({e})."),
+        )
+    })?;
+    crate::game::set_active(game);
+    log::info!("jeu actif : {}", game.label());
+    let _ = app.emit(crate::game::EVENT_CHANGED, game);
+    Ok(settings)
+}
+
+/// Ligue poe.ninja du jeu actif. `None` ou vide : ligue par défaut.
 #[tauri::command]
 pub fn set_league(
     app: AppHandle,
@@ -94,12 +126,15 @@ pub fn set_league(
     let league = league
         .map(|l| l.trim().to_string())
         .filter(|l| !l.is_empty());
-    store.update(&app, |s| s.league = league).map_err(|e| {
-        app_error(
-            crate::contracts::ErrorCode::Internal,
-            format!("Réglage non enregistré ({e})."),
-        )
-    })
+    let game = crate::game::active();
+    store
+        .update(&app, |s| s.set_league_for(game, league))
+        .map_err(|e| {
+            app_error(
+                crate::contracts::ErrorCode::Internal,
+                format!("Réglage non enregistré ({e})."),
+            )
+        })
 }
 
 /// Budget de la recherche d'upgrades, en exalts. `None` ou 0 : sans limite.
@@ -204,7 +239,9 @@ pub fn set_client_log_path(
         }
     }
     store
-        .update(&app, |s| s.client_log_path = path)
+        .update(&app, |s| {
+            s.set_client_log_path_for(crate::game::active(), path)
+        })
         .map_err(|e| {
             app_error(
                 crate::contracts::ErrorCode::Internal,

@@ -38,6 +38,12 @@ export const EVENTS = {
 /** Raccourcis de l'overlay, au format « Alt+U », « Ctrl+Shift+F2 », « Escape » (src-tauri/src/shortcuts.rs). */
 export type ShortcutSettings = { closeOverlay: string; upgradeSearch: string };
 
+/** Jeu actif du sélecteur « POE 1 / POE 2 » (src-tauri/src/game.rs). */
+export type Game = "poe1" | "poe2";
+
+/** Réglages propres à PoE 1 (ceux de PoE 2 sont à la racine de Settings). */
+export type GameSettings = { clientLogPath: string | null; league: string | null };
+
 export type Settings = {
   betaChannel: boolean;
   clientLogPath: string | null;
@@ -46,6 +52,9 @@ export type Settings = {
   shortcuts: ShortcutSettings;
   /** Budget de la recherche d'upgrades, en exalts ; null : sans limite. */
   upgradeBudget: number | null;
+  /** Jeu actif ; les champs ci-dessus sans préfixe sont ceux de PoE 2. */
+  game: Game;
+  poe1: GameSettings;
 };
 
 /** Recherche d'upgrades ouverte dans le navigateur (Alt+U). */
@@ -67,6 +76,8 @@ export type UpgradeSearch = {
 
 /** Doit rester égale à DEFAULT_LEAGUE (src-tauri/src/settings.rs). */
 export const DEFAULT_LEAGUE = "Forbidden Rites";
+/** Doit rester égale à DEFAULT_LEAGUE_POE1 (src-tauri/src/settings.rs). */
+export const DEFAULT_LEAGUE_POE1 = "Standard";
 
 /** État du suivi de Client.txt (apps/desktop/src-tauri/src/client_log.rs). */
 export type ClientLogStatus = {
@@ -363,6 +374,7 @@ export const commands = {
   checkForUpdate: () => invoke<UpdateInfo | null>("check_for_update"),
   installUpdate: () => invoke<void>("install_update"),
   getSettings: () => invoke<Settings>("get_settings"),
+  setGame: (game: Game) => invoke<Settings>("set_game", { game }),
   setUpdateChannel: (beta: boolean) => invoke<Settings>("set_update_channel", { beta }),
   getClientLogStatus: () => invoke<ClientLogStatus>("get_client_log_status"),
   setClientLogPath: (path: string | null) => invoke<Settings>("set_client_log_path", { path }),

@@ -11,6 +11,7 @@ fn main() {
             "check_for_update",
             "install_update",
             "get_settings",
+            "set_game",
             "set_update_channel",
             "get_client_log_status",
             "set_client_log_path",

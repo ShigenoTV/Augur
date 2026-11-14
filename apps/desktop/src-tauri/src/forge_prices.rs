@@ -102,10 +102,14 @@ fn client(version: &str) -> Result<reqwest::Client, AppError> {
         .map_err(|e| network(format!("Client HTTP indisponible ({e}).")))
 }
 
-/// Liste des ligues de poe.ninja (une requête, à l'ouverture de Réglages).
-pub async fn leagues(version: &str) -> Result<Vec<String>, AppError> {
+/// Liste des ligues de poe.ninja d'un jeu (une requête, à l'ouverture de Réglages).
+pub async fn leagues(version: &str, game: crate::game::Game) -> Result<Vec<String>, AppError> {
     let client = client(version)?;
-    let doc = get_json(&client, &format!("{}/leagues", ninja::API)).await?;
+    let api = match game {
+        crate::game::Game::Poe2 => ninja::API,
+        crate::game::Game::Poe1 => ninja::API_POE1,
+    };
+    let doc = get_json(&client, &format!("{api}/leagues")).await?;
     let list = ninja::ligues(&doc);
     if list.is_empty() {
         return Err(network("poe.ninja n'a renvoyé aucune ligue.".into()));
