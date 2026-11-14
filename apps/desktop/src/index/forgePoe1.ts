@@ -49,7 +49,7 @@ export function prixPourPlan(ninja: Record<string, number>, saisis: Record<strin
 }
 
 /** Le solveur ne propose un plan que jusqu'à ce nombre de mods voulus. */
-export const VOULUS_MAX_PLAN = 4;
+export const VOULUS_MAX_PLAN = 6;
 
 /** Chiffre chaque méthode et les classe : coût moyen croissant, méthodes sans prix à la fin. */
 export function chiffrer(
@@ -316,7 +316,7 @@ export function arbrePoe1(plan: ForgePoe1Plan, noms: string[], prix: Record<stri
     descriptions.set(
       id,
       g.length > 1
-        ? `${e.rarete} · ${g.length} situations, surtout ${decrireEtape(e, noms)}`
+        ? `${(["Normal", "Magique", "Rare"] as const).filter((r) => g.some((x) => x.rarete === r)).join(" ou ")} · ${g.length} situations, surtout ${decrireEtape(e, noms)}`
         : `${e.rarete} · ${decrireEtape(e, noms)}`,
     );
   }

@@ -11,11 +11,12 @@ import {
   type ForgePoe1Prices,
   type ForgePoe1Request,
   type ForgePoe1Result,
+  type ForgePoe1StartItem,
   type ForgeWanted,
 } from "../bridge";
 import { DecisionTree } from "./DecisionTree";
 import { AffichagePoe1Context, useCoutPoe1 } from "./devisePoe1";
-import { AffixColumn } from "./ForgeCard";
+import { AffixColumn, StartItemPicker } from "./ForgeCard";
 import { cleAffixe, etapes, formatCount, libelleCourt, lirePrix } from "./forge";
 import {
   VOULUS_MAX_PLAN,
@@ -246,8 +247,11 @@ function PlanConseille({
   spam,
   prix,
   prixChanges,
+  depuisObjet,
 }: {
   plan: ForgePoe1Plan | null;
+  /** Le plan repart de l'objet du joueur, pas d'un objet neuf. */
+  depuisObjet: boolean;
   noms: string[];
   spam: number | null;
   /** Prix utilisés par le calcul (Chaos), pour la liste de courses. */
@@ -266,19 +270,22 @@ function PlanConseille({
       </p>
     );
   }
-  const gain = spam != null && plan.coutMoyen < spam * 0.98 ? spam / plan.coutMoyen : null;
+  // Les méthodes de spam partent d'une base neuve : pas de comparaison depuis l'objet du joueur.
+  const gain = !depuisObjet && spam != null && plan.coutMoyen < spam * 0.98 ? spam / plan.coutMoyen : null;
   return (
     <section className="space-y-2 rounded-card border border-accent/40 bg-ink-900 p-3">
       <p className="text-sm text-text-muted">
-        Plan conseillé : environ <span className="font-semibold text-accent">{cout(plan.coutMoyen)}</span> en moyenne
+        Plan conseillé{depuisObjet ? " depuis ton objet" : ""} : environ{" "}
+        <span className="font-semibold text-accent">{cout(plan.coutMoyen)}</span> en moyenne
         {gain != null && gain >= 1.05
           ? `, ${gain.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} fois moins que le meilleur spam`
           : ""}
         .
       </p>
       <p className="text-xs text-text-muted">
-        Commence par : <span className="text-text-primary">{plan.depart}</span>. Ensuite, à chaque étape, la meilleure
-        action selon l'objet obtenu.
+        {depuisObjet ? "Sur ton objet, commence par" : "Commence par"} :{" "}
+        <span className="text-text-primary">{plan.depart}</span>. Ensuite, à chaque étape, la meilleure action selon
+        l'objet obtenu.
       </p>
       {arbre && plan.etapes.length > 0 && (
         <>
@@ -417,6 +424,7 @@ function Resultat({
         noms={nomsVoulus}
         spam={meilleure?.coutMoyen ?? null}
         prix={prixPlan}
+        depuisObjet={result.depart != null}
         prixChanges={prixChanges}
       />
       {lignes.length === 0 ? (
@@ -505,6 +513,19 @@ export function ForgePoe1Card() {
   const [error, setError] = useState<string | null>(null);
   /** Prix envoyés au dernier calcul, pour signaler un plan devenu périmé. */
   const [prixCalcul, setPrixCalcul] = useState("");
+  /** Objet en possession d'où le plan conseillé repart (null : objet neuf). */
+  const [depart, setDepart] = useState<{ texte: string; objet: ForgePoe1StartItem } | null>(null);
+  /** Clé du composant de l'objet de départ : change pour vider la zone de texte au reset. */
+  const [cleDepart, setCleDepart] = useState(0);
+
+  /** Remet le plan à zéro : affixes voulus, objet de départ et résultat (la base reste choisie). */
+  function reinitialiser() {
+    setVoulus([]);
+    setResult(null);
+    setDepart(null);
+    setCleDepart((k) => k + 1);
+    setError(null);
+  }
 
   useEffect(() => {
     if (!isTauri()) return;
@@ -562,6 +583,7 @@ export function ForgePoe1Card() {
         influence,
         voulus,
         prix: envoyes,
+        objetDepart: depart?.texte ?? null,
       };
       setResult(await commands.planForgePoe1(demande));
       setPrixCalcul(JSON.stringify(envoyes));
@@ -622,6 +644,7 @@ export function ForgePoe1Card() {
             onChange={(e) => {
               setBaseId(e.target.value);
               setVoulus([]);
+              setDepart(null);
             }}
             className={`${input} w-72`}
           >
@@ -640,7 +663,11 @@ export function ForgePoe1Card() {
             min={1}
             max={100}
             value={ilvl}
-            onChange={(e) => setIlvl(Math.min(100, Math.max(1, Number(e.target.value) || 1)))}
+            onChange={(e) => {
+              setIlvl(Math.min(100, Math.max(1, Number(e.target.value) || 1)));
+              // L'objet de départ garde son niveau d'objet.
+              if (depart?.objet.ilvl != null) setDepart(null);
+            }}
             className={`${input} w-20`}
           />
         </label>
@@ -667,6 +694,26 @@ export function ForgePoe1Card() {
 
       {base && base.implicites.length > 0 && (
         <p className="text-xs text-text-subtle">Implicite : {base.implicites.join(" · ")}</p>
+      )}
+
+      <StartItemPicker<ForgePoe1StartItem>
+        key={cleDepart}
+        depart={depart}
+        analyser={(t) => commands.analyzeForgePoe1Item(t)}
+        onDepart={(d) => {
+          setDepart(d);
+          setResult(null);
+          if (!d) return;
+          // L'objet choisit la base, le niveau d'objet et l'influence ; on garde les affixes voulus si la base ne change pas.
+          setClasse(d.objet.classe);
+          if (d.objet.baseId !== baseId) setVoulus([]);
+          setBaseId(d.objet.baseId);
+          if (d.objet.ilvl !== null) setIlvl(d.objet.ilvl);
+          setInfluence(d.objet.influence);
+        }}
+      />
+      {depart?.objet.metamod && (
+        <p className="text-xs text-text-subtle">Metamod d'établi sur l'objet : {depart.objet.metamod}.</p>
       )}
 
       {affixes && (
@@ -697,6 +744,15 @@ export function ForgePoe1Card() {
               className={btnPrimary}
             >
               {busy ? "Calcul en cours…" : "Comparer les méthodes"}
+            </button>
+            <button
+              type="button"
+              disabled={busy || (voulus.length === 0 && !result && !depart)}
+              onClick={reinitialiser}
+              className={btnSecondary}
+              title="Décoche les affixes voulus, retire l'objet de départ et efface le résultat"
+            >
+              Réinitialiser
             </button>
             {result && (
               <button

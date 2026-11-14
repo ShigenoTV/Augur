@@ -12,6 +12,7 @@
 //! meilleure décision en dépend.
 
 pub mod calcul;
+pub mod depart;
 pub mod donnees;
 pub mod solveur;
 
@@ -23,6 +24,7 @@ use crate::forge::atelier::{GroupeAffixe, PalierAffixe};
 use crate::forge::{Goal, GroupId, Slot, WantedAffix};
 
 pub use calcul::{MethodePoe1, ResultatPoe1};
+pub use depart::{ObjetDepartPoe1, analyser_objet};
 pub use donnees::{BaseVue, ErreurForgePoe1, bases, construire_pool, donnees};
 pub use solveur::{BranchePlan, EtapePlan, IssuesPlan, PlanPoe1, UsageAction};
 
@@ -121,15 +123,35 @@ pub struct DemandePoe1 {
     /// Prix des monnaies en Chaos (cote du marché ou saisie du joueur) : sans prix, pas de plan.
     #[serde(default)]
     pub prix: BTreeMap<String, f64>,
+    /// Texte d'un objet déjà en possession (Ctrl+Alt+C en jeu) d'où le plan conseillé repart.
+    /// Absent ou vide : objet Normal neuf. Les méthodes de spam partent toujours d'une base neuve.
+    #[serde(default)]
+    pub objet_depart: Option<String>,
 }
 
 /// Méthodes de spam pour la demande, de la plus probable à la moins probable.
 pub fn planifier(d: &DemandePoe1) -> Result<ResultatPoe1, ErreurForgePoe1> {
     let pb = construire_pool(&d.base_id, d.ilvl, d.influence.as_deref())?;
     let mut r = calcul::methodes(&pb, &d.voulus, &d.prix)?;
+    let texte = d
+        .objet_depart
+        .as_deref()
+        .map(str::trim)
+        .filter(|t| !t.is_empty());
+    if d.prix.is_empty() && texte.is_none() {
+        return Ok(r);
+    }
+    let goal = Goal::new(&pb.pool, &d.voulus).map_err(ErreurForgePoe1::Objectif)?;
+    let objet = match texte {
+        Some(t) => {
+            let (mods, o) = depart::objet_depart(&pb, &goal, t)?;
+            r.depart = Some(mods);
+            Some(o)
+        }
+        None => None,
+    };
     if !d.prix.is_empty() {
-        let goal = Goal::new(&pb.pool, &d.voulus).map_err(ErreurForgePoe1::Objectif)?;
-        r.plan = solveur::plan(&pb, &goal, &d.prix);
+        r.plan = solveur::plan_depuis_objet(&pb, &goal, &d.prix, objet.as_ref());
     }
     Ok(r)
 }

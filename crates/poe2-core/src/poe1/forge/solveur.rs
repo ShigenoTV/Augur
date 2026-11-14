@@ -35,7 +35,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use serde::Serialize;
 
-use crate::forge::{AffixPool, Class, Goal, GroupId, Rarity, Slot};
+use crate::forge::{AffixIdx, AffixPool, Class, Goal, GroupId, Rarity, Slot};
 
 use super::calcul::{
     ALCHEMY, ALTERATION, AUGMENTATION, CHAOS, Conso, DEUX_MODS_MAGIQUE, MODS_RARE, SCOURING,
@@ -44,7 +44,7 @@ use super::donnees::{PoolPoe1, TAG_ATTAQUE, TAG_SORT};
 
 /// Nombre de mods voulus au plus pour le solveur : au-delà, le calcul devient trop long pour l'appli
 /// (moins d'une seconde à 4 mods ; à 5 ou 6, la recherche d'une première politique qui aboutit échoue).
-pub const VOULUS_MAX: usize = 4;
+pub const VOULUS_MAX: usize = 6;
 
 pub const TRANSMUTATION: &str = "Orb of Transmutation";
 pub const REGAL: &str = "Regal Orb";
@@ -568,6 +568,34 @@ impl<'a> Modele<'a> {
         self.noeuds.len() - 1
     }
 
+    /// État abstrait d'un objet en possession ; `None` s'il dépasse ce que la rareté permet.
+    fn etat_objet(&self, pool: &AffixPool, o: &ObjetSolveur) -> Option<Etat> {
+        let rarete = match o.rarete {
+            Rarity::Normal => Rarete::Normal,
+            Rarity::Magic => Rarete::Magique,
+            Rarity::Rare => Rarete::Rare,
+        };
+        let mut e = Etat::vide(rarete);
+        if let Some(t) = &o.metamod {
+            e.meta = self.metamods.iter().find(|(_, texte, _)| texte == t)?.0;
+        }
+        e.autres = o.inconnus;
+        for &i in &o.mods {
+            let a = pool.affixes.get(i as usize)?;
+            match self.goal.classify(pool, i) {
+                Class::Wanted(k) if cote(a.slot) == self.cotes[k] => e.bons |= 1 << k,
+                Class::Wanted(k) | Class::Blocked(k) => e.bloques |= 1 << k,
+                Class::Other => e.autres[cote(a.slot)] += 1,
+            }
+        }
+        let cap = match rarete {
+            Rarete::Normal => [0, 0],
+            Rarete::Magique => self.cap_magique,
+            Rarete::Rare => self.cap_rare,
+        };
+        (0..2).all(|c| self.n(&e, c) <= cap[c]).then_some(e)
+    }
+
     fn reussi(&self, e: &Etat) -> bool {
         e.bons == self.complet
     }
@@ -963,6 +991,67 @@ impl Graphe {
         change
     }
 
+    /// Rend la politique propre : depuis chaque état, l'objectif est atteint avec une probabilité
+    /// non nulle. Un état dont l'action ne mène jamais à l'objectif (cycle Exalted / Annulment qui
+    /// ne peut pas produire un mod d'Essence, relance qui ne le tire jamais…) prend l'action la moins
+    /// chère, au vu de `v` et `x`, parmi celles qui y mènent. Sans cela, l'évaluation est singulière.
+    fn reparer(&self, politique: &mut [usize], v: &[f64], x: &[f64]) {
+        let ns = politique.len();
+        // Bons : états d'où l'objectif est atteignable sous la politique (au but : aucune action).
+        let mut bon: Vec<bool> = self.actions.iter().map(|a| a.is_empty()).collect();
+        let mut noeud_bon = vec![false; self.noeuds.len()];
+        let mene = |a: &Action, bon: &[bool], noeud_bon: &[bool]| match &a.issue {
+            Issue::Succes => true,
+            Issue::Noeud(h) => noeud_bon[*h],
+            Issue::Etats(l) => l.iter().any(|&(t, p)| p > 0.0 && bon[t]),
+        };
+        loop {
+            let mut change = false;
+            for (h, loi) in self.noeuds.iter().enumerate() {
+                if !noeud_bon[h] && loi.iter().any(|&(t, p)| p > 0.0 && bon[t]) {
+                    noeud_bon[h] = true;
+                    change = true;
+                }
+            }
+            for s in 0..ns {
+                if bon[s] {
+                    continue;
+                }
+                if let Some(a) = self.actions[s].get(politique[s])
+                    && mene(a, &bon, &noeud_bon)
+                {
+                    bon[s] = true;
+                    change = true;
+                }
+            }
+            if change {
+                continue;
+            }
+            // Plus rien ne bouge : un état mauvais qui a une action vers un bon état en change.
+            for s in 0..ns {
+                if bon[s] {
+                    continue;
+                }
+                let meilleure = self.actions[s]
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, a)| mene(a, &bon, &noeud_bon))
+                    .min_by(|(_, a), (_, b)| {
+                        (a.cout + self.issue(a, v, x)).total_cmp(&(b.cout + self.issue(b, v, x)))
+                    })
+                    .map(|(j, _)| j);
+                if let Some(j) = meilleure {
+                    politique[s] = j;
+                    bon[s] = true;
+                    change = true;
+                }
+            }
+            if !change {
+                return;
+            }
+        }
+    }
+
     /// Lignes du système `(I - P) v = c` d'une politique : états, puis nœuds de relance.
     fn systeme(&self, politique: &[usize]) -> Vec<Vec<(usize, f64)>> {
         let ns = politique.len();
@@ -1148,6 +1237,38 @@ struct Solution<'a> {
 /// Plan au coût moyen minimal. `None` si l'objectif est hors d'atteinte avec les prix connus.
 pub fn plan(pb: &PoolPoe1, goal: &Goal, prix: &BTreeMap<String, f64>) -> Option<PlanPoe1> {
     resoudre(pb, goal, prix).map(|s| plan_depuis(&s))
+}
+
+/// Objet déjà en possession, d'où le plan repart (au lieu d'un objet Normal).
+#[derive(Clone, Debug, PartialEq)]
+pub struct ObjetSolveur {
+    pub rarete: Rarity,
+    /// Mods retrouvés dans le pool (indices).
+    pub mods: Vec<AffixIdx>,
+    /// Mods inconnus ou artisanaux (hors metamod) : préfixes, suffixes. Ils prennent une place.
+    pub inconnus: [u8; 2],
+    /// Metamod d'établi présent : son texte dans le pool (voir [`textes_metamods`]).
+    pub metamod: Option<String>,
+}
+
+/// Plan au coût moyen minimal depuis un objet donné (`None` : objet Normal neuf).
+pub fn plan_depuis_objet(
+    pb: &PoolPoe1,
+    goal: &Goal,
+    prix: &BTreeMap<String, f64>,
+    objet: Option<&ObjetSolveur>,
+) -> Option<PlanPoe1> {
+    resoudre_depuis(pb, goal, prix, objet).map(|s| plan_depuis(&s))
+}
+
+/// Textes des metamods d'établi de la base (« Prefixes Cannot Be Changed »…), comme dans le pool.
+pub fn textes_metamods(pb: &PoolPoe1) -> Vec<String> {
+    pb.etabli
+        .iter()
+        .map(|c| &pb.pool.affixes[c.affixe as usize])
+        .filter(|a| METAMODS.iter().any(|(id, _)| *id == a.id))
+        .map(|a| a.text.clone())
+        .collect()
 }
 
 /// Résumé d'une solution : consommation moyenne par monnaie et par action.
@@ -1338,6 +1459,15 @@ fn resoudre<'a>(
     goal: &'a Goal,
     prix: &'a BTreeMap<String, f64>,
 ) -> Option<Solution<'a>> {
+    resoudre_depuis(pb, goal, prix, None)
+}
+
+fn resoudre_depuis<'a>(
+    pb: &PoolPoe1,
+    goal: &'a Goal,
+    prix: &'a BTreeMap<String, f64>,
+    objet: Option<&ObjetSolveur>,
+) -> Option<Solution<'a>> {
     let pool = &pb.pool;
     let ilvl = pb.ilvl;
     let n = goal.len();
@@ -1411,7 +1541,17 @@ fn resoudre<'a>(
 
     // Exploration des états atteignables depuis l'objet Normal.
     let mut a_visiter = Vec::new();
-    let depart = m.etat(Etat::vide(Rarete::Normal), &mut a_visiter);
+    let neuf = m.etat(Etat::vide(Rarete::Normal), &mut a_visiter);
+    let depart = match objet {
+        None => neuf,
+        Some(o) => {
+            let e = m.etat_objet(pool, o)?;
+            if m.reussi(&e) {
+                return None;
+            }
+            m.etat(e, &mut a_visiter)
+        }
+    };
     let mut actions: Vec<Vec<Action>> = Vec::new();
     while let Some(i) = a_visiter.pop() {
         let acts = m.actions(i, &mut a_visiter);
@@ -1439,6 +1579,7 @@ fn resoudre<'a>(
         }
         let x0 = vec![borne; g.noeuds.len()];
         g.valeurs(&x0, &mut v, &mut politique, 300);
+        g.reparer(&mut politique, &v, &x0);
         if let Some(r) = g.evaluer(&politique, &[&|a: &Action| a.cout]) {
             break r.into_iter().next()?;
         }
@@ -1825,6 +1966,49 @@ mod tests {
         }
         assert!(relances_vues.iter().all(|v| *v), "relance inutilisée");
         assert!(fini, "aucune issue ne finit l'objet");
+    }
+
+    /// Arc à 5 mods voulus dont celui de l'Essence of Insanity : l'Exalted ne peut pas le donner,
+    /// la première politique doit être réparée pour atteindre l'objectif.
+    #[test]
+    fn cinq_voulus_avec_mod_d_essence() {
+        let pb =
+            construire_pool("Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow3", 84, None).unwrap();
+        // Tout tier, comme « tout tier » dans le panneau.
+        let texte = |t: &str, slot: Slot, adds: bool| {
+            let a = pb
+                .pool
+                .affixes
+                .iter()
+                .find(|a| {
+                    a.slot == slot && a.text.contains(t) && a.text.starts_with("Adds") == adds
+                })
+                .unwrap_or_else(|| panic!("{t} absent du pool"));
+            WantedAffix {
+                group: a.group,
+                family: a.family_id,
+                max_tier: 255,
+            }
+        };
+        let voulus = [
+            texte("Physical Damage", Slot::Prefix, true),
+            texte("increased Physical Damage", Slot::Prefix, false),
+            texte("increased Attack Speed", Slot::Suffix, false),
+            texte("Mana per Enemy Killed", Slot::Suffix, false),
+            texte("Spectral Spirits", Slot::Suffix, false),
+        ];
+        let goal = Goal::new(&pb.pool, &voulus).unwrap();
+        let mut prix = cote_marche();
+        prix.insert("Essence of Insanity".into(), 15.0);
+        let sol = resoudre(&pb, &goal, &prix).unwrap();
+        let plan = plan_depuis(&sol);
+        assert!(plan.actions.iter().any(|a| a.action.contains("Insanity")));
+        let sim = simuler(&sol, &pb, 1_500);
+        assert!(
+            (sol.cout_moyen - sim).abs() / sim < 0.08,
+            "solveur {} contre simulation {sim}",
+            sol.cout_moyen
+        );
     }
 
     #[test]

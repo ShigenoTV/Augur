@@ -139,6 +139,7 @@ pub fn run() {
             commands::get_forge_poe1_bases,
             commands::get_forge_poe1_affixes,
             commands::plan_forge_poe1,
+            commands::analyze_forge_poe1_item,
             commands::get_forge_poe1_prices,
             commands::get_forge_affixes,
             commands::analyze_forge_item,

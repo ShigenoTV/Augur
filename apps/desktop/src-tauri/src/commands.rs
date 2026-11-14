@@ -527,6 +527,14 @@ pub async fn plan_forge_poe1(
     crate::forge_poe1::planifier(demande).await
 }
 
+/// Forge PoE 1 : objet de départ collé (Ctrl+Alt+C en jeu) : base, niveau, influence et mods lus.
+#[tauri::command]
+pub fn analyze_forge_poe1_item(
+    texte: String,
+) -> Result<poe2_core::poe1::forge::ObjetDepartPoe1, AppError> {
+    crate::forge_poe1::analyser(&texte)
+}
+
 /// Forge PoE 1 : prix poe.ninja (Chaos) des monnaies, Essences, fossiles et résonateurs.
 #[tauri::command]
 pub async fn get_forge_poe1_prices(

@@ -32,6 +32,10 @@ pub fn affixes(base_id: &str, ilvl: u32, influence: Option<&str>) -> Result<Affi
     forge::affixes(base_id, ilvl, influence).map_err(error)
 }
 
+pub fn analyser(texte: &str) -> Result<forge::ObjetDepartPoe1, AppError> {
+    forge::analyser_objet(texte).map_err(error)
+}
+
 pub async fn planifier(demande: DemandePoe1) -> Result<ResultatPoe1, AppError> {
     tauri::async_runtime::spawn_blocking(move || forge::planifier(&demande))
         .await
