@@ -315,6 +315,7 @@ fn essence_garantit_son_mod() {
         ilvl: 86,
         influence: None,
         voulus,
+        objet_depart: None,
     })
     .unwrap();
     assert_eq!(r.methodes[0].genre, "essence");
@@ -457,6 +458,7 @@ fn etabli_finit_un_magique() {
         ilvl: 86,
         influence: None,
         voulus,
+        objet_depart: None,
     })
     .unwrap();
     let premiere = &r.methodes[0];
@@ -580,4 +582,110 @@ fn methodes_fossiles_par_resonateur() {
     );
     let chaos = r.methodes.iter().find(|m| m.id == "chaos").unwrap();
     assert!(paire.chance > 5.0 * chaos.chance);
+}
+
+/// Glorious Plate rare : vie (Athlete's), résistance au feu, metamod « Prefixes Cannot Be Changed ».
+const PLAQUE_COPIEE: &str = r#"Item Class: Body Armours
+Rarity: Rare
+Doom Shell
+Glorious Plate
+--------
+Armour: 553
+--------
+Requirements:
+Level: 68
+Str: 191
+--------
+Sockets: R-R
+--------
+Item Level: 84
+--------
+{ Prefix Modifier "Athlete's" (Tier: 2) — Life }
++120(115-129) to maximum Life
+{ Suffix Modifier "of the Kiln" (Tier: 4) — Elemental, Fire, Resistance }
++26(24-29)% to Fire Resistance
+{ Master Crafted Suffix Modifier "of Prefixes" (Rank: 1) }
+Prefixes Cannot Be Changed (crafted)
+"#;
+
+const PLAQUE: &str = "Metadata/Items/Armours/BodyArmours/BodyStr17";
+
+#[test]
+fn objet_de_depart_lu() {
+    let o = analyser_objet(PLAQUE_COPIEE).unwrap();
+    assert_eq!(o.base_id, PLAQUE);
+    assert_eq!(o.ilvl, Some(84));
+    assert_eq!(o.rarete, Rarity::Rare);
+    assert_eq!(o.metamod.as_deref(), Some("Prefixes Cannot Be Changed"));
+    let reconnus: Vec<bool> = o.mods.iter().map(|m| m.reconnu).collect();
+    // Le metamod est reconnu (le plan le connaît), il ne compte pas comme un mauvais mod.
+    assert_eq!(reconnus, [true, true, true]);
+}
+
+#[test]
+fn plan_depuis_l_objet_de_depart() {
+    let pb = construire_pool(PLAQUE, 84, None).unwrap();
+    let voulus = vec![
+        voulu(&pb.pool, "IncreasedLife8"),
+        voulu(&pb.pool, "FireResist4"),
+        voulu(&pb.pool, "ColdResist4"),
+    ];
+    let prix: std::collections::BTreeMap<String, f64> = [
+        ("Chaos Orb", 1.0),
+        ("Orb of Alchemy", 0.03),
+        ("Orb of Transmutation", 0.03),
+        ("Orb of Alteration", 0.07),
+        ("Orb of Augmentation", 0.04),
+        ("Regal Orb", 0.35),
+        ("Exalted Orb", 12.0),
+        ("Orb of Annulment", 3.0),
+        ("Orb of Scouring", 0.4),
+        ("Divine Orb", 150.0),
+    ]
+    .into_iter()
+    .map(|(n, p)| (n.to_string(), p))
+    .collect();
+    let demande = |objet: Option<&str>| DemandePoe1 {
+        base_id: PLAQUE.into(),
+        ilvl: 84,
+        influence: None,
+        voulus: voulus.clone(),
+        prix: prix.clone(),
+        objet_depart: objet.map(str::to_string),
+    };
+    let neuf = planifier(&demande(None)).unwrap();
+    let depuis = planifier(&demande(Some(PLAQUE_COPIEE))).unwrap();
+    assert!(neuf.depart.is_none());
+    let mods = depuis.depart.as_ref().unwrap();
+    assert_eq!(mods.iter().filter(|m| m.voulu.is_some()).count(), 2);
+    let (p0, p1) = (neuf.plan.unwrap(), depuis.plan.unwrap());
+    // Deux voulus sur trois déjà là, préfixes verrouillés : il reste moins à dépenser.
+    assert!(
+        p1.cout_moyen < p0.cout_moyen,
+        "{} contre {}",
+        p1.cout_moyen,
+        p0.cout_moyen
+    );
+    let racine = p1.etapes.iter().find(|e| e.id == p1.racine).unwrap();
+    assert_eq!(racine.rarete, "Rare");
+    assert_eq!(racine.voulus, vec![0, 1]);
+    assert_eq!(
+        racine.metamod.as_deref(),
+        Some("Prefixes Cannot Be Changed")
+    );
+    assert!((racine.reste - p1.cout_moyen).abs() < 1e-6);
+
+    // Mauvaise base, objet déjà fini.
+    let mut autre = demande(Some(PLAQUE_COPIEE));
+    autre.base_id = "Metadata/Items/Armours/BodyArmours/BodyStr16".into();
+    assert!(matches!(
+        planifier(&autre),
+        Err(ErreurForgePoe1::ObjetDepart(_))
+    ));
+    let mut fini = demande(Some(PLAQUE_COPIEE));
+    fini.voulus.pop();
+    assert!(matches!(
+        planifier(&fini),
+        Err(ErreurForgePoe1::ObjetDepart(_))
+    ));
 }

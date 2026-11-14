@@ -162,3 +162,22 @@ format des montants et la description des cases (avec le metamod), passés en op
 En PoE 1, la barre latérale propose Chaos ou Divine (`devisePoe1.ts`, gardé à part du choix PoE 2). Les
 calculs restent en Chaos ; le cours de la Divine vient des prix de la Forge (saisie, sinon poe.ninja) ou du
 dernier relevé des coffres. Les prix unitaires saisis restent en Chaos.
+
+## Jusqu'à 6 mods voulus
+
+Le plan conseillé accepte 6 mods voulus (il s'arrêtait à 4). Au-delà de 4, la première politique (relance
+à valeur fixe) pouvait tourner en rond sans jamais atteindre l'objectif, par exemple en enchaînant Exalted
+et Annulment alors qu'un mod voulu ne vient que d'une Essence. `Graphe::reparer` rend cette politique
+propre : un état d'où l'objectif n'est jamais atteint prend l'action la moins chère parmi celles qui y
+mènent. L'itération de politique part ensuite d'une politique qui aboutit. Test : arc à 5 mods dont celui
+de l'Essence of Insanity, comparé à la simulation.
+
+## Objet de départ
+
+Comme en PoE 2, le joueur colle le texte d'un objet (Ctrl+Alt+C) : la Forge lit sa base (entre bases
+homonymes, celle dont l'implicite est sur l'objet), son niveau, son influence et ses mods (lecture du suivi
+PoE 2), reconnaît un metamod d'établi, et le plan conseillé repart de l'état de cet objet
+(`poe1::forge::depart`, `solveur::plan_depuis_objet`). Les autres mods artisanaux prennent une place sans
+servir l'objectif. Les méthodes de spam partent toujours d'une base neuve. Objet fracturé : pas encore
+pris en compte. Le bouton « Réinitialiser » décoche les mods voulus, retire l'objet de départ et efface le
+résultat.

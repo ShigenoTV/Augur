@@ -59,6 +59,7 @@ fn main() {
             "get_forge_poe1_bases",
             "get_forge_poe1_affixes",
             "plan_forge_poe1",
+            "analyze_forge_poe1_item",
             "get_forge_poe1_prices",
             "analyze_forge_item",
             "open_forge_buy_search",

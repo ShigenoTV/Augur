@@ -138,7 +138,7 @@ export function AffixColumn({
 }
 
 /** Objet de départ lu, avec le texte collé (envoyé tel quel au calcul). */
-type Depart = { texte: string; objet: ForgeStartItem };
+type Depart<T extends ForgeStartItem = ForgeStartItem> = { texte: string; objet: T };
 
 const RARETE: Record<ForgeStartItem["rarete"], string> = { normal: "Normal", magic: "Magique", rare: "Rare" };
 
@@ -147,12 +147,15 @@ const RARETE: Record<ForgeStartItem["rarete"], string> = { normal: "Normal", mag
  * au lieu d'une base neuve (comme dans l'ancienne appli de craft). « Analyser » choisit sa base et son
  * niveau d'objet.
  */
-function StartItemPicker({
+export function StartItemPicker<T extends ForgeStartItem = ForgeStartItem>({
   depart,
   onDepart,
+  analyser: lire = (t) => commands.analyzeForgeItem(t) as Promise<T>,
 }: {
-  depart: Depart | null;
-  onDepart: (d: Depart | null) => void;
+  depart: Depart<T> | null;
+  onDepart: (d: Depart<T> | null) => void;
+  /** Lecture de l'objet (Forge PoE 1 : sa propre commande) ; par défaut la Forge PoE 2. */
+  analyser?: (texte: string) => Promise<T>;
 }) {
   const [texte, setTexte] = useState("");
   const [busy, setBusy] = useState(false);
@@ -162,7 +165,7 @@ function StartItemPicker({
     setBusy(true);
     setError(null);
     try {
-      onDepart({ texte, objet: await commands.analyzeForgeItem(texte) });
+      onDepart({ texte, objet: await lire(texte) });
     } catch (err) {
       setError(message(err));
     } finally {

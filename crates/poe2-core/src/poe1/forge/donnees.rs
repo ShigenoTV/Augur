@@ -28,6 +28,8 @@ pub enum ErreurForgePoe1 {
     Influence(String),
     #[error("objectif invalide : {0}")]
     Objectif(String),
+    #[error("objet de départ : {0}")]
+    ObjetDepart(String),
 }
 
 #[derive(Debug, Deserialize)]

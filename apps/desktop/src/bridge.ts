@@ -268,6 +268,8 @@ export type ForgePoe1Request = {
   voulus: ForgeWanted[];
   /** Prix en Chaos (cote ou saisie) : le plan conseillé en dépend. */
   prix?: Record<string, number>;
+  /** Texte d'un objet en possession (Ctrl+Alt+C) d'où le plan conseillé repart ; null : objet neuf. */
+  objetDepart?: string | null;
 };
 export type ForgePoe1Conso = { nom: string; quantite: number };
 export type ForgePoe1Method = {
@@ -327,7 +329,11 @@ export type ForgePoe1Result = {
   methodes: ForgePoe1Method[];
   ecartees: { nom: string; raison: string }[];
   plan: ForgePoe1Plan | null;
+  /** Mods de l'objet de départ tels que la Forge les a compris ; null : objet neuf. */
+  depart: ForgeReadMod[] | null;
 };
+/** Objet de départ PoE 1 lu par la Forge (poe1::forge::depart). */
+export type ForgePoe1StartItem = ForgeStartItem & { influence: string | null; metamod: string | null };
 export type ForgePoe1Prices = { league: string; prix: Record<string, number>; erreur: string | null };
 export type ForgeCatalogueEntry = { id: string; nom: string; genre: "base" | "monnaie" | "omen" | "essence" };
 export type ForgePriceSource = "joueur" | "poeNinja" | "indicatif";
@@ -552,6 +558,7 @@ export const commands = {
   getForgePoe1Affixes: (baseId: string, ilvl: number, influence: string | null) =>
     invoke<ForgePoe1Affixes>("get_forge_poe1_affixes", { baseId, ilvl, influence }),
   planForgePoe1: (demande: ForgePoe1Request) => invoke<ForgePoe1Result>("plan_forge_poe1", { demande }),
+  analyzeForgePoe1Item: (texte: string) => invoke<ForgePoe1StartItem>("analyze_forge_poe1_item", { texte }),
   getForgePoe1Prices: () => invoke<ForgePoe1Prices>("get_forge_poe1_prices"),
   getForgeAffixes: (baseId: string, ilvl: number) => invoke<ForgeAffixes>("get_forge_affixes", { baseId, ilvl }),
   analyzeForgeItem: (texte: string) => invoke<ForgeStartItem>("analyze_forge_item", { texte }),

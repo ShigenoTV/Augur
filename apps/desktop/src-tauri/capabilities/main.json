@@ -56,6 +56,7 @@
     "allow-get-forge-poe1-bases",
     "allow-get-forge-poe1-affixes",
     "allow-plan-forge-poe1",
+    "allow-analyze-forge-poe1-item",
     "allow-get-forge-poe1-prices",
     "allow-analyze-forge-item",
     "allow-open-forge-buy-search",

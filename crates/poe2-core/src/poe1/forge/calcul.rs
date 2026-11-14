@@ -89,6 +89,8 @@ pub struct ResultatPoe1 {
     pub ecartees: Vec<Ecartee>,
     /// Plan au coût moyen minimal (Exalted, Annulment, metamods…), si les prix sont fournis.
     pub plan: Option<super::solveur::PlanPoe1>,
+    /// Mods de l'objet de départ tels que la Forge les a compris (`None` : objet neuf).
+    pub depart: Option<Vec<crate::forge::suivi::ModLu>>,
 }
 
 fn conso(nom: &str, quantite: f64) -> Conso {
@@ -796,5 +798,6 @@ pub fn methodes(
         methodes,
         ecartees,
         plan: None,
+        depart: None,
     })
 }
