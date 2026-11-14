@@ -774,8 +774,8 @@ impl<'a> Modele<'a> {
         let verrou = e.meta.verrou();
         let libre = |c: usize| verrou != Some(c);
         let mut issues: Vec<Etat> = Vec::new();
-        for k in 0..self.goal.len() {
-            if !libre(self.cotes[k]) {
+        for (k, &cote) in self.cotes.iter().enumerate().take(self.goal.len()) {
+            if !libre(cote) {
                 continue;
             }
             if e.bons & (1 << k) != 0 {
