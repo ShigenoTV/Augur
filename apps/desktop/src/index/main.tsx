@@ -406,7 +406,7 @@ function App() {
             {poe1 && (
               <div className="mt-4">
                 <Card title="Coffres PoE 1">
-                  <StashCard />
+                  <StashCard onSettings={setSettings} />
                 </Card>
               </div>
             )}
