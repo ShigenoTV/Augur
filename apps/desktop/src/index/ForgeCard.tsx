@@ -66,18 +66,20 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
 const DIVINE: ForgeCatalogueEntry = { id: "divine", nom: "Divine Orb (affichage en Divine)", genre: "monnaie" };
 
 /** Colonne d'affixes visables (préfixes ou suffixes) avec le tier minimum voulu. */
-function AffixColumn({
+export function AffixColumn({
   slot,
   affixes,
   voulus,
   onToggle,
   onTier,
+  essenceHint = "Posé seulement par une Essence ou un Alloy",
 }: {
   slot: ForgeSlot;
   affixes: ForgeAffix[];
   voulus: ForgeWanted[];
   onToggle: (a: ForgeAffix) => void;
   onTier: (a: ForgeAffix, tier: number) => void;
+  essenceHint?: string;
 }) {
   const liste = affixes.filter((a) => a.slot === slot);
   return (
@@ -122,7 +124,7 @@ function AffixColumn({
               ) : (
                 <span
                   className="font-mono text-[11px] text-text-subtle"
-                  title={a.essence ? "Posé seulement par une Essence ou un Alloy" : "Chance d'être le prochain mod de ce côté"}
+                  title={a.essence ? essenceHint : "Chance d'être le prochain mod de ce côté"}
                 >
                   {a.essence ? "Essence" : formatPercent(a.part)}
                 </span>

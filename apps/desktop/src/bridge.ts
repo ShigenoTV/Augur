@@ -251,6 +251,28 @@ export type ForgeAffixes = {
   sansPoids: { id: string; slot: ForgeSlot; niveau: number }[];
   attribution: ForgeAttribution;
 };
+/** Forge PoE 1 (crates/poe2-core/src/poe1/forge, apps/desktop/src-tauri/src/forge_poe1.rs). */
+export type ForgePoe1Base = {
+  id: string;
+  nom: string;
+  classe: string;
+  niveauDrop: number;
+  implicites: string[];
+  influences: string[];
+};
+export type ForgePoe1Affixes = { baseId: string; ilvl: number; influence: string | null; affixes: ForgeAffix[] };
+export type ForgePoe1Request = { baseId: string; ilvl: number; influence: string | null; voulus: ForgeWanted[] };
+export type ForgePoe1Conso = { nom: string; quantite: number };
+export type ForgePoe1Method = {
+  id: string;
+  nom: string;
+  genre: "alteration" | "chaos" | "alchimie" | "essence";
+  chance: number;
+  monnaies: ForgePoe1Conso[];
+  note: string;
+};
+export type ForgePoe1Result = { methodes: ForgePoe1Method[]; ecartees: { nom: string; raison: string }[] };
+export type ForgePoe1Prices = { league: string; prix: Record<string, number>; erreur: string | null };
 export type ForgeCatalogueEntry = { id: string; nom: string; genre: "base" | "monnaie" | "omen" | "essence" };
 export type ForgePriceSource = "joueur" | "poeNinja" | "indicatif";
 export type ForgeMarket = {
@@ -470,6 +492,11 @@ export const commands = {
   importPobCode: (code: string) => invoke<CharacterInfo>("import_pob_code", { code }),
   clearCharacter: () => invoke<void>("clear_character"),
   getForgeBases: () => invoke<ForgeBase[]>("get_forge_bases"),
+  getForgePoe1Bases: () => invoke<ForgePoe1Base[]>("get_forge_poe1_bases"),
+  getForgePoe1Affixes: (baseId: string, ilvl: number, influence: string | null) =>
+    invoke<ForgePoe1Affixes>("get_forge_poe1_affixes", { baseId, ilvl, influence }),
+  planForgePoe1: (demande: ForgePoe1Request) => invoke<ForgePoe1Result>("plan_forge_poe1", { demande }),
+  getForgePoe1Prices: () => invoke<ForgePoe1Prices>("get_forge_poe1_prices"),
   getForgeAffixes: (baseId: string, ilvl: number) => invoke<ForgeAffixes>("get_forge_affixes", { baseId, ilvl }),
   analyzeForgeItem: (texte: string) => invoke<ForgeStartItem>("analyze_forge_item", { texte }),
   openForgeBuySearch: (demande: ForgePlanRequest) => invoke<ForgeBuySearch>("open_forge_buy_search", { demande }),

@@ -189,6 +189,27 @@ pub fn cote_echange(page: &Value, nom: &str, cours_divine: Option<f64>) -> Optio
     Some(cote(chaos, None, cours_divine))
 }
 
+/// Toutes les cotes d'une page d'échange : nom → valeur en Chaos (non arrondie). Sert aux prix de la
+/// Forge PoE 1 (monnaies et Essences).
+pub fn prix_echange(page: &Value) -> std::collections::BTreeMap<String, f64> {
+    let mut noms = std::collections::HashMap::new();
+    for i in page["items"].as_array().into_iter().flatten() {
+        if let (Some(id), Some(nom)) = (i["id"].as_str(), i["name"].as_str()) {
+            noms.insert(id, nom);
+        }
+    }
+    page["lines"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|l| {
+            let nom = noms.get(l["id"].as_str()?)?;
+            let v = l["primaryValue"].as_f64().filter(|v| *v > 0.0)?;
+            Some((nom.to_string(), v))
+        })
+        .collect()
+}
+
 /// Cote d'un unique dans une page d'objets : même nom (et même base), avec les
 /// mêmes liens si l'objet en a 5 ou 6, sans liens sinon.
 pub fn cote_unique(page: &Value, objet: &Objet, cours_divine: Option<f64>) -> Option<Cote> {
@@ -301,6 +322,15 @@ mod tests {
         .unwrap();
         assert_eq!(carte.chaos, 7.2);
         assert_eq!(cote_echange(&devises, "Objet inconnu", None), None);
+    }
+
+    #[test]
+    fn toutes_les_cotes_d_une_page() {
+        let devises = donnees("ninja-currency.json");
+        let prix = prix_echange(&devises);
+        assert!(prix.len() >= 2, "{prix:?}");
+        assert!((prix["Divine Orb"] - 78.3).abs() < 1.0);
+        assert!(prix.values().all(|v| *v > 0.0));
     }
 
     #[test]
