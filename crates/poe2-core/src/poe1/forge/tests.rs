@@ -81,7 +81,36 @@ impl Tireur {
     }
 }
 
-fn simuler_rare(pool: &AffixPool, goal: &Goal, ilvl: u8, garanti: Option<u16>, n: usize) -> f64 {
+/// Objet réussi, éventuellement fini par le craft `etabli` (place libre de son côté, groupe libre).
+fn fini(pool: &AffixPool, goal: &Goal, item: &ItemState, etabli: Option<u16>, cap: u8) -> bool {
+    if goal.is_met(item) {
+        return true;
+    }
+    let Some(e) = etabli else { return false };
+    let a = &pool.affixes[e as usize];
+    let mut x = *item;
+    pool.count(item, a.slot) < cap
+        && !item
+            .mods()
+            .iter()
+            .any(|m| pool.affixes[m.idx as usize].conflicts(a))
+        && {
+            x.push(Mod {
+                idx: e,
+                ..Mod::default()
+            });
+            goal.is_met(&x)
+        }
+}
+
+fn simuler_rare(
+    pool: &AffixPool,
+    goal: &Goal,
+    ilvl: u8,
+    garanti: Option<u16>,
+    etabli: Option<u16>,
+    n: usize,
+) -> f64 {
     let mut rng = SmallRng::seed_from_u64(7);
     let tireur = Tireur::new(pool, ilvl);
     let mut ok = 0;
@@ -117,7 +146,7 @@ fn simuler_rare(pool: &AffixPool, goal: &Goal, ilvl: u8, garanti: Option<u16>, n
                 None => break,
             }
         }
-        if goal.is_met(&item) {
+        if fini(pool, goal, &item, etabli, 3) {
             ok += 1;
         }
     }
@@ -251,8 +280,8 @@ fn chaos_proche_de_la_simulation() {
         ],
     ] {
         let goal = Goal::new(&pb.pool, &voulus).unwrap();
-        let c = chance_rare(&pb.pool, &goal, 86, None);
-        let s = simuler_rare(&pb.pool, &goal, 86, None, 200_000);
+        let c = chance_rare(&pb.pool, &goal, 86, None, None);
+        let s = simuler_rare(&pb.pool, &goal, 86, None, None, 200_000);
         proche(c, s, 0.05);
     }
 }
@@ -275,10 +304,10 @@ fn essence_garantit_son_mod() {
         voulu(&pb.pool, "IncreasedLife5"),
     ];
     let goal = Goal::new(&pb.pool, &voulus).unwrap();
-    let c = chance_rare(&pb.pool, &goal, 86, Some(ess.affixe));
-    let s = simuler_rare(&pb.pool, &goal, 86, Some(ess.affixe), 200_000);
+    let c = chance_rare(&pb.pool, &goal, 86, Some(ess.affixe), None);
+    let s = simuler_rare(&pb.pool, &goal, 86, Some(ess.affixe), None, 200_000);
     proche(c, s, 0.05);
-    assert!(c > chance_rare(&pb.pool, &goal, 86, None));
+    assert!(c > chance_rare(&pb.pool, &goal, 86, None, None));
 
     let r = planifier(&DemandePoe1 {
         base_id: ANNEAU.into(),
@@ -327,4 +356,112 @@ fn deux_prefixes_ecartent_l_alteration() {
     ];
     let goal = Goal::new(&pb.pool, &voulus).unwrap();
     assert!(chance_alteration(&pb.pool, &goal, 86).is_none());
+}
+
+fn craft_froid(pb: &donnees::PoolPoe1) -> u16 {
+    pb.etabli
+        .iter()
+        .map(|e| e.affixe)
+        .filter(|&i| {
+            pb.pool.affixes[i as usize]
+                .text
+                .contains("to Cold Resistance")
+        })
+        .max_by_key(|&i| pb.pool.affixes[i as usize].req_ilvl)
+        .expect("craft de résistance au froid sur un anneau")
+}
+
+#[test]
+fn etabli_finit_un_rare() {
+    let pb = construire_pool(ANNEAU, 86, None).unwrap();
+    let craft = craft_froid(&pb);
+    let a = &pb.pool.affixes[craft as usize];
+    assert!(a.weight == 0, "un mod d'établi n'est jamais tiré");
+    let voulus = vec![
+        voulu(&pb.pool, "IncreasedLife5"),
+        WantedAffix {
+            group: a.group,
+            family: a.family_id,
+            max_tier: a.tier,
+        },
+    ];
+    let goal = Goal::new(&pb.pool, &voulus).unwrap();
+    let sans = chance_rare(&pb.pool, &goal, 86, None, None);
+    let avec = chance_rare(&pb.pool, &goal, 86, None, Some(craft));
+    let s = simuler_rare(&pb.pool, &goal, 86, None, Some(craft), 200_000);
+    proche(avec, s, 0.05);
+    assert!(avec > 2.0 * sans, "{avec} contre {sans}");
+}
+
+#[test]
+fn etabli_finit_un_magique() {
+    let pb = construire_pool(ANNEAU, 86, None).unwrap();
+    let craft = craft_froid(&pb);
+    let a = &pb.pool.affixes[craft as usize];
+    let voulus = vec![
+        voulu(&pb.pool, "IncreasedLife5"),
+        WantedAffix {
+            group: a.group,
+            family: a.family_id,
+            max_tier: a.tier,
+        },
+    ];
+    let goal = Goal::new(&pb.pool, &voulus).unwrap();
+    let (avec, aug) = chance_alteration_etabli(&pb.pool, &goal, 86, craft).unwrap();
+    let (sans, _) = chance_alteration(&pb.pool, &goal, 86).unwrap();
+    assert!(avec > 2.0 * sans, "{avec} contre {sans}");
+    // Simulation : Alteration, Augmentation si un second mod peut finir l'objet, puis l'établi.
+    let mut rng = SmallRng::seed_from_u64(3);
+    let f = DrawFilter::default();
+    let (mut ok, mut augs) = (0, 0);
+    let n = 200_000;
+    for _ in 0..n {
+        let mut item = ItemState::new(Rarity::Magic, 86);
+        let nb = if rng.random_bool(0.5) { 2 } else { 1 };
+        while item.len() < nb {
+            let i = pool_tirer(&pb.pool, &item, &f, &mut rng);
+            item.push(Mod {
+                idx: i,
+                ..Mod::default()
+            });
+        }
+        if item.len() == 1 && !fini(&pb.pool, &goal, &item, Some(craft), 1) {
+            let peut = pb.pool.distribution(&item, &f).iter().any(|&(j, _)| {
+                let mut x = item;
+                x.push(Mod {
+                    idx: j,
+                    ..Mod::default()
+                });
+                fini(&pb.pool, &goal, &x, Some(craft), 1)
+            });
+            if peut {
+                augs += 1;
+                let i = pool_tirer(&pb.pool, &item, &f, &mut rng);
+                item.push(Mod {
+                    idx: i,
+                    ..Mod::default()
+                });
+            }
+        }
+        if fini(&pb.pool, &goal, &item, Some(craft), 1) {
+            ok += 1;
+        }
+    }
+    proche(avec, ok as f64 / n as f64, 0.05);
+    proche(aug, augs as f64 / n as f64, 0.05);
+
+    let r = planifier(&DemandePoe1 {
+        base_id: ANNEAU.into(),
+        ilvl: 86,
+        influence: None,
+        voulus,
+    })
+    .unwrap();
+    let premiere = &r.methodes[0];
+    assert!(premiere.finition.is_some(), "{:?}", premiere.nom);
+    assert!(premiere.nom.ends_with("+ établi"));
+}
+
+fn pool_tirer(pool: &AffixPool, item: &ItemState, f: &DrawFilter, rng: &mut SmallRng) -> u16 {
+    pool.draw(item, f, rng).unwrap()
 }

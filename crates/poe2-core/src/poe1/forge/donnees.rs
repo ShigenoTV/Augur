@@ -38,6 +38,18 @@ pub struct DonneesPoe1 {
     pub bases: Vec<BasePoe1>,
     pub mods: Vec<ModPoe1>,
     pub essences: Vec<EssencePoe1>,
+    /// Crafts d'établi qui ajoutent un mod.
+    #[serde(default)]
+    pub etabli: Vec<CraftPoe1>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CraftPoe1 {
+    #[serde(rename = "mod")]
+    pub mod_id: String,
+    pub classes: Vec<String>,
+    /// Nom de la monnaie → quantité.
+    pub cout: BTreeMap<String, u32>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -70,6 +82,12 @@ pub struct ModPoe1 {
     pub spawn: Vec<(String, u32)>,
     /// Mod posé seulement par une Essence (jamais tiré au hasard).
     pub essence: bool,
+    /// Mod artisanal, posé seulement par l'établi.
+    #[serde(default)]
+    pub artisanal: bool,
+    /// Première stat (min, max), pour classer un mod d'Essence ou d'établi parmi les tiers.
+    #[serde(default)]
+    pub valeur: Option<(i64, i64)>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -132,6 +150,16 @@ pub struct PoolPoe1 {
     pub pool: AffixPool,
     /// Essences applicables à ce niveau d'objet (mod garanti présent dans le pool).
     pub essences: Vec<EssenceBase>,
+    /// Crafts d'établi de la classe (mod artisanal présent dans le pool, poids nul).
+    pub etabli: Vec<EtabliBase>,
+}
+
+/// Un craft d'établi utilisable sur la base.
+#[derive(Debug, Clone)]
+pub struct EtabliBase {
+    pub affixe: AffixIdx,
+    /// (nom de la monnaie, quantité).
+    pub cout: Vec<(String, u32)>,
 }
 
 pub fn base(id: &str) -> Result<&'static BasePoe1, ErreurForgePoe1> {
@@ -172,13 +200,26 @@ pub fn construire_pool(
         .map(|m| (m.as_str(), ()))
         .collect();
 
-    // Mods retenus : tirables sur la base, ou garantis par une Essence de la classe.
+    let crafts: HashMap<&str, &CraftPoe1> = d
+        .etabli
+        .iter()
+        .filter(|c| c.classes.contains(&b.classe))
+        .map(|c| (c.mod_id.as_str(), c))
+        .collect();
+
+    // Mods retenus : tirables sur la base, garantis par une Essence ou craftables à l'établi pour la
+    // classe.
     let retenus: Vec<(&ModPoe1, u32)> = d
         .mods
         .iter()
         .filter_map(|m| {
-            let w = if m.essence { 0 } else { poids(&m.spawn, &tags) };
-            (w > 0 || garantis.contains_key(m.id.as_str())).then_some((m, w))
+            let w = if m.essence || m.artisanal {
+                0
+            } else {
+                poids(&m.spawn, &tags)
+            };
+            (w > 0 || garantis.contains_key(m.id.as_str()) || crafts.contains_key(m.id.as_str()))
+                .then_some((m, w))
         })
         .collect();
 
@@ -191,7 +232,8 @@ pub fn construire_pool(
         }
     }
     let mut familles: BTreeMap<(GroupId, &str), u16> = BTreeMap::new();
-    let mut par_famille: HashMap<(GroupId, &str), Vec<u32>> = HashMap::new();
+    // Niveaux (et première valeur) des tiers tirables de chaque famille.
+    let mut par_famille: HashMap<(GroupId, &str), Vec<Palier>> = HashMap::new();
     for (m, w) in &retenus {
         let g = groupe_de(m, &groupes);
         let n = familles.keys().filter(|(h, _)| *h == g).count() as u16;
@@ -200,12 +242,12 @@ pub fn construire_pool(
             par_famille
                 .entry((g, m.famille.as_str()))
                 .or_default()
-                .push(m.niveau);
+                .push((m.niveau, m.valeur.map(|v| v.0)));
         }
     }
     for v in par_famille.values_mut() {
-        v.sort_unstable_by(|a, b| b.cmp(a));
-        v.dedup();
+        v.sort_unstable_by_key(|x| std::cmp::Reverse(x.0));
+        v.dedup_by_key(|x| x.0);
     }
 
     let affixes: Vec<Affix> = retenus
@@ -216,12 +258,14 @@ pub fn construire_pool(
                 .get(&(g, m.famille.as_str()))
                 .map(Vec::as_slice)
                 .unwrap_or(&[]);
-            let tier = niveaux
-                .iter()
-                .position(|&n| n <= m.niveau)
-                .map_or(if niveaux.is_empty() { 1 } else { niveaux.len() }, |p| {
-                    p + 1
-                });
+            let tier = if *w > 0 {
+                niveaux
+                    .iter()
+                    .position(|&(n, _)| n <= m.niveau)
+                    .map_or(1, |p| p + 1)
+            } else {
+                tier_hors_tirage(niveaux, m)
+            };
             Affix {
                 id: m.id.clone(),
                 name: m.nom.clone(),
@@ -267,13 +311,44 @@ pub fn construire_pool(
         })
         .collect();
 
+    let mut etabli: Vec<EtabliBase> = crafts
+        .iter()
+        .filter_map(|(m, c)| {
+            Some(EtabliBase {
+                affixe: *index.get(m)?,
+                cout: c.cout.iter().map(|(n, q)| (n.clone(), *q)).collect(),
+            })
+        })
+        .collect();
+    etabli.sort_by_key(|e| e.affixe);
+
     Ok(PoolPoe1 {
         base: b,
         ilvl: ilvl as u8,
         influence: influence.map(str::to_string),
         pool: AffixPool::new(affixes),
         essences,
+        etabli,
     })
+}
+
+/// Tier tirable d'une famille : (niveau requis, première valeur minimale).
+type Palier = (u32, Option<i64>);
+
+/// Tier d'un mod jamais tiré (Essence, établi) : celui du meilleur tier tirable de sa famille dont la
+/// première valeur ne dépasse pas la sienne (« vaut au moins ce tier ») ; à défaut de valeurs, par le
+/// niveau requis. Sous tous les tiers tirables : un cran sous le dernier. Famille sans tier tirable : T1.
+fn tier_hors_tirage(niveaux: &[Palier], m: &ModPoe1) -> usize {
+    if niveaux.is_empty() {
+        return 1;
+    }
+    let pos = match m.valeur {
+        Some((v, _)) if niveaux.iter().all(|(_, n)| n.is_some()) => {
+            niveaux.iter().position(|(_, n)| n.is_some_and(|n| n <= v))
+        }
+        _ => niveaux.iter().position(|&(n, _)| n <= m.niveau),
+    };
+    pos.map_or(niveaux.len() + 1, |p| p + 1)
 }
 
 fn groupe_de(m: &ModPoe1, groupes: &BTreeMap<&str, GroupId>) -> GroupId {

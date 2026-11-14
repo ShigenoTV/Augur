@@ -12,7 +12,9 @@ Le fichier réunit :
 - les préfixes et suffixes du domaine `item` (`mods.json`) : ceux qui ont un poids quelque part,
   plus les mods garantis par les Essences (poids nul, posés seulement par une Essence) ;
 - les Essences (`essences.json`) : mod garanti par classe, niveau d'objet maximal, et si elles
-  refont un objet Rare (Screaming et au-dessus) ou seulement un objet Normal.
+  refont un objet Rare (Screaming et au-dessus) ou seulement un objet Normal ;
+- les crafts d'établi qui ajoutent un mod (`crafting_bench_options.json`) : mod artisanal (domaine
+  `crafted`, gardé dans les mods avec `artisanal`), classes autorisées et coût par nom de monnaie.
 
 Seuls les champs lus par `poe2_core::poe1::forge` sont gardés. La sortie est déterministe (JSON
 canonique, gzip sans date) : deux exécutions sur les mêmes entrées donnent les mêmes octets.
@@ -37,7 +39,14 @@ from pathlib import Path
 
 SCHEMA = 1
 REPOE = "https://repoe-fork.github.io/"
-FICHIERS = ("mods.json", "base_items.json", "essences.json", "item_classes.json", "version.txt")
+FICHIERS = (
+    "mods.json",
+    "base_items.json",
+    "essences.json",
+    "item_classes.json",
+    "crafting_bench_options.json",
+    "version.txt",
+)
 RACINE = Path(__file__).resolve().parents[2]
 SORTIE = RACINE / "crates" / "poe2-core" / "data" / "forge-poe1.json.gz"
 
@@ -161,13 +170,36 @@ def essences(table: dict, items: dict) -> list[dict]:
     return sortie
 
 
-def mods(table: dict, garantis: set[str]) -> list[dict]:
+def etabli(options: list, items: dict) -> list[dict]:
+    sortie = []
+    for o in options:
+        mod = (o.get("actions") or {}).get("add_explicit_mod")
+        classes = sorted(c for c in o.get("item_classes") or [] if c in CLASSES)
+        if not mod or not classes:
+            continue
+        cout = {}
+        for cid, n in (o.get("cost") or {}).items():
+            nom = (items.get(cid) or {}).get("name")
+            if not nom:
+                raise ValueError(f"monnaie inconnue dans un craft d'établi : {cid}")
+            cout[nom] = int(n)
+        sortie.append({"mod": mod, "classes": classes, "cout": dict(sorted(cout.items()))})
+    sortie.sort(key=lambda e: (e["mod"], e["classes"]))
+    return sortie
+
+
+def mods(table: dict, garantis: set[str], artisanaux: set[str] = frozenset()) -> list[dict]:
     sortie = []
     for mid, m in table.items():
-        if m.get("domain") != "item" or m.get("generation_type") not in ("prefix", "suffix"):
+        if m.get("generation_type") not in ("prefix", "suffix"):
+            continue
+        artisanal = mid in artisanaux
+        if m.get("domain") != "item" and not artisanal:
             continue
         spawn = [[s["tag"], int(s["weight"])] for s in m.get("spawn_weights") or []]
-        if mid not in garantis and not any(w > 0 for _, w in spawn):
+        if artisanal:
+            spawn = []
+        elif mid not in garantis and not any(w > 0 for _, w in spawn):
             continue
         sortie.append(
             {
@@ -180,6 +212,9 @@ def mods(table: dict, garantis: set[str]) -> list[dict]:
                 "texte": (m.get("text") or "").replace("\r", ""),
                 "spawn": spawn,
                 "essence": bool(m.get("is_essence_only")),
+                "artisanal": artisanal,
+                # Première stat (min, max) : sert à classer un mod d'Essence ou d'établi parmi les tiers.
+                "valeur": next(([int(x["min"]), int(x["max"])] for x in m.get("stats") or []), None),
             }
         )
     sortie.sort(key=lambda m: m["id"])
@@ -193,14 +228,19 @@ def construire(dossier: Path) -> dict:
     garantis = {m for e in ess for m in e["cibles"].values()}
     if absents := sorted(garantis - set(table_mods)):
         raise ValueError(f"mods garantis absents de mods.json : {', '.join(absents)}")
+    crafts = etabli(lire_json(dossier, "crafting_bench_options.json"), items)
+    artisanaux = {c["mod"] for c in crafts}
+    if absents := sorted(artisanaux - set(table_mods)):
+        raise ValueError(f"mods d'établi absents de mods.json : {', '.join(absents)}")
     version = (dossier / "version.txt").read_text(encoding="utf-8").strip()
     return {
         "schema": SCHEMA,
         "repoe_version": version,
         "classes": classes(lire_json(dossier, "item_classes.json")),
         "bases": bases(items, table_mods),
-        "mods": mods(table_mods, garantis),
+        "mods": mods(table_mods, garantis, artisanaux),
         "essences": ess,
+        "etabli": crafts,
     }
 
 
@@ -226,7 +266,7 @@ def main(argv: list[str] | None = None) -> int:
     ecrire(d, a.out)
     print(
         f"{a.out} : RePoE PoE 1 {d['repoe_version']}, {len(d['bases'])} bases, "
-        f"{len(d['mods'])} mods, {len(d['essences'])} Essences",
+        f"{len(d['mods'])} mods, {len(d['essences'])} Essences, {len(d['etabli'])} crafts d'établi",
         file=sys.stderr,
     )
     return 0

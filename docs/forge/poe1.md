@@ -15,10 +15,11 @@ Le mode POE 2 ne change pas.
 | Chaos Orb | objet Rare refait | 1 Chaos |
 | Alchemy + Scouring | même chance que le Chaos | 1 Alchemy + 1 Scouring |
 | Chaque Essence utile | Essence dont le mod garanti est un des mods voulus, utilisable à ce niveau d'objet | 1 Essence (+ 1 Scouring sous Screaming) |
+| … + établi | chaque méthode ci-dessus, finie par le craft d'établi d'un des mods voulus (le meilleur pour la méthode) : il suffit que les autres mods voulus sortent et qu'il reste une place libre de son côté | celles de la méthode, plus le craft payé une fois |
 
 Choix de l'objet : classe, base (les homonymes comme Two-Stone Ring sont départagés par leur implicite), niveau
 d'objet, influence (Shaper, Elder, Crusader, Redeemer, Hunter, Warlord), puis les affixes voulus au tier choisi ou
-mieux. Hors de ce jalon : fossiles et résonateurs, craft d'établi et metamods, Exalted / Annulment, Harvest,
+mieux. Hors de ce jalon : fossiles et résonateurs, metamods, Exalted / Annulment, Harvest,
 Eldritch, Veiled, double influence, joyaux et flacons, suivi dans l'overlay.
 
 ## Données
@@ -31,7 +32,12 @@ PoE 2. `tools/gamedata/forge_poe1_data.py` produit `crates/poe2-core/data/forge-
 - les bases publiées de ces classes, avec leurs implicites (`base_items.json`) ;
 - les préfixes et suffixes du domaine `item` qui ont un poids, et les mods garantis des Essences (`mods.json`) ;
 - les Essences : mod garanti par classe, niveau d'objet maximal (Whispering 35, Muttering 45, Weeping 60, Wailing
-  75), et si elles refont un objet Rare (« reforges a rare item » : Screaming et au-dessus, Essences spéciales).
+  75), et si elles refont un objet Rare (« reforges a rare item » : Screaming et au-dessus, Essences spéciales) ;
+- les crafts d'établi qui ajoutent un mod (`crafting_bench_options.json`, 727 crafts) : mod artisanal, classes et
+  coût par monnaie. On suppose tous les crafts débloqués. Un seul mod artisanal par objet (sans metamod).
+
+Tier d'un mod jamais tiré (Essence, établi) : celui du meilleur tier tirable de sa famille dont la première valeur
+minimale ne dépasse pas la sienne (« vaut au moins ce tier »).
 
 Poids d'un mod sur une base : celui de la **première** étiquette de sa liste `spawn_weights` portée par l'objet
 (étiquettes de la base, plus celle de l'influence). Tiers : par famille (`type`), parmi les mods tirables sur la
@@ -58,6 +64,11 @@ Relevées dans le code de Craft of Exile pour PoE 1 (`packages/package.js`, 14/1
   PoE 1 des réglages, en Chaos), ou du prix saisi par le joueur (gardé sur le poste). Le prix de la base n'est pas
   compté. Coût moyen = coût d'un essai / chance ; essais médian et 9 sur 10 par la loi géométrique.
 
+- **Établi** : le voulu craftable n'est plus à tirer ; l'essai réussit si les autres voulus sortent, sans mauvais
+  tier de son groupe et avec une place libre de son côté. Rare : même calcul que ci-dessus ; Magique : énumération
+  exacte des tirages (l'Augmentation sert aussi quand elle laisse la place au craft). Testé contre la simulation
+  (écart < 3 %). Le coût compte le craft même quand le mod sort tout seul : c'est un majorant léger.
+
 ## Réutilisé de la Forge PoE 2
 
 Le modèle d'objet et le tirage pondéré (`forge::moteur`), l'objectif (`forge::objectif`), la colonne d'affixes du
@@ -73,5 +84,6 @@ monnaies qui refont tout l'objet.
 
 ## Suite possible (sur décision de Max)
 
-Fossiles et résonateurs (effets réels dans `fossils.json`), craft d'établi et metamods (demande un solveur PoE 1),
+Fossiles et résonateurs (effets réels dans `fossils.json`), metamods et étapes Exalt / Annul (solveur PoE 1, choisi
+par Max le 14/11),
 Alteration + Regal, suivi dans l'overlay (Ctrl+Alt+C), mise à jour PoE 1 dans `mise_a_jour.py`.

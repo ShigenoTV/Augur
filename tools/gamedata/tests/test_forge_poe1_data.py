@@ -34,7 +34,18 @@ def _sources(tmp_path: Path) -> Path:
         "LifeEssence7": _mod(poids=0, essence=True),
         "Monstre": _mod(domaine="monster"),
         "Implicite": {**_mod(generation="unique"), "text": "+(12-16)% to Fire and Lightning Resistances"},
+        "EinharMasterIncreasedLife3": {
+            **_mod(),
+            "domain": "crafted",
+            "spawn_weights": [],
+            "stats": [{"id": "base_maximum_life", "min": 41, "max": 55}],
+        },
     }
+    bench = [
+        {"actions": {"add_explicit_mod": "EinharMasterIncreasedLife3"}, "item_classes": ["Ring", "Flask"],
+         "cost": {"Metadata/Items/Currency/CurrencyUpgradeToRare": 2}},
+        {"actions": {"add_explicit_mod": None, "change_socket_count": 3}, "item_classes": ["Ring"], "cost": {}},
+    ]
     items = {
         "Metadata/Items/Rings/Ring12": {
             "domain": "item",
@@ -53,6 +64,7 @@ def _sources(tmp_path: Path) -> Path:
             "tags": ["ring"],
             "drop_level": 1,
         },
+        "Metadata/Items/Currency/CurrencyUpgradeToRare": {"domain": "undefined", "name": "Regal Orb"},
         "Metadata/Items/Currency/CurrencyEssenceGreed7": {
             "domain": "undefined",
             "release_state": "released",
@@ -76,6 +88,7 @@ def _sources(tmp_path: Path) -> Path:
         "base_items.json": items,
         "essences.json": essences,
         "item_classes.json": classes,
+        "crafting_bench_options.json": bench,
     }.items():
         (tmp_path / nom).write_text(json.dumps(contenu), encoding="utf-8")
     (tmp_path / "version.txt").write_text("3.29.3.6\n", encoding="utf-8")
@@ -89,9 +102,12 @@ def test_construit_les_donnees(tmp_path):
     assert d["bases"][0]["implicites"] == ["+(12-16)% to Fire and Lightning Resistances"]
     assert d["classes"]["Ring"]["influences"] == {"Hunter": "ring_basilisk", "Shaper": "ring_shaper"}
     ids = [m["id"] for m in d["mods"]]
-    assert ids == ["IncreasedLife1", "LifeEssence7"]  # sans poids ni Essence : écarté
-    assert d["mods"][0]["texte"] == "+(3-9) to maximum Life"
-    assert d["mods"][0]["spawn"] == [["ring", 1000], ["default", 0]]
+    assert ids == ["EinharMasterIncreasedLife3", "IncreasedLife1", "LifeEssence7"]  # sans poids ni Essence ni établi : écarté
+    craft = d["mods"][0]
+    assert craft["artisanal"] and craft["spawn"] == [] and craft["valeur"] == [41, 55]
+    assert d["etabli"] == [{"mod": "EinharMasterIncreasedLife3", "classes": ["Ring"], "cout": {"Regal Orb": 2}}]
+    assert d["mods"][1]["texte"] == "+(3-9) to maximum Life"
+    assert d["mods"][1]["spawn"] == [["ring", 1000], ["default", 0]]
     (e,) = d["essences"]
     assert e["rang"] == 7 and e["sur_rare"] and e["cibles"] == {"Ring": "LifeEssence7"}
 
