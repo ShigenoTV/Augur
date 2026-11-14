@@ -20,6 +20,7 @@ pub mod contracts;
 mod diag_log;
 mod evaluation;
 mod forge;
+mod forge_poe1;
 mod forge_prices;
 mod game;
 mod game_window;
@@ -133,6 +134,10 @@ pub fn run() {
             commands::reset_forge_prices,
             commands::refresh_forge_prices,
             commands::get_forge_bases,
+            commands::get_forge_poe1_bases,
+            commands::get_forge_poe1_affixes,
+            commands::plan_forge_poe1,
+            commands::get_forge_poe1_prices,
             commands::get_forge_affixes,
             commands::analyze_forge_item,
             commands::open_forge_buy_search,

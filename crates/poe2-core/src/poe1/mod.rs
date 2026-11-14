@@ -8,6 +8,7 @@
 //! sont fournies par l'appli.
 
 pub mod coffre;
+pub mod forge;
 pub mod ninja;
 pub mod trade;
 

@@ -20,6 +20,7 @@ import { LeagueCard, ShortcutsCard, UpgradeBudgetCard } from "./SettingsCards";
 import { afficherRaccourci, SHORTCUTS_PAR_DEFAUT } from "./shortcuts";
 import { summarizeClientLog } from "./clientLog";
 import { ForgeCard } from "./ForgeCard";
+import { ForgePoe1Card } from "./ForgePoe1Card";
 import { LedgerCard } from "./LedgerCard";
 import { StashCard } from "./StashCard";
 import { MeasureCard } from "./MeasureCard";
@@ -301,13 +302,16 @@ function App() {
         <main className="min-w-0 flex-1 space-y-5 px-8 py-6">
           <header>
             <h1 className="font-display text-2xl font-semibold text-text-primary">{courante.nom}</h1>
-            <p className="mt-1 text-sm text-text-subtle">{courante.desc}</p>
+            <p className="mt-1 text-sm text-text-subtle">
+              {page === "forge" && poe1
+                ? "Décris l'objet voulu : Forge compare les méthodes de spam (Alteration, Chaos, Alchemy, Essences) par coût moyen."
+                : courante.desc}
+            </p>
           </header>
 
           <UpdateBanner update={updates.visible} onInstall={() => void updates.install()} onLater={updates.later} />
 
           {/* Les pages restent montées : changer de page ne perd ni un plan Forge ni une session Ledger. */}
-          {page === "forge" && poe1 && <BientotPoe1 module="Forge" />}
           {page === "outils" && poe1 && <BientotPoe1 module="Outils" />}
 
           <div hidden={page !== "copilot"} className="space-y-4">
@@ -361,6 +365,10 @@ function App() {
 
           <div hidden={page !== "forge" || poe1}>
             <ForgeCard ligue={settings?.league ?? null} onReglages={() => ouvrir("reglages")} />
+          </div>
+
+          <div hidden={page !== "forge" || !poe1}>
+            <ForgePoe1Card />
           </div>
 
           <div hidden={page !== "ledger"}>

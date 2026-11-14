@@ -6,6 +6,7 @@ Générées par des scripts de `tools/gamedata/`, jamais modifiées à la main.
 |---|---|---|
 | `gemmes.json` | Chaque sort à dégâts par niveau (dégâts par type, chaînes, temps d'incantation, critique, tags d'élément ; infusion d'Arc) ; Lightning Bolt et Arc marqués vérifiés en jeu ; chaque attaque (efficacité par niveau, vitesse, conversion) ; dégâts dans le temps par seconde ; effets propres de la gemme sur les ailments (chance de poison ou de saignement, Flammability, magnitude, durée) ; gemmes de minions (dégâts d'un monstre allié de niveau 2 × niveau de gemme, table de Path of Building PoE 2 `src/Data/Misc.lua`, licence MIT) ; bases d'armes (dégâts, temps d'attaque, critique) ; texte des effets de chaque support | RePoE PoE 2, `skills.json` et `base_items.json` (https://repoe-fork.github.io/poe2/) |
 | `forge.json.gz` | Forge (`poe2-core::forge::atelier`) : mods d'objets tirables et mods garantis par les Essences, bases, relevé de poids de mods poe2db complété par Craft of Exile, et mod garanti de chaque Essence par classe (Craft of Exile) | RePoE PoE 2 (`mods.json`, `base_items.json`) ; **poids : PoE2DB / Krakenbul, CC BY-NC-SA 3.0**, complément Craft of Exile (voir ci-dessous) |
+| `forge-poe1.json.gz` | Forge PoE 1 (`poe2-core::poe1::forge`) : classes d'équipement et leurs influences, bases publiées (avec implicites), préfixes et suffixes avec leurs **vrais poids de génération** (tables du jeu), mods garantis et règles d'usage des Essences | RePoE PoE 1 (`mods.json`, `base_items.json`, `essences.json`, `item_classes.json`, https://repoe-fork.github.io/), généré par `tools/gamedata/forge_poe1_data.py` |
 | `trade-stats.json` | « Crafter ou acheter » de Forge (`poe2-core::forge::achat`) : identifiants de stats du site de trade (`explicit.stat_…`) de chaque ligne de mod de `forge.json.gz` | Exiled Exchange 2, `renderer/public/data/en/stats.ndjson` (https://github.com/Kvan7/Exiled-Exchange-2), licence MIT |
 | `arbre.json` | Texte des stats de chaque passif, version d'arbre `0_5` | Path of Building Community PoE 2, `src/TreeData/0_5/tree.json` |
 
@@ -51,6 +52,11 @@ Les poids des mods que PoE2DB n'a pas mesurés viennent de **Craft of Exile**
 (https://www.craftofexile.com/?game=poe2, mêmes estimations de Krakenbul), données tierces copiées avec leur
 attribution : [`tools/theorycraft/donnees/LICENCE-poids-coe.md`](../../../tools/theorycraft/donnees/LICENCE-poids-coe.md).
 La liste des Essences et de leur mod garanti par classe vient de la même source (même fichier d'attribution).
+
+Les données de `forge-poe1.json.gz` sont extraites des fichiers de Path of Exile 1 par RePoE
+(https://repoe-fork.github.io/) ; aucun relevé tiers de poids n'est nécessaire pour PoE 1. Les règles de tirage
+(nombre de mods d'un objet refait) ont été vérifiées dans le code de Craft of Exile (voir `docs/forge/poe1.md`),
+sans en copier de données. Régénérer : `python tools/gamedata/forge_poe1_data.py`.
 
 Les identifiants de stats du site de trade de `trade-stats.json` viennent du projet Exiled Exchange 2
 (© Alexander Drozdov et contributeurs), distribué sous licence MIT.

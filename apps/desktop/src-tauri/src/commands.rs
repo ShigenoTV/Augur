@@ -499,6 +499,38 @@ pub async fn refresh_forge_prices(
     prices.refresh(&app, &ligue).await
 }
 
+/// Forge PoE 1 : bases craftables (équipement), avec leurs implicites et influences possibles.
+#[tauri::command]
+pub fn get_forge_poe1_bases() -> Result<Vec<poe2_core::poe1::forge::BaseVue>, AppError> {
+    crate::forge_poe1::bases()
+}
+
+/// Forge PoE 1 : affixes d'une base à un niveau d'objet, influence comprise.
+#[tauri::command]
+pub fn get_forge_poe1_affixes(
+    base_id: String,
+    ilvl: u32,
+    influence: Option<String>,
+) -> Result<poe2_core::poe1::forge::AffixesPoe1, AppError> {
+    crate::forge_poe1::affixes(&base_id, ilvl, influence.as_deref())
+}
+
+/// Forge PoE 1 : méthodes de spam et chance de réussite d'un essai.
+#[tauri::command]
+pub async fn plan_forge_poe1(
+    demande: poe2_core::poe1::forge::DemandePoe1,
+) -> Result<poe2_core::poe1::forge::ResultatPoe1, AppError> {
+    crate::forge_poe1::planifier(demande).await
+}
+
+/// Forge PoE 1 : prix poe.ninja (Chaos) des monnaies et Essences.
+#[tauri::command]
+pub async fn get_forge_poe1_prices(
+    app: AppHandle,
+) -> Result<crate::forge_poe1::PrixPoe1, AppError> {
+    crate::forge_poe1::prix(&app).await
+}
+
 #[tauri::command]
 pub fn get_forge_bases() -> Result<Vec<poe2_core::forge::atelier::BaseForge>, AppError> {
     poe2_core::forge::atelier::bases().map_err(crate::forge::error)
