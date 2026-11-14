@@ -4,7 +4,7 @@
 //! La lecture des mods est celle du suivi PoE 2 (`crate::forge::suivi::lire_objet`) : en-tête avancé
 //! (`{ Prefix Modifier "Hale" (Tier: 7) — Life }`), nom d'affixe, texte, tier. Les mods artisanaux
 //! comptent comme des mods qui prennent une place, sauf un metamod (« Prefixes Cannot Be Changed »…),
-//! que le plan connaît.
+//! que le plan connaît. Les mods fracturés restent sur l'objet : le plan ne les retire jamais.
 
 use serde::Serialize;
 
@@ -89,10 +89,18 @@ fn lire(
         return Err(erreur("objet non identifié"));
     }
     let mut lu = lire_objet(&pb.pool, goal, pb.ilvl, objet).map_err(erreur_suivi)?;
-    if lu.mods.iter().any(|m| m.fracture) {
-        return Err(erreur(
-            "objet fracturé : pas encore pris en compte par la Forge PoE 1",
-        ));
+    // Un mod fracturé reste sur l'objet : il doit être connu, et ne pas prendre la place d'un voulu.
+    if let Some(m) = lu.mods.iter().find(|m| m.fracture && !m.reconnu) {
+        return Err(erreur(format!(
+            "mod fracturé « {} » non reconnu sur cette base",
+            m.texte
+        )));
+    }
+    if let Some(m) = lu.mods.iter().find(|m| m.fracture && m.tier_trop_bas) {
+        return Err(erreur(format!(
+            "le mod fracturé « {} » prend la place d'un mod voulu (tier trop bas) : objectif impossible",
+            m.texte
+        )));
     }
     let mut inconnus = [lu.inconnus.0, lu.inconnus.1];
     // Un metamod artisanal ne compte pas comme un mod inconnu : le plan le connaît.
@@ -118,6 +126,13 @@ fn lire(
         mods: lu.item.mods().iter().map(|m| m.idx).collect(),
         inconnus,
         metamod,
+        fractures: lu
+            .item
+            .mods()
+            .iter()
+            .filter(|m| m.fractured)
+            .map(|m| m.idx)
+            .collect(),
     };
     Ok((lu.mods, objet_solveur))
 }

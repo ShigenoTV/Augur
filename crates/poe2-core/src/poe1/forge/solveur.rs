@@ -231,6 +231,23 @@ fn cote(s: Slot) -> usize {
     }
 }
 
+/// Ajoute un mod du pool à l'état abstrait (voulu, voulu bloqué ou autre).
+fn classer(
+    goal: &Goal,
+    cotes: &[usize],
+    pool: &AffixPool,
+    i: AffixIdx,
+    e: &mut Etat,
+) -> Option<()> {
+    let a = pool.affixes.get(i as usize)?;
+    match goal.classify(pool, i) {
+        Class::Wanted(k) if cote(a.slot) == cotes[k] => e.bons |= 1 << k,
+        Class::Wanted(k) | Class::Blocked(k) => e.bloques |= 1 << k,
+        Class::Other => e.autres[cote(a.slot)] += 1,
+    }
+    Some(())
+}
+
 /// Poids tirables d'une variante (sans filtre, sans attaque, sans sort).
 struct Tirage {
     /// Par voulu, sur son côté : poids accepté et poids d'un mauvais tier.
@@ -391,6 +408,8 @@ struct Modele<'a> {
     metamods: Vec<(Meta, String, CoutEtabli)>,
     /// Craft final le moins cher par voulu : (texte, coût).
     finitions: Vec<Option<(String, CoutEtabli)>>,
+    /// Mods fracturés de l'objet de départ : jamais retirés ni relancés (rareté sans objet).
+    fixe: Etat,
 
     etats: Vec<Etat>,
     index: HashMap<Etat, usize>,
@@ -416,6 +435,29 @@ impl<'a> Modele<'a> {
             Rarete::Magique => self.cap_magique,
             _ => self.cap_rare,
         }
+    }
+
+    /// Objet ne portant que ses mods fracturés, à la rareté donnée.
+    fn base(&self, r: Rarete) -> Etat {
+        let mut e = self.fixe;
+        e.rarete = r;
+        e
+    }
+
+    /// Nombre de mods fracturés.
+    fn nb_fixes(&self) -> u8 {
+        self.n(&self.fixe, 0) + self.n(&self.fixe, 1)
+    }
+
+    /// Rareté après un Scouring : Normal sans mod, Magique avec un mod gardé, Rare au-delà.
+    fn decape(&self, mut s: Etat) -> Etat {
+        s.meta = Meta::Aucun;
+        s.rarete = match self.n(&s, 0) + self.n(&s, 1) {
+            0 => Rarete::Normal,
+            1 => Rarete::Magique,
+            _ => Rarete::Rare,
+        };
+        s
     }
 
     /// Issues d'un mod ajouté : (poids, état). Vide si rien ne peut être ajouté.
@@ -474,30 +516,52 @@ impl<'a> Modele<'a> {
     fn loi(&self, cle: &Cle) -> HashMap<Etat, f64> {
         let mut sortie = HashMap::new();
         match *cle {
+            // Les mods fracturés restent : on tire le nombre de mods total moins ceux gardés.
             Cle::Magique => {
-                let vide = Etat::vide(Rarete::Magique);
-                self.tirer(vide, 1, 0, 1.0 - DEUX_MODS_MAGIQUE, &mut sortie);
-                self.tirer(vide, 2, 0, DEUX_MODS_MAGIQUE, &mut sortie);
+                let vide = self.base(Rarete::Magique);
+                let f = self.nb_fixes();
+                self.tirer(
+                    vide,
+                    1u8.saturating_sub(f),
+                    0,
+                    1.0 - DEUX_MODS_MAGIQUE,
+                    &mut sortie,
+                );
+                self.tirer(
+                    vide,
+                    2u8.saturating_sub(f),
+                    0,
+                    DEUX_MODS_MAGIQUE,
+                    &mut sortie,
+                );
             }
             Cle::Rare => {
+                let f = self.nb_fixes();
                 for (n, p) in MODS_RARE {
-                    self.tirer(Etat::vide(Rarete::Rare), n, 0, p, &mut sortie);
+                    self.tirer(
+                        self.base(Rarete::Rare),
+                        n.saturating_sub(f),
+                        0,
+                        p,
+                        &mut sortie,
+                    );
                 }
             }
             Cle::Essence(i) => {
                 let k = self.essences[i].1;
-                let mut e = Etat::vide(Rarete::Rare);
-                e.bons = 1 << k;
+                let mut e = self.base(Rarete::Rare);
+                e.bons |= 1 << k;
+                let f = self.nb_fixes();
                 for (n, p) in MODS_RARE {
-                    self.tirer(e, n - 1, 0, p, &mut sortie);
+                    self.tirer(e, n.saturating_sub(1 + f), 0, p, &mut sortie);
                 }
             }
             Cle::Verrou(c, bons, bloques, autres) => {
-                let mut e = Etat::vide(Rarete::Rare);
-                e.bons = bons;
-                e.bloques = bloques;
-                e.autres[c] = autres;
-                let gardes = self.n(&e, c);
+                let mut e = self.base(Rarete::Rare);
+                e.bons |= bons;
+                e.bloques |= bloques;
+                e.autres[c] = e.autres[c].max(autres);
+                let gardes = self.n(&e, 0) + self.n(&e, 1);
                 for (n, p) in MODS_RARE {
                     self.tirer(e, n.saturating_sub(gardes), 0, p, &mut sortie);
                 }
@@ -581,12 +645,7 @@ impl<'a> Modele<'a> {
         }
         e.autres = o.inconnus;
         for &i in &o.mods {
-            let a = pool.affixes.get(i as usize)?;
-            match self.goal.classify(pool, i) {
-                Class::Wanted(k) if cote(a.slot) == self.cotes[k] => e.bons |= 1 << k,
-                Class::Wanted(k) | Class::Blocked(k) => e.bloques |= 1 << k,
-                Class::Other => e.autres[cote(a.slot)] += 1,
-            }
+            classer(self.goal, &self.cotes, pool, i, &mut e)?;
         }
         let cap = match rarete {
             Rarete::Normal => [0, 0],
@@ -633,7 +692,6 @@ impl<'a> Modele<'a> {
                     .collect(),
             )
         };
-        let nb_mods = |m: &Self, e: &Etat| m.n(e, 0) + m.n(e, 1);
 
         match e.rarete {
             Rarete::Normal => {
@@ -692,16 +750,21 @@ impl<'a> Modele<'a> {
                     let issue = vers(self, un, a_visiter);
                     ajouter(self, Genre::Regal, REGAL, &[(REGAL, 1.0)], issue);
                 }
-                let i0 = self.etat(Etat::vide(Rarete::Normal), a_visiter);
-                ajouter(
-                    self,
-                    Genre::Scouring,
-                    SCOURING,
-                    &[(SCOURING, 1.0)],
-                    Issue::Etats(vec![(i0, 1.0)]),
-                );
-                if nb_mods(self, &e) > 0 {
-                    let issue = self.annuler(&e, a_visiter);
+                let s = self.decape(self.base(Rarete::Normal));
+                if s != e {
+                    let i0 = self.etat(s, a_visiter);
+                    ajouter(
+                        self,
+                        Genre::Scouring,
+                        SCOURING,
+                        &[(SCOURING, 1.0)],
+                        Issue::Etats(vec![(i0, 1.0)]),
+                    );
+                }
+                let issue = self.annuler(&e, a_visiter);
+                if let Issue::Etats(v) = &issue
+                    && !v.is_empty()
+                {
                     ajouter(
                         self,
                         Genre::Annulment,
@@ -733,15 +796,11 @@ impl<'a> Modele<'a> {
                             Issue::Noeud(h),
                         );
                         // Scouring : garde le côté verrouillé.
-                        let mut s = Etat::vide(Rarete::Normal);
-                        s.bons = e.bons & masque;
-                        s.bloques = e.bloques & masque;
+                        let mut s = self.base(Rarete::Normal);
+                        s.bons |= e.bons & masque;
+                        s.bloques |= e.bloques & masque;
                         s.autres[c] = e.autres[c];
-                        s.rarete = match self.n(&s, c) {
-                            0 => Rarete::Normal,
-                            1 => Rarete::Magique,
-                            _ => Rarete::Rare,
-                        };
+                        let s = self.decape(s);
                         let is = self.etat(s, a_visiter);
                         let libelle = format!("{SCOURING} ({})", verrou_texte(c));
                         ajouter(
@@ -755,7 +814,8 @@ impl<'a> Modele<'a> {
                     None => {
                         let h = self.noeud(Cle::Rare, a_visiter);
                         ajouter(self, Genre::Chaos, CHAOS, &[(CHAOS, 1.0)], Issue::Noeud(h));
-                        let i0 = self.etat(Etat::vide(Rarete::Normal), a_visiter);
+                        let s = self.decape(self.base(Rarete::Normal));
+                        let i0 = self.etat(s, a_visiter);
                         ajouter(
                             self,
                             Genre::Scouring,
@@ -861,13 +921,15 @@ impl<'a> Modele<'a> {
             .fold(0, |m, k| m | (1 << k))
     }
 
-    /// Annulment : un mod au hasard (chances égales) hors du côté verrouillé, metamod compris.
+    /// Annulment : un mod au hasard (chances égales) hors du côté verrouillé et des mods fracturés,
+    /// metamod compris.
     fn annuler(&mut self, e: &Etat, a_visiter: &mut Vec<usize>) -> Issue {
         let verrou = e.meta.verrou();
         let libre = |c: usize| verrou != Some(c);
+        let fixe = self.fixe;
         let mut issues: Vec<Etat> = Vec::new();
         for (k, &cote) in self.cotes.iter().enumerate().take(self.goal.len()) {
-            if !libre(cote) {
+            if !libre(cote) || (fixe.bons | fixe.bloques) & (1 << k) != 0 {
                 continue;
             }
             if e.bons & (1 << k) != 0 {
@@ -883,7 +945,7 @@ impl<'a> Modele<'a> {
         }
         for c in 0..2 {
             if libre(c) {
-                for _ in 0..e.autres[c] {
+                for _ in 0..e.autres[c].saturating_sub(fixe.autres[c]) {
                     let mut s = *e;
                     s.autres[c] -= 1;
                     issues.push(s);
@@ -1249,6 +1311,8 @@ pub struct ObjetSolveur {
     pub inconnus: [u8; 2],
     /// Metamod d'établi présent : son texte dans le pool (voir [`textes_metamods`]).
     pub metamod: Option<String>,
+    /// Mods fracturés (indices, aussi présents dans `mods`) : ils restent sur l'objet quoi qu'on fasse.
+    pub fractures: Vec<AffixIdx>,
 }
 
 /// Plan au coût moyen minimal depuis un objet donné (`None` : objet Normal neuf).
@@ -1478,11 +1542,22 @@ fn resoudre_depuis<'a>(
     let (mp, ms) = pool.cap(Rarity::Magic);
     let (rp, rs) = pool.cap(Rarity::Rare);
 
+    // Mods fracturés : un voulu bloqué par un mod fracturé rend l'objectif impossible.
+    let mut fixe = Etat::vide(Rarete::Normal);
+    for &i in objet.map(|o| o.fractures.as_slice()).unwrap_or_default() {
+        classer(goal, &cotes, pool, i, &mut fixe)?;
+    }
+    if fixe.bloques != 0 {
+        return None;
+    }
     let essences = pb
         .essences
         .iter()
         .filter_map(|e| match goal.classify(pool, e.affixe) {
-            Class::Wanted(k) => Some((e.essence.nom.clone(), k, e.essence.sur_rare, e.affixe)),
+            // Le groupe d'un mod fracturé est déjà pris : l'Essence n'y peut rien.
+            Class::Wanted(k) if fixe.bons & (1 << k) == 0 => {
+                Some((e.essence.nom.clone(), k, e.essence.sur_rare, e.affixe))
+            }
             _ => None,
         })
         .collect();
@@ -1528,6 +1603,7 @@ fn resoudre_depuis<'a>(
             .into_iter()
             .map(|f| f.map(|(t, c, _)| (t, c)))
             .collect(),
+        fixe,
         etats: Vec::new(),
         index: HashMap::new(),
         noeuds: Vec::new(),
@@ -1539,11 +1615,10 @@ fn resoudre_depuis<'a>(
         sans_prix: Vec::new(),
     };
 
-    // Exploration des états atteignables depuis l'objet Normal.
+    // Exploration des états atteignables depuis l'objet de départ.
     let mut a_visiter = Vec::new();
-    let neuf = m.etat(Etat::vide(Rarete::Normal), &mut a_visiter);
     let depart = match objet {
-        None => neuf,
+        None => m.etat(Etat::vide(Rarete::Normal), &mut a_visiter),
         Some(o) => {
             let e = m.etat_objet(pool, o)?;
             if m.reussi(&e) {
@@ -1741,17 +1816,35 @@ mod tests {
 
     /// Coût moyen de la politique optimale, simulée sur le moteur exact.
     fn simuler(sol: &Solution, pb: &PoolPoe1, n: usize) -> f64 {
+        let neuf = Objet {
+            rarete: Rarete::Normal,
+            mods: Vec::new(),
+            meta: Meta::Aucun,
+        };
+        simuler_depuis(sol, pb, n, &neuf, &[])
+    }
+
+    /// Même simulation depuis un objet donné, dont les mods `fixes` (fracturés) ne partent jamais.
+    fn simuler_depuis(
+        sol: &Solution,
+        pb: &PoolPoe1,
+        n: usize,
+        depart: &Objet,
+        fixes: &[u16],
+    ) -> f64 {
         let pool = &pb.pool;
         let ilvl = pb.ilvl;
         let m = &sol.m;
         let mut rng = SmallRng::seed_from_u64(11);
         let mut total = 0.0;
+        let nf = fixes.len() as u8;
+        let rarete_decape = |nb: usize| match nb {
+            0 => Rarete::Normal,
+            1 => Rarete::Magique,
+            _ => Rarete::Rare,
+        };
         for _ in 0..n {
-            let mut o = Objet {
-                rarete: Rarete::Normal,
-                mods: Vec::new(),
-                meta: Meta::Aucun,
-            };
+            let mut o = depart.clone();
             for _pas in 0..100_000 {
                 let e = abstrait(m, pool, &o);
                 if m.reussi(&e) {
@@ -1769,28 +1862,30 @@ mod tests {
                     Genre::Transmutation | Genre::Alteration => {
                         o = Objet {
                             rarete: Rarete::Magique,
-                            mods: Vec::new(),
+                            mods: fixes.to_vec(),
                             meta: Meta::Aucun,
                         };
                         let nb = if rng.random::<f64>() < DEUX_MODS_MAGIQUE {
-                            2
+                            2u8
                         } else {
                             1
-                        };
+                        }
+                        .saturating_sub(nf);
                         for _ in 0..nb {
                             ajouter(pool, ilvl, &mut o, magique, 0, &mut rng);
                         }
                     }
                     Genre::Alchemy | Genre::Chaos => {
-                        let garde: Vec<u16> = match o.meta.verrou() {
-                            Some(c) => o
-                                .mods
-                                .iter()
-                                .copied()
-                                .filter(|&i| cote(pool.affixes[i as usize].slot) == c)
-                                .collect(),
-                            None => Vec::new(),
-                        };
+                        let verrou = o.meta.verrou();
+                        let garde: Vec<u16> = o
+                            .mods
+                            .iter()
+                            .copied()
+                            .filter(|&i| {
+                                fixes.contains(&i)
+                                    || Some(cote(pool.affixes[i as usize].slot)) == verrou
+                            })
+                            .collect();
                         let nb = nombre_rare(&mut rng).saturating_sub(garde.len() as u8);
                         o = Objet {
                             rarete: Rarete::Rare,
@@ -1802,10 +1897,12 @@ mod tests {
                         }
                     }
                     Genre::Essence(j) => {
-                        let nb = nombre_rare(&mut rng) - 1;
+                        let nb = nombre_rare(&mut rng).saturating_sub(1 + nf);
+                        let mut mods = fixes.to_vec();
+                        mods.push(m.essences[j].3);
                         o = Objet {
                             rarete: Rarete::Rare,
-                            mods: vec![m.essences[j].3],
+                            mods,
                             meta: Meta::Aucun,
                         };
                         for _ in 0..nb {
@@ -1830,6 +1927,7 @@ mod tests {
                         let libres: Vec<usize> = (0..o.mods.len())
                             .filter(|&i| {
                                 Some(cote(pool.affixes[o.mods[i] as usize].slot)) != verrou
+                                    && !fixes.contains(&o.mods[i])
                             })
                             .collect();
                         let meta_libre = o.meta.cote().is_some_and(|c| Some(c) != verrou);
@@ -1841,24 +1939,15 @@ mod tests {
                             o.meta = Meta::Aucun;
                         }
                     }
-                    Genre::Scouring => match o.meta.verrou() {
-                        Some(c) => {
-                            o.mods.retain(|&i| cote(pool.affixes[i as usize].slot) == c);
-                            o.meta = Meta::Aucun;
-                            o.rarete = match o.mods.len() {
-                                0 => Rarete::Normal,
-                                1 => Rarete::Magique,
-                                _ => Rarete::Rare,
-                            };
-                        }
-                        None => {
-                            o = Objet {
-                                rarete: Rarete::Normal,
-                                mods: Vec::new(),
-                                meta: Meta::Aucun,
-                            }
-                        }
-                    },
+                    Genre::Scouring => {
+                        let verrou = o.meta.verrou();
+                        o.mods.retain(|&i| {
+                            fixes.contains(&i)
+                                || Some(cote(pool.affixes[i as usize].slot)) == verrou
+                        });
+                        o.meta = Meta::Aucun;
+                        o.rarete = rarete_decape(o.mods.len());
+                    }
                     Genre::Meta(mt) => o.meta = mt,
                     Genre::RetirerMeta => o.meta = Meta::Aucun,
                     Genre::Finition => break,
@@ -2066,6 +2155,63 @@ mod tests {
         assert!(
             (sol.cout_moyen - sim).abs() / sim < 0.05,
             "solveur {} contre simulation {sim}",
+            sol.cout_moyen
+        );
+    }
+
+    #[test]
+    fn objet_fracture_garde_son_mod() {
+        // Glorious Plate rare : vie fracturée (voulue), un mauvais suffixe ; on veut vie + feu + froid.
+        let pb = construire_pool(ARMURE, 84, None).unwrap();
+        let pool = &pb.pool;
+        let idx = |id: &str| pool.affixes.iter().position(|a| a.id == id).unwrap() as u16;
+        let goal = Goal::new(
+            pool,
+            &[
+                voulu(pool, "IncreasedLife8"),
+                voulu(pool, "FireResist4"),
+                voulu(pool, "ColdResist4"),
+            ],
+        )
+        .unwrap();
+        let vie = idx("IncreasedLife8");
+        let autre = idx("LightningResist1");
+        let prix = cote_marche();
+        let objet = ObjetSolveur {
+            rarete: Rarity::Rare,
+            mods: vec![vie, autre],
+            inconnus: [0, 0],
+            metamod: None,
+            fractures: vec![vie],
+        };
+        let sol = resoudre_depuis(&pb, &goal, &prix, Some(&objet)).expect("plan");
+        // Aucun état du modèle n'a perdu la vie fracturée.
+        assert!(
+            sol.m.etats.iter().all(|e| e.bons & 1 != 0),
+            "vie fracturée perdue"
+        );
+        // Le même objet sans fracture coûte plus cher : la vie peut partir.
+        let libre = ObjetSolveur {
+            fractures: Vec::new(),
+            ..objet.clone()
+        };
+        let sans = resoudre_depuis(&pb, &goal, &prix, Some(&libre)).expect("plan");
+        assert!(
+            sol.cout_moyen <= sans.cout_moyen + 1e-9,
+            "{} contre {}",
+            sol.cout_moyen,
+            sans.cout_moyen
+        );
+        let depart = Objet {
+            rarete: Rarete::Rare,
+            mods: vec![vie, autre],
+            meta: Meta::Aucun,
+        };
+        let simule = simuler_depuis(&sol, &pb, 20_000, &depart, &[vie]);
+        let ecart = (simule - sol.cout_moyen).abs() / sol.cout_moyen;
+        assert!(
+            ecart < 0.08,
+            "simulé {simule}, calculé {} ({ecart})",
             sol.cout_moyen
         );
     }

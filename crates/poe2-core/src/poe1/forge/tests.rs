@@ -689,3 +689,72 @@ fn plan_depuis_l_objet_de_depart() {
         Err(ErreurForgePoe1::ObjetDepart(_))
     ));
 }
+
+const PLAQUE_FRACTUREE: &str = r#"Item Class: Body Armours
+Rarity: Rare
+Doom Shell
+Glorious Plate
+--------
+Armour: 553
+--------
+Requirements:
+Level: 68
+Str: 191
+--------
+Item Level: 84
+--------
+{ Fractured Prefix Modifier "Athlete's" (Tier: 2) — Life }
++120(115-129) to maximum Life (fractured)
+{ Suffix Modifier "of the Kiln" (Tier: 4) — Elemental, Fire, Resistance }
++26(24-29)% to Fire Resistance
+--------
+Fractured Item
+"#;
+
+#[test]
+fn objet_fracture_lu_et_planifie() {
+    let o = analyser_objet(PLAQUE_FRACTUREE).unwrap();
+    let fractures: Vec<bool> = o.mods.iter().map(|m| m.fracture).collect();
+    assert_eq!(fractures, [true, false]);
+    assert!(o.mods.iter().all(|m| m.reconnu));
+
+    let pb = construire_pool(PLAQUE, 84, None).unwrap();
+    let demande = DemandePoe1 {
+        base_id: PLAQUE.into(),
+        ilvl: 84,
+        influence: None,
+        voulus: vec![
+            voulu(&pb.pool, "IncreasedLife8"),
+            voulu(&pb.pool, "FireResist4"),
+            voulu(&pb.pool, "ColdResist4"),
+        ],
+        prix: [
+            ("Chaos Orb", 1.0),
+            ("Orb of Alchemy", 0.03),
+            ("Orb of Transmutation", 0.03),
+            ("Orb of Alteration", 0.07),
+            ("Orb of Augmentation", 0.04),
+            ("Regal Orb", 0.35),
+            ("Exalted Orb", 12.0),
+            ("Orb of Annulment", 3.0),
+            ("Orb of Scouring", 0.4),
+            ("Divine Orb", 150.0),
+        ]
+        .into_iter()
+        .map(|(n, p)| (n.to_string(), p))
+        .collect(),
+        objet_depart: Some(PLAQUE_FRACTUREE.into()),
+    };
+    let r = planifier(&demande).unwrap();
+    let plan = r.plan.expect("plan depuis l'objet fracturé");
+    // La vie fracturée reste dans toutes les situations du plan.
+    assert!(plan.etapes.iter().all(|e| e.voulus.contains(&0)));
+
+    // Un mod fracturé au mauvais tier bloque l'objectif.
+    let mut bloque = demande.clone();
+    bloque.voulus[0] = voulu(&pb.pool, "IncreasedLife12");
+    assert!(matches!(
+        planifier(&bloque),
+        Err(ErreurForgePoe1::ObjetDepart(_))
+    ));
+}

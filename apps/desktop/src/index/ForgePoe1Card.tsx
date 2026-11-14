@@ -715,6 +715,11 @@ export function ForgePoe1Card() {
       {depart?.objet.metamod && (
         <p className="text-xs text-text-subtle">Metamod d'établi sur l'objet : {depart.objet.metamod}.</p>
       )}
+      {depart?.objet.mods.some((m) => m.fracture) && (
+        <p className="text-xs text-text-subtle">
+          Objet fracturé : le mod fracturé reste quoi qu'on fasse, le plan ne le retire jamais.
+        </p>
+      )}
 
       {affixes && (
         <>
