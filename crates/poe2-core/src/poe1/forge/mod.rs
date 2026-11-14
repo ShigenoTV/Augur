@@ -24,7 +24,7 @@ use crate::forge::{Goal, GroupId, Slot, WantedAffix};
 
 pub use calcul::{MethodePoe1, ResultatPoe1};
 pub use donnees::{BaseVue, ErreurForgePoe1, bases, construire_pool, donnees};
-pub use solveur::{PlanPoe1, UsageAction};
+pub use solveur::{EtapePlan, PlanPoe1, UsageAction};
 
 /// Affixes d'une base PoE 1 à un niveau d'objet.
 #[derive(Clone, Debug, PartialEq, Serialize)]

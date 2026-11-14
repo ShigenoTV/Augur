@@ -17,13 +17,16 @@ import { AffixColumn } from "./ForgeCard";
 import { cleAffixe, libelleCourt, lirePrix } from "./forge";
 import {
   VOULUS_MAX_PLAN,
+  type SituationPoe1,
   chiffrer,
+  decisions,
   formatChance,
   formatChaos,
   formatEssais,
   libelleBase,
   prixEffectif,
   prixPourPlan,
+  trouverEtape,
 } from "./forgePoe1";
 
 const btn = "rounded-chip px-3 py-1.5 text-sm font-semibold disabled:opacity-50";
@@ -101,16 +104,144 @@ function PrixUtilises({
   );
 }
 
+const SITUATIONS_MONTREES = 4;
+
+/** Pas à pas : quoi faire selon l'objet obtenu, en règles puis pour l'objet du joueur. */
+function PasAPas({ plan, noms, divine }: { plan: ForgePoe1Plan; noms: string[]; divine: number | null }) {
+  const regles = useMemo(() => decisions(plan.etapes, noms), [plan, noms]);
+  const metamods = useMemo(
+    () => [...new Set(plan.etapes.flatMap((e) => (e.metamod ? [e.metamod] : [])))].sort(),
+    [plan],
+  );
+  const [situation, setSituation] = useState<SituationPoe1>({
+    rarete: "Normal",
+    voulus: noms.map(() => "absent"),
+    autresPrefixes: 0,
+    autresSuffixes: 0,
+    metamod: null,
+  });
+  const etape = trouverEtape(plan.etapes, situation);
+  const maj = (p: Partial<SituationPoe1>) => setSituation((s) => ({ ...s, ...p }));
+  const compte = (valeur: number, onChange: (n: number) => void, label: string) => (
+    <label className="flex items-center gap-1">
+      {label}
+      <select value={valeur} onChange={(e) => onChange(Number(e.target.value))} className={input} aria-label={label}>
+        {[0, 1, 2, 3].map((n) => (
+          <option key={n} value={n}>
+            {n}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+  return (
+    <details className="text-xs text-text-muted">
+      <summary className="cursor-pointer text-text-subtle">Pas à pas : quoi faire selon l'objet obtenu</summary>
+      <ul className="mt-2 space-y-1.5">
+        {regles.map((r) => (
+          <li key={`${r.rarete}-${r.action}`}>
+            <span className="text-text-subtle">Objet {r.rarete} : </span>
+            <span className="font-semibold text-text-primary">{r.action}</span>
+            {r.parDefaut ? (
+              <span> dans les autres cas.</span>
+            ) : r.rarete === "Normal" ? null : (
+              <>
+                <span> si </span>
+                {r.situations.slice(0, SITUATIONS_MONTREES).join(" ; ")}
+                {r.situations.length > SITUATIONS_MONTREES &&
+                  ` ; et ${r.situations.length - SITUATIONS_MONTREES} autre(s) cas`}
+                .
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 space-y-2 rounded-card border border-ink-700 p-2">
+        <p className="text-text-subtle">Où en est ton objet ?</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-1">
+            Rareté
+            <select
+              value={situation.rarete}
+              onChange={(e) => maj({ rarete: e.target.value as SituationPoe1["rarete"] })}
+              className={input}
+              aria-label="Rareté"
+            >
+              <option value="Normal">Normal</option>
+              <option value="Magique">Magique</option>
+              <option value="Rare">Rare</option>
+            </select>
+          </label>
+          {noms.map((nom, i) => (
+            <label key={i} className="flex items-center gap-1">
+              {nom}
+              <select
+                value={situation.voulus[i]}
+                onChange={(e) =>
+                  maj({
+                    voulus: situation.voulus.map((v, j) =>
+                      j === i ? (e.target.value as SituationPoe1["voulus"][number]) : v,
+                    ),
+                  })
+                }
+                className={input}
+                aria-label={nom}
+              >
+                <option value="absent">absent</option>
+                <option value="present">présent</option>
+                <option value="bas">tier trop bas</option>
+              </select>
+            </label>
+          ))}
+          {compte(situation.autresPrefixes, (n) => maj({ autresPrefixes: n }), "Autres préfixes")}
+          {compte(situation.autresSuffixes, (n) => maj({ autresSuffixes: n }), "Autres suffixes")}
+          {metamods.length > 0 && (
+            <label className="flex items-center gap-1">
+              Metamod
+              <select
+                value={situation.metamod ?? ""}
+                onChange={(e) => maj({ metamod: e.target.value || null })}
+                className={input}
+                aria-label="Metamod"
+              >
+                <option value="">aucun</option>
+                {metamods.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+        {etape ? (
+          <p className="text-sm">
+            À faire : <span className="font-semibold text-accent">{etape.action}</span>
+            <span className="text-xs text-text-muted">
+              {" "}
+              (reste environ {formatChaos(etape.reste, divine)} en moyenne)
+            </span>
+          </p>
+        ) : (
+          <p className="text-text-subtle">
+            Le plan ne passe presque jamais par cette situation : vérifie l'objet, ou repars d'un objet Normal.
+          </p>
+        )}
+      </div>
+    </details>
+  );
+}
+
 /** Plan au coût moyen minimal, quand le solveur en a trouvé un. */
 function PlanConseille({
   plan,
-  nbVoulus,
+  noms,
   spam,
   divine,
   prixChanges,
 }: {
   plan: ForgePoe1Plan | null;
-  nbVoulus: number;
+  noms: string[];
   spam: number | null;
   divine: number | null;
   prixChanges: boolean;
@@ -118,7 +249,7 @@ function PlanConseille({
   if (!plan) {
     return (
       <p className="text-[11px] text-text-subtle">
-        {nbVoulus > VOULUS_MAX_PLAN
+        {noms.length > VOULUS_MAX_PLAN
           ? `Plan conseillé (Exalted, Annulment, metamods) : jusqu'à ${VOULUS_MAX_PLAN} mods voulus pour l'instant.`
           : "Pas de plan conseillé : des prix manquent, ou l'objet est hors d'atteinte."}
       </p>
@@ -130,7 +261,10 @@ function PlanConseille({
       <p className="text-sm text-text-muted">
         Plan conseillé : environ{" "}
         <span className="font-semibold text-accent">{formatChaos(plan.coutMoyen, divine)}</span> en moyenne
-        {gain != null && gain >= 1.05 ? `, ${gain.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} fois moins que le meilleur spam` : ""}.
+        {gain != null && gain >= 1.05
+          ? `, ${gain.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} fois moins que le meilleur spam`
+          : ""}
+        .
       </p>
       <p className="text-xs text-text-muted">
         Commence par : <span className="text-text-primary">{plan.depart}</span>. Ensuite, à chaque étape, la meilleure
@@ -152,11 +286,14 @@ function PlanConseille({
           ))}
         </tbody>
       </table>
+      {plan.etapes.length > 0 && <PasAPas plan={plan} noms={noms} divine={divine} />}
       {plan.sansPrix.length > 0 && (
         <p className="text-[11px] text-text-subtle">Actions écartées faute de prix : {plan.sansPrix.join(", ")}.</p>
       )}
       {prixChanges && (
-        <p className="text-[11px] text-signal-warn">Un prix a changé depuis le calcul : relance « Comparer les méthodes ».</p>
+        <p className="text-[11px] text-signal-warn">
+          Un prix a changé depuis le calcul : relance « Comparer les méthodes ».
+        </p>
       )}
     </section>
   );
@@ -167,14 +304,15 @@ function Resultat({
   prix,
   saisis,
   onSaisie,
-  nbVoulus,
+  nomsVoulus,
   prixChanges,
 }: {
   result: ForgePoe1Result;
   prix: ForgePoe1Prices | null;
   saisis: Record<string, number>;
   onSaisie: (nom: string, v: number | null) => void;
-  nbVoulus: number;
+  /** Noms courts des mods voulus, dans l'ordre de la demande. */
+  nomsVoulus: string[];
   prixChanges: boolean;
 }) {
   const lignes = chiffrer(result.methodes, prix?.prix ?? {}, saisis);
@@ -191,7 +329,7 @@ function Resultat({
     <div className="space-y-3">
       <PlanConseille
         plan={result.plan}
-        nbVoulus={nbVoulus}
+        noms={nomsVoulus}
         spam={meilleure?.coutMoyen ?? null}
         divine={divine}
         prixChanges={prixChanges}
@@ -236,7 +374,11 @@ function Resultat({
                   </td>
                   <td className="pr-3 font-mono">{formatChance(m.chance)}</td>
                   <td className="pr-3 font-mono">
-                    {m.coutEssai != null ? formatChaos(m.coutEssai) : <span className="text-signal-warn">prix inconnu</span>}
+                    {m.coutEssai != null ? (
+                      formatChaos(m.coutEssai)
+                    ) : (
+                      <span className="text-signal-warn">prix inconnu</span>
+                    )}
                   </td>
                   <td className="pr-3 font-mono text-text-primary">{formatChaos(m.coutMoyen, divine)}</td>
                   <td className="font-mono">
@@ -285,7 +427,10 @@ export function ForgePoe1Card() {
 
   useEffect(() => {
     if (!isTauri()) return;
-    void commands.getForgePoe1Bases().then(setBases).catch((e) => setError(message(e)));
+    void commands
+      .getForgePoe1Bases()
+      .then(setBases)
+      .catch((e) => setError(message(e)));
   }, []);
 
   const classes = useMemo(() => [...new Set(bases.map((b) => b.classe))].sort((a, b) => a.localeCompare(b)), [bases]);
@@ -330,7 +475,13 @@ export function ForgePoe1Card() {
       const cote = prix ?? (await commands.getForgePoe1Prices().catch(() => null));
       if (!prix) setPrix(cote);
       const envoyes = prixPourPlan(cote?.prix ?? {}, saisis);
-      const demande: ForgePoe1Request = { baseId, ilvl, influence, voulus, prix: envoyes };
+      const demande: ForgePoe1Request = {
+        baseId,
+        ilvl,
+        influence,
+        voulus,
+        prix: envoyes,
+      };
       setResult(await commands.planForgePoe1(demande));
       setPrixCalcul(JSON.stringify(envoyes));
     } catch (err) {
@@ -349,6 +500,11 @@ export function ForgePoe1Card() {
       return n;
     });
   }
+
+  const nomsVoulus = voulus.map((w, i) => {
+    const a = affixes?.affixes.find((x) => cleAffixe(x) === cleAffixe(w));
+    return a ? libelleCourt(a.libelle) : `mod ${i + 1}`;
+  });
 
   if (!isTauri()) {
     return <p className="text-sm text-text-subtle">Forge fonctionne dans l'application.</p>;
@@ -453,14 +609,24 @@ export function ForgePoe1Card() {
             />
           </div>
           <div className="flex items-center gap-3">
-            <button type="button" disabled={busy || voulus.length === 0} onClick={() => void calculer()} className={btnPrimary}>
+            <button
+              type="button"
+              disabled={busy || voulus.length === 0}
+              onClick={() => void calculer()}
+              className={btnPrimary}
+            >
               {busy ? "Calcul en cours…" : "Comparer les méthodes"}
             </button>
             {result && (
               <button
                 type="button"
                 disabled={busy}
-                onClick={() => void commands.getForgePoe1Prices().then(setPrix).catch((e) => setError(message(e)))}
+                onClick={() =>
+                  void commands
+                    .getForgePoe1Prices()
+                    .then(setPrix)
+                    .catch((e) => setError(message(e)))
+                }
                 className={btnSecondary}
               >
                 Actualiser la cote
@@ -490,7 +656,7 @@ export function ForgePoe1Card() {
           prix={prix}
           saisis={saisis}
           onSaisie={saisir}
-          nbVoulus={voulus.length}
+          nomsVoulus={nomsVoulus}
           prixChanges={prixCalcul !== "" && prixCalcul !== JSON.stringify(prixPourPlan(prix?.prix ?? {}, saisis))}
         />
       )}

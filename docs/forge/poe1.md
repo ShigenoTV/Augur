@@ -114,3 +114,15 @@ monnaies qui refont tout l'objet.
 Fossiles et résonateurs (effets réels dans `fossils.json`), plan pas à pas dans le panneau (prochaine étape choisie
 par Max le 14/11), solveur au-delà de 4 mods voulus, multimod, suivi dans l'overlay (Ctrl+Alt+C), mise à jour PoE 1
 dans `mise_a_jour.py`.
+
+## Pas à pas du plan conseillé
+
+Le solveur renvoie, avec le plan, l'action conseillée dans chaque situation où le plan passe au moins une
+fois sur mille crafts (`etapes` : rareté, mods voulus présents, mods voulus pris par un tier trop bas,
+autres préfixes et suffixes, metamod, coût moyen restant). Le panneau en tire :
+
+- des règles par rareté : l'action habituelle (« dans les autres cas »), puis les situations où le plan
+  fait autre chose, les plus fréquentes d'abord ;
+- « Où en est ton objet ? » : le joueur décrit son objet et voit l'action à faire et le coût moyen restant.
+  Une situation absente des étapes est une situation où le plan ne passe presque jamais.
+
