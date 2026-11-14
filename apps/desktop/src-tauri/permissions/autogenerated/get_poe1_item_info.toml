@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-poe1-item-info"
+description = "Enables the get_poe1_item_info command without any pre-configured scope."
+commands.allow = ["get_poe1_item_info"]
+
+[[permission]]
+identifier = "deny-get-poe1-item-info"
+description = "Denies the get_poe1_item_info command without any pre-configured scope."
+commands.deny = ["get_poe1_item_info"]

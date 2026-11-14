@@ -116,6 +116,20 @@ pub fn set_game(
     Ok(settings)
 }
 
+/// PoE 1 : objet copié en dernier et sa cote poe.ninja (overlay).
+#[tauri::command]
+pub async fn get_poe1_item_info(
+    app: AppHandle,
+) -> Result<crate::poe1_items::Poe1ItemInfo, AppError> {
+    crate::poe1_items::info(&app).await
+}
+
+/// PoE 1 : ouvre la recherche de l'objet copié sur le site de trade (Alt+U).
+#[tauri::command]
+pub fn open_poe1_trade_search(app: AppHandle) -> Result<String, AppError> {
+    crate::poe1_items::open_trade(&app)
+}
+
 /// Ligue poe.ninja du jeu actif. `None` ou vide : ligue par défaut.
 #[tauri::command]
 pub fn set_league(

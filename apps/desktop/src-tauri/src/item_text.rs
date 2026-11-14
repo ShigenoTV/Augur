@@ -41,6 +41,7 @@ fn rarity(r: Rarete) -> Rarity {
         Rarete::Unique => Rarity::Unique,
         Rarete::Devise => Rarity::Currency,
         Rarete::Gemme => Rarity::Gem,
+        Rarete::CarteDivination => Rarity::Other,
     }
 }
 

@@ -17,3 +17,10 @@ Textes d'objets tels que copiés en jeu (client anglais), utilisés par
 > ≥ 99 % de réussite) demande une collecte en jeu : ajoutez simplement les
 > fichiers `.txt` ici, le test calcule le taux de réussite sur tout le dossier.
 > Ne collez jamais d'information personnelle (notes privées, noms de compte).
+
+## PoE 1 (`poe1/`)
+
+Objets de Path of Exile 1, **reconstitués** d'après le format public du jeu
+(sockets, influences, en-têtes « Master Crafted » et « Shaper's », qualité de
+catalyseur, cartes de divination). Ils servent au test `poe1` de
+`tests/corpus.rs`. À compléter par de vraies copies faites en jeu sur PoE 1.

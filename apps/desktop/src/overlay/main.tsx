@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { commands, isAppError, isTauri, on } from "../bridge";
 import { afficherRaccourci, SHORTCUTS_PAR_DEFAUT } from "../index/shortcuts";
 import { ForgeTipPanel, type ForgeView } from "./ForgeTipPanel";
+import { Poe1Panel, type Poe1View } from "./Poe1Panel";
 import { EVALUATING_DELAY_MS, runCopilot } from "./copilot";
 
 function Overlay() {
@@ -22,7 +23,20 @@ function Overlay() {
   const shown = useRef<CopilotView>(view);
   shown.current = view;
   const [search, setSearch] = useState<{ ok: boolean; text: string } | null>(null);
+  // PoE 1 : objet copié, cote poe.ninja et recherche de trade.
+  const [poe1, setPoe1] = useState<Poe1View | null>(null);
+  const poe1Shown = useRef<Poe1View | null>(null);
+  poe1Shown.current = poe1;
+  const openPoe1Trade = () => {
+    if (poe1Shown.current?.status !== "ready") return;
+    setSearch({ ok: true, text: "Ouverture de la recherche…" });
+    void commands
+      .openPoe1TradeSearch()
+      .then(() => setSearch({ ok: true, text: "Recherche ouverte dans ton navigateur." }))
+      .catch((error: unknown) => setSearch({ ok: false, text: isAppError(error) ? error.message : String(error) }));
+  };
   const openSearch = () => {
+    if (poe1Shown.current) return openPoe1Trade();
     const v = shown.current;
     if (v.status !== "ready" || !v.delta || v.delta.support === "unsupported") return;
     setSearch({ ok: true, text: "Préparation de la recherche…" });
@@ -54,10 +68,9 @@ function Overlay() {
       on.itemCopied((item) => {
         const id = ++run.current;
         setSearch(null);
-        void commands
-          .getSettings()
-          .then((s) => setRaccourcis(s.shortcuts))
-          .catch(() => undefined);
+        setPoe1(null);
+        const settings = commands.getSettings().catch(() => null);
+        void settings.then((s) => s && setRaccourcis(s.shortcuts));
         const emit = (v: CopilotView) => {
           if (run.current === id) setView(v);
         };
@@ -79,7 +92,18 @@ function Overlay() {
         };
         // Un plan Forge suivi passe d'abord : l'objet copié peut être le craft en cours.
         setForge(null);
-        void commands
+        const startPoe1 = () => {
+          setView({ status: "hidden" });
+          setPoe1({ status: "loading" });
+          void commands
+            .getPoe1ItemInfo()
+            .then((info) => run.current === id && setPoe1({ status: "ready", info }))
+            .catch(
+              (error: unknown) =>
+                run.current === id && setPoe1({ status: "error", message: isAppError(error) ? error.message : String(error) }),
+            );
+        };
+        const startPoe2 = () => void commands
           .getForgeAdvice()
           .then((tip) => {
             if (run.current !== id) return;
@@ -93,15 +117,22 @@ function Overlay() {
             setView({ status: "hidden" });
             setForge({ status: "error", error });
           });
+        void settings.then((s) => {
+          if (run.current !== id) return;
+          if (s?.game === "poe1") return startPoe1();
+          startPoe2();
+        });
       }),
       on.itemUnrecognized((error) => {
         run.current++;
         setForge(null);
+        setPoe1(null);
         setView({ status: "unrecognized", error });
       }),
       on.overlayHidden(() => {
         run.current++;
         setForge(null);
+        setPoe1(null);
         setView({ status: "hidden" });
       }),
       on.upgradeSearchRequested(() => openSearch()),
@@ -123,13 +154,21 @@ function Overlay() {
 
   return (
     <div ref={panel} className="inline-block">
-      {measuring && (view.status !== "hidden" || forge) && (
+      {measuring && !poe1 && (view.status !== "hidden" || forge) && (
         <p className="mb-1 flex items-center gap-1.5 text-[11px] text-text-subtle">
           <span className="inline-block size-1.5 rounded-full bg-signal-loss" aria-hidden />
           Mesures en cours : objet enregistré
         </p>
       )}
-      {forge ? (
+      {poe1 ? (
+        <Poe1Panel
+          view={poe1}
+          fermer={hotkeys.close}
+          trade={hotkeys.upgradeSearch}
+          onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)}
+          onTrade={openPoe1Trade}
+        />
+      ) : forge ? (
         <ForgeTipPanel view={forge} fermer={hotkeys.close} onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)} />
       ) : (
         <CopilotOverlay

@@ -30,6 +30,7 @@ mod log_locator;
 pub mod measures;
 mod overlay;
 pub mod placement;
+mod poe1_items;
 mod settings;
 mod shortcuts;
 mod time;
@@ -81,6 +82,7 @@ pub fn run() {
         .manage(updates::PendingUpdate::default())
         .manage(client_log::ClientLogState::default())
         .manage(measures::MeasureState::default())
+        .manage(poe1_items::Poe1Ninja::default())
         .invoke_handler(tauri::generate_handler![
             commands::parse_clipboard_item,
             commands::get_overlay_state,
@@ -91,6 +93,8 @@ pub fn run() {
             commands::install_update,
             commands::get_settings,
             commands::set_game,
+            commands::get_poe1_item_info,
+            commands::open_poe1_trade_search,
             commands::get_leagues,
             commands::set_league,
             commands::set_upgrade_budget,

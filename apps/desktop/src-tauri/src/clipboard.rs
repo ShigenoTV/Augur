@@ -67,12 +67,10 @@ pub fn spawn_watcher(app: AppHandle) {
                 if !in_game || !item_text::looks_like_item(&text) {
                     continue;
                 }
-                // L'overlay ne sait lire que les objets de PoE 2 pour l'instant.
-                if crate::game::active() == crate::game::Game::Poe1 {
-                    continue;
-                }
                 // Contrat : `augur://item-copied` porte l'objet déjà parsé.
                 let parsed = item_text::parse(&text);
+                // Les sessions de mesures servent le moteur de PoE 2.
+                let measuring = measuring && crate::game::active() == crate::game::Game::Poe2;
                 if measuring {
                     let result = parsed.clone().map_err(|e| e.message.clone());
                     measures::record_item(&app, &text, &result);

@@ -1,0 +1,22 @@
+Item Class: Body Armours
+Rarity: Unique
+The Covenant
+Spidersilk Robe
+--------
+Energy Shield: 189 (augmented)
+--------
+Requirements:
+Level: 49
+Int: 134
+--------
+Sockets: B-B-B-B-B-B
+--------
+Item Level: 84
+--------
++75 to Intelligence
++120 to maximum Energy Shield
+Socketed Gems are Supported by Level 29 Blood Magic
+Corrupted Blood cannot be inflicted on you
+--------
+My Soul is your Strength
+My Price is your Blood

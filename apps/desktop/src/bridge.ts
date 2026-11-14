@@ -41,6 +41,32 @@ export type ShortcutSettings = { closeOverlay: string; upgradeSearch: string };
 /** Jeu actif du sélecteur « POE 1 / POE 2 » (src-tauri/src/game.rs). */
 export type Game = "poe1" | "poe2";
 
+/** Cote poe.ninja d'un objet de PoE 1 (poe2_core::poe1::ninja::Cote). */
+export type Poe1Price = {
+  chaos: number;
+  chaosMax: number | null;
+  divine: number | null;
+  annonces: number | null;
+  liens: number | null;
+};
+
+/** Objet de PoE 1 copié en jeu, pour l'overlay (src-tauri/src/poe1_items.rs). */
+export type Poe1ItemInfo = {
+  name: string | null;
+  base: string;
+  itemClass: string | null;
+  rarity: string;
+  itemLevel: number | null;
+  links: number;
+  influences: string[];
+  corrupted: boolean;
+  mods: string[];
+  price: Poe1Price | null;
+  priceNote: string | null;
+  tradeSummary: string[];
+  league: string;
+};
+
 /** Réglages propres à PoE 1 (ceux de PoE 2 sont à la racine de Settings). */
 export type GameSettings = { clientLogPath: string | null; league: string | null };
 
@@ -375,6 +401,8 @@ export const commands = {
   installUpdate: () => invoke<void>("install_update"),
   getSettings: () => invoke<Settings>("get_settings"),
   setGame: (game: Game) => invoke<Settings>("set_game", { game }),
+  getPoe1ItemInfo: () => invoke<Poe1ItemInfo>("get_poe1_item_info"),
+  openPoe1TradeSearch: () => invoke<string>("open_poe1_trade_search"),
   setUpdateChannel: (beta: boolean) => invoke<Settings>("set_update_channel", { beta }),
   getClientLogStatus: () => invoke<ClientLogStatus>("get_client_log_status"),
   setClientLogPath: (path: string | null) => invoke<Settings>("set_client_log_path", { path }),

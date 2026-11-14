@@ -41,6 +41,8 @@ pub enum ErreurPob {
     Xml(String),
     #[error("ce code vient de Path of Building pour PoE 1, pas pour PoE 2")]
     PoE1,
+    #[error("ce code vient de Path of Building pour PoE 2, pas pour PoE 1")]
+    PoE2,
     #[error("le build ne contient pas de section {0}")]
     SectionManquante(&'static str),
 }
@@ -198,9 +200,22 @@ pub fn encoder(xml: &str) -> String {
     base64::engine::general_purpose::URL_SAFE.encode(octets)
 }
 
-/// Décode et lit un code d'export.
+/// Décode et lit un code d'export de Path of Building PoE 2.
 pub fn importer(code: &str) -> Result<BuildPob, ErreurPob> {
     lire_xml(&decoder(code)?)
+}
+
+/// Décode et lit un code d'export de Path of Building PoE 1 (même format,
+/// racine `<PathOfBuilding>`). Seul le résumé du personnage sert pour l'instant :
+/// le moteur de calcul ne connaît que PoE 2.
+pub fn importer_poe1(code: &str) -> Result<BuildPob, ErreurPob> {
+    lire_xml_racine(&decoder(code)?, Racine::Poe1)
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Racine {
+    Poe1,
+    Poe2,
 }
 
 fn attr_u32(n: roxmltree::Node, nom: &str) -> Option<u32> {
@@ -224,12 +239,20 @@ fn enfants<'a, 'i>(
 
 /// Lit le XML d'un build PoB PoE 2.
 pub fn lire_xml(xml: &str) -> Result<BuildPob, ErreurPob> {
+    lire_xml_racine(xml, Racine::Poe2)
+}
+
+fn lire_xml_racine(xml: &str, attendue: Racine) -> Result<BuildPob, ErreurPob> {
     let doc = roxmltree::Document::parse(xml).map_err(|e| ErreurPob::Xml(e.to_string()))?;
     let racine = doc.root_element();
-    if racine.has_tag_name("PathOfBuilding") {
-        return Err(ErreurPob::PoE1);
+    let (bonne, autre, erreur) = match attendue {
+        Racine::Poe2 => ("PathOfBuilding2", "PathOfBuilding", ErreurPob::PoE1),
+        Racine::Poe1 => ("PathOfBuilding", "PathOfBuilding2", ErreurPob::PoE2),
+    };
+    if racine.has_tag_name(autre) {
+        return Err(erreur);
     }
-    if !racine.has_tag_name("PathOfBuilding2") {
+    if !racine.has_tag_name(bonne) {
         return Err(ErreurPob::Xml(format!(
             "racine inattendue « {} »",
             racine.tag_name().name()
@@ -550,6 +573,32 @@ Implicits: 0
             Err(ErreurPob::SectionManquante("Build"))
         );
         assert!(matches!(importer(&encoder("<a")), Err(ErreurPob::Xml(_))));
+    }
+
+    #[test]
+    fn lit_un_build_poe1() {
+        let xml = r#"<PathOfBuilding>
+  <Build level="94" className="Templar" ascendClassName="Hierophant" mainSocketGroup="1" targetVersion="3_0"/>
+  <Tree activeSpec="1"><Spec nodes="1,2" treeVersion="3_26"/></Tree>
+  <Skills activeSkillSet="1"><SkillSet id="1">
+    <Skill enabled="true" mainActiveSkill="1" slot="Body Armour">
+      <Gem nameSpec="Arc" skillId="Arc" gemId="Metadata/Items/Gems/SkillGemArc" level="20" quality="20" enabled="true"/>
+      <Gem nameSpec="Lightning Penetration" skillId="SupportLightningPenetration" gemId="Metadata/Items/Gems/SupportGemLightningPenetration" level="20" quality="0" enabled="true"/>
+    </Skill>
+  </SkillSet></Skills>
+</PathOfBuilding>"#;
+        let b = importer_poe1(&encoder(xml)).unwrap();
+        assert_eq!((b.niveau, b.classe.as_str()), (94, "Templar"));
+        assert_eq!(
+            b.competence_principale().map(|g| g.nom.as_str()),
+            Some("Arc")
+        );
+        assert_eq!(b.groupes[0].supports().count(), 1);
+        assert_eq!(b.version_arbre.as_deref(), Some("3_26"));
+        assert_eq!(
+            importer_poe1(&encoder("<PathOfBuilding2><Build/></PathOfBuilding2>")),
+            Err(ErreurPob::PoE2)
+        );
     }
 
     #[test]

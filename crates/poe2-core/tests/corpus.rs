@@ -262,3 +262,84 @@ fn reel_bottes_corrompues_desacralisees() {
     );
     assert_eq!(d[0].modele, "+#% to Fire Resistance");
 }
+
+/// Objets de PoE 1 (`poe1/`), reconstitués d'après le format public du jeu :
+/// à compléter par de vraies copies faites en jeu.
+mod poe1 {
+    use super::*;
+
+    fn objet(nom: &str) -> parser::Objet {
+        super::objet(&format!("poe1/{nom}"))
+    }
+
+    #[test]
+    fn tout_le_dossier_est_reconnu() {
+        for e in std::fs::read_dir(dossier().join("poe1")).unwrap().flatten() {
+            let texte = std::fs::read_to_string(e.path()).unwrap();
+            let o = parser::parser(&texte).unwrap_or_else(|err| panic!("{:?} : {err}", e.path()));
+            assert!(o.lignes_inconnues.is_empty(), "{:?}", e.path());
+        }
+    }
+
+    #[test]
+    fn rare_influencee_au_format_avance() {
+        let o = objet("rare-casque-influence-avance.txt");
+        assert_eq!(o.rarete, Rarete::Rare);
+        assert_eq!(o.nom.as_deref(), Some("Doom Visor"));
+        assert_eq!(o.base, "Hubris Circlet");
+        assert_eq!(o.qualite, Some(20));
+        assert_eq!(o.exigences.niveau, Some(69));
+        assert_eq!(o.exigences.intelligence, Some(154));
+        assert_eq!(o.emplacements.as_deref(), Some("B-B-R B"));
+        assert_eq!(o.niveau_objet, Some(86));
+        assert_eq!(o.influences, vec!["Shaper Item".to_string()]);
+        let affixes: Vec<_> = o
+            .mods
+            .iter()
+            .filter_map(|m| m.entete.as_ref())
+            .map(|e| e.affixe)
+            .collect();
+        assert_eq!(
+            affixes,
+            vec![
+                Affixe::Implicite,
+                Affixe::Prefixe,
+                Affixe::Prefixe,
+                Affixe::Suffixe,
+                Affixe::Suffixe
+            ]
+        );
+        let craft = o.mods.last().unwrap();
+        assert_eq!(craft.genre, GenreMod::Artisanal);
+        assert_eq!(craft.valeurs, vec![27.0]);
+        assert_eq!(o.mods_de_genre(GenreMod::Implicite).count(), 1);
+    }
+
+    #[test]
+    fn unique_six_liens_et_texte_d_ambiance() {
+        let o = objet("unique-armure-6l.txt");
+        assert_eq!(o.rarete, Rarete::Unique);
+        assert_eq!(o.nom.as_deref(), Some("The Covenant"));
+        assert_eq!(o.base, "Spidersilk Robe");
+        assert_eq!(o.emplacements.as_deref(), Some("B-B-B-B-B-B"));
+        assert_eq!(o.mods.len(), 4);
+        assert!(o.texte_saveur.is_some());
+    }
+
+    #[test]
+    fn carte_devise_et_catalyseur() {
+        let carte = objet("carte-divination.txt");
+        assert_eq!(carte.rarete, Rarete::CarteDivination);
+        assert_eq!(carte.base, "A Chilling Wind");
+        assert_eq!(carte.taille_pile, Some((1, 5)));
+        let devise = objet("devise-divine.txt");
+        assert_eq!(
+            (devise.rarete, devise.base.as_str()),
+            (Rarete::Devise, "Divine Orb")
+        );
+        let bague = objet("bague-catalyseur-fracturee.txt");
+        assert_eq!(bague.qualite, Some(20));
+        assert_eq!(bague.influences, vec!["Fractured Item".to_string()]);
+        assert_eq!(bague.mods_de_genre(GenreMod::Fracture).count(), 1);
+    }
+}

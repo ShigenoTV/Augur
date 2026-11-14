@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::contracts::{CharacterSource, CharacterSummary};
+use crate::game::Game;
 use crate::time::rfc3339_now;
 
 /// Événement émis à chaque import ou suppression (charge : `Option<CharacterInfo>`).
@@ -56,14 +57,94 @@ struct Charge {
     info: CharacterInfo,
 }
 
+/// Personnage importé de chaque jeu. Le moteur de calcul ne sert que PoE 2 :
+/// pour PoE 1, seul le résumé est affiché.
 #[derive(Default)]
-pub struct CharacterState(Mutex<Option<Charge>>);
+struct Slots {
+    poe2: Option<Charge>,
+    poe1: Option<Charge>,
+}
 
-fn fichier(app: &AppHandle) -> Option<PathBuf> {
-    app.path()
-        .app_data_dir()
-        .ok()
-        .map(|d| d.join("personnage.json"))
+impl Slots {
+    fn of(&mut self, game: Game) -> &mut Option<Charge> {
+        match game {
+            Game::Poe2 => &mut self.poe2,
+            Game::Poe1 => &mut self.poe1,
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct CharacterState(Mutex<Slots>);
+
+fn fichier(app: &AppHandle, game: Game) -> Option<PathBuf> {
+    let nom = match game {
+        Game::Poe2 => "personnage.json",
+        Game::Poe1 => "personnage-poe1.json",
+    };
+    app.path().app_data_dir().ok().map(|d| d.join(nom))
+}
+
+fn lire_code(game: Game, code: &str) -> Result<BuildPob, pob::ErreurPob> {
+    match game {
+        Game::Poe2 => pob::importer(code),
+        Game::Poe1 => pob::importer_poe1(code),
+    }
+}
+
+/// Résumé d'un build PoE 1 : la compétence principale de PoB, sans comparaison.
+fn describe_poe1(build: &BuildPob, imported_at: String) -> CharacterInfo {
+    let principale = build.competence_principale();
+    let supports = build
+        .groupe_principal
+        .and_then(|i| build.groupes.get(i))
+        .map(|gr| gr.supports().map(|g| g.nom.clone()).collect())
+        .unwrap_or_default();
+    CharacterInfo {
+        summary: CharacterSummary {
+            name: principale
+                .map(|g| format!("Build {}", g.nom))
+                .unwrap_or_else(|| "Build Path of Building".into()),
+            class: build.classe_affichee().to_string(),
+            level: build.niveau,
+            league: String::new(),
+            source: CharacterSource::PobCode,
+        },
+        imported_at,
+        skill: principale.map(|g| GemInfo {
+            name: g.nom.clone(),
+            level: g.niveau,
+            quality: g.qualite,
+        }),
+        supports,
+        skill_supported: false,
+        equipped_slots: build.objets.iter().map(|o| o.emplacement.clone()).collect(),
+        passives: build.passifs.len(),
+        tree_version: build.version_arbre.clone(),
+    }
+}
+
+fn describe_for(game: Game, build: &BuildPob, imported_at: String) -> CharacterInfo {
+    match game {
+        Game::Poe2 => describe(build, imported_at),
+        Game::Poe1 => describe_poe1(build, imported_at),
+    }
+}
+
+fn charger(app: &AppHandle, game: Game) -> Option<Charge> {
+    fichier(app, game)
+        .and_then(|p| std::fs::read(p).ok())
+        .and_then(|b| serde_json::from_slice::<Fichier>(&b).ok())
+        .and_then(|f| match lire_code(game, &f.code) {
+            Ok(build) => {
+                let info = describe_for(game, &build, f.imported_at);
+                Some(Charge { build, info })
+            }
+            Err(e) => {
+                log::warn!("personnage {} enregistré illisible : {e}", game.label());
+                None
+            }
+        })
 }
 
 /// Résumé d'un build importé.
@@ -98,48 +179,45 @@ pub fn describe(build: &BuildPob, imported_at: String) -> CharacterInfo {
 }
 
 impl CharacterState {
-    /// Relit le personnage enregistré, s'il y en a un.
+    /// Relit les personnages enregistrés (un par jeu), s'il y en a.
     pub fn load(app: &AppHandle) -> Self {
-        let charge = fichier(app)
-            .and_then(|p| std::fs::read(p).ok())
-            .and_then(|b| serde_json::from_slice::<Fichier>(&b).ok())
-            .and_then(|f| match pob::importer(&f.code) {
-                Ok(build) => {
-                    let info = describe(&build, f.imported_at);
-                    Some(Charge { build, info })
-                }
-                Err(e) => {
-                    log::warn!("personnage enregistré illisible : {e}");
-                    None
-                }
-            });
-        Self(Mutex::new(charge))
+        Self(Mutex::new(Slots {
+            poe2: charger(app, Game::Poe2),
+            poe1: charger(app, Game::Poe1),
+        }))
     }
 
-    fn lock(&self) -> std::sync::MutexGuard<'_, Option<Charge>> {
+    fn lock(&self) -> std::sync::MutexGuard<'_, Slots> {
         self.0.lock().unwrap_or_else(|e| e.into_inner())
     }
 
+    /// Personnage du jeu actif.
     pub fn info(&self) -> Option<CharacterInfo> {
-        self.lock().as_ref().map(|c| c.info.clone())
+        self.lock()
+            .of(crate::game::active())
+            .as_ref()
+            .map(|c| c.info.clone())
     }
 
+    /// Personnage PoE 2 (overlay et moteur de calcul).
     pub fn summary(&self) -> Option<CharacterSummary> {
-        self.lock().as_ref().map(|c| c.info.summary.clone())
+        self.lock().poe2.as_ref().map(|c| c.info.summary.clone())
     }
 
-    /// Exécute `f` sur le build chargé (pour le moteur de calcul).
+    /// Exécute `f` sur le build PoE 2 chargé (pour le moteur de calcul).
     pub fn with_build<T>(&self, f: impl FnOnce(&BuildPob) -> T) -> Option<T> {
-        self.lock().as_ref().map(|c| f(&c.build))
+        self.lock().poe2.as_ref().map(|c| f(&c.build))
     }
 }
 
-/// Importe un code PoB, l'enregistre et prévient les fenêtres.
+/// Importe un code PoB pour le jeu actif, l'enregistre et prévient les fenêtres.
 pub fn import(app: &AppHandle, code: &str) -> Result<CharacterInfo, String> {
-    let build = pob::importer(code).map_err(|e| format!("Code Path of Building refusé : {e}."))?;
+    let game = crate::game::active();
+    let build =
+        lire_code(game, code).map_err(|e| format!("Code Path of Building refusé : {e}."))?;
     let imported_at = rfc3339_now();
-    let info = describe(&build, imported_at.clone());
-    if let Some(path) = fichier(app) {
+    let info = describe_for(game, &build, imported_at.clone());
+    if let Some(path) = fichier(app, game) {
         let contenu = Fichier {
             code: code.trim().to_string(),
             imported_at,
@@ -155,7 +233,7 @@ pub fn import(app: &AppHandle, code: &str) -> Result<CharacterInfo, String> {
             return Err(format!("Personnage non enregistré ({e})."));
         }
     }
-    *app.state::<CharacterState>().lock() = Some(Charge {
+    *app.state::<CharacterState>().lock().of(game) = Some(Charge {
         build,
         info: info.clone(),
     });
@@ -163,16 +241,17 @@ pub fn import(app: &AppHandle, code: &str) -> Result<CharacterInfo, String> {
     Ok(info)
 }
 
-/// Oublie le personnage importé.
+/// Oublie le personnage importé du jeu actif.
 pub fn clear(app: &AppHandle) -> Result<(), String> {
-    if let Some(path) = fichier(app) {
+    let game = crate::game::active();
+    if let Some(path) = fichier(app, game) {
         match std::fs::remove_file(&path) {
             Ok(()) => {}
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
             Err(e) => return Err(format!("Personnage non supprimé ({e}).")),
         }
     }
-    *app.state::<CharacterState>().lock() = None;
+    *app.state::<CharacterState>().lock().of(game) = None;
     let _ = app.emit(EVENT_CHANGED, None::<CharacterInfo>);
     Ok(())
 }

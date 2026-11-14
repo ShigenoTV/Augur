@@ -78,7 +78,7 @@ function BientotPoe1({ module }: { module: string }) {
     <section className="rounded-panel border border-ink-700 bg-ink-900 p-4">
       <StatePanel icon="flat" title={`${module} : bientôt pour PoE 1`}>
         Ce module ne connaît encore que Path of Exile 2. Repasse sur « POE 2 » en haut à gauche pour l'utiliser.
-        L'Atlas Ledger et les réglages fonctionnent déjà avec PoE 1.
+        Le Copilot (lecture d'objet, cote et trade), l'Atlas Ledger et les réglages fonctionnent déjà avec PoE 1.
       </StatePanel>
     </section>
   );
@@ -306,28 +306,32 @@ function App() {
           <UpdateBanner update={updates.visible} onInstall={() => void updates.install()} onLater={updates.later} />
 
           {/* Les pages restent montées : changer de page ne perd ni un plan Forge ni une session Ledger. */}
-          {page === "copilot" && poe1 && <BientotPoe1 module="Copilot" />}
           {page === "forge" && poe1 && <BientotPoe1 module="Forge" />}
           {page === "outils" && poe1 && <BientotPoe1 module="Outils" />}
 
-          <div hidden={page !== "copilot" || poe1} className="space-y-4">
+          <div hidden={page !== "copilot"} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Card title="Personnage">
-                <CharacterCard />
+              <Card title={poe1 ? "Personnage PoE 1" : "Personnage"}>
+                <CharacterCard key={game} game={game} />
               </Card>
               <Card title="Raccourcis">
                 <ul className="space-y-2 text-sm text-text-muted">
                   <li>
-                    <Kbd>Ctrl+C</Kbd> sur un objet en jeu : ouvre l'overlay
+                    <Kbd>Ctrl+C</Kbd> sur un objet en jeu : ouvre l'overlay{poe1 ? " avec sa cote poe.ninja" : ""}
                   </li>
-                  <li>
-                    <Kbd>Ctrl+Alt+C</Kbd> sur l'objet en cours de craft : prochaine étape du plan Forge
-                  </li>
+                  {!poe1 && (
+                    <li>
+                      <Kbd>Ctrl+Alt+C</Kbd> sur l'objet en cours de craft : prochaine étape du plan Forge
+                    </li>
+                  )}
                   <li>
                     <Kbd>{afficherRaccourci(raccourcis.closeOverlay)}</Kbd> ferme l'overlay (actif seulement quand il est affiché)
                   </li>
                   <li>
-                    <Kbd>{afficherRaccourci(raccourcis.upgradeSearch)}</Kbd> cherche un meilleur objet pour cet emplacement (ouvre le site de trade)
+                    <Kbd>{afficherRaccourci(raccourcis.upgradeSearch)}</Kbd>{" "}
+                    {poe1
+                      ? "cherche l'objet affiché sur le site de trade de PoE 1"
+                      : "cherche un meilleur objet pour cet emplacement (ouvre le site de trade)"}
                   </li>
                 </ul>
                 <button type="button" onClick={() => ouvrir("reglages")} className="mt-2 text-xs text-accent hover:underline">
