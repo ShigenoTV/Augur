@@ -11,6 +11,8 @@ use std::sync::Mutex;
 
 use tauri::{AppHandle, Manager, WindowEvent};
 
+#[cfg(test)]
+mod acl_tests;
 mod bug_report;
 mod character;
 mod client_log;

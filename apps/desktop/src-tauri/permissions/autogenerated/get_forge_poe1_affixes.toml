@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-forge-poe1-affixes"
+description = "Enables the get_forge_poe1_affixes command without any pre-configured scope."
+commands.allow = ["get_forge_poe1_affixes"]
+
+[[permission]]
+identifier = "deny-get-forge-poe1-affixes"
+description = "Denies the get_forge_poe1_affixes command without any pre-configured scope."
+commands.deny = ["get_forge_poe1_affixes"]

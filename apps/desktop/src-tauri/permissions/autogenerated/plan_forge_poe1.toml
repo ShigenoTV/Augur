@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-plan-forge-poe1"
+description = "Enables the plan_forge_poe1 command without any pre-configured scope."
+commands.allow = ["plan_forge_poe1"]
+
+[[permission]]
+identifier = "deny-plan-forge-poe1"
+description = "Denies the plan_forge_poe1 command without any pre-configured scope."
+commands.deny = ["plan_forge_poe1"]
