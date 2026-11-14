@@ -85,7 +85,38 @@ pub struct PlanPoe1 {
     pub monnaies: Vec<Conso>,
     /// Monnaies sans prix : les actions qui les utilisent sont écartées.
     pub sans_prix: Vec<String>,
+    /// Pas à pas : l'action conseillée dans chaque situation rencontrée, la plus fréquente d'abord.
+    /// L'appli y retrouve la situation de l'objet du joueur.
+    pub etapes: Vec<EtapePlan>,
 }
+
+/// Une situation de l'objet et ce qu'il faut y faire.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EtapePlan {
+    /// « Normal », « Magique » ou « Rare ».
+    pub rarete: String,
+    /// Mods voulus présents (indices dans la liste demandée).
+    pub voulus: Vec<usize>,
+    /// Mods voulus dont le groupe est pris par un tier trop bas (indices).
+    pub mauvais_tiers: Vec<usize>,
+    /// Autres mods : préfixes, suffixes.
+    pub autres_prefixes: u8,
+    pub autres_suffixes: u8,
+    /// Metamod d'établi présent (texte), s'il y en a un.
+    pub metamod: Option<String>,
+    /// Action conseillée.
+    pub action: String,
+    /// Coût moyen restant jusqu'à l'objet fini, action comprise, en Chaos.
+    pub reste: f64,
+    /// Nombre moyen de passages par cette situation sur un craft.
+    pub passages: f64,
+}
+
+/// Situations gardées dans le pas à pas : celles où l'on passe au moins une fois sur mille crafts,
+/// au plus `ETAPES_MAX` (quelques centaines en pratique).
+pub const ETAPES_MAX: usize = 2000;
+const PASSAGES_MIN: f64 = 1e-3;
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -1077,6 +1108,8 @@ struct Solution<'a> {
     politique: Vec<usize>,
     depart: usize,
     cout_moyen: f64,
+    /// Coût moyen restant depuis chaque état, sous la politique.
+    restes: Vec<f64>,
 }
 
 /// Plan au coût moyen minimal. `None` si l'objectif est hors d'atteinte avec les prix connus.
@@ -1092,6 +1125,7 @@ fn plan_depuis(sol: &Solution) -> PlanPoe1 {
         politique,
         depart,
         cout_moyen,
+        restes,
     } = sol;
     let (depart, cout_moyen) = (*depart, *cout_moyen);
 
@@ -1158,7 +1192,55 @@ fn plan_depuis(sol: &Solution) -> PlanPoe1 {
         actions: usages,
         monnaies,
         sans_prix,
+        etapes: etapes(m, g, politique, restes, &visites),
     }
+}
+
+/// Situations les plus fréquentes sous la politique, avec l'action conseillée.
+fn etapes(
+    m: &Modele,
+    g: &Graphe,
+    politique: &[usize],
+    restes: &[f64],
+    visites: &[f64],
+) -> Vec<EtapePlan> {
+    let indices = |masque: u8| -> Vec<usize> {
+        (0..m.goal.len())
+            .filter(|k| masque & (1 << k) != 0)
+            .collect()
+    };
+    let mut sortie: Vec<EtapePlan> = visites
+        .iter()
+        .enumerate()
+        .filter(|(_, y)| **y >= PASSAGES_MIN)
+        .filter_map(|(s, y)| {
+            let a = g.actions.get(s)?.get(politique[s])?;
+            let e = m.etats[s];
+            Some(EtapePlan {
+                rarete: match e.rarete {
+                    Rarete::Normal => "Normal",
+                    Rarete::Magique => "Magique",
+                    Rarete::Rare => "Rare",
+                }
+                .to_string(),
+                voulus: indices(e.bons),
+                mauvais_tiers: indices(e.bloques),
+                autres_prefixes: e.autres[0],
+                autres_suffixes: e.autres[1],
+                metamod: m
+                    .metamods
+                    .iter()
+                    .find(|(meta, _, _)| *meta == e.meta)
+                    .map(|(_, texte, _)| texte.clone()),
+                action: m.libelles[a.libelle].clone(),
+                reste: restes[s],
+                passages: *y,
+            })
+        })
+        .collect();
+    sortie.sort_by(|a, b| b.passages.total_cmp(&a.passages));
+    sortie.truncate(ETAPES_MAX);
+    sortie
 }
 
 fn resoudre<'a>(
@@ -1293,6 +1375,7 @@ fn resoudre<'a>(
         politique,
         depart,
         cout_moyen,
+        restes: vals,
     })
 }
 
@@ -1574,6 +1657,24 @@ mod tests {
             plan.cout_moyen
         );
         assert_eq!(plan.depart, ALCHEMY);
+        // Pas à pas : l'objet Normal (une fois, Alchemy), puis des Rares qu'on relance au Chaos.
+        let e0 = plan.etapes.iter().find(|e| e.rarete == "Normal").unwrap();
+        assert_eq!(e0.action, ALCHEMY);
+        assert!((e0.passages - 1.0).abs() < 1e-9);
+        assert!((e0.reste - plan.cout_moyen).abs() < 1e-6);
+        let rares: Vec<_> = plan.etapes.iter().filter(|e| e.rarete == "Rare").collect();
+        assert!(!rares.is_empty());
+        assert!(
+            rares
+                .iter()
+                .all(|e| e.action == CHAOS && e.voulus.len() < 2)
+        );
+        assert!(plan.etapes.len() <= ETAPES_MAX);
+        assert!(
+            plan.etapes
+                .windows(2)
+                .all(|w| w[0].passages >= w[1].passages)
+        );
     }
 
     #[test]

@@ -289,6 +289,23 @@ export type ForgePoe1Plan = {
   actions: { action: string; nombre: number }[];
   monnaies: ForgePoe1Conso[];
   sansPrix: string[];
+  /** Action conseillée dans chaque situation rencontrée, la plus fréquente d'abord. */
+  etapes: ForgePoe1Etape[];
+};
+export type ForgePoe1Etape = {
+  rarete: "Normal" | "Magique" | "Rare";
+  /** Mods voulus présents (indices dans la liste demandée). */
+  voulus: number[];
+  /** Mods voulus dont le groupe est pris par un tier trop bas (indices). */
+  mauvaisTiers: number[];
+  autresPrefixes: number;
+  autresSuffixes: number;
+  metamod: string | null;
+  action: string;
+  /** Coût moyen restant jusqu'à l'objet fini, en Chaos. */
+  reste: number;
+  /** Passages moyens par cette situation sur un craft. */
+  passages: number;
 };
 export type ForgePoe1Result = {
   methodes: ForgePoe1Method[];
