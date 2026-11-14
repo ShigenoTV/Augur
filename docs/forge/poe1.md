@@ -124,6 +124,7 @@ monnaies qui refont tout l'objet.
 | P1-01 | Une Essence suit la même loi 4/5/6 mods que le Chaos, mod garanti compris | 50 Essences sur un objet, compter les mods |
 | P1-02 | Un objet Magique refait a 2 mods une fois sur deux | 100 Alterations, compter |
 | P1-03 | Les fossiles suivent la loi 4/5/6 mods du Chaos ; bonus additifs entre fossiles (mode par défaut de Craft of Exile) | recouper un cas avec l'émulateur en mode multiplicatif ; compter les mods sur des objets refaits aux fossiles |
+| P1-04 | Sur un objet fracturé, Alteration, Chaos, Alchemy et Essence tirent le nombre de mods habituel moins les mods fracturés ; un Scouring laisse l'objet Magique (1 mod fracturé) ou Rare | 50 Chaos sur un objet fracturé, compter les mods ; un Scouring, noter la rareté |
 
 ## Suite possible (sur décision de Max)
 
@@ -178,6 +179,15 @@ Comme en PoE 2, le joueur colle le texte d'un objet (Ctrl+Alt+C) : la Forge lit 
 homonymes, celle dont l'implicite est sur l'objet), son niveau, son influence et ses mods (lecture du suivi
 PoE 2), reconnaît un metamod d'établi, et le plan conseillé repart de l'état de cet objet
 (`poe1::forge::depart`, `solveur::plan_depuis_objet`). Les autres mods artisanaux prennent une place sans
-servir l'objectif. Les méthodes de spam partent toujours d'une base neuve. Objet fracturé : pas encore
-pris en compte. Le bouton « Réinitialiser » décoche les mods voulus, retire l'objet de départ et efface le
+servir l'objectif. Les méthodes de spam partent toujours d'une base neuve. Le bouton « Réinitialiser » décoche les mods voulus, retire l'objet de départ et efface le
 résultat.
+
+### Objet fracturé
+
+Les mods fracturés restent sur l'objet : le plan ne les retire jamais (Annulment, Scouring et relances les
+gardent). Une relance tire le nombre de mods habituel moins les mods fracturés (Alteration : 1 ou 2 mods au
+total ; Chaos, Alchemy, Essence : 4, 5 ou 6), comme le Chaos avec un côté verrouillé (hypothèse P1-04). Un
+Scouring laisse un objet Magique (un mod fracturé) ou Rare (deux et plus). Une Essence dont le groupe est pris
+par un mod fracturé n'est pas proposée. Un mod fracturé non reconnu, ou au mauvais tier d'un mod voulu,
+est refusé avec un message (objectif impossible). Le calcul est recoupé par simulation sur le moteur exact
+(`objet_fracture_garde_son_mod`).
