@@ -14,7 +14,10 @@ Le fichier réunit :
 - les Essences (`essences.json`) : mod garanti par classe, niveau d'objet maximal, et si elles
   refont un objet Rare (Screaming et au-dessus) ou seulement un objet Normal ;
 - les crafts d'établi qui ajoutent un mod (`crafting_bench_options.json`) : mod artisanal (domaine
-  `crafted`, gardé dans les mods avec `artisanal`), classes autorisées et coût par nom de monnaie.
+  `crafted`, gardé dans les mods avec `artisanal`), classes autorisées et coût par nom de monnaie ;
+- les fossiles qui ne font que changer les poids par étiquette de mod (`fossils.json`) : multiplicateurs
+  en pourcentage (0 = étiquette bloquée). Les fossiles à effet spécial (mods ajoutés ou forcés, tirage
+  chanceux, copie, corruption, Opulent) n'y sont pas.
 
 Seuls les champs lus par `poe2_core::poe1::forge` sont gardés. La sortie est déterministe (JSON
 canonique, gzip sans date) : deux exécutions sur les mêmes entrées donnent les mêmes octets.
@@ -45,6 +48,7 @@ FICHIERS = (
     "essences.json",
     "item_classes.json",
     "crafting_bench_options.json",
+    "fossils.json",
     "version.txt",
 )
 RACINE = Path(__file__).resolve().parents[2]
@@ -188,6 +192,31 @@ def etabli(options: list, items: dict) -> list[dict]:
     return sortie
 
 
+def fossiles(table: dict, items: dict) -> list[dict]:
+    sortie = []
+    for fid, f in table.items():
+        if (
+            "DelveCrafting" not in fid
+            or (items.get(fid) or {}).get("release_state") != "released"
+            or f.get("added_mods")
+            or f.get("forced_mods")
+            or f.get("allowed_tags")
+            or f.get("forbidden_tags")
+            or f.get("rolls_lucky")
+            or f.get("mirrors")
+            or f.get("corrupted_essence_chance")
+        ):
+            continue
+        poids = [[x["tag"], int(x["weight"])] for x in f.get("positive_mod_weights") or []]
+        poids += [[x["tag"], int(x["weight"])] for x in f.get("negative_mod_weights") or []]
+        # Opulent (étiquette `drop`) annule aussi les mods sans étiquette : effet à part, laissé de côté.
+        if not poids or any(t == "drop" for t, _ in poids):
+            continue
+        sortie.append({"id": fid, "nom": f["name"], "poids": sorted(poids)})
+    sortie.sort(key=lambda f: f["nom"])
+    return sortie
+
+
 def mods(table: dict, garantis: set[str], artisanaux: set[str] = frozenset()) -> list[dict]:
     sortie = []
     for mid, m in table.items():
@@ -213,8 +242,8 @@ def mods(table: dict, garantis: set[str], artisanaux: set[str] = frozenset()) ->
                 "spawn": spawn,
                 "essence": bool(m.get("is_essence_only")),
                 "artisanal": artisanal,
-                # Tags bloqués par les metamods « Cannot roll Attack/Caster Modifiers ».
-                "tags": sorted(t for t in m.get("implicit_tags") or [] if t in ("attack", "caster")),
+                # Étiquettes du mod : metamods « Cannot roll Attack/Caster Modifiers » et fossiles.
+                "tags": sorted(m.get("implicit_tags") or []),
                 # Première stat (min, max) : sert à classer un mod d'Essence ou d'établi parmi les tiers.
                 "valeur": next(([int(x["min"]), int(x["max"])] for x in m.get("stats") or []), None),
             }
@@ -243,6 +272,7 @@ def construire(dossier: Path) -> dict:
         "mods": mods(table_mods, garantis, artisanaux),
         "essences": ess,
         "etabli": crafts,
+        "fossiles": fossiles(lire_json(dossier, "fossils.json"), items),
     }
 
 
@@ -268,7 +298,8 @@ def main(argv: list[str] | None = None) -> int:
     ecrire(d, a.out)
     print(
         f"{a.out} : RePoE PoE 1 {d['repoe_version']}, {len(d['bases'])} bases, "
-        f"{len(d['mods'])} mods, {len(d['essences'])} Essences, {len(d['etabli'])} crafts d'établi",
+        f"{len(d['mods'])} mods, {len(d['essences'])} Essences, {len(d['etabli'])} crafts d'établi, "
+        f"{len(d['fossiles'])} fossiles",
         file=sys.stderr,
     )
     return 0
