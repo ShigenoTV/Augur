@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-forge-history"
+description = "Enables the get_forge_history command without any pre-configured scope."
+commands.allow = ["get_forge_history"]
+
+[[permission]]
+identifier = "deny-get-forge-history"
+description = "Denies the get_forge_history command without any pre-configured scope."
+commands.deny = ["get_forge_history"]

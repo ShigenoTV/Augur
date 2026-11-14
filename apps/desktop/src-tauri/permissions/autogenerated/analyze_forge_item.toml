@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-analyze-forge-item"
+description = "Enables the analyze_forge_item command without any pre-configured scope."
+commands.allow = ["analyze_forge_item"]
+
+[[permission]]
+identifier = "deny-analyze-forge-item"
+description = "Denies the analyze_forge_item command without any pre-configured scope."
+commands.deny = ["analyze_forge_item"]
