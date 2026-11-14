@@ -25,6 +25,7 @@ import { LedgerCard } from "./LedgerCard";
 import { StashCard } from "./StashCard";
 import { MeasureCard } from "./MeasureCard";
 import { AffichageContext, DEVISES, useAffichage } from "./devise";
+import { AffichagePoe1Context, DEVISES_POE1, useAffichagePoe1 } from "./devisePoe1";
 import { useUpdates } from "./useUpdates";
 
 /** Pas de canal bêta tant que les mises à jour passent par GitHub Releases (voir src-tauri/src/updates.rs). */
@@ -127,6 +128,7 @@ function App() {
   const [erreurJeu, setErreurJeu] = useState<string | null>(null);
   const updates = useUpdates();
   const affichage = useAffichage();
+  const affichagePoe1 = useAffichagePoe1();
   const game = jeuActif(settings);
   const poe1 = game === "poe1";
   // Version des données embarquées du jeu choisi.
@@ -235,6 +237,7 @@ function App() {
 
   return (
     <AffichageContext.Provider value={affichage}>
+      <AffichagePoe1Context.Provider value={affichagePoe1}>
       <div className="flex min-h-screen">
         <aside className="sticky top-0 flex h-screen w-52 shrink-0 flex-col border-r border-ink-700 bg-ink-900 py-5">
           <div className="mb-4 px-4">
@@ -266,6 +269,30 @@ function App() {
                     disabled={sansTaux}
                     title={sansTaux ? "Ouvre la Forge pour charger les prix" : undefined}
                     onClick={() => affichage.choisir(d.id)}
+                    className={`flex-1 px-1 py-1 disabled:opacity-40 ${actif ? "bg-accent font-semibold text-accent-ink" : "text-text-muted hover:bg-ink-800"}`}
+                  >
+                    {d.nom}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-5 px-4" hidden={!poe1}>
+            <p className="mb-1.5 text-xs text-text-subtle">Coûts affichés en</p>
+            <div className="flex overflow-hidden rounded-chip border border-ink-600 text-xs" role="radiogroup" aria-label="Monnaie des coûts">
+              {DEVISES_POE1.map((d) => {
+                const actif = affichagePoe1.affichage.devise === d.id;
+                const sansTaux = d.id === "divine" && affichagePoe1.affichage.divine <= 0;
+                return (
+                  <button
+                    key={d.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={actif}
+                    disabled={sansTaux}
+                    title={sansTaux ? "Ouvre la Forge pour charger les prix" : undefined}
+                    onClick={() => affichagePoe1.choisir(d.id)}
                     className={`flex-1 px-1 py-1 disabled:opacity-40 ${actif ? "bg-accent font-semibold text-accent-ink" : "text-text-muted hover:bg-ink-800"}`}
                   >
                     {d.nom}
@@ -474,6 +501,7 @@ function App() {
           </div>
         </main>
       </div>
+      </AffichagePoe1Context.Provider>
     </AffichageContext.Provider>
   );
 }

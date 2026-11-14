@@ -1,5 +1,5 @@
 import { StatePanel } from "@augur/ui";
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import {
   commands,
   isAppError,
@@ -13,10 +13,13 @@ import {
   type ForgePoe1Result,
   type ForgeWanted,
 } from "../bridge";
+import { DecisionTree } from "./DecisionTree";
+import { AffichagePoe1Context, useCoutPoe1 } from "./devisePoe1";
 import { AffixColumn } from "./ForgeCard";
-import { cleAffixe, libelleCourt, lirePrix } from "./forge";
+import { cleAffixe, etapes, formatCount, libelleCourt, lirePrix } from "./forge";
 import {
   VOULUS_MAX_PLAN,
+  arbrePoe1,
   type SituationPoe1,
   chiffrer,
   decisions,
@@ -106,8 +109,15 @@ function PrixUtilises({
 
 const SITUATIONS_MONTREES = 4;
 
+const VUES = [
+  ["arbre", "Arbre de décision"],
+  ["etapes", "Étapes"],
+  ["courses", "Liste de courses"],
+] as const;
+
 /** Pas à pas : quoi faire selon l'objet obtenu, en règles puis pour l'objet du joueur. */
-function PasAPas({ plan, noms, divine }: { plan: ForgePoe1Plan; noms: string[]; divine: number | null }) {
+function PasAPas({ plan, noms }: { plan: ForgePoe1Plan; noms: string[] }) {
+  const cout = useCoutPoe1();
   const regles = useMemo(() => decisions(plan.etapes, noms), [plan, noms]);
   const metamods = useMemo(
     () => [...new Set(plan.etapes.flatMap((e) => (e.metamod ? [e.metamod] : [])))].sort(),
@@ -217,10 +227,7 @@ function PasAPas({ plan, noms, divine }: { plan: ForgePoe1Plan; noms: string[]; 
         {etape ? (
           <p className="text-sm">
             À faire : <span className="font-semibold text-accent">{etape.action}</span>
-            <span className="text-xs text-text-muted">
-              {" "}
-              (reste environ {formatChaos(etape.reste, divine)} en moyenne)
-            </span>
+            <span className="text-xs text-text-muted"> (reste environ {cout(etape.reste)} en moyenne)</span>
           </p>
         ) : (
           <p className="text-text-subtle">
@@ -237,15 +244,19 @@ function PlanConseille({
   plan,
   noms,
   spam,
-  divine,
+  prix,
   prixChanges,
 }: {
   plan: ForgePoe1Plan | null;
   noms: string[];
   spam: number | null;
-  divine: number | null;
+  /** Prix utilisés par le calcul (Chaos), pour la liste de courses. */
+  prix: Record<string, number>;
   prixChanges: boolean;
 }) {
+  const cout = useCoutPoe1();
+  const [vue, setVue] = useState<"arbre" | "etapes" | "courses">("arbre");
+  const arbre = useMemo(() => (plan ? arbrePoe1(plan, noms, prix) : null), [plan, noms, prix]);
   if (!plan) {
     return (
       <p className="text-[11px] text-text-subtle">
@@ -259,8 +270,7 @@ function PlanConseille({
   return (
     <section className="space-y-2 rounded-card border border-accent/40 bg-ink-900 p-3">
       <p className="text-sm text-text-muted">
-        Plan conseillé : environ{" "}
-        <span className="font-semibold text-accent">{formatChaos(plan.coutMoyen, divine)}</span> en moyenne
+        Plan conseillé : environ <span className="font-semibold text-accent">{cout(plan.coutMoyen)}</span> en moyenne
         {gain != null && gain >= 1.05
           ? `, ${gain.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} fois moins que le meilleur spam`
           : ""}
@@ -270,23 +280,93 @@ function PlanConseille({
         Commence par : <span className="text-text-primary">{plan.depart}</span>. Ensuite, à chaque étape, la meilleure
         action selon l'objet obtenu.
       </p>
-      <table className="text-xs">
-        <thead className="text-left text-text-subtle">
-          <tr>
-            <th className="pr-4 font-normal">Action</th>
-            <th className="font-normal">Nombre moyen</th>
-          </tr>
-        </thead>
-        <tbody>
-          {plan.actions.map((a) => (
-            <tr key={a.action}>
-              <td className="py-0.5 pr-4 text-text-primary">{a.action}</td>
-              <td className="font-mono">{formatEssais(a.nombre)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {plan.etapes.length > 0 && <PasAPas plan={plan} noms={noms} divine={divine} />}
+      {arbre && plan.etapes.length > 0 && (
+        <>
+          <div className="flex gap-5 border-b border-ink-700 text-sm">
+            {VUES.map(([id, nom]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setVue(id)}
+                className={`-mb-px border-b-2 pb-1.5 ${vue === id ? "border-accent font-semibold text-accent" : "border-transparent text-text-muted hover:text-text-primary"}`}
+              >
+                {nom}
+              </button>
+            ))}
+          </div>
+          {vue === "arbre" && <DecisionTree plan={arbre.plan} formatCout={cout} decrire={arbre.decrire} />}
+          {vue === "etapes" && (
+            <table className="w-full text-xs">
+              <thead className="text-left text-text-subtle">
+                <tr>
+                  <th className="py-1 font-normal">Objet</th>
+                  <th className="font-normal">Action</th>
+                  <th className="text-right font-normal" title="Coût espéré pour finir depuis cet état">
+                    Reste
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {etapes(arbre.plan).map((n) => (
+                  <tr key={n.id} className="border-t border-ink-800 align-top">
+                    <td className="py-1 pr-2 text-text-muted">{arbre.decrire(n)}</td>
+                    <td className="py-1 pr-2 text-text-primary">
+                      {n.action.label}
+                      {n.repeat && n.repeat.expectedAttempts > 1.05 && (
+                        <span className="text-text-subtle"> · ~{formatCount(n.repeat.expectedAttempts)} essais</span>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap py-1 text-right font-mono text-text-muted">{cout(n.costToGo)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {vue === "courses" && (
+            <div className="space-y-3">
+              <table className="w-full max-w-xl text-xs">
+                <thead className="text-left text-text-subtle">
+                  <tr>
+                    <th className="py-1 font-normal">À acheter (en moyenne)</th>
+                    <th className="text-right font-normal">Quantité</th>
+                    <th className="text-right font-normal">Coût</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {arbre.plan.shopping.map((l) => (
+                    <tr key={l.id} className="border-t border-ink-800">
+                      <td className="py-1 pr-2 text-text-muted">{l.label}</td>
+                      <td className="whitespace-nowrap py-1 pr-2 text-right font-mono text-text-subtle">
+                        ×{formatCount(l.expectedCount)}
+                      </td>
+                      <td className="whitespace-nowrap py-1 text-right font-mono text-text-primary">
+                        {cout(l.expectedCost)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <table className="text-xs">
+                <thead className="text-left text-text-subtle">
+                  <tr>
+                    <th className="pr-4 font-normal">Action</th>
+                    <th className="font-normal">Nombre moyen</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {plan.actions.map((a) => (
+                    <tr key={a.action}>
+                      <td className="py-0.5 pr-4 text-text-primary">{a.action}</td>
+                      <td className="font-mono">{formatEssais(a.nombre)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+      {plan.etapes.length > 0 && <PasAPas plan={plan} noms={noms} />}
       {plan.sansPrix.length > 0 && (
         <p className="text-[11px] text-text-subtle">Actions écartées faute de prix : {plan.sansPrix.join(", ")}.</p>
       )}
@@ -317,6 +397,11 @@ function Resultat({
 }) {
   const lignes = chiffrer(result.methodes, prix?.prix ?? {}, saisis);
   const divine = prixEffectif("Divine Orb", prix?.prix ?? {}, saisis);
+  const cout = useCoutPoe1();
+  const { majDivine } = useContext(AffichagePoe1Context);
+  // Cours de la Divine pour le choix « Coûts affichés en » de la barre latérale.
+  useEffect(() => majDivine(divine), [divine]); // majDivine change à chaque rendu, sans effet sur le cours.
+  const prixPlan = useMemo(() => prixPourPlan(prix?.prix ?? {}, saisis), [prix, saisis]);
   const noms = [
     ...new Set([
       ...result.methodes.flatMap((m) => [...m.monnaies, ...(m.finition?.monnaies ?? [])].map((c) => c.nom)),
@@ -331,7 +416,7 @@ function Resultat({
         plan={result.plan}
         noms={nomsVoulus}
         spam={meilleure?.coutMoyen ?? null}
-        divine={divine}
+        prix={prixPlan}
         prixChanges={prixChanges}
       />
       {lignes.length === 0 ? (
@@ -343,7 +428,7 @@ function Resultat({
           {meilleure && meilleure.coutMoyen != null && (
             <p className="text-sm text-text-muted">
               Méthode la moins chère : <span className="font-semibold text-text-primary">{meilleure.nom}</span>, environ{" "}
-              <span className="font-semibold text-accent">{formatChaos(meilleure.coutMoyen, divine)}</span> en moyenne (
+              <span className="font-semibold text-accent">{cout(meilleure.coutMoyen)}</span> en moyenne (
               {formatEssais(meilleure.essaisMoyens)} essais).
             </p>
           )}
@@ -368,19 +453,15 @@ function Resultat({
                     {m.finition && (
                       <p className="text-[11px] text-text-muted">
                         Craft final : {m.finition.monnaies.map((c) => `${c.quantite} ${c.nom}`).join(" + ")}
-                        {m.coutFinition != null ? ` (${formatChaos(m.coutFinition)}, payé une fois)` : ""}
+                        {m.coutFinition != null ? ` (${cout(m.coutFinition)}, payé une fois)` : ""}
                       </p>
                     )}
                   </td>
                   <td className="pr-3 font-mono">{formatChance(m.chance)}</td>
                   <td className="pr-3 font-mono">
-                    {m.coutEssai != null ? (
-                      formatChaos(m.coutEssai)
-                    ) : (
-                      <span className="text-signal-warn">prix inconnu</span>
-                    )}
+                    {m.coutEssai != null ? cout(m.coutEssai) : <span className="text-signal-warn">prix inconnu</span>}
                   </td>
-                  <td className="pr-3 font-mono text-text-primary">{formatChaos(m.coutMoyen, divine)}</td>
+                  <td className="pr-3 font-mono text-text-primary">{cout(m.coutMoyen)}</td>
                   <td className="font-mono">
                     {formatEssais(m.essaisP50)} / {formatEssais(m.essaisP90)}
                   </td>

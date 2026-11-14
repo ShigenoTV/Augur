@@ -291,7 +291,15 @@ export type ForgePoe1Plan = {
   sansPrix: string[];
   /** Action conseillée dans chaque situation rencontrée, la plus fréquente d'abord. */
   etapes: ForgePoe1Etape[];
+  /** Identifiant de la situation de départ (objet Normal). */
+  racine: number;
+  /** Lois des relances (Alchemy, Chaos, Essence…) partagées par plusieurs situations. */
+  relances: ForgePoe1Issues[];
 };
+/** Issue de l'action conseillée : situation d'arrivée (null : objet fini) et probabilité. */
+export type ForgePoe1Branche = { vers: number | null; probabilite: number };
+/** Issues d'une action vers les situations du plan ; les situations trop rares sont regroupées. */
+export type ForgePoe1Issues = { branches: ForgePoe1Branche[]; autresIssues: number; nombreAutres: number };
 export type ForgePoe1Etape = {
   rarete: "Normal" | "Magique" | "Rare";
   /** Mods voulus présents (indices dans la liste demandée). */
@@ -306,6 +314,14 @@ export type ForgePoe1Etape = {
   reste: number;
   /** Passages moyens par cette situation sur un craft. */
   passages: number;
+  /** Identifiant de la situation (cible des branches). */
+  id: number;
+  /** Coût d'une utilisation de l'action conseillée, en Chaos. */
+  cout: number;
+  /** Issues quand l'action refait l'objet : indice dans `relances`. */
+  relance: number | null;
+  /** Issues sinon (vides avec une relance). */
+  issues: ForgePoe1Issues;
 };
 export type ForgePoe1Result = {
   methodes: ForgePoe1Method[];

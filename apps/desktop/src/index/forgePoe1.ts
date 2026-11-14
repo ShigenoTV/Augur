@@ -1,5 +1,16 @@
 /** Forge PoE 1 : coût des méthodes de spam (fonctions pures, testées). */
-import type { ForgePoe1Base, ForgePoe1Conso, ForgePoe1Etape, ForgePoe1Method } from "../bridge";
+import type {
+  ForgeActionNode,
+  ForgeBranch,
+  ForgeItemSummary,
+  ForgePlan,
+  ForgePoe1Base,
+  ForgePoe1Conso,
+  ForgePoe1Etape,
+  ForgePoe1Method,
+  ForgePoe1Plan,
+  ForgeTerminalNode,
+} from "../bridge";
 
 /** Méthode chiffrée : coût d'un essai, coût moyen et nombre d'essais (médian, 9 fois sur 10). */
 export type MethodeChiffree = ForgePoe1Method & {
@@ -195,4 +206,149 @@ export function decisions(etapes: ForgePoe1Etape[], noms: string[]): DecisionPoe
     }
   }
   return sortie;
+}
+
+const RARETE: Record<ForgePoe1Etape["rarete"], ForgeItemSummary["rarity"]> = {
+  Normal: "normal",
+  Magique: "magic",
+  Rare: "rare",
+};
+const FINI = "fini";
+const idEtape = (id: number) => `e${id}`;
+
+/** Plan PoE 1 mis à la forme d'un plan PoE 2, pour l'arbre de décision, les étapes et les courses. */
+export type ArbrePoe1 = {
+  plan: ForgePlan;
+  /** Description d'une case : rareté, mods voulus, autres mods, metamod. */
+  decrire: (n: ForgeActionNode | ForgeTerminalNode) => string;
+};
+
+/**
+ * Convertit le plan conseillé PoE 1 (montants en Chaos) en plan au format de la Forge PoE 2, pour
+ * l'arbre, les étapes et la liste de courses aux prix utilisés.
+ *
+ * Les situations où le plan fait la même relance (même action, même loi de relance : Chaos, Essence ou
+ * Alteration qui refont l'objet) sont regroupées en une case : leurs issues entre elles deviennent
+ * la relance sur place (« ~N× »). Une issue est un progrès quand il reste moins à dépenser après.
+ */
+export function arbrePoe1(plan: ForgePoe1Plan, noms: string[], prix: Record<string, number>): ArbrePoe1 {
+  // Groupes de situations à relance identique ; le représentant est la plus visitée.
+  const signature = (e: ForgePoe1Etape) => (e.relance == null ? `#${e.id}` : `${e.action}|${e.relance}`);
+  const issuesDe = (e: ForgePoe1Etape) => (e.relance == null ? e.issues : (plan.relances[e.relance] ?? e.issues));
+  const groupes = new Map<string, ForgePoe1Etape[]>();
+  for (const e of plan.etapes) groupes.set(signature(e), [...(groupes.get(signature(e)) ?? []), e]);
+  const groupeDe = new Map<number, ForgePoe1Etape[]>();
+  for (const g of groupes.values()) {
+    g.sort((a, b) => b.passages - a.passages);
+    for (const e of g) groupeDe.set(e.id, g);
+  }
+  const caseDe = (id: number | null) => {
+    if (id == null) return FINI;
+    const g = groupeDe.get(id);
+    return g ? idEtape(g[0]!.id) : null;
+  };
+  const resume = (e: ForgePoe1Etape | null): ForgeItemSummary => ({
+    rarity: e ? RARETE[e.rarete] : "rare",
+    heldWanted: e ? e.voulus : noms.map((_, i) => i),
+    blockedWanted: e?.mauvaisTiers ?? [],
+    fracturedWanted: null,
+    badPrefixes: e?.autresPrefixes ?? 0,
+    badSuffixes: e?.autresSuffixes ?? 0,
+  });
+  const resteDe = new Map(plan.etapes.map((e) => [idEtape(e.id), e.reste]));
+  const descriptions = new Map<string, string>();
+  const nodes: ForgePlan["nodes"] = {};
+  let fini = 0;
+  for (const g of groupes.values()) {
+    const e = g[0]!;
+    const id = idEtape(e.id);
+    const passages = g.reduce((t, x) => t + x.passages, 0);
+    // Issues vers les cases (situations hors plan dessiné regroupées avec les issues rares).
+    const versCase = new Map<string, number>();
+    let surPlace = 0;
+    const issues = issuesDe(e);
+    let rares = issues.autresIssues;
+    let nRares = issues.nombreAutres;
+    for (const b of issues.branches) {
+      const c = caseDe(b.vers);
+      if (c === id) surPlace += b.probabilite;
+      else if (c == null) {
+        rares += b.probabilite;
+        nRares += 1;
+      } else versCase.set(c, (versCase.get(c) ?? 0) + b.probabilite);
+    }
+    fini += passages * (versCase.get(FINI) ?? 0);
+    const reste = 1 - surPlace;
+    const branches: ForgeBranch[] = [...versCase.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([to, p]) => {
+        const resteCible = to === FINI ? 0 : resteDe.get(to);
+        return {
+          id: `${id}-${to}`,
+          kind: resteCible != null && resteCible < e.reste ? "success" : "failure",
+          label: "",
+          probability: reste > 0 ? p / reste : 0,
+          to,
+          loopback: false,
+          extraCost: 0,
+        };
+      });
+    nodes[id] = {
+      kind: "action",
+      id,
+      stateKey: id,
+      state: resume(e),
+      expectedVisits: passages,
+      costToGo: e.reste,
+      action: { id: e.action, label: e.action, unitCost: e.cout, isAbandon: false },
+      repeat:
+        surPlace > 0
+          ? {
+              selfLoopProbability: surPlace,
+              expectedAttempts: reste > 0 ? 1 / reste : Infinity,
+              p90Attempts: surPlace < 1 ? Math.max(1, Math.ceil(Math.log(0.1) / Math.log(surPlace))) : Infinity,
+            }
+          : null,
+      branches,
+      mergedMinorProbability: reste > 0 ? rares / reste : 0,
+      mergedMinorCount: nRares,
+    };
+    descriptions.set(
+      id,
+      g.length > 1
+        ? `${e.rarete} · ${g.length} situations, surtout ${decrireEtape(e, noms)}`
+        : `${e.rarete} · ${decrireEtape(e, noms)}`,
+    );
+  }
+  nodes[FINI] = {
+    kind: "terminal",
+    id: FINI,
+    stateKey: FINI,
+    state: resume(null),
+    expectedVisits: fini > 0 ? fini : 1,
+    costToGo: 0,
+    result: "Objet fini",
+    note: null,
+  };
+  const shopping = plan.monnaies.map((c) => {
+    const unitCost = prix[c.nom] ?? 0;
+    return { id: c.nom, label: c.nom, expectedCount: c.quantite, unitCost, expectedCost: unitCost * c.quantite };
+  });
+  shopping.sort((a, b) => b.expectedCost - a.expectedCost);
+  return {
+    plan: {
+      baseId: "",
+      ilvl: 0,
+      goal: noms.map((label) => ({ label, slot: "prefix", group: 0, familyId: 0, maxTier: 0 })),
+      rootId: caseDe(plan.racine) ?? idEtape(plan.racine),
+      nodes,
+      expectedCost: plan.coutMoyen,
+      baseCost: 0,
+      shopping,
+      solver: { states: plan.etapes.length, sweeps: 0, converged: true, millis: 0, costFromVisits: plan.coutMoyen },
+      mc: null,
+      pricesSource: "",
+    },
+    decrire: (n) => (n.kind === "terminal" ? "Objet fini" : (descriptions.get(n.id) ?? "")),
+  };
 }

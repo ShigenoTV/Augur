@@ -126,3 +126,23 @@ autres préfixes et suffixes, metamod, coût moyen restant). Le panneau en tire 
 - « Où en est ton objet ? » : le joueur décrit son objet et voit l'action à faire et le coût moyen restant.
   Une situation absente des étapes est une situation où le plan ne passe presque jamais.
 
+
+## Arbre de décision, étapes et liste de courses
+
+Comme en PoE 2, le plan conseillé s'affiche en trois onglets. Le composant d'arbre, sa mise en page
+(`arbre()`), le tri des étapes (`etapes()`) et les tableaux sont ceux de la Forge PoE 2 ; seuls changent le
+format des montants et la description des cases (avec le metamod), passés en options au composant.
+
+- Chaque étape renvoie ses issues : directes (Exalted, Annulment, établi…) dans `issues`, ou, quand l'action
+  refait l'objet (Alchemy, Chaos, Essence, Alteration…), l'indice de sa loi dans `relances`, écrite une seule
+  fois. Les issues vers des situations hors du pas à pas sont regroupées (« +N »).
+- `arbrePoe1` (panneau) met le plan à la forme d'un plan PoE 2. Les situations qui font la même relance sont
+  regroupées en une case (« Rare · 270 situations, surtout … ») : les issues entre elles deviennent la relance
+  sur place (« ~N× »). Une flèche est verte quand il reste moins à dépenser après qu'avant.
+- La liste de courses chiffre les monnaies consommées en moyenne aux prix utilisés par le calcul.
+
+## Coûts affichés en Chaos ou Divine
+
+En PoE 1, la barre latérale propose Chaos ou Divine (`devisePoe1.ts`, gardé à part du choix PoE 2). Les
+calculs restent en Chaos ; le cours de la Divine vient des prix de la Forge (saisie, sinon poe.ninja) ou du
+dernier relevé des coffres. Les prix unitaires saisis restent en Chaos.
