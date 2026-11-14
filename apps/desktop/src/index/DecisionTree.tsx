@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { ForgePlan } from "../bridge";
+import type { ForgeActionNode, ForgePlan, ForgeTerminalNode } from "../bridge";
 import { useCout } from "./devise";
 import { arbre, decrireEtat, formatCount, formatPercent, libelleCourt, type NoeudArbre } from "./forge";
 
@@ -16,13 +16,25 @@ const y = (n: NoeudArbre) => MARGE + n.row * PAS_Y;
  * Arbre de décision du plan (repris de l'ancienne appli de craft de Max) : une colonne par étape
  * depuis la base neuve, flèches vertes quand l'objet progresse, rouges pointillées quand il recule.
  */
-export function DecisionTree({ plan }: { plan: ForgePlan }) {
-  const cout = useCout();
+export function DecisionTree({
+  plan,
+  formatCout,
+  decrire,
+}: {
+  plan: ForgePlan;
+  /** Format des montants (Forge PoE 1 : Chaos ou Divine) ; par défaut la monnaie choisie en PoE 2. */
+  formatCout?: (v: number | null | undefined) => string;
+  /** Description d'une case (Forge PoE 1 : avec le metamod) ; par défaut l'état PoE 2. */
+  decrire?: (n: ForgeActionNode | ForgeTerminalNode) => string;
+}) {
+  const coutPoe2 = useCout();
+  const cout = formatCout ?? coutPoe2;
   const [retours, setRetours] = useState(false);
   const [zoom, setZoom] = useState(1);
   const t = useMemo(() => arbre(plan), [plan]);
   const labels = plan.goal.map((g) => libelleCourt(g.label));
   const pos = new Map(t.noeuds.map((n) => [n.id, n]));
+  const etat = (n: ForgeActionNode | ForgeTerminalNode) => (decrire ? decrire(n) : decrireEtat(n.state, labels));
   const largeur = MARGE * 2 + (t.colonnes - 1) * PAS_X + L;
   const hauteur = MARGE * 2 + (t.lignes - 1) * PAS_Y + H + (retours ? 40 : 0);
 
@@ -151,7 +163,7 @@ export function DecisionTree({ plan }: { plan: ForgePlan }) {
                         : "border-ink-600 bg-ink-900"
                   }`}
                   style={{ left: x(n), top: y(n), width: L, height: H }}
-                  title={decrireEtat(n.node.state, labels)}
+                  title={etat(n.node)}
                 >
                   {n.node.kind === "terminal" ? (
                     <>
@@ -168,7 +180,7 @@ export function DecisionTree({ plan }: { plan: ForgePlan }) {
                           <span className="font-mono text-text-subtle">~{formatCount(n.node.repeat.expectedAttempts)}×</span>
                         )}
                       </span>
-                      <span className="truncate text-text-muted">{decrireEtat(n.node.state, labels)}</span>
+                      <span className="truncate text-text-muted">{etat(n.node)}</span>
                       <span className="mt-auto flex justify-between text-text-subtle">
                         <span>
                           reste <span className="font-mono text-text-primary">{cout(n.node.costToGo)}</span>

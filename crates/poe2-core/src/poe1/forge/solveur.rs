@@ -31,7 +31,7 @@
 //! système linéaire entre les nœuds. Les boucles locales (Exalted puis Annulment) sont traitées par
 //! Gauss-Seidel.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use serde::Serialize;
 
@@ -88,6 +88,10 @@ pub struct PlanPoe1 {
     /// Pas à pas : l'action conseillée dans chaque situation rencontrée, la plus fréquente d'abord.
     /// L'appli y retrouve la situation de l'objet du joueur.
     pub etapes: Vec<EtapePlan>,
+    /// Identifiant de la situation de départ (objet Normal) dans `etapes`.
+    pub racine: usize,
+    /// Lois des relances (Alchemy, Chaos, Essence, Alteration…) partagées par plusieurs situations.
+    pub relances: Vec<IssuesPlan>,
 }
 
 /// Une situation de l'objet et ce qu'il faut y faire.
@@ -111,6 +115,35 @@ pub struct EtapePlan {
     pub reste: f64,
     /// Nombre moyen de passages par cette situation sur un craft.
     pub passages: f64,
+    /// Identifiant de la situation (cible des branches).
+    pub id: usize,
+    /// Coût d'une utilisation de l'action conseillée, en Chaos.
+    pub cout: f64,
+    /// Issues de l'action quand elle refait l'objet : indice dans `PlanPoe1::relances`.
+    pub relance: Option<usize>,
+    /// Issues de l'action sinon (vide avec une relance).
+    pub issues: IssuesPlan,
+}
+
+/// Issues d'une action, de la plus probable à la moins probable, vers les situations gardées
+/// dans `etapes` ou l'objet fini ; les autres sont regroupées.
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IssuesPlan {
+    pub branches: Vec<BranchePlan>,
+    /// Probabilité cumulée des issues regroupées (situations trop rares pour le pas à pas).
+    pub autres_issues: f64,
+    /// Nombre d'issues regroupées.
+    pub nombre_autres: usize,
+}
+
+/// Une issue de l'action conseillée.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BranchePlan {
+    /// Situation d'arrivée ; `None` : objet fini.
+    pub vers: Option<usize>,
+    pub probabilite: f64,
 }
 
 /// Situations gardées dans le pas à pas : celles où l'on passe au moins une fois sur mille crafts,
@@ -1186,13 +1219,16 @@ fn plan_depuis(sol: &Solution) -> PlanPoe1 {
         .unwrap_or_default();
     let mut sans_prix = m.sans_prix.clone();
     sans_prix.sort();
+    let (etapes, relances) = etapes(m, g, politique, restes, &visites);
     PlanPoe1 {
         cout_moyen,
         depart: depart_libelle,
         actions: usages,
         monnaies,
         sans_prix,
-        etapes: etapes(m, g, politique, restes, &visites),
+        etapes,
+        racine: depart,
+        relances,
     }
 }
 
@@ -1203,7 +1239,7 @@ fn etapes(
     politique: &[usize],
     restes: &[f64],
     visites: &[f64],
-) -> Vec<EtapePlan> {
+) -> (Vec<EtapePlan>, Vec<IssuesPlan>) {
     let indices = |masque: u8| -> Vec<usize> {
         (0..m.goal.len())
             .filter(|k| masque & (1 << k) != 0)
@@ -1235,11 +1271,65 @@ fn etapes(
                 action: m.libelles[a.libelle].clone(),
                 reste: restes[s],
                 passages: *y,
+                id: s,
+                cout: a.cout,
+                relance: None,
+                issues: IssuesPlan::default(),
             })
         })
         .collect();
     sortie.sort_by(|a, b| b.passages.total_cmp(&a.passages));
     sortie.truncate(ETAPES_MAX);
+
+    // Issues, vers les situations gardées ; une loi de relance n'est écrite qu'une fois.
+    let gardes: HashSet<usize> = sortie.iter().map(|e| e.id).collect();
+    let mut relances = Vec::new();
+    let mut index_relances: HashMap<usize, usize> = HashMap::new();
+    for e in &mut sortie {
+        let a = &g.actions[e.id][politique[e.id]];
+        match &a.issue {
+            Issue::Succes => {
+                e.issues = issues(m, &[], &gardes);
+                e.issues.branches.push(BranchePlan {
+                    vers: None,
+                    probabilite: 1.0,
+                });
+            }
+            Issue::Etats(l) => e.issues = issues(m, l, &gardes),
+            Issue::Noeud(h) => {
+                let i = *index_relances.entry(*h).or_insert_with(|| {
+                    relances.push(issues(m, &g.noeuds[*h], &gardes));
+                    relances.len() - 1
+                });
+                e.relance = Some(i);
+            }
+        }
+    }
+    (sortie, relances)
+}
+
+/// Loi d'issues fusionnée par situation d'arrivée (les états au but deviennent « objet fini »),
+/// des plus probables aux moins probables ; les situations hors de `gardes` sont regroupées.
+fn issues(m: &Modele, loi: &[(usize, f64)], gardes: &HashSet<usize>) -> IssuesPlan {
+    let mut fusion: BTreeMap<Option<usize>, f64> = BTreeMap::new();
+    let mut sortie = IssuesPlan::default();
+    for &(t, p) in loi {
+        if m.reussi(&m.etats[t]) {
+            *fusion.entry(None).or_default() += p;
+        } else if gardes.contains(&t) {
+            *fusion.entry(Some(t)).or_default() += p;
+        } else {
+            sortie.autres_issues += p;
+            sortie.nombre_autres += 1;
+        }
+    }
+    sortie.branches = fusion
+        .into_iter()
+        .map(|(vers, probabilite)| BranchePlan { vers, probabilite })
+        .collect();
+    sortie
+        .branches
+        .sort_by(|a, b| b.probabilite.total_cmp(&a.probabilite));
     sortie
 }
 
@@ -1675,6 +1765,66 @@ mod tests {
                 .windows(2)
                 .all(|w| w[0].passages >= w[1].passages)
         );
+    }
+
+    #[test]
+    fn arbre_du_plan_coherent() {
+        let pb = construire_pool(ARMURE, 84, None).unwrap();
+        let voulus = [
+            voulu(&pb.pool, "IncreasedLife8"),
+            voulu(&pb.pool, "FireResist4"),
+        ];
+        let goal = Goal::new(&pb.pool, &voulus).unwrap();
+        let plan = plan(&pb, &goal, &cote_marche()).unwrap();
+        let racine = plan.etapes.iter().find(|e| e.id == plan.racine).unwrap();
+        assert_eq!(racine.rarete, "Normal");
+        assert!((racine.reste - plan.cout_moyen).abs() < 1e-6);
+        let reste: BTreeMap<usize, f64> = plan.etapes.iter().map(|e| (e.id, e.reste)).collect();
+        let mut fini = false;
+        let mut relances_vues = vec![false; plan.relances.len()];
+        for e in &plan.etapes {
+            let issues = match e.relance {
+                Some(r) => {
+                    relances_vues[r] = true;
+                    assert!(e.issues.branches.is_empty());
+                    &plan.relances[r]
+                }
+                None => &e.issues,
+            };
+            assert!(!issues.branches.is_empty() || issues.nombre_autres > 0);
+            let total: f64 =
+                issues.branches.iter().map(|b| b.probabilite).sum::<f64>() + issues.autres_issues;
+            assert!((total - 1.0).abs() < 1e-6, "{total}");
+            assert!(
+                issues
+                    .branches
+                    .windows(2)
+                    .all(|w| w[0].probabilite >= w[1].probabilite)
+            );
+            assert!(
+                issues
+                    .branches
+                    .iter()
+                    .all(|b| b.vers.is_none_or(|t| reste.contains_key(&t)))
+            );
+            fini |= issues.branches.iter().any(|b| b.vers.is_none());
+            // Équation de Bellman quand toutes les issues sont gardées : reste = coût + suite.
+            if issues.nombre_autres == 0 {
+                let suite: f64 = issues
+                    .branches
+                    .iter()
+                    .map(|b| b.vers.map_or(0.0, |t| reste[&t] * b.probabilite))
+                    .sum();
+                assert!(
+                    (e.reste - e.cout - suite).abs() <= 1e-6 * e.reste.max(1.0),
+                    "{} contre {}",
+                    e.reste,
+                    e.cout + suite
+                );
+            }
+        }
+        assert!(relances_vues.iter().all(|v| *v), "relance inutilisée");
+        assert!(fini, "aucune issue ne finit l'objet");
     }
 
     #[test]

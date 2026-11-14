@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { ForgePoe1Base, ForgePoe1Etape, ForgePoe1Method } from "../bridge";
+import type { ForgePoe1Base, ForgePoe1Etape, ForgePoe1Method, ForgePoe1Plan } from "../bridge";
 import {
   chiffrer,
   decisions,
   decrireEtape,
   essaisPour,
   formatChance,
+  arbrePoe1,
   formatChaos,
   libelleBase,
   prixEffectif,
@@ -110,6 +111,12 @@ describe("forge PoE 1", () => {
   });
 });
 
+const directes = (branches: ForgePoe1Etape["issues"]["branches"], autresIssues = 0, nombreAutres = 0) => ({
+  branches,
+  autresIssues,
+  nombreAutres,
+});
+
 const etape = (p: Partial<ForgePoe1Etape>): ForgePoe1Etape => ({
   rarete: "Magique",
   voulus: [],
@@ -120,6 +127,10 @@ const etape = (p: Partial<ForgePoe1Etape>): ForgePoe1Etape => ({
   action: "Orb of Alteration",
   reste: 100,
   passages: 1,
+  id: 0,
+  cout: 1,
+  relance: null,
+  issues: { branches: [], autresIssues: 0, nombreAutres: 0 },
   ...p,
 });
 
@@ -189,5 +200,117 @@ describe("pas à pas PoE 1", () => {
       ),
     ).toBe("Vie · tier trop bas : Feu · 1 autre préfixe, 2 autres suffixes · metamod « Suffixes Cannot Be Changed »");
     expect(decrireEtape(etape({}), noms)).toBe("aucun mod voulu");
+  });
+});
+
+describe("arbre du plan PoE 1", () => {
+  // Normal -> Alchemy -> Rare relancé au Chaos (70 % sur place), 20 % fini, 10 % vers un Rare à 1 voulu.
+  const plan: ForgePoe1Plan = {
+    coutMoyen: 50,
+    depart: "Orb of Alchemy",
+    actions: [],
+    monnaies: [
+      { nom: "Chaos Orb", quantite: 40 },
+      { nom: "Orb of Alchemy", quantite: 1 },
+    ],
+    sansPrix: [],
+    racine: 0,
+    relances: [],
+    etapes: [
+      etape({
+        id: 0,
+        rarete: "Normal",
+        action: "Orb of Alchemy",
+        reste: 50,
+        cout: 0.5,
+        issues: directes([{ vers: 1, probabilite: 1 }]),
+      }),
+      etape({
+        id: 1,
+        rarete: "Rare",
+        action: "Chaos Orb",
+        reste: 49.5,
+        passages: 5,
+        issues: directes(
+          [
+            { vers: 1, probabilite: 0.7 },
+            { vers: null, probabilite: 0.2 },
+            { vers: 2, probabilite: 0.09 },
+          ],
+          0.01,
+          3,
+        ),
+      }),
+      etape({
+        id: 2,
+        rarete: "Rare",
+        voulus: [0],
+        metamod: "Prefixes Cannot Be Changed",
+        action: "Chaos Orb",
+        reste: 60,
+      }),
+    ],
+  };
+  const { plan: p, decrire } = arbrePoe1(plan, ["Vie"], { "Chaos Orb": 1, "Orb of Alchemy": 0.5 });
+
+  it("met chaque situation dans une case, avec ses issues hors relance sur place", () => {
+    expect(p.rootId).toBe("e0");
+    const rare = p.nodes.e1!;
+    expect(rare.kind).toBe("action");
+    if (rare.kind !== "action") return;
+    expect(rare.repeat?.expectedAttempts).toBeCloseTo(1 / 0.3);
+    expect(rare.branches.map((b) => [b.to, b.kind])).toEqual([
+      ["fini", "success"],
+      ["e2", "failure"],
+    ]);
+    expect(rare.branches[0]!.probability).toBeCloseTo(0.2 / 0.3);
+    expect(rare.mergedMinorProbability).toBeCloseTo(0.01 / 0.3);
+    expect(rare.mergedMinorCount).toBe(3);
+    expect(p.nodes.fini?.kind).toBe("terminal");
+    expect(p.nodes.fini?.expectedVisits).toBeCloseTo(1);
+  });
+
+  it("décrit les cases avec le metamod et chiffre la liste de courses", () => {
+    expect(decrire(p.nodes.e2!)).toBe("Rare · Vie · metamod « Prefixes Cannot Be Changed »");
+    expect(decrire(p.nodes.e0!)).toBe("Normal · aucun mod voulu");
+    expect(p.shopping.map((l) => [l.label, l.expectedCost])).toEqual([
+      ["Chaos Orb", 40],
+      ["Orb of Alchemy", 0.5],
+    ]);
+  });
+
+  it("regroupe les situations à relance identique en une case qui boucle sur elle-même", () => {
+    const loi = directes([
+      { vers: 1, probabilite: 0.5 },
+      { vers: 2, probabilite: 0.3 },
+      { vers: null, probabilite: 0.2 },
+    ]);
+    const p2 = arbrePoe1(
+      {
+        ...plan,
+        relances: [loi],
+        etapes: [
+          etape({
+            id: 0,
+            rarete: "Normal",
+            action: "Orb of Alchemy",
+            reste: 6,
+            issues: directes([{ vers: 1, probabilite: 1 }]),
+          }),
+          etape({ id: 1, rarete: "Rare", action: "Chaos Orb", reste: 5, passages: 3, relance: 0 }),
+          etape({ id: 2, rarete: "Rare", voulus: [0], action: "Chaos Orb", reste: 5, passages: 2, relance: 0 }),
+        ],
+      },
+      ["Vie"],
+      {},
+    ).plan;
+    expect(Object.keys(p2.nodes).sort()).toEqual(["e0", "e1", "fini"]);
+    const g = p2.nodes.e1!;
+    if (g.kind !== "action") throw new Error("case d'action attendue");
+    expect(g.expectedVisits).toBe(5);
+    expect(g.repeat?.selfLoopProbability).toBeCloseTo(0.8);
+    expect(g.branches.map((b) => [b.to, b.kind])).toEqual([["fini", "success"]]);
+    expect(g.branches[0]!.probability).toBeCloseTo(1);
+    expect(p2.nodes.fini?.expectedVisits).toBeCloseTo(1);
   });
 });

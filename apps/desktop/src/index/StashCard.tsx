@@ -1,6 +1,7 @@
 import { StatePanel } from "@augur/ui";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { commands, isAppError, isTauri, on, type StashStatus, type StashTab } from "../bridge";
+import { AffichagePoe1Context, formatPoe1 } from "./devisePoe1";
 
 const champ =
   "min-w-0 rounded-chip border border-ink-700 bg-ink-950 px-2 py-1.5 text-sm text-text-primary placeholder:text-text-subtle";
@@ -125,6 +126,11 @@ export function StashCard() {
   const connecte = Boolean(status?.hasSession && status.account);
   const last = status?.last ?? null;
   const cours = last?.coursDivine ?? null;
+  const { affichage, majDivine } = useContext(AffichagePoe1Context);
+  // Le cours du relevé sert aussi au choix « Coûts affichés en » de la barre latérale.
+  useEffect(() => majDivine(cours), [cours]); // majDivine change à chaque rendu, sans effet sur le cours.
+  const montant = (v: number) =>
+    affichage.devise === "divine" && cours ? formatPoe1(v, { devise: "divine", divine: cours }) : formatChaos(v, cours);
 
   return (
     <div className="space-y-4 text-sm">
@@ -254,7 +260,7 @@ export function StashCard() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-chip border border-ink-700 p-3">
                   <p className="text-xs text-text-subtle">Valeur relevée</p>
-                  <p className="text-lg font-semibold">{formatChaos(last.chaos, cours)}</p>
+                  <p className="text-lg font-semibold">{montant(last.chaos)}</p>
                   <p className="text-xs text-text-subtle">le {heure(last.at)}</p>
                 </div>
                 {status.gain !== null && status.previous && (
@@ -262,7 +268,7 @@ export function StashCard() {
                     <p className="text-xs text-text-subtle">Depuis le relevé du {heure(status.previous.at)}</p>
                     <p className={`text-lg font-semibold ${status.gain >= 0 ? "text-signal-gain" : "text-signal-loss"}`}>
                       {signe(status.gain)}
-                      {formatChaos(Math.abs(status.gain), cours)}
+                      {montant(Math.abs(status.gain))}
                     </p>
                   </div>
                 )}
@@ -285,7 +291,7 @@ export function StashCard() {
                         </span>
                         <span className={c.chaos >= 0 ? "text-signal-gain" : "text-signal-loss"}>
                           {signe(c.chaos)}
-                          {formatChaos(Math.abs(c.chaos), cours)}
+                          {montant(Math.abs(c.chaos))}
                         </span>
                       </li>
                     ))}
@@ -302,7 +308,7 @@ export function StashCard() {
                         {l.quantite > 1 && `${l.quantite.toLocaleString("fr-FR")} × `}
                         {l.nom}
                       </span>
-                      <span>{formatChaos(l.chaos, cours)}</span>
+                      <span>{montant(l.chaos)}</span>
                     </li>
                   ))}
                 </ul>
