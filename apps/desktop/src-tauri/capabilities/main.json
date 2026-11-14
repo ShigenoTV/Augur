@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
-  "description": "Fenêtre principale : état de l'application, jeu actif (sélecteur PoE 1 / PoE 2), événements, réglages et mise à jour de l'application (vérification et installation de paquets signés). Session de mesures (l'export est écrit par le cœur Rust dans Documents\\Augur\\mesures, jamais un chemin choisi par la WebView). Atlas Ledger : session de farm et historique local (base SQLite dans le dossier de données d'Augur, écrite par le cœur Rust). Personnage : import d'un code Path of Building collé par le joueur (gardé dans le dossier de données d'Augur). Forge : bases, affixes et plan de craft calculés par le cœur Rust sur les données embarquées ; table de prix saisie par le joueur et relevé poe.ninja téléchargé par le cœur Rust à la demande (fichier dans le dossier de configuration d'Augur, écrit par le cœur Rust). Diagnostic : journal d'Augur (tenu par le cœur Rust), copie dans le presse-papier et ouverture, par le cœur Rust, de la page de ticket GitHub du dépôt Augur préremplie avec le texte relu par le joueur. Aucun accès fichier, shell ni réseau depuis la WebView.",
+  "description": "Fenêtre principale : état de l'application, jeu actif (sélecteur PoE 1 / PoE 2), coffres de PoE 1 (le cœur Rust lit les onglets choisis sur pathofexile.com avec la session du joueur, gardée dans le Gestionnaire d'identification Windows et jamais exposée à la WebView, qui ne peut que l'enregistrer ou l'effacer), événements, réglages et mise à jour de l'application (vérification et installation de paquets signés). Session de mesures (l'export est écrit par le cœur Rust dans Documents\\Augur\\mesures, jamais un chemin choisi par la WebView). Atlas Ledger : session de farm et historique local (base SQLite dans le dossier de données d'Augur, écrite par le cœur Rust). Personnage : import d'un code Path of Building collé par le joueur (gardé dans le dossier de données d'Augur). Forge : bases, affixes et plan de craft calculés par le cœur Rust sur les données embarquées ; table de prix saisie par le joueur et relevé poe.ninja téléchargé par le cœur Rust à la demande (fichier dans le dossier de configuration d'Augur, écrit par le cœur Rust). Diagnostic : journal d'Augur (tenu par le cœur Rust), copie dans le presse-papier et ouverture, par le cœur Rust, de la page de ticket GitHub du dépôt Augur préremplie avec le texte relu par le joueur. Aucun accès fichier, shell ni réseau depuis la WebView.",
   "windows": [
     "main"
   ],
@@ -15,6 +15,12 @@
     "allow-install-update",
     "allow-get-settings",
     "allow-set-game",
+    "allow-get-poe1-stash",
+    "allow-connect-poe1-stash",
+    "allow-forget-poe1-stash-session",
+    "allow-list-poe1-stash-tabs",
+    "allow-set-poe1-stash-tabs",
+    "allow-take-poe1-stash-snapshot",
     "allow-set-update-channel",
     "allow-get-client-log-status",
     "allow-set-client-log-path",

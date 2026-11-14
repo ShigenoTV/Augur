@@ -1,11 +1,13 @@
 //! Path of Exile 1 : ce qu'Augur sait faire pour PoE 1 sans moteur de calcul.
 //!
 //! - [`ninja`] : cote poe.ninja d'un objet copié en jeu (devises, cartes, uniques) ;
+//! - [`coffre`] : objets des coffres (API du site) et valeur d'un relevé ;
 //! - [`trade`] : recherche de l'objet sur le site de trade de PoE 1.
 //!
 //! Comme le reste de la crate : aucune entrée-sortie, les réponses de poe.ninja
 //! sont fournies par l'appli.
 
+pub mod coffre;
 pub mod ninja;
 pub mod trade;
 

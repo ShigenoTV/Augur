@@ -130,6 +130,55 @@ pub fn open_poe1_trade_search(app: AppHandle) -> Result<String, AppError> {
     crate::poe1_items::open_trade(&app)
 }
 
+/// PoE 1 : état de la carte « Coffres » (compte, onglets suivis, deux derniers relevés).
+#[tauri::command]
+pub fn get_poe1_stash(app: AppHandle) -> crate::poe1_stash::StashStatus {
+    crate::poe1_stash::status(&app)
+}
+
+/// PoE 1 : enregistre le compte et la session (`POESESSID`, facultative si déjà
+/// enregistrée), puis vérifie l'accès en listant les onglets.
+#[tauri::command]
+pub async fn connect_poe1_stash(
+    app: AppHandle,
+    account: String,
+    session: Option<String>,
+) -> Result<Vec<poe2_core::poe1::coffre::Onglet>, AppError> {
+    crate::poe1_stash::connecter(&app, account, session).await
+}
+
+/// PoE 1 : efface la session enregistrée.
+#[tauri::command]
+pub fn forget_poe1_stash_session(app: AppHandle) -> crate::poe1_stash::StashStatus {
+    crate::poe1_stash::oublier(&app);
+    crate::poe1_stash::status(&app)
+}
+
+/// PoE 1 : onglets du compte (une lecture sur le site).
+#[tauri::command]
+pub async fn list_poe1_stash_tabs(
+    app: AppHandle,
+) -> Result<Vec<poe2_core::poe1::coffre::Onglet>, AppError> {
+    crate::poe1_stash::onglets(&app).await
+}
+
+/// PoE 1 : onglets suivis.
+#[tauri::command]
+pub fn set_poe1_stash_tabs(
+    app: AppHandle,
+    tabs: Vec<u32>,
+) -> Result<crate::poe1_stash::StashStatus, AppError> {
+    crate::poe1_stash::choisir(&app, tabs)
+}
+
+/// PoE 1 : relève les onglets suivis et leur valeur.
+#[tauri::command]
+pub async fn take_poe1_stash_snapshot(
+    app: AppHandle,
+) -> Result<crate::poe1_stash::StashStatus, AppError> {
+    crate::poe1_stash::relever(&app).await
+}
+
 /// Ligue poe.ninja du jeu actif. `None` ou vide : ligue par défaut.
 #[tauri::command]
 pub fn set_league(

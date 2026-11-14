@@ -21,6 +21,7 @@ import { afficherRaccourci, SHORTCUTS_PAR_DEFAUT } from "./shortcuts";
 import { summarizeClientLog } from "./clientLog";
 import { ForgeCard } from "./ForgeCard";
 import { LedgerCard } from "./LedgerCard";
+import { StashCard } from "./StashCard";
 import { MeasureCard } from "./MeasureCard";
 import { AffichageContext, DEVISES, useAffichage } from "./devise";
 import { useUpdates } from "./useUpdates";
@@ -365,6 +366,13 @@ function App() {
           <div hidden={page !== "ledger"}>
             {/* Un historique par jeu : changer de jeu recharge la carte. */}
             <LedgerCard key={game} />
+            {poe1 && (
+              <div className="mt-4">
+                <Card title="Coffres PoE 1">
+                  <StashCard />
+                </Card>
+              </div>
+            )}
           </div>
 
           <div hidden={page !== "outils" || poe1} className="space-y-4">

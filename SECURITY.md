@@ -39,5 +39,5 @@ Une dépendance vulnérable sans correctif disponible est remplacée, retirée o
 - **Capabilities Tauri minimales** : aucun plugin `shell`, aucun accès système de fichiers hors des dossiers de l'application et de `Client.txt`.
 - **Content Security Policy stricte** dans la WebView : aucun script distant, aucun `eval`.
 - Jetons OAuth stockés dans le **Gestionnaire d'identification Windows**, jamais en clair sur le disque ni dans les logs.
-- Jamais de `POESESSID` demandé ni stocké.
+- `POESESSID` (coffres de PoE 1 uniquement, décision de Max du 2026-11-14, usage personnel) : demandé seulement si le joueur active la lecture de ses coffres, stocké dans le **Gestionnaire d'identification Windows** (jamais dans un fichier d'Augur, les logs ni le diagnostic), envoyé uniquement à `www.pathofexile.com` sans suivre de redirection, en lecture seule et à faible débit, effaçable par « Oublier ma session ». Voir `apps/desktop/src-tauri/src/secret.rs` et `poe1_stash.rs`.
 - Aucun secret dans le dépôt : clés de signature et identifiants OAuth du studio dans les secrets de la CI uniquement.

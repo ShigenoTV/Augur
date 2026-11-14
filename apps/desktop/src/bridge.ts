@@ -32,6 +32,7 @@ export const EVENTS = {
   clientLogStatus: "augur://client-log-status",
   measureSession: "augur://measure-session",
   ledgerSession: "augur://ledger-session",
+  poe1Stash: "augur://poe1-stash",
   characterChanged: "augur://character-changed",
 } as const;
 
@@ -67,8 +68,40 @@ export type Poe1ItemInfo = {
   league: string;
 };
 
+/** Onglet de coffre de PoE 1 (poe2_core::poe1::coffre::Onglet). */
+export type StashTab = { index: number; nom: string; genre: string };
+
+/** Relevé des coffres de PoE 1 (poe2_core::poe1::coffre::Releve). */
+export type StashSnapshot = {
+  at: string;
+  ligue: string;
+  chaos: number;
+  coursDivine: number | null;
+  onglets: { index: number; nom: string; chaos: number; objets: number }[];
+  lignes: { nom: string; quantite: number; chaos: number }[];
+  nonCotes: number;
+};
+
+/** Carte « Coffres PoE 1 » (src-tauri/src/poe1_stash.rs). */
+export type StashStatus = {
+  account: string | null;
+  hasSession: boolean;
+  league: string;
+  tabs: number[];
+  busy: boolean;
+  last: StashSnapshot | null;
+  previous: StashSnapshot | null;
+  gain: number | null;
+  changes: { nom: string; quantite: number; chaos: number }[];
+};
+
 /** Réglages propres à PoE 1 (ceux de PoE 2 sont à la racine de Settings). */
-export type GameSettings = { clientLogPath: string | null; league: string | null };
+export type GameSettings = {
+  clientLogPath: string | null;
+  league: string | null;
+  account?: string | null;
+  stashTabs?: number[];
+};
 
 export type Settings = {
   betaChannel: boolean;
@@ -403,6 +436,13 @@ export const commands = {
   setGame: (game: Game) => invoke<Settings>("set_game", { game }),
   getPoe1ItemInfo: () => invoke<Poe1ItemInfo>("get_poe1_item_info"),
   openPoe1TradeSearch: () => invoke<string>("open_poe1_trade_search"),
+  getPoe1Stash: () => invoke<StashStatus>("get_poe1_stash"),
+  connectPoe1Stash: (account: string, session: string | null) =>
+    invoke<StashTab[]>("connect_poe1_stash", { account, session }),
+  forgetPoe1StashSession: () => invoke<StashStatus>("forget_poe1_stash_session"),
+  listPoe1StashTabs: () => invoke<StashTab[]>("list_poe1_stash_tabs"),
+  setPoe1StashTabs: (tabs: number[]) => invoke<StashStatus>("set_poe1_stash_tabs", { tabs }),
+  takePoe1StashSnapshot: () => invoke<StashStatus>("take_poe1_stash_snapshot"),
   setUpdateChannel: (beta: boolean) => invoke<Settings>("set_update_channel", { beta }),
   getClientLogStatus: () => invoke<ClientLogStatus>("get_client_log_status"),
   setClientLogPath: (path: string | null) => invoke<Settings>("set_client_log_path", { path }),
@@ -470,6 +510,8 @@ export const on = {
     listen<MeasureStatus>(EVENTS.measureSession, (e) => cb(e.payload)),
   ledgerSession: (cb: (p: LedgerStatus) => void): Promise<UnlistenFn> =>
     listen<LedgerStatus>(EVENTS.ledgerSession, (e) => cb(e.payload)),
+  poe1Stash: (cb: (p: StashStatus) => void): Promise<UnlistenFn> =>
+    listen<StashStatus>(EVENTS.poe1Stash, (e) => cb(e.payload)),
   characterChanged: (cb: (p: CharacterInfo | null) => void): Promise<UnlistenFn> =>
     listen<CharacterInfo | null>(EVENTS.characterChanged, (e) => cb(e.payload)),
 };

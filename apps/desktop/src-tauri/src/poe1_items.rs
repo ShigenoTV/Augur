@@ -41,7 +41,7 @@ impl Poe1Ninja {
         pages.insert((ligue.to_string(), page), (Instant::now(), doc));
     }
 
-    async fn page(
+    pub(crate) async fn page(
         &self,
         client: &reqwest::Client,
         ligue: &str,

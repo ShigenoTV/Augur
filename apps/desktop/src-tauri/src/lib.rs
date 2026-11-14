@@ -31,6 +31,8 @@ pub mod measures;
 mod overlay;
 pub mod placement;
 mod poe1_items;
+mod poe1_stash;
+mod secret;
 mod settings;
 mod shortcuts;
 mod time;
@@ -95,6 +97,12 @@ pub fn run() {
             commands::set_game,
             commands::get_poe1_item_info,
             commands::open_poe1_trade_search,
+            commands::get_poe1_stash,
+            commands::connect_poe1_stash,
+            commands::forget_poe1_stash_session,
+            commands::list_poe1_stash_tabs,
+            commands::set_poe1_stash_tabs,
+            commands::take_poe1_stash_snapshot,
             commands::get_leagues,
             commands::set_league,
             commands::set_upgrade_budget,
@@ -150,6 +158,7 @@ pub fn run() {
             game::set_active(handle.state::<settings::SettingsStore>().get().game);
             app.manage(character::CharacterState::load(handle));
             app.manage(ledger::LedgerState::open(handle));
+            app.manage(poe1_stash::Poe1Stash::load(handle));
             app.manage(forge_prices::ForgePrices::load(handle));
             app.manage(forge::ForgePlanner::load(handle));
             // plan suivi avant la fermeture : recalculé en arrière-plan, aux prix du moment

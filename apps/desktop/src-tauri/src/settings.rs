@@ -41,6 +41,11 @@ pub struct Settings {
 pub struct GameSettings {
     pub client_log_path: Option<String>,
     pub league: Option<String>,
+    /// Nom de compte pathofexile.com (« Nom#1234 »), pour lire les coffres.
+    /// La session (`POESESSID`) n'est jamais ici : voir `secret.rs`.
+    pub account: Option<String>,
+    /// Onglets de coffre suivis (index du jeu).
+    pub stash_tabs: Vec<u32>,
 }
 
 fn non_vide(s: &Option<String>) -> Option<&str> {
