@@ -76,7 +76,11 @@ pub struct OverlayState {
     pub game_focused: bool,
     pub character: Option<CharacterSummary>,
     pub last_item: Option<ParsedItem>,
+    /// Version des données embarquées de PoE 2 (RePoE), `None` si elles ne se chargent pas.
     pub data_patch: Option<String>,
+    /// Version des données embarquées de PoE 1 (RePoE PoE 1), même règle.
+    #[serde(default)]
+    pub data_patch_poe1: Option<String>,
 }
 
 /// Interrupteurs distants (kill switch par fonctionnalité). Une

@@ -29,6 +29,10 @@ pub fn get_overlay_state(
             .ok()
             .map(|d| d.repoe_version.clone())
             .filter(|v| !v.is_empty()),
+        data_patch_poe1: poe2_core::poe1::forge::donnees()
+            .ok()
+            .map(|d| d.repoe_version.clone())
+            .filter(|v| !v.is_empty()),
     }
 }
 
