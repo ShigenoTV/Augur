@@ -5,6 +5,10 @@
 //! les maps de l'Atlas commencent par `Map`, les hideouts contiennent
 //! `Hideout`, les villes finissent par `_town`. Les règles par préfixe
 //! tiennent quand GGG ajoute des maps ; seules les exceptions sont listées.
+//!
+//! Les mêmes règles valent pour PoE 1 : maps en `MapWorlds…`, villes en
+//! `…_town` (`1_1_town`), hideouts en `Hideout…`. Labyrinthe, Delve, Heist,
+//! Sanctum et autres zones de ligue restent « Autre ».
 
 use serde::{Deserialize, Serialize};
 
@@ -53,6 +57,21 @@ pub fn type_zone(area_id: &str) -> TypeZone {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn classe_les_zones_de_poe1() {
+        for (id, attendu) in [
+            ("MapWorldsStrand", TypeZone::Map),
+            ("MapWorldsCemetery", TypeZone::Map),
+            ("HideoutCelestialNebula", TypeZone::Hideout),
+            ("1_1_town", TypeZone::Ville),
+            ("2_10_town", TypeZone::Ville),
+            ("Delve_Main", TypeZone::Autre),
+            ("1_Labyrinth_Trials_1", TypeZone::Autre),
+        ] {
+            assert_eq!(type_zone(id), attendu, "{id}");
+        }
+    }
 
     #[test]
     fn classe_les_zones_connues() {

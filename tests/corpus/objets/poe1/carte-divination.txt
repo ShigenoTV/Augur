@@ -1,0 +1,10 @@
+Item Class: Divination Cards
+Rarity: Divination Card
+A Chilling Wind
+--------
+Stack Size: 1/5
+--------
+Level 21 Vaal Cold Snap
+Cold Snap Gem
+--------
+"Of the ice it is said, the cold always wins."

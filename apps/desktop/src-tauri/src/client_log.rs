@@ -17,6 +17,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::contracts::{ZoneChanged, events};
+use crate::game::Game;
 use crate::log_locator;
 use crate::settings::SettingsStore;
 use crate::time::rfc3339_now;
@@ -122,8 +123,16 @@ impl Tail {
     }
 }
 
-fn user_path(app: &AppHandle) -> Option<String> {
-    app.state::<SettingsStore>().get().client_log_path
+/// Jeu actif et chemin de `Client.txt` choisi pour ce jeu : un changement de
+/// l'un ou de l'autre relance la recherche du fichier.
+fn user_path(app: &AppHandle) -> (Game, Option<String>) {
+    let game = crate::game::active();
+    let path = app
+        .state::<SettingsStore>()
+        .get()
+        .client_log_path_for(game)
+        .map(str::to_string);
+    (game, path)
 }
 
 /// Lance le suivi en tâche de fond : recherche du fichier, lecture des
@@ -135,7 +144,7 @@ pub fn spawn(app: AppHandle) {
             let state = app.state::<ClientLogState>();
             loop {
                 let configured = user_path(&app);
-                let (found, searched) = log_locator::locate(configured.as_deref());
+                let (found, searched) = log_locator::locate(configured.0, configured.1.as_deref());
                 let searched: Vec<String> =
                     searched.iter().map(|p| p.display().to_string()).collect();
                 let Some(path) = found else {
@@ -164,7 +173,7 @@ pub fn spawn(app: AppHandle) {
                     if last_settings_check.elapsed() >= SETTINGS_CHECK {
                         last_settings_check = Instant::now();
                         if user_path(&app) != configured {
-                            break; // le joueur a choisi un autre chemin
+                            break; // le joueur a choisi un autre chemin ou un autre jeu
                         }
                     }
                     match tail.poll() {

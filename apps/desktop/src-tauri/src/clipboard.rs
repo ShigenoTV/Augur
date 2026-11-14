@@ -69,6 +69,8 @@ pub fn spawn_watcher(app: AppHandle) {
                 }
                 // Contrat : `augur://item-copied` porte l'objet déjà parsé.
                 let parsed = item_text::parse(&text);
+                // Les sessions de mesures servent le moteur de PoE 2.
+                let measuring = measuring && crate::game::active() == crate::game::Game::Poe2;
                 if measuring {
                     let result = parsed.clone().map_err(|e| e.message.clone());
                     measures::record_item(&app, &text, &result);

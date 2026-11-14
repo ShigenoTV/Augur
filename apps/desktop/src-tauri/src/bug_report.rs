@@ -72,8 +72,8 @@ pub fn diagnostic(app: &AppHandle) -> String {
         format!("Contrat : {}", crate::contracts::CONTRACT_VERSION),
         format!("Système : {}", system::version()),
         format!("Client.txt : {journal}"),
-        format!("Jeu : {jeu}"),
-        format!("Ligue souhaitée : {}", settings.league()),
+        format!("Jeu : {} ({jeu})", settings.game.label()),
+        format!("Ligue souhaitée : {}", settings.league_for(settings.game)),
         format!("Personnage importé : {perso}"),
     ]
     .join("\n")

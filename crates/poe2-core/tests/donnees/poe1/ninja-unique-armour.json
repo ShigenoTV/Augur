@@ -1,0 +1,38 @@
+{
+ "lines": [
+  {
+   "id": 1465,
+   "name": "The Covenant",
+   "baseType": "Spidersilk Robe",
+   "links": 6,
+   "itemType": "Body Armour",
+   "chaosValue": 7829,
+   "divineValue": 100.0,
+   "listingCount": 1,
+   "count": 1,
+   "detailsId": "the-covenant-spidersilk-robe-6l"
+  },
+  {
+   "id": 1463,
+   "name": "The Covenant",
+   "baseType": "Spidersilk Robe",
+   "itemType": "Body Armour",
+   "chaosValue": 156.6,
+   "divineValue": 2.0,
+   "listingCount": 46,
+   "count": 46,
+   "detailsId": "the-covenant-spidersilk-robe"
+  },
+  {
+   "id": 703,
+   "name": "Kaom's Heart",
+   "baseType": "Glorious Plate",
+   "itemType": "Body Armour",
+   "chaosValue": 25.0,
+   "divineValue": 0.32,
+   "listingCount": 56,
+   "count": 56,
+   "detailsId": "kaoms-heart-glorious-plate"
+  }
+ ]
+}

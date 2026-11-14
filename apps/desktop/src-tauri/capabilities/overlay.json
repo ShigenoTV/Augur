@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "overlay",
-  "description": "Overlay en jeu : écoute des événements, lecture de l'objet copié, comparaison au personnage importé (calcul local), prochaine étape du plan Forge suivi (calcul local), lecture des réglages (raccourcis affichés), recherche d'upgrades (le cœur Rust ouvre une adresse du site de trade officiel dans le navigateur, rien d'autre), fermeture et dimensionnement de sa propre fenêtre. Aucun accès fichier, shell ni réseau.",
+  "description": "Overlay en jeu : écoute des événements, lecture de l'objet copié, comparaison au personnage importé (calcul local), prochaine étape du plan Forge suivi (calcul local), lecture des réglages (raccourcis affichés), recherche d'upgrades (le cœur Rust ouvre une adresse du site de trade officiel dans le navigateur, rien d'autre), fermeture et dimensionnement de sa propre fenêtre. PoE 1 : cote poe.ninja de l'objet copié (téléchargée par le cœur Rust) et recherche sur le site de trade de PoE 1 (même principe). Aucun accès fichier, shell ni réseau depuis la WebView.",
   "windows": ["overlay"],
   "permissions": [
     "core:event:allow-listen",
@@ -15,6 +15,8 @@
     "allow-get-measure-status",
     "allow-evaluate-item",
     "allow-open-upgrade-search",
+    "allow-get-poe1-item-info",
+    "allow-open-poe1-trade-search",
     "allow-estimate-price",
     "allow-get-forge-advice"
   ]

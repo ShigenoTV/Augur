@@ -21,6 +21,7 @@ mod diag_log;
 mod evaluation;
 mod forge;
 mod forge_prices;
+mod game;
 mod game_window;
 pub mod item_text;
 mod ledger;
@@ -29,6 +30,9 @@ mod log_locator;
 pub mod measures;
 mod overlay;
 pub mod placement;
+mod poe1_items;
+mod poe1_stash;
+mod secret;
 mod settings;
 mod shortcuts;
 mod time;
@@ -80,6 +84,7 @@ pub fn run() {
         .manage(updates::PendingUpdate::default())
         .manage(client_log::ClientLogState::default())
         .manage(measures::MeasureState::default())
+        .manage(poe1_items::Poe1Ninja::default())
         .invoke_handler(tauri::generate_handler![
             commands::parse_clipboard_item,
             commands::get_overlay_state,
@@ -89,6 +94,15 @@ pub fn run() {
             commands::check_for_update,
             commands::install_update,
             commands::get_settings,
+            commands::set_game,
+            commands::get_poe1_item_info,
+            commands::open_poe1_trade_search,
+            commands::get_poe1_stash,
+            commands::connect_poe1_stash,
+            commands::forget_poe1_stash_session,
+            commands::list_poe1_stash_tabs,
+            commands::set_poe1_stash_tabs,
+            commands::take_poe1_stash_snapshot,
             commands::get_leagues,
             commands::set_league,
             commands::set_upgrade_budget,
@@ -140,8 +154,11 @@ pub fn run() {
             }
             log::info!("démarrage d'Augur v{}", handle.package_info().version);
             app.manage(settings::SettingsStore::load(handle));
+            // Avant le Ledger et le suivi de Client.txt, qui dépendent du jeu actif.
+            game::set_active(handle.state::<settings::SettingsStore>().get().game);
             app.manage(character::CharacterState::load(handle));
             app.manage(ledger::LedgerState::open(handle));
+            app.manage(poe1_stash::Poe1Stash::load(handle));
             app.manage(forge_prices::ForgePrices::load(handle));
             app.manage(forge::ForgePlanner::load(handle));
             // plan suivi avant la fermeture : recalculé en arrière-plan, aux prix du moment

@@ -1,0 +1,51 @@
+{
+ "core": {
+  "items": [
+   {
+    "id": "chaos",
+    "name": "Chaos Orb",
+    "image": "/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQ3VycmVuY3lSZXJvbGxSYXJlIiwic2NhbGUiOjF9XQ/46a2347805/CurrencyRerollRare.png",
+    "category": "Currency",
+    "detailsId": "chaos-orb"
+   },
+   {
+    "id": "divine",
+    "name": "Divine Orb",
+    "image": "/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQ3VycmVuY3kvQ3VycmVuY3lNb2RWYWx1ZXMiLCJzY2FsZSI6MX1d/ec48896769/CurrencyModValues.png",
+    "category": "Currency",
+    "detailsId": "divine-orb"
+   }
+  ],
+  "rates": {
+   "divine": 0.01277
+  },
+  "primary": "chaos",
+  "secondary": "divine"
+ },
+ "lines": [
+  {
+   "id": "a-chilling-wind",
+   "primaryValue": 7.2,
+   "volumePrimaryValue": 111.7
+  },
+  {
+   "id": "the-doctor",
+   "primaryValue": 598.9,
+   "volumePrimaryValue": 1996
+  }
+ ],
+ "items": [
+  {
+   "id": "a-chilling-wind",
+   "name": "A Chilling Wind",
+   "category": "Cards",
+   "detailsId": "a-chilling-wind"
+  },
+  {
+   "id": "the-doctor",
+   "name": "The Doctor",
+   "category": "Cards",
+   "detailsId": "the-doctor"
+  }
+ ]
+}

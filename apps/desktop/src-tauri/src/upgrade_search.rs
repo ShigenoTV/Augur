@@ -90,7 +90,16 @@ pub fn adresse(r: &Recherche, ligue: &str, budget_exalts: Option<u32>) -> String
 
 /// Adresse d'une recherche quelconque (`query` + `sort`) dans la ligue.
 pub fn adresse_requete(ligue: &str, requete: &Value) -> String {
-    let mut url = reqwest::Url::parse(SITE).expect("adresse du site de trade valide");
+    adresse_sur(SITE, ligue, requete)
+}
+
+/// Adresse d'une recherche du site de trade de PoE 1.
+pub fn adresse_requete_poe1(ligue: &str, requete: &Value) -> String {
+    adresse_sur(poe2_core::poe1::trade::SITE, ligue, requete)
+}
+
+fn adresse_sur(site: &str, ligue: &str, requete: &Value) -> String {
+    let mut url = reqwest::Url::parse(site).expect("adresse du site de trade valide");
     if let Ok(mut segments) = url.path_segments_mut() {
         segments.pop_if_empty().push(ligue);
     }
@@ -143,7 +152,7 @@ pub fn preparer(
 
 /// Ouvre l'adresse dans le navigateur par défaut.
 pub fn ouvrir(url: &str) -> Result<(), AppError> {
-    if !url.starts_with(SITE) {
+    if !url.starts_with(SITE) && !url.starts_with(poe2_core::poe1::trade::SITE) {
         return Err(app_error(
             ErrorCode::Internal,
             "Adresse de recherche refusée.",

@@ -17,6 +17,9 @@ use std::collections::BTreeMap;
 
 /// Adresse de l'API économique PoE 2 de poe.ninja.
 pub const API: &str = "https://poe.ninja/poe2/api/economy";
+/// Même API pour PoE 1 (même forme de réponse, vérifié le 14/11/2026). Seule la
+/// liste des ligues s'en sert pour l'instant.
+pub const API_POE1: &str = "https://poe.ninja/poe1/api/economy";
 
 /// Délai minimal entre deux actualisations (poe.ninja ne met à jour PoE 2 qu'environ toutes les
 /// heures).

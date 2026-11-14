@@ -12,6 +12,7 @@ use poe2_core::ledger::{Bilan, EvenementJournal, Horodatage, LigneJournal, Suivi
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
+use crate::game::Game;
 use crate::ledger_store::{LedgerStore, SessionRow, Strategy};
 use crate::time::rfc3339_now;
 
@@ -90,21 +91,56 @@ impl Inner {
 
 pub struct LedgerState(Mutex<Inner>);
 
+/// Fichier d'historique d'un jeu (`ledger.sqlite` reste celui de PoE 2, comme avant).
+pub fn store_file(game: Game) -> &'static str {
+    match game {
+        Game::Poe2 => "ledger.sqlite",
+        Game::Poe1 => "ledger-poe1.sqlite",
+    }
+}
+
+fn open_store(app: &AppHandle, game: Game) -> (Option<LedgerStore>, Option<String>) {
+    match app.path().app_data_dir() {
+        Ok(dir) => match LedgerStore::open(&dir.join(store_file(game))) {
+            Ok(store) => (Some(store), None),
+            Err(e) => {
+                log::error!("historique Ledger illisible : {e}");
+                (None, Some(format!("Historique illisible ({e}).")))
+            }
+        },
+        Err(e) => (None, Some(format!("Dossier de données introuvable ({e})."))),
+    }
+}
+
 impl LedgerState {
-    /// Ouvre la base `ledger.sqlite` du dossier de données d'Augur.
+    /// Ouvre l'historique du jeu actif dans le dossier de données d'Augur.
     pub fn open(app: &AppHandle) -> Self {
         let mut inner = Inner::default();
-        match app.path().app_data_dir() {
-            Ok(dir) => match LedgerStore::open(&dir.join("ledger.sqlite")) {
-                Ok(store) => inner.store = Some(store),
-                Err(e) => {
-                    log::error!("historique Ledger illisible : {e}");
-                    inner.storage_error = Some(format!("Historique illisible ({e})."));
-                }
-            },
-            Err(e) => inner.storage_error = Some(format!("Dossier de données introuvable ({e}).")),
-        }
+        (inner.store, inner.storage_error) = open_store(app, crate::game::active());
         Self(Mutex::new(inner))
+    }
+
+    /// Passe à l'historique d'un autre jeu. Refusé pendant une session : elle
+    /// mélangerait les maps des deux jeux.
+    pub fn switch_game(&self, app: &AppHandle, game: Game) -> Result<(), String> {
+        let status = {
+            let mut g = self.lock();
+            if g.active.is_some() {
+                return Err(
+                    "Une session Atlas Ledger est en cours : arrête-la avant de changer de jeu."
+                        .into(),
+                );
+            }
+            let (store, error) = open_store(app, game);
+            *g = Inner {
+                store,
+                storage_error: error,
+                ..Inner::default()
+            };
+            g.status()
+        };
+        emit(app, &status);
+        Ok(())
     }
 
     fn lock(&self) -> MutexGuard<'_, Inner> {

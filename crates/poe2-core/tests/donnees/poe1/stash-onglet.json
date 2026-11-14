@@ -1,0 +1,18 @@
+{
+ "numTabs": 3,
+ "tabs": [
+  {"n": "Devises", "i": 0, "id": "a1", "type": "CurrencyStash"},
+  {"n": "Butin", "i": 1, "id": "b2", "type": "QuadStash"},
+  {"n": "Cartes", "i": 2, "id": "c3", "type": "DivinationCardStash"}
+ ],
+ "items": [
+  {"w": 1, "h": 1, "name": "", "typeLine": "Divine Orb", "baseType": "Divine Orb", "frameType": 5, "stackSize": 3, "x": 0, "y": 0, "inventoryId": "Stash1"},
+  {"w": 1, "h": 1, "name": "", "typeLine": "Chaos Orb", "baseType": "Chaos Orb", "frameType": 5, "stackSize": 40, "x": 1, "y": 0, "inventoryId": "Stash1"},
+  {"w": 2, "h": 3, "name": "The Covenant", "typeLine": "Spidersilk Robe", "baseType": "Spidersilk Robe", "frameType": 3, "rarity": "Unique", "ilvl": 84,
+   "sockets": [{"group": 0, "sColour": "B"}, {"group": 0, "sColour": "B"}, {"group": 0, "sColour": "B"}, {"group": 0, "sColour": "B"}, {"group": 0, "sColour": "B"}, {"group": 0, "sColour": "B"}],
+   "x": 2, "y": 0, "inventoryId": "Stash1"},
+  {"w": 1, "h": 1, "name": "", "typeLine": "A Chilling Wind", "baseType": "A Chilling Wind", "frameType": 6, "stackSize": 2, "x": 4, "y": 0, "inventoryId": "Stash1"},
+  {"w": 1, "h": 1, "name": "Woe Deed", "typeLine": "Contract: Underbelly", "baseType": "Contract: Underbelly", "frameType": 2, "rarity": "Rare", "ilvl": 72, "x": 5, "y": 0, "inventoryId": "Stash1"},
+  {"w": 1, "h": 1, "name": "", "typeLine": "Rogue's Marker", "baseType": "Rogue's Marker", "frameType": 5, "stackSize": 9250, "x": 6, "y": 0, "inventoryId": "Stash1"}
+ ]
+}

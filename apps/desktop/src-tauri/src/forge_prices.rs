@@ -50,7 +50,7 @@ fn now_unix() -> u64 {
 }
 
 /// Encode une valeur de paramètre d'URL (nom de ligue avec espaces).
-fn encode(v: &str) -> String {
+pub(crate) fn encode(v: &str) -> String {
     v.bytes()
         .map(|b| match b {
             b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
@@ -65,7 +65,10 @@ fn network(message: String) -> AppError {
     app_error(ErrorCode::Network, message)
 }
 
-async fn get_json(client: &reqwest::Client, url: &str) -> Result<serde_json::Value, AppError> {
+pub(crate) async fn get_json(
+    client: &reqwest::Client,
+    url: &str,
+) -> Result<serde_json::Value, AppError> {
     let resp = client
         .get(url)
         .send()
@@ -87,7 +90,7 @@ async fn get_json(client: &reqwest::Client, url: &str) -> Result<serde_json::Val
     serde_json::from_str(&body).map_err(|e| network(format!("Réponse poe.ninja inattendue ({e}).")))
 }
 
-fn client(version: &str) -> Result<reqwest::Client, AppError> {
+pub(crate) fn client(version: &str) -> Result<reqwest::Client, AppError> {
     // reqwest est compilé sans fournisseur de chiffrement (« rustls-no-provider », imposé par
     // tauri-plugin-updater) : on installe ring, comme le fait le plugin.
     if rustls::crypto::CryptoProvider::get_default().is_none() {
@@ -102,10 +105,14 @@ fn client(version: &str) -> Result<reqwest::Client, AppError> {
         .map_err(|e| network(format!("Client HTTP indisponible ({e}).")))
 }
 
-/// Liste des ligues de poe.ninja (une requête, à l'ouverture de Réglages).
-pub async fn leagues(version: &str) -> Result<Vec<String>, AppError> {
+/// Liste des ligues de poe.ninja d'un jeu (une requête, à l'ouverture de Réglages).
+pub async fn leagues(version: &str, game: crate::game::Game) -> Result<Vec<String>, AppError> {
     let client = client(version)?;
-    let doc = get_json(&client, &format!("{}/leagues", ninja::API)).await?;
+    let api = match game {
+        crate::game::Game::Poe2 => ninja::API,
+        crate::game::Game::Poe1 => ninja::API_POE1,
+    };
+    let doc = get_json(&client, &format!("{api}/leagues")).await?;
     let list = ninja::ligues(&doc);
     if list.is_empty() {
         return Err(network("poe.ninja n'a renvoyé aucune ligue.".into()));

@@ -33,7 +33,7 @@ pub enum ErreurParse {
         "client du jeu dans une autre langue que l'anglais : non pris en charge pour l'instant"
     )]
     LangueNonPriseEnCharge,
-    #[error("ce texte n'est pas un objet de Path of Exile 2 (ligne « Rarity: » absente)")]
+    #[error("ce texte n'est pas un objet de Path of Exile (ligne « Rarity: » absente)")]
     PasUnObjet,
     #[error("rareté inconnue : « {0} »")]
     RareteInconnue(String),
@@ -50,6 +50,8 @@ pub enum Rarete {
     Unique,
     Devise,
     Gemme,
+    /// Carte de divination (PoE 1).
+    CarteDivination,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -134,6 +136,8 @@ pub struct Objet {
     pub non_identifie: bool,
     pub miroir: bool,
     pub sanctifie: bool,
+    /// Influences et marques de PoE 1 (« Shaper Item », « Fractured Item »…).
+    pub influences: Vec<String>,
     pub texte_saveur: Option<String>,
     pub note: Option<String>,
     /// Texte copié avec Ctrl+Alt+C.
@@ -163,14 +167,30 @@ const SUFFIXES_GENRE: [(&str, GenreMod); 6] = [
 
 /// Qualificatifs d'en-tête avancé qui donnent le genre du mod. Seul
 /// « Desecrated » est vérifié sur un vrai objet ; « Fractured » est supposé
-/// sur le même modèle.
-const QUALIFICATIFS_ENTETE: [(&str, GenreMod); 2] = [
+/// sur le même modèle, « Master Crafted » vient du format de PoE 1.
+const QUALIFICATIFS_ENTETE: [(&str, GenreMod); 3] = [
     ("Desecrated", GenreMod::Desacralise),
     ("Fractured", GenreMod::Fracture),
+    ("Master Crafted", GenreMod::Artisanal),
 ];
 
-/// Propriétés connues des blocs de propriétés (armes, armures, gemmes…).
-const PROPRIETES: [&str; 22] = [
+/// Lignes d'influence et de marque des objets de PoE 1, seules dans leur section.
+const INFLUENCES: [&str; 10] = [
+    "Shaper Item",
+    "Elder Item",
+    "Crusader Item",
+    "Hunter Item",
+    "Redeemer Item",
+    "Warlord Item",
+    "Searing Exarch Item",
+    "Eater of Worlds Item",
+    "Synthesised Item",
+    "Fractured Item",
+];
+
+/// Propriétés connues des blocs de propriétés (armes, armures, gemmes…),
+/// celles de PoE 2 puis celles propres à PoE 1.
+const PROPRIETES: [&str; 37] = [
     "Quality",
     "Physical Damage",
     "Elemental Damage",
@@ -193,6 +213,22 @@ const PROPRIETES: [&str; 22] = [
     "Cost",
     "Cast Time",
     "Waystone Tier",
+    // PoE 1
+    "Critical Strike Chance",
+    "Chance to Block",
+    "Ward",
+    "Weapon Range",
+    "Map Tier",
+    "Atlas Region",
+    "Item Quantity",
+    "Item Rarity",
+    "Monster Pack Size",
+    "More Scarabs",
+    "More Currency",
+    "Mana Cost",
+    "Mana Reserved",
+    "Cooldown Time",
+    "Experience",
 ];
 
 fn rarete(s: &str) -> Result<Rarete, ErreurParse> {
@@ -203,6 +239,7 @@ fn rarete(s: &str) -> Result<Rarete, ErreurParse> {
         "Unique" => Rarete::Unique,
         "Currency" => Rarete::Devise,
         "Gem" => Rarete::Gemme,
+        "Divination Card" => Rarete::CarteDivination,
         autre => {
             return Err(ErreurParse::RareteInconnue(
                 autre.chars().take(40).collect(),
@@ -276,11 +313,14 @@ fn lire_entete(ligne: &str) -> Option<EnteteMod> {
         .find_map(|(q, _)| gauche.strip_prefix(q))
         .map(str::trim_start)
         .unwrap_or(gauche);
-    let affixe = if qualifie.starts_with("Prefix") {
+    // PoE 1 met d'autres mots devant le type (« Master Crafted Prefix », « Shaper's
+    // Suffix », « Eldritch Implicit ») : on cherche le type avant le nom entre guillemets.
+    let avant_nom = qualifie.split('"').next().unwrap_or(qualifie);
+    let affixe = if qualifie.starts_with("Prefix") || avant_nom.contains("Prefix Modifier") {
         Affixe::Prefixe
-    } else if qualifie.starts_with("Suffix") {
+    } else if qualifie.starts_with("Suffix") || avant_nom.contains("Suffix Modifier") {
         Affixe::Suffixe
-    } else if gauche.starts_with("Implicit") {
+    } else if gauche.starts_with("Implicit") || avant_nom.contains("Implicit Modifier") {
         Affixe::Implicite
     } else if gauche.starts_with("Unique") {
         Affixe::Unique
@@ -351,7 +391,8 @@ fn est_drapeau(l: &str) -> bool {
 
 fn est_ligne_propriete(l: &str) -> bool {
     match l.split_once(':') {
-        Some((nom, _)) => PROPRIETES.contains(&nom.trim()),
+        // « Quality (Attack Modifiers): +20% » : qualité d'un catalyseur (PoE 1).
+        Some((nom, _)) => PROPRIETES.contains(&nom.trim()) || nom.trim().starts_with("Quality ("),
         None => false,
     }
 }
@@ -421,6 +462,7 @@ pub fn parser(texte: &str) -> Result<Objet, ErreurParse> {
         non_identifie: false,
         miroir: false,
         sanctifie: false,
+        influences: Vec::new(),
         texte_saveur: None,
         note: None,
         avance: lignes
@@ -446,6 +488,8 @@ pub fn parser(texte: &str) -> Result<Objet, ErreurParse> {
             }
         } else if let Some(v) = premiere.strip_prefix("Note:") {
             o.note = Some(v.trim().to_string());
+        } else if s.iter().all(|l| INFLUENCES.contains(&l.trim())) {
+            o.influences.extend(s.iter().map(|l| l.trim().to_string()));
         } else if s.iter().all(|l| est_drapeau(l.trim())) {
             for l in s {
                 match l.trim() {
@@ -468,7 +512,7 @@ pub fn parser(texte: &str) -> Result<Objet, ErreurParse> {
                 };
                 let augmentee = valeur.contains("(augmented)");
                 let valeur = valeur.replace("(augmented)", "").trim().to_string();
-                if nom == "Quality" {
+                if nom == "Quality" || nom.starts_with("Quality (") {
                     o.qualite = valeur
                         .trim_start_matches('+')
                         .trim_end_matches('%')

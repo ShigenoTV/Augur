@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-poe1-stash-tabs"
+description = "Enables the set_poe1_stash_tabs command without any pre-configured scope."
+commands.allow = ["set_poe1_stash_tabs"]
+
+[[permission]]
+identifier = "deny-set-poe1-stash-tabs"
+description = "Denies the set_poe1_stash_tabs command without any pre-configured scope."
+commands.deny = ["set_poe1_stash_tabs"]

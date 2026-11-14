@@ -1,0 +1,29 @@
+Item Class: Helmets
+Rarity: Rare
+Doom Visor
+Hubris Circlet
+--------
+Quality: +20% (augmented)
+Energy Shield: 284 (augmented)
+--------
+Requirements:
+Level: 69
+Int: 154
+--------
+Sockets: B-B-R B
+--------
+Item Level: 86
+--------
+{ Implicit Modifier — Life }
++25(20-30) to maximum Life (implicit)
+--------
+{ Prefix Modifier "Resplendent" (Tier: 1) — Defences, Energy Shield }
++57(51-60) to maximum Energy Shield
+{ Shaper's Prefix Modifier "The Shaper's" — Elemental, Lightning }
+Nearby Enemies have -9% to Lightning Resistance
+{ Suffix Modifier "of the Ice" (Tier: 3) — Elemental, Cold, Resistance }
++36(36-41)% to Cold Resistance
+{ Master Crafted Suffix Modifier "of Craft" (Rank: 2) — Elemental, Fire, Resistance }
++27(26-30)% to Fire Resistance (crafted)
+--------
+Shaper Item

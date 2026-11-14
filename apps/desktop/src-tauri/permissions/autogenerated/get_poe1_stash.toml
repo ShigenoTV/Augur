@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-poe1-stash"
+description = "Enables the get_poe1_stash command without any pre-configured scope."
+commands.allow = ["get_poe1_stash"]
+
+[[permission]]
+identifier = "deny-get-poe1-stash"
+description = "Denies the get_poe1_stash command without any pre-configured scope."
+commands.deny = ["get_poe1_stash"]

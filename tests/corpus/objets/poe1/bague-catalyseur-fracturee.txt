@@ -1,0 +1,18 @@
+Item Class: Rings
+Rarity: Rare
+Gale Loop
+Vermillion Ring
+--------
+Quality (Life and Mana Modifiers): +20% (augmented)
+--------
+Requires: Level 64
+--------
+Item Level: 84
+--------
++6% to maximum Life (implicit)
+--------
++78 to maximum Life (fractured)
++42% to Lightning Resistance
++38 to Dexterity
+--------
+Fractured Item

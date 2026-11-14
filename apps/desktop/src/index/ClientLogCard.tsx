@@ -1,6 +1,7 @@
 import { StatePanel } from "@augur/ui";
 import { useState } from "react";
 import { commands, isAppError, type ClientLogStatus, type Settings } from "../bridge";
+import { cheminJournalDuJeu, exempleDossier, jeuActif } from "./game";
 
 /** Réglage manuel du chemin de Client.txt, et diagnostic de la recherche. */
 export function ClientLogCard({
@@ -12,7 +13,8 @@ export function ClientLogCard({
   settings: Settings | null;
   onSettings: (s: Settings) => void;
 }) {
-  const [input, setInput] = useState(settings?.clientLogPath ?? "");
+  const choisi = cheminJournalDuJeu(settings);
+  const [input, setInput] = useState(choisi ?? "");
   const [error, setError] = useState<string | null>(null);
 
   async function save(path: string | null) {
@@ -40,7 +42,7 @@ export function ClientLogCard({
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Dossier du jeu, ex. D:\SteamLibrary\steamapps\common\Path of Exile 2"
+          placeholder={`Dossier du jeu, ex. ${exempleDossier(jeuActif(settings))}`}
           className="min-w-0 flex-1 rounded-chip border border-ink-700 bg-ink-950 px-2 py-1.5 font-mono text-xs text-text-primary placeholder:text-text-subtle"
         />
         <button
@@ -51,7 +53,7 @@ export function ClientLogCard({
         >
           Utiliser ce chemin
         </button>
-        {settings?.clientLogPath && (
+        {choisi && (
           <button
             type="button"
             onClick={() => void save(null)}

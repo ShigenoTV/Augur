@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-connect-poe1-stash"
+description = "Enables the connect_poe1_stash command without any pre-configured scope."
+commands.allow = ["connect_poe1_stash"]
+
+[[permission]]
+identifier = "deny-connect-poe1-stash"
+description = "Denies the connect_poe1_stash command without any pre-configured scope."
+commands.deny = ["connect_poe1_stash"]

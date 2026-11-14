@@ -1,13 +1,14 @@
 import { StatePanel } from "@augur/ui";
 import { useEffect, useState } from "react";
-import { commands, isAppError, isTauri, on, type CharacterInfo } from "../bridge";
+import { commands, isAppError, isTauri, on, type CharacterInfo, type Game } from "../bridge";
 import { describeSkill } from "./character";
 
 /**
- * Personnage du joueur : import d'un code d'export Path of Building PoE 2.
- * Le code est collé à la main ; Augur ne télécharge rien.
+ * Personnage du joueur du jeu actif : import d'un code d'export Path of Building
+ * (PoE 2 ou PoE 1). Le code est collé à la main ; Augur ne télécharge rien.
  */
-export function CharacterCard() {
+export function CharacterCard({ game = "poe2" }: { game?: Game }) {
+  const poe1 = game === "poe1";
   const [info, setInfo] = useState<CharacterInfo | null>(null);
   const [editing, setEditing] = useState(false);
   const [code, setCode] = useState("");
@@ -66,7 +67,12 @@ export function CharacterCard() {
           <p className="text-xs text-text-subtle">
             {info.equippedSlots.length} objets équipés, {info.passives} passifs
           </p>
-          {!info.skillSupported && (
+          {poe1 && (
+            <p className="text-xs text-text-subtle">
+              PoE 1 : Augur garde le résumé du build. Le gain de DPS des objets n'est pas encore calculé pour PoE 1.
+            </p>
+          )}
+          {!poe1 && !info.skillSupported && (
             <p className="text-xs text-signal-loss">
               Augur ne calcule que les compétences qui infligent des dégâts (sorts, attaques, minions) : le gain de DPS ne sera pas affiché pour cette
               compétence.
@@ -96,7 +102,7 @@ export function CharacterCard() {
       {showForm && (
         <div className="space-y-2">
           <p className="text-xs text-text-subtle">
-            Dans Path of Building PoE 2 : Import/Export Build &gt; Generate &gt; Copy, puis colle le code ici. Sur pobb.in,
+            Dans Path of Building {poe1 ? "(PoE 1)" : "PoE 2"} : Import/Export Build &gt; Generate &gt; Copy, puis colle le code ici. Sur pobb.in,
             utilise le bouton de copie du code (pas le lien).
           </p>
           <textarea
