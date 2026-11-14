@@ -213,6 +213,8 @@ def mods(table: dict, garantis: set[str], artisanaux: set[str] = frozenset()) ->
                 "spawn": spawn,
                 "essence": bool(m.get("is_essence_only")),
                 "artisanal": artisanal,
+                # Tags bloqués par les metamods « Cannot roll Attack/Caster Modifiers ».
+                "tags": sorted(t for t in m.get("implicit_tags") or [] if t in ("attack", "caster")),
                 # Première stat (min, max) : sert à classer un mod d'Essence ou d'établi parmi les tiers.
                 "valeur": next(([int(x["min"]), int(x["max"])] for x in m.get("stats") or []), None),
             }

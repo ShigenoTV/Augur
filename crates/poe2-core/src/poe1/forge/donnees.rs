@@ -88,6 +88,9 @@ pub struct ModPoe1 {
     /// Première stat (min, max), pour classer un mod d'Essence ou d'établi parmi les tiers.
     #[serde(default)]
     pub valeur: Option<(i64, i64)>,
+    /// Tags `attack` / `caster` du mod (metamods « Cannot roll … »).
+    #[serde(default)]
+    pub tags: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -281,7 +284,7 @@ pub fn construire_pool(
                 tier: tier as u8,
                 req_ilvl: m.niveau.min(100) as u8,
                 weight: *w,
-                tags: 0,
+                tags: tags_poe1(&m.tags),
                 desecrated: false,
                 cap_shift: (0, 0),
                 extra_groups: m
@@ -349,6 +352,21 @@ fn tier_hors_tirage(niveaux: &[Palier], m: &ModPoe1) -> usize {
         _ => niveaux.iter().position(|&(n, _)| n <= m.niveau),
     };
     pos.map_or(niveaux.len() + 1, |p| p + 1)
+}
+
+/// Bit du tag `attack` dans `Affix::tags` (bloqué par « Cannot roll Attack Modifiers »).
+pub const TAG_ATTAQUE: u64 = 1;
+/// Bit du tag `caster` (bloqué par « Cannot roll Caster Modifiers »).
+pub const TAG_SORT: u64 = 2;
+
+fn tags_poe1(tags: &[String]) -> u64 {
+    tags.iter()
+        .map(|t| match t.as_str() {
+            "attack" => TAG_ATTAQUE,
+            "caster" => TAG_SORT,
+            _ => 0,
+        })
+        .fold(0, |a, b| a | b)
 }
 
 fn groupe_de(m: &ModPoe1, groupes: &BTreeMap<&str, GroupId>) -> GroupId {
