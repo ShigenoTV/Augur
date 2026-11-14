@@ -1,7 +1,9 @@
 import { StatePanel } from "@augur/ui";
 import { useContext, useEffect, useRef, useState } from "react";
-import { commands, isAppError, isTauri, on, type StashStatus, type StashTab } from "../bridge";
+import { commands, isAppError, isTauri, on, type Settings, type StashStatus, type StashTab } from "../bridge";
 import { AffichagePoe1Context, formatPoe1 } from "./devisePoe1";
+import { ligueParDefaut } from "./game";
+import { optionsLigues } from "./SettingsCards";
 
 const champ =
   "min-w-0 rounded-chip border border-ink-700 bg-ink-950 px-2 py-1.5 text-sm text-text-primary placeholder:text-text-subtle";
@@ -24,8 +26,9 @@ const heure = (iso: string) =>
  * valeur au prix poe.ninja et gain depuis le relevé précédent. Avec « relevé
  * automatique », un relevé est fait au début et à la fin de chaque session Ledger.
  */
-export function StashCard() {
+export function StashCard({ onSettings }: { onSettings?: (s: Settings) => void }) {
   const [status, setStatus] = useState<StashStatus | null>(null);
+  const [ligues, setLigues] = useState<string[] | null>(null);
   const [tabs, setTabs] = useState<StashTab[] | null>(null);
   const [account, setAccount] = useState("");
   const [session, setSession] = useState("");
@@ -52,6 +55,10 @@ export function StashCard() {
         setStatus(s);
         setAccount(s.account ?? "");
       })
+      .catch(() => undefined);
+    commands
+      .getLeagues()
+      .then(setLigues)
       .catch(() => undefined);
     const un = on.poe1Stash(setStatus);
     // Relevé automatique au début et à la fin d'une session Ledger.
@@ -100,6 +107,21 @@ export function StashCard() {
   async function chargerOnglets() {
     const liste = await run(commands.listPoe1StashTabs);
     if (liste) setTabs(liste);
+  }
+
+  /** Change la ligue PoE 1 (la même que pour les prix) ; les onglets suivis sont propres à chaque ligue. */
+  async function choisirLigue(ligue: string) {
+    if (!status || ligue === status.league) return;
+    const ok = await run(async () => {
+      onSettings?.(await commands.setLeague(ligue === ligueParDefaut("poe1") ? null : ligue));
+      if (status.tabs.length > 0) await commands.setPoe1StashTabs([]);
+      setStatus(await commands.getPoe1Stash());
+      return true;
+    });
+    if (ok) {
+      setTabs(null);
+      await chargerOnglets();
+    }
   }
 
   async function basculer(index: number) {
@@ -187,12 +209,27 @@ export function StashCard() {
         <>
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-text-muted">
-              Compte <span className="text-text-primary">{status.account}</span>, ligue{" "}
-              <span className="text-text-primary">{status.league}</span>
+              Compte <span className="text-text-primary">{status.account}</span>
             </p>
             <button type="button" onClick={() => setEditing(true)} className="text-xs text-accent hover:underline">
-              Changer
+              Changer de compte
             </button>
+            <label className="flex items-center gap-2 text-text-muted">
+              Ligue
+              <select
+                value={status.league}
+                disabled={busy || status.busy}
+                onChange={(e) => void choisirLigue(e.target.value)}
+                aria-label="Ligue des coffres"
+                className={`${champ} w-48 disabled:opacity-50`}
+              >
+                {optionsLigues(ligues, status.league, [ligueParDefaut("poe1")]).map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button
               type="button"
               onClick={() => void run(commands.forgetPoe1StashSession).then((s) => s && setStatus(s))}
@@ -231,7 +268,8 @@ export function StashCard() {
             )}
             <p className="text-xs text-text-subtle">
               Chaque onglet est une lecture sur le site (une toutes les 2,5 s, 20 onglets au plus). Les onglets de cartes et
-              d'uniques spéciaux peuvent revenir vides.
+              d'uniques spéciaux peuvent revenir vides. Les onglets suivis sont propres à chaque ligue : changer de ligue
+              les décoche. La ligue choisie sert aussi aux prix.
             </p>
           </div>
 
