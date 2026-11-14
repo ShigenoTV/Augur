@@ -104,7 +104,9 @@ function Resultat({
 }) {
   const lignes = chiffrer(result.methodes, prix?.prix ?? {}, saisis);
   const divine = prixEffectif("Divine Orb", prix?.prix ?? {}, saisis);
-  const noms = [...new Set(result.methodes.flatMap((m) => m.monnaies.map((c) => c.nom)))].sort();
+  const noms = [
+    ...new Set(result.methodes.flatMap((m) => [...m.monnaies, ...(m.finition?.monnaies ?? [])].map((c) => c.nom))),
+  ].sort();
   const meilleure = lignes[0];
   return (
     <div className="space-y-3">
@@ -139,6 +141,12 @@ function Resultat({
                   <td className="py-1.5 pr-3">
                     <p className="text-text-primary">{m.nom}</p>
                     <p className="text-[11px] text-text-subtle">{m.note}</p>
+                    {m.finition && (
+                      <p className="text-[11px] text-text-muted">
+                        Craft final : {m.finition.monnaies.map((c) => `${c.quantite} ${c.nom}`).join(" + ")}
+                        {m.coutFinition != null ? ` (${formatChaos(m.coutFinition)}, payé une fois)` : ""}
+                      </p>
+                    )}
                   </td>
                   <td className="pr-3 font-mono">{formatChance(m.chance)}</td>
                   <td className="pr-3 font-mono">
@@ -165,8 +173,8 @@ function Resultat({
       )}
       <PrixUtilises noms={noms} prix={prix} saisis={saisis} onSaisie={onSaisie} />
       <p className="text-[11px] text-text-subtle">
-        Coûts hors prix de la base. Le coût moyen suppose qu'on recommence jusqu'à réussir ; un essai sur deux finit avant
-        le nombre médian.
+        Coûts hors prix de la base. Le coût moyen suppose qu'on recommence jusqu'à réussir, plus le craft d'établi final
+        s'il y en a un ; un essai sur deux finit avant le nombre médian. Les crafts d'établi doivent être débloqués.
       </p>
     </div>
   );

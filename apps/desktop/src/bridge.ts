@@ -270,6 +270,8 @@ export type ForgePoe1Method = {
   chance: number;
   monnaies: ForgePoe1Conso[];
   note: string;
+  /** Craft d'établi qui finit l'objet, payé une fois. */
+  finition: { texte: string; monnaies: ForgePoe1Conso[] } | null;
 };
 export type ForgePoe1Result = { methodes: ForgePoe1Method[]; ecartees: { nom: string; raison: string }[] };
 export type ForgePoe1Prices = { league: string; prix: Record<string, number>; erreur: string | null };

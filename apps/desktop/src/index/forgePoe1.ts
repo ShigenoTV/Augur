@@ -1,10 +1,12 @@
 /** Forge PoE 1 : coût des méthodes de spam (fonctions pures, testées). */
-import type { ForgePoe1Base, ForgePoe1Method } from "../bridge";
+import type { ForgePoe1Base, ForgePoe1Conso, ForgePoe1Method } from "../bridge";
 
 /** Méthode chiffrée : coût d'un essai, coût moyen et nombre d'essais (médian, 9 fois sur 10). */
 export type MethodeChiffree = ForgePoe1Method & {
   /** Coût d'un essai en Chaos ; `null` si une monnaie n'a pas de prix. */
   coutEssai: number | null;
+  /** Coût du craft d'établi final (0 sans finition). */
+  coutFinition: number | null;
   coutMoyen: number | null;
   essaisMoyens: number;
   essaisP50: number;
@@ -32,18 +34,20 @@ export function chiffrer(
   ninja: Record<string, number>,
   saisis: Record<string, number>,
 ): MethodeChiffree[] {
+  const somme = (cs: ForgePoe1Conso[]) =>
+    cs.reduce((t, c) => t + c.quantite * (prixEffectif(c.nom, ninja, saisis) ?? 0), 0);
   const chiffrees = methodes.map((m) => {
-    const sansPrix = m.monnaies
-      .filter((c) => c.quantite > 0 && prixEffectif(c.nom, ninja, saisis) == null)
-      .map((c) => c.nom);
-    const coutEssai =
-      sansPrix.length > 0
-        ? null
-        : m.monnaies.reduce((t, c) => t + c.quantite * (prixEffectif(c.nom, ninja, saisis) ?? 0), 0);
+    const toutes = [...m.monnaies, ...(m.finition?.monnaies ?? [])];
+    const sansPrix = [
+      ...new Set(toutes.filter((c) => c.quantite > 0 && prixEffectif(c.nom, ninja, saisis) == null).map((c) => c.nom)),
+    ];
+    const coutEssai = sansPrix.length > 0 ? null : somme(m.monnaies);
+    const coutFinition = sansPrix.length > 0 ? null : somme(m.finition?.monnaies ?? []);
     return {
       ...m,
       coutEssai,
-      coutMoyen: coutEssai == null || m.chance <= 0 ? null : coutEssai / m.chance,
+      coutFinition,
+      coutMoyen: coutEssai == null || coutFinition == null || m.chance <= 0 ? null : coutEssai / m.chance + coutFinition,
       essaisMoyens: m.chance > 0 ? 1 / m.chance : Infinity,
       essaisP50: essaisPour(m.chance, 0.5),
       essaisP90: essaisPour(m.chance, 0.9),

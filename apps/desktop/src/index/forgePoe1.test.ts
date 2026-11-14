@@ -9,6 +9,7 @@ const m = (id: string, chance: number, monnaies: [string, number][]): ForgePoe1M
   chance,
   monnaies: monnaies.map(([nom, quantite]) => ({ nom, quantite })),
   note: "",
+  finition: null,
 });
 
 describe("forge PoE 1", () => {
@@ -46,6 +47,19 @@ describe("forge PoE 1", () => {
     expect(chaos?.coutMoyen).toBeCloseTo(100);
     expect(essence?.coutMoyen).toBeNull();
     expect(essence?.sansPrix).toEqual(["Deafening Essence of Greed"]);
+  });
+
+  it("ajoute le craft d'établi une seule fois", () => {
+    const avec = {
+      ...m("chaos+etabli", 0.1, [["Chaos Orb", 1]]),
+      finition: { texte: "+(41-55) to maximum Life", monnaies: [{ nom: "Regal Orb", quantite: 2 }] },
+    };
+    const [r] = chiffrer([avec], { "Chaos Orb": 1, "Regal Orb": 0.5 }, {});
+    expect(r?.coutFinition).toBeCloseTo(1);
+    expect(r?.coutMoyen).toBeCloseTo(11);
+    const [sans] = chiffrer([avec], { "Chaos Orb": 1 }, {});
+    expect(sans?.coutMoyen).toBeNull();
+    expect(sans?.sansPrix).toEqual(["Regal Orb"]);
   });
 
   it("affiche les coûts et les chances", () => {

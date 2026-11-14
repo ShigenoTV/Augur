@@ -18,7 +18,10 @@ use std::collections::HashMap;
 
 use serde::Serialize;
 
-use crate::forge::{AffixIdx, AffixPool, Class, Goal, GroupId, Slot, WantedAffix};
+use crate::forge::{
+    AffixIdx, AffixPool, Class, DrawFilter, Goal, GroupId, ItemState, Mod, Rarity, Slot,
+    WantedAffix,
+};
 
 use super::donnees::{ErreurForgePoe1, PoolPoe1};
 
@@ -56,6 +59,8 @@ pub struct MethodePoe1 {
     pub monnaies: Vec<Conso>,
     /// Précision utile au joueur (comment enchaîner).
     pub note: String,
+    /// Craft d'établi qui finit l'objet, payé une fois (pas à chaque essai).
+    pub finition: Option<Finition>,
 }
 
 /// Méthode écartée et pourquoi.
@@ -200,22 +205,33 @@ struct Rare<'a> {
     autres: [Vec<f64>; 2],
     cap: [u8; 2],
     complet: u8,
+    /// Voulu finissable à l'établi : (index du voulu, côté du mod artisanal).
+    etabli: Option<(usize, usize)>,
     memo: HashMap<Etat, f64>,
 }
 
 impl Rare<'_> {
+    /// Objet final réussi : tous les voulus, ou tous sauf celui de l'établi avec une place libre de
+    /// son côté (son groupe est libre puisqu'un mauvais tier de ce groupe fait échouer plus tôt).
+    fn reussi(&self, e: &Etat) -> bool {
+        e.bons == self.complet
+            || self
+                .etabli
+                .is_some_and(|(k, c)| e.bons == self.complet & !(1 << k) && e.n[c] < self.cap[c])
+    }
+
     fn chance(&mut self, e: Etat) -> f64 {
         if e.bons == self.complet {
             return 1.0;
         }
         if e.reste == 0 {
-            return 0.0;
+            return if self.reussi(&e) { 1.0 } else { 0.0 };
         }
         if let Some(&v) = self.memo.get(&e) {
             return v;
         }
-        let manquants = (self.complet & !e.bons).count_ones() as u8;
-        if manquants > e.reste {
+        let a_tirer = self.complet & !e.bons & !self.etabli.map_or(0, |(k, _)| 1 << k);
+        if a_tirer.count_ones() as u8 > e.reste {
             return 0.0;
         }
         let ouvert = [e.n[0] < self.cap[0], e.n[1] < self.cap[1]];
@@ -254,7 +270,7 @@ impl Rare<'_> {
             }
         }
         let v = if total <= 0.0 {
-            0.0
+            if self.reussi(&e) { 1.0 } else { 0.0 }
         } else {
             issues
                 .into_iter()
@@ -266,8 +282,15 @@ impl Rare<'_> {
     }
 }
 
-/// Chance qu'un objet Rare refait (Chaos, Alchemy, ou Essence si `garanti`) atteigne l'objectif.
-pub fn chance_rare(pool: &AffixPool, goal: &Goal, ilvl: u8, garanti: Option<AffixIdx>) -> f64 {
+/// Chance qu'un objet Rare refait (Chaos, Alchemy, ou Essence si `garanti`) atteigne l'objectif,
+/// éventuellement fini par le craft d'établi `etabli` (mod artisanal accepté pour un des voulus).
+pub fn chance_rare(
+    pool: &AffixPool,
+    goal: &Goal,
+    ilvl: u8,
+    garanti: Option<AffixIdx>,
+    etabli: Option<AffixIdx>,
+) -> f64 {
     let p = poids(pool, goal, ilvl);
     let mut depart = Etat {
         bons: 0,
@@ -286,12 +309,18 @@ pub fn chance_rare(pool: &AffixPool, goal: &Goal, ilvl: u8, garanti: Option<Affi
             Class::Other => exclu = Some((a.group, c)),
         }
     }
+    let etabli = match etabli.map(|e| (goal.classify(pool, e), &pool.affixes[e as usize])) {
+        None => None,
+        Some((Class::Wanted(k), a)) => Some((k, cote(a.slot))),
+        Some(_) => return 0.0,
+    };
     let (cp, cs) = pool.cap(crate::forge::Rarity::Rare);
     let mut r = Rare {
         p: &p,
         autres: reste_autres(&p, exclu, 3),
         cap: [cp, cs],
         complet: ((1u16 << goal.len()) - 1) as u8,
+        etabli,
         memo: HashMap::new(),
     };
     MODS_RARE
@@ -354,7 +383,97 @@ pub fn chance_alteration(pool: &AffixPool, goal: &Goal, ilvl: u8) -> Option<(f64
     Some((direct + aug_ok + deux, aug_q))
 }
 
-/// Toutes les méthodes de spam applicables, de la plus probable à la moins probable.
+/// Alteration + Augmentation avec finition à l'établi, par énumération exacte des tirages
+/// (`AffixPool::distribution`) : chance par essai et Augmentations par essai. L'Augmentation est
+/// utilisée quand l'objet n'a qu'un mod et qu'un second mod peut le finir (établi compris).
+pub fn chance_alteration_etabli(
+    pool: &AffixPool,
+    goal: &Goal,
+    ilvl: u8,
+    etabli: AffixIdx,
+) -> Option<(f64, f64)> {
+    let mut cotes = [0u8; 2];
+    for s in &goal.slots {
+        cotes[cote(*s)] += 1;
+    }
+    if cotes.iter().any(|&c| c > 1) {
+        return None;
+    }
+    let Class::Wanted(kb) = goal.classify(pool, etabli) else {
+        return Some((0.0, 0.0));
+    };
+    let cote_etabli = pool.affixes[etabli as usize].slot;
+    let reussi = |item: &ItemState| -> bool {
+        if goal.is_met(item) {
+            return true;
+        }
+        let tenus: Vec<Class> = item
+            .mods()
+            .iter()
+            .map(|m| goal.classify(pool, m.idx))
+            .collect();
+        let manque_seulement_kb = (0..goal.len())
+            .all(|k| k == kb || tenus.contains(&Class::Wanted(k)))
+            && !tenus.contains(&Class::Blocked(kb));
+        // Objet Magique : un préfixe et un suffixe au plus.
+        let place = pool.count(item, cote_etabli) == 0;
+        manque_seulement_kb && place
+    };
+    let f = DrawFilter::default();
+    let vide = ItemState::new(Rarity::Magic, ilvl);
+    let suivants = |item: &ItemState| -> f64 {
+        pool.distribution(item, &f)
+            .into_iter()
+            .filter(|&(j, _)| {
+                let mut x = *item;
+                x.push(Mod {
+                    idx: j,
+                    ..Mod::default()
+                });
+                reussi(&x)
+            })
+            .map(|(_, p)| p)
+            .sum()
+    };
+    let un = 1.0 - DEUX_MODS_MAGIQUE;
+    let (mut ok, mut augs) = (0.0, 0.0);
+    for (i, p1) in pool.distribution(&vide, &f) {
+        let mut item = vide;
+        item.push(Mod {
+            idx: i,
+            ..Mod::default()
+        });
+        let s = suivants(&item);
+        if reussi(&item) {
+            ok += un * p1;
+        } else if s > 0.0 {
+            augs += un * p1;
+            ok += un * p1 * s;
+        }
+        ok += DEUX_MODS_MAGIQUE * p1 * s;
+    }
+    Some((ok, augs))
+}
+
+/// Craft d'établi qui finit l'objet : mod posé et son coût.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Finition {
+    /// Texte du mod artisanal.
+    pub texte: String,
+    /// Monnaies du craft, payées une fois.
+    pub monnaies: Vec<Conso>,
+}
+
+/// Les méthodes de spam d'un objet, avant finition.
+enum Spam<'a> {
+    Alteration,
+    Rare,
+    Essence(&'a super::donnees::EssenceBase),
+}
+
+/// Toutes les méthodes de spam applicables, avec et sans finition à l'établi, de la plus probable à
+/// la moins probable.
 pub fn methodes(pb: &PoolPoe1, voulus: &[WantedAffix]) -> Result<ResultatPoe1, ErreurForgePoe1> {
     let goal = Goal::new(&pb.pool, voulus).map_err(ErreurForgePoe1::Objectif)?;
     let pool = &pb.pool;
@@ -362,73 +481,141 @@ pub fn methodes(pb: &PoolPoe1, voulus: &[WantedAffix]) -> Result<ResultatPoe1, E
     let mut methodes = Vec::new();
     let mut ecartees = Vec::new();
 
-    match chance_alteration(pool, &goal, ilvl) {
-        Some((chance, aug)) if chance > 0.0 => methodes.push(MethodePoe1 {
-            id: "alteration".into(),
-            nom: "Alteration + Augmentation".into(),
-            genre: "alteration".into(),
-            chance,
-            monnaies: vec![conso(ALTERATION, 1.0), conso(AUGMENTATION, aug)],
-            note: "Objet Magique : Alteration jusqu'au bon mod, Augmentation quand il reste une place qui peut finir l'objet.".into(),
-        }),
-        Some(_) => ecartees.push(Ecartee {
-            nom: "Alteration + Augmentation".into(),
-            raison: "aucun mod voulu ne peut apparaître à ce niveau d'objet".into(),
-        }),
-        None => ecartees.push(Ecartee {
-            nom: "Alteration + Augmentation".into(),
-            raison: "un objet Magique n'a qu'un préfixe et un suffixe".into(),
-        }),
-    }
+    // Crafts d'établi acceptés pour un voulu (un seul mod artisanal par objet).
+    let crafts: Vec<&super::donnees::EtabliBase> = pb
+        .etabli
+        .iter()
+        .filter(|e| matches!(goal.classify(pool, e.affixe), Class::Wanted(_)))
+        .collect();
 
-    let rare = chance_rare(pool, &goal, ilvl, None);
-    if rare > 0.0 {
-        methodes.push(MethodePoe1 {
-            id: "chaos".into(),
-            nom: "Chaos Orb".into(),
-            genre: "chaos".into(),
-            chance: rare,
-            monnaies: vec![conso(CHAOS, 1.0)],
-            note: "Objet Rare : un Chaos Orb refait tous les mods (4 à 6).".into(),
-        });
-        methodes.push(MethodePoe1 {
-            id: "alchimie".into(),
-            nom: "Alchemy + Scouring".into(),
-            genre: "alchimie".into(),
-            chance: rare,
-            monnaies: vec![conso(ALCHEMY, 1.0), conso(SCOURING, 1.0)],
-            note: "Orb of Alchemy sur l'objet Normal, Orb of Scouring pour recommencer.".into(),
-        });
-    } else {
-        ecartees.push(Ecartee {
-            nom: "Chaos Orb".into(),
-            raison: "objectif impossible en un tirage à ce niveau d'objet".into(),
-        });
-    }
+    let chance = |m: &Spam, etabli: Option<AffixIdx>| -> Option<(f64, f64)> {
+        match m {
+            Spam::Alteration => match etabli {
+                None => chance_alteration(pool, &goal, ilvl),
+                Some(e) => chance_alteration_etabli(pool, &goal, ilvl, e),
+            },
+            Spam::Rare => Some((chance_rare(pool, &goal, ilvl, None, etabli), 0.0)),
+            Spam::Essence(e) => Some((chance_rare(pool, &goal, ilvl, Some(e.affixe), etabli), 0.0)),
+        }
+    };
 
-    for e in &pb.essences {
-        if !matches!(goal.classify(pool, e.affixe), Class::Wanted(_)) {
-            continue;
-        }
-        let chance = chance_rare(pool, &goal, ilvl, Some(e.affixe));
-        if chance <= 0.0 {
-            continue;
-        }
-        let mut monnaies = vec![conso(&e.essence.nom, 1.0)];
-        let note = if e.essence.sur_rare {
-            "Refait directement l'objet Rare, en gardant le mod de l'Essence.".to_string()
-        } else {
-            monnaies.push(conso(SCOURING, 1.0));
-            "Objet Normal seulement : Orb of Scouring entre deux essais.".to_string()
+    let mut spams = vec![Spam::Alteration, Spam::Rare];
+    spams.extend(
+        pb.essences
+            .iter()
+            .filter(|e| matches!(goal.classify(pool, e.affixe), Class::Wanted(_)))
+            .map(Spam::Essence),
+    );
+
+    for spam in &spams {
+        let (id, nom, genre, note) = match spam {
+            Spam::Alteration => (
+                "alteration".to_string(),
+                "Alteration + Augmentation".to_string(),
+                "alteration",
+                "Objet Magique : Alteration jusqu'au bon mod, Augmentation quand il reste une place qui peut finir l'objet.".to_string(),
+            ),
+            Spam::Rare => (
+                "chaos".to_string(),
+                "Chaos Orb".to_string(),
+                "chaos",
+                "Objet Rare : un Chaos Orb refait tous les mods (4 à 6).".to_string(),
+            ),
+            Spam::Essence(e) => (
+                format!("essence:{}", e.essence.id),
+                e.essence.nom.clone(),
+                "essence",
+                if e.essence.sur_rare {
+                    "Refait directement l'objet Rare, en gardant le mod de l'Essence.".to_string()
+                } else {
+                    "Objet Normal seulement : Orb of Scouring entre deux essais.".to_string()
+                },
+            ),
         };
-        methodes.push(MethodePoe1 {
-            id: format!("essence:{}", e.essence.id),
-            nom: e.essence.nom.clone(),
-            genre: "essence".into(),
-            chance,
-            monnaies,
-            note,
-        });
+        let monnaies = |aug: f64| -> Vec<Conso> {
+            match spam {
+                Spam::Alteration => vec![conso(ALTERATION, 1.0), conso(AUGMENTATION, aug)],
+                Spam::Rare => vec![conso(CHAOS, 1.0)],
+                Spam::Essence(e) if e.essence.sur_rare => vec![conso(&e.essence.nom, 1.0)],
+                Spam::Essence(e) => vec![conso(&e.essence.nom, 1.0), conso(SCOURING, 1.0)],
+            }
+        };
+
+        let sans = chance(spam, None);
+        match sans {
+            None => ecartees.push(Ecartee {
+                nom: nom.clone(),
+                raison: "un objet Magique n'a qu'un préfixe et un suffixe".into(),
+            }),
+            Some((p, aug)) if p > 0.0 => methodes.push(MethodePoe1 {
+                id: id.clone(),
+                nom: nom.clone(),
+                genre: genre.into(),
+                chance: p,
+                monnaies: monnaies(aug),
+                note: note.clone(),
+                finition: None,
+            }),
+            Some(_) => ecartees.push(Ecartee {
+                nom: nom.clone(),
+                raison: "objectif impossible en un tirage à ce niveau d'objet".into(),
+            }),
+        }
+
+        // Meilleure finition à l'établi pour cette méthode, si elle augmente la chance.
+        let essence = match spam {
+            Spam::Essence(e) => Some(e.affixe),
+            _ => None,
+        };
+        let meilleure = crafts
+            .iter()
+            .filter(|c| {
+                essence.is_none_or(|g| goal.classify(pool, g) != goal.classify(pool, c.affixe))
+            })
+            .filter_map(|c| chance(spam, Some(c.affixe)).map(|r| (c, r)))
+            .max_by(|a, b| a.1.0.total_cmp(&b.1.0));
+        if let Some((c, (p, aug))) = meilleure
+            && p > sans.map_or(0.0, |s| s.0) * 1.0001
+        {
+            let a = &pool.affixes[c.affixe as usize];
+            methodes.push(MethodePoe1 {
+                id: format!("{id}+etabli:{}", a.id),
+                nom: format!("{nom} + établi"),
+                genre: genre.into(),
+                chance: p,
+                monnaies: monnaies(aug),
+                note: format!("{note} Puis craft à l'établi : {}.", a.text),
+                finition: Some(Finition {
+                    texte: a.text.clone(),
+                    monnaies: c
+                        .cout
+                        .iter()
+                        .map(|(n, q)| conso(n, f64::from(*q)))
+                        .collect(),
+                }),
+            });
+        }
+
+        // Alchemy + Scouring : même chance que le Chaos, autres monnaies.
+        if matches!(spam, Spam::Rare) {
+            let alch: Vec<MethodePoe1> = methodes
+                .iter()
+                .filter(|m| m.genre == "chaos")
+                .map(|m| MethodePoe1 {
+                    id: m.id.replacen("chaos", "alchimie", 1),
+                    nom: m.nom.replacen("Chaos Orb", "Alchemy + Scouring", 1),
+                    genre: "alchimie".into(),
+                    monnaies: vec![conso(ALCHEMY, 1.0), conso(SCOURING, 1.0)],
+                    note: m.note.replacen(
+                        "Objet Rare : un Chaos Orb refait tous les mods (4 à 6).",
+                        "Orb of Alchemy sur l'objet Normal, Orb of Scouring pour recommencer.",
+                        1,
+                    ),
+                    ..m.clone()
+                })
+                .collect();
+            methodes.extend(alch);
+        }
     }
 
     methodes.sort_by(|a, b| b.chance.total_cmp(&a.chance).then(a.nom.cmp(&b.nom)));
