@@ -9,6 +9,7 @@ const withCharacter: OverlayState = {
   character: fixtures.character,
   lastItem: null,
   dataPatch: null,
+  dataPatchPoe1: null,
 };
 
 function deps(overrides: Partial<CopilotDeps> = {}): CopilotDeps {

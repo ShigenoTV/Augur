@@ -129,6 +129,8 @@ function App() {
   const affichage = useAffichage();
   const game = jeuActif(settings);
   const poe1 = game === "poe1";
+  // Version des données embarquées du jeu choisi.
+  const versionDonnees = poe1 ? state?.dataPatchPoe1 : state?.dataPatch;
 
   async function choisirJeu(g: Game) {
     setErreurJeu(null);
@@ -276,7 +278,7 @@ function App() {
           <div className="mt-auto space-y-1.5 px-4">
             <Status ok={Boolean(state?.gameFocused)} label={state?.gameFocused ? "Jeu au premier plan" : "Jeu non détecté"} />
             <Status ok={logSummary.ok} label={logSummary.label} />
-            <Status ok={Boolean(state?.dataPatch)} label={state?.dataPatch ? `Données du jeu : ${state.dataPatch}` : "Données du jeu indisponibles"} />
+            <Status ok={Boolean(versionDonnees)} label={versionDonnees ? `Données du jeu : ${versionDonnees}` : "Données du jeu indisponibles"} />
             <button
               type="button"
               onClick={() => void updates.check()}

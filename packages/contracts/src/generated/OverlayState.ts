@@ -9,4 +9,12 @@ export type OverlayState = { contractVersion: number, appVersion: string,
 /**
  * La fenêtre du jeu est au premier plan.
  */
-gameFocused: boolean, character: CharacterSummary | null, lastItem: ParsedItem | null, dataPatch: string | null, };
+gameFocused: boolean, character: CharacterSummary | null, lastItem: ParsedItem | null, 
+/**
+ * Version des données embarquées de PoE 2 (RePoE), `None` si elles ne se chargent pas.
+ */
+dataPatch: string | null, 
+/**
+ * Version des données embarquées de PoE 1 (RePoE PoE 1), même règle.
+ */
+dataPatchPoe1: string | null, };
