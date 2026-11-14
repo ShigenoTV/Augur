@@ -126,7 +126,7 @@ pub struct DemandePoe1 {
 /// Méthodes de spam pour la demande, de la plus probable à la moins probable.
 pub fn planifier(d: &DemandePoe1) -> Result<ResultatPoe1, ErreurForgePoe1> {
     let pb = construire_pool(&d.base_id, d.ilvl, d.influence.as_deref())?;
-    let mut r = calcul::methodes(&pb, &d.voulus)?;
+    let mut r = calcul::methodes(&pb, &d.voulus, &d.prix)?;
     if !d.prix.is_empty() {
         let goal = Goal::new(&pb.pool, &d.voulus).map_err(ErreurForgePoe1::Objectif)?;
         r.plan = solveur::plan(&pb, &goal, &d.prix);

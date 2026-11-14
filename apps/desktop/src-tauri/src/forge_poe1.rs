@@ -1,8 +1,8 @@
 //! Forge PoE 1 (`poe2_core::poe1::forge`) : bases, affixes, méthodes de spam et prix poe.ninja.
 //!
-//! Les prix viennent des pages « échange » de poe.ninja PoE 1 (Currency et Essence), gardées 30
-//! minutes par le cache de l'overlay PoE 1. Le coût de chaque méthode est fait par le panneau : la
-//! chance d'un essai ne dépend pas des prix.
+//! Les prix viennent des pages « échange » de poe.ninja PoE 1 (Currency, Essence, Fossil,
+//! Resonator), gardées 30 minutes par le cache de l'overlay PoE 1. Le coût de chaque méthode est fait
+//! par le panneau ; les prix envoyés servent au plan conseillé et au choix des fossiles.
 
 use std::collections::BTreeMap;
 
@@ -59,7 +59,7 @@ pub async fn prix(app: &AppHandle) -> Result<PrixPoe1, AppError> {
     let cache = app.state::<crate::poe1_items::Poe1Ninja>();
     let mut prix = BTreeMap::new();
     let mut erreur = None;
-    for type_page in ["Currency", "Essence"] {
+    for type_page in ["Currency", "Essence", "Fossil", "Resonator"] {
         match cache
             .page(&client, &league, ninja::Page::Echange(type_page))
             .await

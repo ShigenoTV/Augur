@@ -273,7 +273,7 @@ export type ForgePoe1Conso = { nom: string; quantite: number };
 export type ForgePoe1Method = {
   id: string;
   nom: string;
-  genre: "alteration" | "chaos" | "alchimie" | "essence";
+  genre: "alteration" | "chaos" | "alchimie" | "essence" | "fossile";
   chance: number;
   monnaies: ForgePoe1Conso[];
   note: string;

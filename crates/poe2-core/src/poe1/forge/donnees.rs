@@ -41,6 +41,17 @@ pub struct DonneesPoe1 {
     /// Crafts d'établi qui ajoutent un mod.
     #[serde(default)]
     pub etabli: Vec<CraftPoe1>,
+    /// Fossiles qui changent les poids par étiquette de mod.
+    #[serde(default)]
+    pub fossiles: Vec<FossilePoe1>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct FossilePoe1 {
+    pub id: String,
+    pub nom: String,
+    /// (étiquette de mod, multiplicateur en %) : 1000 = ×10, 15 = ×0,15, 0 = mods bloqués.
+    pub poids: Vec<(String, u32)>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -88,7 +99,7 @@ pub struct ModPoe1 {
     /// Première stat (min, max), pour classer un mod d'Essence ou d'établi parmi les tiers.
     #[serde(default)]
     pub valeur: Option<(i64, i64)>,
-    /// Tags `attack` / `caster` du mod (metamods « Cannot roll … »).
+    /// Étiquettes du mod (`implicit_tags` du jeu) : metamods « Cannot roll … » et fossiles.
     #[serde(default)]
     pub tags: Vec<String>,
 }
@@ -354,19 +365,50 @@ fn tier_hors_tirage(niveaux: &[Palier], m: &ModPoe1) -> usize {
     pos.map_or(niveaux.len() + 1, |p| p + 1)
 }
 
+/// Étiquettes de mod suivies dans `Affix::tags` (bit = position) : celles des metamods
+/// « Cannot roll Attack / Caster Modifiers » puis celles des fossiles. Les autres sont ignorées.
+pub const ETIQUETTES: [&str; 24] = [
+    "attack",
+    "caster",
+    "ailment",
+    "attribute",
+    "aura",
+    "bleed",
+    "chaos",
+    "cold",
+    "critical",
+    "curse",
+    "damage",
+    "defences",
+    "drop",
+    "elemental",
+    "fire",
+    "gem",
+    "life",
+    "lightning",
+    "mana",
+    "minion",
+    "physical",
+    "poison",
+    "resistance",
+    "speed",
+];
+
 /// Bit du tag `attack` dans `Affix::tags` (bloqué par « Cannot roll Attack Modifiers »).
 pub const TAG_ATTAQUE: u64 = 1;
 /// Bit du tag `caster` (bloqué par « Cannot roll Caster Modifiers »).
 pub const TAG_SORT: u64 = 2;
 
+/// Bit d'une étiquette de mod dans `Affix::tags` ; 0 si elle n'est pas suivie.
+pub fn bit_etiquette(tag: &str) -> u64 {
+    ETIQUETTES
+        .iter()
+        .position(|t| *t == tag)
+        .map_or(0, |i| 1 << i)
+}
+
 fn tags_poe1(tags: &[String]) -> u64 {
-    tags.iter()
-        .map(|t| match t.as_str() {
-            "attack" => TAG_ATTAQUE,
-            "caster" => TAG_SORT,
-            _ => 0,
-        })
-        .fold(0, |a, b| a | b)
+    tags.iter().map(|t| bit_etiquette(t)).fold(0, |a, b| a | b)
 }
 
 fn groupe_de(m: &ModPoe1, groupes: &BTreeMap<&str, GroupId>) -> GroupId {

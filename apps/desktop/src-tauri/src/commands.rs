@@ -527,7 +527,7 @@ pub async fn plan_forge_poe1(
     crate::forge_poe1::planifier(demande).await
 }
 
-/// Forge PoE 1 : prix poe.ninja (Chaos) des monnaies et Essences.
+/// Forge PoE 1 : prix poe.ninja (Chaos) des monnaies, Essences, fossiles et résonateurs.
 #[tauri::command]
 pub async fn get_forge_poe1_prices(
     app: AppHandle,

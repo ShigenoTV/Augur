@@ -467,3 +467,117 @@ fn etabli_finit_un_magique() {
 fn pool_tirer(pool: &AffixPool, item: &ItemState, f: &DrawFilter, rng: &mut SmallRng) -> u16 {
     pool.draw(item, f, rng).unwrap()
 }
+
+fn fossile(nom: &str) -> &'static donnees::FossilePoe1 {
+    donnees::donnees()
+        .unwrap()
+        .fossiles
+        .iter()
+        .find(|f| f.nom == nom)
+        .unwrap_or_else(|| panic!("{nom} absent des données"))
+}
+
+fn poids_de(pool: &AffixPool, id: &str) -> u32 {
+    pool.affixes.iter().find(|a| a.id == id).unwrap().weight
+}
+
+#[test]
+fn fossiles_changent_les_poids() {
+    let pb = construire_pool(ANNEAU, 86, None).unwrap();
+    let vie = poids_de(&pb.pool, "IncreasedLife5");
+    let froid = poids_de(&pb.pool, "ColdResist4");
+    let mana = poids_de(&pb.pool, "IncreasedMana5");
+    // Pristine : vie ×10 ; Frigid : froid ×10, feu bloqué ; le reste ne bouge pas (poids ×100).
+    let p = pool_fossiles(
+        &pb.pool,
+        &[fossile("Pristine Fossil"), fossile("Frigid Fossil")],
+    );
+    assert_eq!(poids_de(&p, "IncreasedLife5"), vie * 1000);
+    assert_eq!(poids_de(&p, "ColdResist4"), froid * 1000);
+    assert_eq!(poids_de(&p, "FireResist4"), 0);
+    assert_eq!(poids_de(&p, "IncreasedMana5"), mana * 100);
+    // Bonus additifs : froid (×10) + élémentaire (×6) = ×16 ; Aetheric : attaque ×0,15.
+    let p = pool_fossiles(
+        &pb.pool,
+        &[fossile("Frigid Fossil"), fossile("Prismatic Fossil")],
+    );
+    assert_eq!(poids_de(&p, "ColdResist4"), froid * 1600);
+    let attaque = pb
+        .pool
+        .affixes
+        .iter()
+        .find(|a| {
+            a.weight > 0 && a.tags & donnees::TAG_ATTAQUE != 0 && a.tags & donnees::TAG_SORT == 0
+        })
+        .unwrap();
+    let p = pool_fossiles(&pb.pool, &[fossile("Aetheric Fossil")]);
+    assert_eq!(poids_de(&p, &attaque.id), attaque.weight * 15);
+}
+
+#[test]
+fn fossiles_proches_de_la_simulation() {
+    let pb = construire_pool(ANNEAU, 86, None).unwrap();
+    let voulus = vec![
+        voulu(&pb.pool, "IncreasedLife5"),
+        voulu(&pb.pool, "ColdResist4"),
+    ];
+    let goal = Goal::new(&pb.pool, &voulus).unwrap();
+    let p = pool_fossiles(
+        &pb.pool,
+        &[fossile("Pristine Fossil"), fossile("Frigid Fossil")],
+    );
+    let c = chance_rare(&p, &goal, 86, None, None);
+    let s = simuler_rare(&p, &goal, 86, None, None, 100_000);
+    proche(c, s, 0.05);
+    assert!(c > 5.0 * chance_rare(&pb.pool, &goal, 86, None, None));
+}
+
+#[test]
+fn methodes_fossiles_par_resonateur() {
+    let pb = construire_pool(ANNEAU, 86, None).unwrap();
+    let voulus = vec![
+        voulu(&pb.pool, "IncreasedLife5"),
+        voulu(&pb.pool, "ColdResist4"),
+    ];
+    let prix: std::collections::BTreeMap<String, f64> = [
+        ("Pristine Fossil", 2.0),
+        ("Frigid Fossil", 1.0),
+        ("Scorched Fossil", 1.0),
+        ("Prismatic Fossil", 1.0),
+        ("Dense Fossil", 1.0),
+        ("Primitive Chaotic Resonator", 1.0),
+        ("Potent Chaotic Resonator", 3.0),
+        ("Powerful Chaotic Resonator", 10.0),
+        ("Prime Chaotic Resonator", 30.0),
+    ]
+    .iter()
+    .map(|(n, p)| (n.to_string(), *p))
+    .collect();
+    let t = std::time::Instant::now();
+    let r = methodes(&pb, &voulus, &prix).unwrap();
+    eprintln!("méthodes en {:?}", t.elapsed());
+    let fos: Vec<_> = r.methodes.iter().filter(|m| m.genre == "fossile").collect();
+    assert!(!fos.is_empty());
+    for m in &fos {
+        eprintln!("{} {:.5} {:?}", m.nom, m.chance, m.monnaies);
+    }
+    // Les fossiles qui bloquent un voulu (Scorched : froid, Dense : vie) ne sont jamais proposés.
+    assert!(
+        fos.iter()
+            .all(|m| !m.id.contains("Scorched") && !m.id.contains("Dense"))
+    );
+    // Pristine + Frigid dans un Potent : la paire attendue, résonateur compté.
+    let paire = fos
+        .iter()
+        .find(|m| m.monnaies.len() == 3 && m.finition.is_none())
+        .expect("une combinaison de deux fossiles");
+    assert!(paire.id.contains("Pristine Fossil") && paire.id.contains("Frigid Fossil"));
+    assert!(
+        paire
+            .monnaies
+            .iter()
+            .any(|c| c.nom == "Potent Chaotic Resonator")
+    );
+    let chaos = r.methodes.iter().find(|m| m.id == "chaos").unwrap();
+    assert!(paire.chance > 5.0 * chaos.chance);
+}

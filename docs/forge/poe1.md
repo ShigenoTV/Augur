@@ -15,11 +15,12 @@ Le mode POE 2 ne change pas.
 | Chaos Orb | objet Rare refait | 1 Chaos |
 | Alchemy + Scouring | même chance que le Chaos | 1 Alchemy + 1 Scouring |
 | Chaque Essence utile | Essence dont le mod garanti est un des mods voulus, utilisable à ce niveau d'objet | 1 Essence (+ 1 Scouring sous Screaming) |
+| Fossiles (1 à 4) | pour chaque taille de Chaotic Resonator, la meilleure combinaison de fossiles : coût moyen minimal aux prix connus, sinon chance maximale ; objet Normal ou Rare refait en Rare | les fossiles + le résonateur |
 | … + établi | chaque méthode ci-dessus, finie par le craft d'établi d'un des mods voulus (le meilleur pour la méthode) : il suffit que les autres mods voulus sortent et qu'il reste une place libre de son côté | celles de la méthode, plus le craft payé une fois |
 
 Choix de l'objet : classe, base (les homonymes comme Two-Stone Ring sont départagés par leur implicite), niveau
 d'objet, influence (Shaper, Elder, Crusader, Redeemer, Hunter, Warlord), puis les affixes voulus au tier choisi ou
-mieux. Hors de ce jalon : fossiles et résonateurs, metamods, Exalted / Annulment, Harvest,
+mieux. Hors de ce jalon : fossiles à effet spécial (voir plus bas), Harvest,
 Eldritch, Veiled, double influence, joyaux et flacons, suivi dans l'overlay.
 
 ## Données
@@ -34,7 +35,11 @@ PoE 2. `tools/gamedata/forge_poe1_data.py` produit `crates/poe2-core/data/forge-
 - les Essences : mod garanti par classe, niveau d'objet maximal (Whispering 35, Muttering 45, Weeping 60, Wailing
   75), et si elles refont un objet Rare (« reforges a rare item » : Screaming et au-dessus, Essences spéciales) ;
 - les crafts d'établi qui ajoutent un mod (`crafting_bench_options.json`, 727 crafts) : mod artisanal, classes et
-  coût par monnaie. On suppose tous les crafts débloqués. Un seul mod artisanal par objet (sans metamod).
+  coût par monnaie. On suppose tous les crafts débloqués. Un seul mod artisanal par objet (sans metamod) ;
+- les étiquettes de chaque mod (`implicit_tags`), lues par les metamods et les fossiles ;
+- les 16 fossiles qui ne font que changer des poids (`fossils.json`) : multiplicateur en % par étiquette de mod
+  (1000 = ×10, 15 = ×0,15, 0 = bloqué). Écartés : Faceted et Tangled (mods ajoutés), Hollow (mod forcé), Glyphic
+  (corruption), Sanctified (tirage chanceux), Fractured (copie), Bloodstained, Gilded, Opulent (effets à part).
 
 Tier d'un mod jamais tiré (Essence, établi) : celui du meilleur tier tirable de sa famille dont la première valeur
 minimale ne dépasse pas la sienne (« vaut au moins ce tier »).
@@ -51,7 +56,12 @@ Relevées dans le code de Craft of Exile pour PoE 1 (`packages/package.js`, 14/1
 - objet **Rare** refait : 4, 5 ou 6 mods à 8/12, 3/12 et 1/12, tirés l'un après l'autre (3 préfixes et 3 suffixes
   au plus, un mod par groupe d'exclusion) ;
 - **Essence** : mod garanti d'abord, puis le reste au hasard avec la même loi du nombre de mods (hypothèse P1-01,
-  à confirmer en jeu).
+  à confirmer en jeu) ;
+- **fossiles** (`poec_getModdedWeight`, mode « additif » par défaut de l'émulateur) : par étiquette, un 0 la bloque,
+  les bonus (> 1) de plusieurs fossiles s'additionnent et les malus (< 1) se multiplient ; par mod, une étiquette
+  bloquée annule son poids, sinon le poids est multiplié par la somme des bonus de ses étiquettes et le produit de
+  leurs malus. Exemple : Frigid (froid ×10) + Prismatic (élémentaire ×6) donne ×16 sur une résistance au froid.
+  L'objet refait suit la loi 4/5/6 du Chaos (hypothèse P1-03).
 
 ## Calcul
 
@@ -60,7 +70,12 @@ Relevées dans le code de Craft of Exile pour PoE 1 (`packages/package.js`, 14/1
 - **Rare : approché.** Chaque mod voulu est suivi exactement ; les autres mods sont résumés par côté (poids restant
   moyen après k tirages sans remise), comme le solveur PoE 2. Les tests le comparent à 200 000 objets simulés :
   écart de 2 à 3 % sur un anneau (vie + résistances, avec ou sans Essence).
-- **Coût** : fait par le panneau, à partir des prix poe.ninja PoE 1 (pages `Currency` et `Essence` de la ligue
+- **Fossiles** : même calcul Rare sur les poids changés (testé contre la simulation). Seuls les fossiles qui, seuls,
+  améliorent la chance du Chaos sont combinés (les 10 meilleurs, soit au plus 385 combinaisons) ; un fossile qui
+  bloque un mod voulu n'en fait donc jamais partie. Une méthode par taille de résonateur, choisie aux prix envoyés
+  par le panneau.
+- **Coût** : fait par le panneau, à partir des prix poe.ninja PoE 1 (pages `Currency`, `Essence`, `Fossil` et
+  `Resonator` de la ligue
   PoE 1 des réglages, en Chaos), ou du prix saisi par le joueur (gardé sur le poste). Le prix de la base n'est pas
   compté. Coût moyen = coût d'un essai / chance ; essais médian et 9 sur 10 par la loi géométrique.
 
@@ -108,11 +123,12 @@ monnaies qui refont tout l'objet.
 |---|---|---|
 | P1-01 | Une Essence suit la même loi 4/5/6 mods que le Chaos, mod garanti compris | 50 Essences sur un objet, compter les mods |
 | P1-02 | Un objet Magique refait a 2 mods une fois sur deux | 100 Alterations, compter |
+| P1-03 | Les fossiles suivent la loi 4/5/6 mods du Chaos ; bonus additifs entre fossiles (mode par défaut de Craft of Exile) | recouper un cas avec l'émulateur en mode multiplicatif ; compter les mods sur des objets refaits aux fossiles |
 
 ## Suite possible (sur décision de Max)
 
-Fossiles et résonateurs (effets réels dans `fossils.json`), plan pas à pas dans le panneau (prochaine étape choisie
-par Max le 14/11), solveur au-delà de 4 mods voulus, multimod, suivi dans l'overlay (Ctrl+Alt+C), mise à jour PoE 1
+Fossiles à effet spécial, fossiles dans le plan conseillé (le solveur ne les connaît pas encore), solveur au-delà
+de 4 mods voulus, multimod, suivi dans l'overlay (Ctrl+Alt+C), mise à jour PoE 1
 dans `mise_a_jour.py`.
 
 ## Pas à pas du plan conseillé

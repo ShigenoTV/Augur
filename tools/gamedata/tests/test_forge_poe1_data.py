@@ -24,6 +24,7 @@ def _mod(generation: str = "prefix", poids: int = 1000, essence: bool = False, d
         "text": "+(3-9) to maximum Life\r",
         "spawn_weights": [{"tag": "ring", "weight": poids}, {"tag": "default", "weight": 0}],
         "is_essence_only": essence,
+        "implicit_tags": ["resource", "life"],
     }
 
 
@@ -81,6 +82,24 @@ def _sources(tmp_path: Path) -> Path:
         },
         "Metadata/Items/Currency/CurrencyCorruptMonolith": {"name": "Remnant of Corruption", "mods": {"Ring": None}},
     }
+    vide = {"added_mods": [], "forced_mods": [], "allowed_tags": [], "forbidden_tags": [], "rolls_lucky": False,
+            "mirrors": False, "corrupted_essence_chance": 0, "positive_mod_weights": [], "negative_mod_weights": []}
+    fossiles = {
+        "Metadata/Items/Currency/CurrencyDelveCraftingLife": {
+            **vide, "name": "Pristine Fossil",
+            "positive_mod_weights": [{"tag": "life", "weight": 1000}],
+            "negative_mod_weights": [{"tag": "defences", "weight": 0}],
+        },
+        "Metadata/Items/Currency/CurrencyDelveCraftingRandom": {
+            **vide, "name": "Tangled Fossil", "added_mods": ["X"], "corrupted_essence_chance": 10,
+        },
+        "Metadata/Items/Currency/CurrencyDelveCraftingQuality": {
+            **vide, "name": "Opulent Fossil", "positive_mod_weights": [{"tag": "drop", "weight": 1000}],
+        },
+        "Metadata/Items/Currency/RandomFossilOutcome1": {**vide, "name": "Random"},
+    }
+    for fid in list(fossiles)[:3]:
+        items[fid] = {"domain": "undefined", "release_state": "released", "name": fossiles[fid]["name"]}
     classes = {c: {"influence_tags": []} for c in fd.CLASSES}
     classes["Ring"] = {"influence_tags": ["ring_shaper", "ring_basilisk", "ring_inconnu"]}
     for nom, contenu in {
@@ -89,6 +108,7 @@ def _sources(tmp_path: Path) -> Path:
         "essences.json": essences,
         "item_classes.json": classes,
         "crafting_bench_options.json": bench,
+        "fossils.json": fossiles,
     }.items():
         (tmp_path / nom).write_text(json.dumps(contenu), encoding="utf-8")
     (tmp_path / "version.txt").write_text("3.29.3.6\n", encoding="utf-8")
@@ -110,6 +130,12 @@ def test_construit_les_donnees(tmp_path):
     assert d["mods"][1]["spawn"] == [["ring", 1000], ["default", 0]]
     (e,) = d["essences"]
     assert e["rang"] == 7 and e["sur_rare"] and e["cibles"] == {"Ring": "LifeEssence7"}
+    assert d["mods"][1]["tags"] == ["life", "resource"]
+    # Seuls les fossiles qui changent des poids : ni Tangled (mods ajoutés), ni Opulent, ni les issues.
+    assert d["fossiles"] == [
+        {"id": "Metadata/Items/Currency/CurrencyDelveCraftingLife", "nom": "Pristine Fossil",
+         "poids": [["defences", 0], ["life", 1000]]}
+    ]
 
 
 def test_sortie_deterministe(tmp_path):
