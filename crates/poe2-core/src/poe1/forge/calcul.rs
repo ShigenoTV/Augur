@@ -8,13 +8,15 @@
 //!   chances 8/12, 3/12 et 1/12, tirés l'un après l'autre (au plus 3 préfixes et 3 suffixes, un mod
 //!   par groupe d'exclusion) ;
 //! - une **Essence** pose d'abord son mod garanti, puis complète au hasard (même loi du nombre de mods,
-//!   mod garanti compris : hypothèse, à confirmer en jeu).
+//!   mod garanti compris : hypothèse, à confirmer en jeu) ;
+//! - des **fossiles** (dans un Chaotic Resonator de 1 à 4 places) refont l'objet en Rare comme un Chaos
+//!   Orb, avec des poids changés par étiquette de mod (règle de Craft of Exile, voir [`pool_fossiles`]).
 //!
 //! Le cas Magique est exact. Le cas Rare suit chaque mod voulu exactement et résume les autres mods par
 //! côté (poids restant moyen après k tirages sans remise, même approximation que le solveur PoE 2) ;
 //! un test le compare à une simulation complète sur le moteur exact.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use serde::Serialize;
 
@@ -23,7 +25,7 @@ use crate::forge::{
     WantedAffix,
 };
 
-use super::donnees::{ErreurForgePoe1, PoolPoe1};
+use super::donnees::{ErreurForgePoe1, FossilePoe1, PoolPoe1, bit_etiquette};
 
 /// Loi du nombre de mods d'un Rare refait : (nombre, chance).
 pub const MODS_RARE: [(u8, f64); 3] = [(4, 8.0 / 12.0), (5, 3.0 / 12.0), (6, 1.0 / 12.0)];
@@ -35,6 +37,15 @@ pub const AUGMENTATION: &str = "Orb of Augmentation";
 pub const CHAOS: &str = "Chaos Orb";
 pub const ALCHEMY: &str = "Orb of Alchemy";
 pub const SCOURING: &str = "Orb of Scouring";
+/// Chaotic Resonators par nombre de places (1 à 4).
+pub const RESONATEURS: [&str; 4] = [
+    "Primitive Chaotic Resonator",
+    "Potent Chaotic Resonator",
+    "Powerful Chaotic Resonator",
+    "Prime Chaotic Resonator",
+];
+/// Fossiles essayés au plus dans les combinaisons (les plus utiles seuls d'abord).
+const FOSSILES_CANDIDATS: usize = 10;
 
 /// Une monnaie consommée par essai, en moyenne.
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -51,7 +62,7 @@ pub struct Conso {
 pub struct MethodePoe1 {
     pub id: String,
     pub nom: String,
-    /// `alteration`, `chaos`, `alchimie` ou `essence`.
+    /// `alteration`, `chaos`, `alchimie`, `essence` ou `fossile`.
     pub genre: String,
     /// Chance de réussite d'un essai (0 à 1).
     pub chance: f64,
@@ -335,6 +346,53 @@ pub fn chance_rare(
         .sum()
 }
 
+/// Poids d'un pool sous des fossiles, multipliés par 100 pour garder les fractions.
+///
+/// Règle de l'émulateur Craft of Exile pour PoE 1 (mode par défaut, « additif ») :
+///
+/// - par étiquette, un multiplicateur nul d'un fossile la bloque ; les multiplicateurs au-dessus de 1
+///   s'**additionnent** d'un fossile à l'autre, ceux en dessous de 1 se multiplient ;
+/// - par mod, une étiquette bloquée annule son poids ; sinon le poids est multiplié par la **somme** des
+///   bonus de ses étiquettes (1 sans bonus) et par le **produit** de leurs malus.
+pub fn pool_fossiles(pool: &AffixPool, fossiles: &[&FossilePoe1]) -> AffixPool {
+    let mut bloque = 0u64;
+    let mut plus: HashMap<u64, f64> = HashMap::new();
+    let mut moins: HashMap<u64, f64> = HashMap::new();
+    for f in fossiles {
+        for (tag, w) in &f.poids {
+            let bit = bit_etiquette(tag);
+            let m = f64::from(*w) / 100.0;
+            if *w == 0 {
+                bloque |= bit;
+            } else if m > 1.0 {
+                *plus.entry(bit).or_default() += m;
+            } else if m < 1.0 {
+                *moins.entry(bit).or_insert(1.0) *= m;
+            }
+        }
+    }
+    let mut p = pool.clone();
+    for a in &mut p.affixes {
+        if a.tags & bloque != 0 {
+            a.weight = 0;
+            continue;
+        }
+        let bonus: f64 = plus
+            .iter()
+            .filter(|(b, _)| a.tags & **b != 0)
+            .map(|(_, m)| m)
+            .sum();
+        let malus: f64 = moins
+            .iter()
+            .filter(|(b, _)| a.tags & **b != 0)
+            .map(|(_, m)| m)
+            .product();
+        let bonus = if bonus > 0.0 { bonus } else { 1.0 };
+        a.weight = (f64::from(a.weight) * 100.0 * bonus * malus).round() as u32;
+    }
+    p
+}
+
 /// Méthode Alteration (+ Augmentation quand elle peut finir l'objet) : chance par essai et nombre
 /// moyen d'Augmentations par essai. `None` si l'objectif ne tient pas sur un objet Magique.
 pub fn chance_alteration(pool: &AffixPool, goal: &Goal, ilvl: u8) -> Option<(f64, f64)> {
@@ -472,11 +530,95 @@ enum Spam<'a> {
     Alteration,
     Rare,
     Essence(&'a super::donnees::EssenceBase),
+    /// Fossiles dans un Chaotic Resonator, avec le pool aux poids changés.
+    Fossiles(Vec<&'a FossilePoe1>, AffixPool),
+}
+
+/// Combinaisons de `k` éléments parmi `n` (indices croissants).
+fn combinaisons(n: usize, k: usize) -> Vec<Vec<usize>> {
+    fn rec(n: usize, k: usize, debut: usize, cur: &mut Vec<usize>, out: &mut Vec<Vec<usize>>) {
+        if cur.len() == k {
+            out.push(cur.clone());
+            return;
+        }
+        for i in debut..n {
+            cur.push(i);
+            rec(n, k, i + 1, cur, out);
+            cur.pop();
+        }
+    }
+    let mut out = Vec::new();
+    rec(n, k, 0, &mut Vec::new(), &mut out);
+    out
+}
+
+/// Combinaison de fossiles retenue : fossiles, pool aux poids changés, chance d'un essai.
+type Choix<'a> = (Vec<&'a FossilePoe1>, AffixPool, f64);
+
+/// Meilleure combinaison de fossiles pour chaque taille de résonateur (1 à 4 places) : coût moyen
+/// minimal quand tous les prix sont connus, sinon chance maximale. Seuls les fossiles qui, seuls,
+/// améliorent la chance du Chaos Orb sont combinés (les `FOSSILES_CANDIDATS` meilleurs).
+fn meilleurs_fossiles<'a>(
+    pool: &AffixPool,
+    goal: &Goal,
+    ilvl: u8,
+    fossiles: &'a [FossilePoe1],
+    prix: &BTreeMap<String, f64>,
+) -> Vec<Choix<'a>> {
+    let base = chance_rare(pool, goal, ilvl, None, None);
+    let mut seuls: Vec<(&FossilePoe1, f64)> = fossiles
+        .iter()
+        .map(|f| {
+            (
+                f,
+                chance_rare(&pool_fossiles(pool, &[f]), goal, ilvl, None, None),
+            )
+        })
+        .filter(|(_, p)| *p > base * 1.0001)
+        .collect();
+    seuls.sort_by(|a, b| b.1.total_cmp(&a.1).then(a.0.nom.cmp(&b.0.nom)));
+    seuls.truncate(FOSSILES_CANDIDATS);
+    let mut sortie = Vec::new();
+    for (k, reso) in RESONATEURS.iter().enumerate() {
+        let mut meilleur: Option<((u8, f64), Choix)> = None;
+        for c in combinaisons(seuls.len(), k + 1) {
+            let fs: Vec<&FossilePoe1> = c.iter().map(|&i| seuls[i].0).collect();
+            let p = pool_fossiles(pool, &fs);
+            let chance = chance_rare(&p, goal, ilvl, None, None);
+            if chance <= 0.0 {
+                continue;
+            }
+            let cout: Option<f64> = fs
+                .iter()
+                .map(|f| prix.get(&f.nom).copied())
+                .chain([prix.get(*reso).copied()])
+                .sum();
+            // Combinaisons aux prix connus d'abord, au coût moyen ; les autres à la chance.
+            let note = (
+                u8::from(cout.is_none()),
+                cout.map_or(-chance, |c| c / chance),
+            );
+            if meilleur
+                .as_ref()
+                .is_none_or(|(m, _)| note.0 < m.0 || (note.0 == m.0 && note.1 < m.1))
+            {
+                meilleur = Some((note, (fs, p, chance)));
+            }
+        }
+        if let Some((_, choix)) = meilleur {
+            sortie.push(choix);
+        }
+    }
+    sortie
 }
 
 /// Toutes les méthodes de spam applicables, avec et sans finition à l'établi, de la plus probable à
 /// la moins probable.
-pub fn methodes(pb: &PoolPoe1, voulus: &[WantedAffix]) -> Result<ResultatPoe1, ErreurForgePoe1> {
+pub fn methodes(
+    pb: &PoolPoe1,
+    voulus: &[WantedAffix],
+    prix: &BTreeMap<String, f64>,
+) -> Result<ResultatPoe1, ErreurForgePoe1> {
     let goal = Goal::new(&pb.pool, voulus).map_err(ErreurForgePoe1::Objectif)?;
     let pool = &pb.pool;
     let ilvl = pb.ilvl;
@@ -498,6 +640,7 @@ pub fn methodes(pb: &PoolPoe1, voulus: &[WantedAffix]) -> Result<ResultatPoe1, E
             },
             Spam::Rare => Some((chance_rare(pool, &goal, ilvl, None, etabli), 0.0)),
             Spam::Essence(e) => Some((chance_rare(pool, &goal, ilvl, Some(e.affixe), etabli), 0.0)),
+            Spam::Fossiles(_, p) => Some((chance_rare(p, &goal, ilvl, None, etabli), 0.0)),
         }
     };
 
@@ -507,6 +650,12 @@ pub fn methodes(pb: &PoolPoe1, voulus: &[WantedAffix]) -> Result<ResultatPoe1, E
             .iter()
             .filter(|e| matches!(goal.classify(pool, e.affixe), Class::Wanted(_)))
             .map(Spam::Essence),
+    );
+    let fossiles = &super::donnees::donnees()?.fossiles;
+    spams.extend(
+        meilleurs_fossiles(pool, &goal, ilvl, fossiles, prix)
+            .into_iter()
+            .map(|(fs, p, _)| Spam::Fossiles(fs, p)),
     );
 
     for spam in &spams {
@@ -533,6 +682,23 @@ pub fn methodes(pb: &PoolPoe1, voulus: &[WantedAffix]) -> Result<ResultatPoe1, E
                     "Objet Normal seulement : Orb of Scouring entre deux essais.".to_string()
                 },
             ),
+            Spam::Fossiles(fs, _) => {
+                let noms: Vec<&str> = fs.iter().map(|f| f.nom.as_str()).collect();
+                (
+                    format!("fossiles:{}", noms.join("+")),
+                    noms.iter()
+                        .map(|n| n.trim_end_matches(" Fossil"))
+                        .collect::<Vec<_>>()
+                        .join(" + ")
+                        + if fs.len() > 1 { " (fossiles)" } else { " (fossile)" },
+                    "fossile",
+                    format!(
+                        "{} avec {} : refait l'objet (Normal ou Rare) en Rare, 4 à 6 mods.",
+                        RESONATEURS[fs.len() - 1],
+                        noms.join(", ")
+                    ),
+                )
+            }
         };
         let monnaies = |aug: f64| -> Vec<Conso> {
             match spam {
@@ -540,6 +706,11 @@ pub fn methodes(pb: &PoolPoe1, voulus: &[WantedAffix]) -> Result<ResultatPoe1, E
                 Spam::Rare => vec![conso(CHAOS, 1.0)],
                 Spam::Essence(e) if e.essence.sur_rare => vec![conso(&e.essence.nom, 1.0)],
                 Spam::Essence(e) => vec![conso(&e.essence.nom, 1.0), conso(SCOURING, 1.0)],
+                Spam::Fossiles(fs, _) => fs
+                    .iter()
+                    .map(|f| conso(&f.nom, 1.0))
+                    .chain([conso(RESONATEURS[fs.len() - 1], 1.0)])
+                    .collect(),
             }
         };
 
