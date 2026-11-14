@@ -76,6 +76,8 @@ pub struct Ecartee {
 pub struct ResultatPoe1 {
     pub methodes: Vec<MethodePoe1>,
     pub ecartees: Vec<Ecartee>,
+    /// Plan au coût moyen minimal (Exalted, Annulment, metamods…), si les prix sont fournis.
+    pub plan: Option<super::solveur::PlanPoe1>,
 }
 
 fn conso(nom: &str, quantite: f64) -> Conso {
@@ -619,5 +621,9 @@ pub fn methodes(pb: &PoolPoe1, voulus: &[WantedAffix]) -> Result<ResultatPoe1, E
     }
 
     methodes.sort_by(|a, b| b.chance.total_cmp(&a.chance).then(a.nom.cmp(&b.nom)));
-    Ok(ResultatPoe1 { methodes, ecartees })
+    Ok(ResultatPoe1 {
+        methodes,
+        ecartees,
+        plan: None,
+    })
 }

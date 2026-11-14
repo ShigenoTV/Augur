@@ -261,7 +261,14 @@ export type ForgePoe1Base = {
   influences: string[];
 };
 export type ForgePoe1Affixes = { baseId: string; ilvl: number; influence: string | null; affixes: ForgeAffix[] };
-export type ForgePoe1Request = { baseId: string; ilvl: number; influence: string | null; voulus: ForgeWanted[] };
+export type ForgePoe1Request = {
+  baseId: string;
+  ilvl: number;
+  influence: string | null;
+  voulus: ForgeWanted[];
+  /** Prix en Chaos (cote ou saisie) : le plan conseillé en dépend. */
+  prix?: Record<string, number>;
+};
 export type ForgePoe1Conso = { nom: string; quantite: number };
 export type ForgePoe1Method = {
   id: string;
@@ -273,7 +280,21 @@ export type ForgePoe1Method = {
   /** Craft d'établi qui finit l'objet, payé une fois. */
   finition: { texte: string; monnaies: ForgePoe1Conso[] } | null;
 };
-export type ForgePoe1Result = { methodes: ForgePoe1Method[]; ecartees: { nom: string; raison: string }[] };
+/** Plan au coût moyen minimal (Regal, Exalted, Annulment, metamods, établi). */
+export type ForgePoe1Plan = {
+  coutMoyen: number;
+  /** Première action, sur l'objet Normal. */
+  depart: string;
+  /** Actions utilisées et leur nombre moyen, de la plus fréquente à la moins fréquente. */
+  actions: { action: string; nombre: number }[];
+  monnaies: ForgePoe1Conso[];
+  sansPrix: string[];
+};
+export type ForgePoe1Result = {
+  methodes: ForgePoe1Method[];
+  ecartees: { nom: string; raison: string }[];
+  plan: ForgePoe1Plan | null;
+};
 export type ForgePoe1Prices = { league: string; prix: Record<string, number>; erreur: string | null };
 export type ForgeCatalogueEntry = { id: string; nom: string; genre: "base" | "monnaie" | "omen" | "essence" };
 export type ForgePriceSource = "joueur" | "poeNinja" | "indicatif";

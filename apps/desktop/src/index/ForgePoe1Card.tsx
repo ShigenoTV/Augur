@@ -7,6 +7,7 @@ import {
   type ForgeAffix,
   type ForgePoe1Affixes,
   type ForgePoe1Base,
+  type ForgePoe1Plan,
   type ForgePoe1Prices,
   type ForgePoe1Request,
   type ForgePoe1Result,
@@ -14,7 +15,16 @@ import {
 } from "../bridge";
 import { AffixColumn } from "./ForgeCard";
 import { cleAffixe, libelleCourt, lirePrix } from "./forge";
-import { chiffrer, formatChance, formatChaos, formatEssais, libelleBase, prixEffectif } from "./forgePoe1";
+import {
+  VOULUS_MAX_PLAN,
+  chiffrer,
+  formatChance,
+  formatChaos,
+  formatEssais,
+  libelleBase,
+  prixEffectif,
+  prixPourPlan,
+} from "./forgePoe1";
 
 const btn = "rounded-chip px-3 py-1.5 text-sm font-semibold disabled:opacity-50";
 const btnPrimary = `${btn} bg-accent text-accent-ink hover:bg-accent-strong`;
@@ -91,25 +101,101 @@ function PrixUtilises({
   );
 }
 
+/** Plan au coût moyen minimal, quand le solveur en a trouvé un. */
+function PlanConseille({
+  plan,
+  nbVoulus,
+  spam,
+  divine,
+  prixChanges,
+}: {
+  plan: ForgePoe1Plan | null;
+  nbVoulus: number;
+  spam: number | null;
+  divine: number | null;
+  prixChanges: boolean;
+}) {
+  if (!plan) {
+    return (
+      <p className="text-[11px] text-text-subtle">
+        {nbVoulus > VOULUS_MAX_PLAN
+          ? `Plan conseillé (Exalted, Annulment, metamods) : jusqu'à ${VOULUS_MAX_PLAN} mods voulus pour l'instant.`
+          : "Pas de plan conseillé : des prix manquent, ou l'objet est hors d'atteinte."}
+      </p>
+    );
+  }
+  const gain = spam != null && plan.coutMoyen < spam * 0.98 ? spam / plan.coutMoyen : null;
+  return (
+    <section className="space-y-2 rounded-card border border-accent/40 bg-ink-900 p-3">
+      <p className="text-sm text-text-muted">
+        Plan conseillé : environ{" "}
+        <span className="font-semibold text-accent">{formatChaos(plan.coutMoyen, divine)}</span> en moyenne
+        {gain != null && gain >= 1.05 ? `, ${gain.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} fois moins que le meilleur spam` : ""}.
+      </p>
+      <p className="text-xs text-text-muted">
+        Commence par : <span className="text-text-primary">{plan.depart}</span>. Ensuite, à chaque étape, la meilleure
+        action selon l'objet obtenu.
+      </p>
+      <table className="text-xs">
+        <thead className="text-left text-text-subtle">
+          <tr>
+            <th className="pr-4 font-normal">Action</th>
+            <th className="font-normal">Nombre moyen</th>
+          </tr>
+        </thead>
+        <tbody>
+          {plan.actions.map((a) => (
+            <tr key={a.action}>
+              <td className="py-0.5 pr-4 text-text-primary">{a.action}</td>
+              <td className="font-mono">{formatEssais(a.nombre)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {plan.sansPrix.length > 0 && (
+        <p className="text-[11px] text-text-subtle">Actions écartées faute de prix : {plan.sansPrix.join(", ")}.</p>
+      )}
+      {prixChanges && (
+        <p className="text-[11px] text-signal-warn">Un prix a changé depuis le calcul : relance « Comparer les méthodes ».</p>
+      )}
+    </section>
+  );
+}
+
 function Resultat({
   result,
   prix,
   saisis,
   onSaisie,
+  nbVoulus,
+  prixChanges,
 }: {
   result: ForgePoe1Result;
   prix: ForgePoe1Prices | null;
   saisis: Record<string, number>;
   onSaisie: (nom: string, v: number | null) => void;
+  nbVoulus: number;
+  prixChanges: boolean;
 }) {
   const lignes = chiffrer(result.methodes, prix?.prix ?? {}, saisis);
   const divine = prixEffectif("Divine Orb", prix?.prix ?? {}, saisis);
   const noms = [
-    ...new Set(result.methodes.flatMap((m) => [...m.monnaies, ...(m.finition?.monnaies ?? [])].map((c) => c.nom))),
+    ...new Set([
+      ...result.methodes.flatMap((m) => [...m.monnaies, ...(m.finition?.monnaies ?? [])].map((c) => c.nom)),
+      ...(result.plan?.monnaies.map((c) => c.nom) ?? []),
+      ...(result.plan?.sansPrix ?? []),
+    ]),
   ].sort();
   const meilleure = lignes[0];
   return (
     <div className="space-y-3">
+      <PlanConseille
+        plan={result.plan}
+        nbVoulus={nbVoulus}
+        spam={meilleure?.coutMoyen ?? null}
+        divine={divine}
+        prixChanges={prixChanges}
+      />
       {lignes.length === 0 ? (
         <StatePanel icon="flat" title="Aucune méthode de spam ne mène à cet objet">
           Essaie un tier plus bas, moins d'affixes, ou un niveau d'objet plus haut.
@@ -194,6 +280,8 @@ export function ForgePoe1Card() {
   const [saisis, setSaisis] = useState<Record<string, number>>(lirePrixSaisis);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Prix envoyés au dernier calcul, pour signaler un plan devenu périmé. */
+  const [prixCalcul, setPrixCalcul] = useState("");
 
   useEffect(() => {
     if (!isTauri()) return;
@@ -235,13 +323,16 @@ export function ForgePoe1Card() {
   }
 
   async function calculer() {
-    const demande: ForgePoe1Request = { baseId, ilvl, influence, voulus };
     setBusy(true);
     setError(null);
     setResult(null);
     try {
+      const cote = prix ?? (await commands.getForgePoe1Prices().catch(() => null));
+      if (!prix) setPrix(cote);
+      const envoyes = prixPourPlan(cote?.prix ?? {}, saisis);
+      const demande: ForgePoe1Request = { baseId, ilvl, influence, voulus, prix: envoyes };
       setResult(await commands.planForgePoe1(demande));
-      if (!prix) setPrix(await commands.getForgePoe1Prices().catch(() => null));
+      setPrixCalcul(JSON.stringify(envoyes));
     } catch (err) {
       setError(message(err));
     } finally {
@@ -393,7 +484,16 @@ export function ForgePoe1Card() {
           {error}
         </StatePanel>
       )}
-      {result && <Resultat result={result} prix={prix} saisis={saisis} onSaisie={saisir} />}
+      {result && (
+        <Resultat
+          result={result}
+          prix={prix}
+          saisis={saisis}
+          onSaisie={saisir}
+          nbVoulus={voulus.length}
+          prixChanges={prixCalcul !== "" && prixCalcul !== JSON.stringify(prixPourPlan(prix?.prix ?? {}, saisis))}
+        />
+      )}
     </div>
   );
 }

@@ -69,6 +69,33 @@ Relevées dans le code de Craft of Exile pour PoE 1 (`packages/package.js`, 14/1
   exacte des tirages (l'Augmentation sert aussi quand elle laisse la place au craft). Testé contre la simulation
   (écart < 3 %). Le coût compte le craft même quand le mod sort tout seul : c'est un majorant léger.
 
+## Plan conseillé : solveur Exalt / Annul / metamods (`poe1::forge::solveur`)
+
+Choisi par Max le 14/11 (option « Spams + établi et metamods »). Au lieu de comparer des spams, le solveur cherche
+la meilleure décision dans chaque situation et donne le coût moyen minimal pour finir l'objet.
+
+- **Actions** : Transmutation, Alteration, Augmentation, Regal, Alchemy, Chaos, Essences, Exalted, Annulment,
+  Scouring, metamods d'établi (« Prefixes / Suffixes Cannot Be Changed », « Cannot roll Attack / Caster
+  Modifiers »), retrait du craft (1 Orb of Scouring), craft d'établi final. Un seul mod d'établi à la fois (pas de
+  multimod).
+- **Règles des metamods**, relevées dans l'émulateur Craft of Exile PoE 1 : Chaos et Scouring gardent le côté
+  verrouillé, le metamod part ; le Chaos tire 4, 5 ou 6 mods au total, moins les mods gardés ; Annulment retire un
+  mod au hasard hors du côté verrouillé, metamod compris ; « Cannot roll Attack / Caster » retire des ajouts les
+  mods aux tags `attack` / `caster` (`implicit_tags` de RePoE, champ `tags` des données).
+- **État** : rareté, voulus présents, voulus bloqués par un mauvais tier, nombre d'autres mods par côté (poids
+  restant moyen, comme les spams Rare), metamod posé.
+- **Méthode** : plus court chemin stochastique. Les relances (Chaos, Alteration, Essence, Chaos verrouillé…) mènent
+  à une loi d'objets commune, traitée comme un nœud. Itération de politique : chaque politique est évaluée
+  exactement par un système creux résolu par BiCGSTAB, puis chaque état prend sa meilleure action. Les nombres
+  moyens d'actions et de monnaies viennent des passages moyens par état (système transposé).
+- **Prix** : le panneau envoie la cote du marché corrigée par les saisies du joueur ; une action sans prix est
+  écartée et listée.
+- **Limite** : jusqu'à 4 mods voulus (moins d'une seconde). À 5 ou 6 mods, la recherche d'une première politique
+  qui aboutit échoue encore : le panneau le dit.
+- **Validation** (tests `solveur::tests`) : Chaos seul retrouve la formule du spam ; sur une Glorious Plate, la
+  politique optimale simulée sur le moteur exact donne 7,58 c contre 7,57 c calculés, et 190,4 c contre 191,2 c
+  dans un cas à verrous (Exalted cher, metamods bon marché ; test long, lancé en release avec `--ignored`).
+
 ## Réutilisé de la Forge PoE 2
 
 Le modèle d'objet et le tirage pondéré (`forge::moteur`), l'objectif (`forge::objectif`), la colonne d'affixes du
@@ -84,6 +111,6 @@ monnaies qui refont tout l'objet.
 
 ## Suite possible (sur décision de Max)
 
-Fossiles et résonateurs (effets réels dans `fossils.json`), metamods et étapes Exalt / Annul (solveur PoE 1, choisi
-par Max le 14/11),
-Alteration + Regal, suivi dans l'overlay (Ctrl+Alt+C), mise à jour PoE 1 dans `mise_a_jour.py`.
+Fossiles et résonateurs (effets réels dans `fossils.json`), plan pas à pas dans le panneau (prochaine étape choisie
+par Max le 14/11), solveur au-delà de 4 mods voulus, multimod, suivi dans l'overlay (Ctrl+Alt+C), mise à jour PoE 1
+dans `mise_a_jour.py`.

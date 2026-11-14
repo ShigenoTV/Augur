@@ -5,22 +5,26 @@
 //! sont propres à PoE 1. Cadrage : `docs/forge/poe1.md`.
 //!
 //! - [`donnees`] : données embarquées et pool d'une base (influence comprise) ;
-//! - [`calcul`] : chance de réussite d'un essai pour Alteration, Chaos, Alchemy et chaque Essence.
+//! - [`calcul`] : chance de réussite d'un essai pour Alteration, Chaos, Alchemy et chaque Essence ;
+//! - [`solveur`] : plan au coût moyen minimal (Regal, Exalted, Annulment, metamods, établi).
 //!
-//! Le coût (prix poe.ninja en Chaos) est appliqué par l'appli : la chance ne dépend pas des prix.
+//! Le coût des méthodes de spam est appliqué par l'appli. Le solveur, lui, reçoit les prix : la
+//! meilleure décision en dépend.
 
 pub mod calcul;
 pub mod donnees;
+pub mod solveur;
 
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
 use crate::forge::atelier::{GroupeAffixe, PalierAffixe};
-use crate::forge::{GroupId, Slot, WantedAffix};
+use crate::forge::{Goal, GroupId, Slot, WantedAffix};
 
 pub use calcul::{MethodePoe1, ResultatPoe1};
 pub use donnees::{BaseVue, ErreurForgePoe1, bases, construire_pool, donnees};
+pub use solveur::{PlanPoe1, UsageAction};
 
 /// Affixes d'une base PoE 1 à un niveau d'objet.
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -114,12 +118,20 @@ pub struct DemandePoe1 {
     #[serde(default)]
     pub influence: Option<String>,
     pub voulus: Vec<WantedAffix>,
+    /// Prix des monnaies en Chaos (cote du marché ou saisie du joueur) : sans prix, pas de plan.
+    #[serde(default)]
+    pub prix: BTreeMap<String, f64>,
 }
 
 /// Méthodes de spam pour la demande, de la plus probable à la moins probable.
 pub fn planifier(d: &DemandePoe1) -> Result<ResultatPoe1, ErreurForgePoe1> {
     let pb = construire_pool(&d.base_id, d.ilvl, d.influence.as_deref())?;
-    calcul::methodes(&pb, &d.voulus)
+    let mut r = calcul::methodes(&pb, &d.voulus)?;
+    if !d.prix.is_empty() {
+        let goal = Goal::new(&pb.pool, &d.voulus).map_err(ErreurForgePoe1::Objectif)?;
+        r.plan = solveur::plan(&pb, &goal, &d.prix);
+    }
+    Ok(r)
 }
 
 #[cfg(test)]

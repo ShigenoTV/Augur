@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ForgePoe1Base, ForgePoe1Method } from "../bridge";
-import { chiffrer, essaisPour, formatChance, formatChaos, libelleBase, prixEffectif } from "./forgePoe1";
+import { chiffrer, essaisPour, formatChance, formatChaos, libelleBase, prixEffectif, prixPourPlan } from "./forgePoe1";
 
 const m = (id: string, chance: number, monnaies: [string, number][]): ForgePoe1Method => ({
   id,
@@ -24,6 +24,14 @@ describe("forge PoE 1", () => {
     expect(prixEffectif("Chaos Orb", { "Chaos Orb": 1 }, {})).toBe(1);
     expect(prixEffectif("Orb of Alteration", { "Orb of Alteration": 0.1 }, { "Orb of Alteration": 0.2 })).toBe(0.2);
     expect(prixEffectif("Inconnue", {}, {})).toBeNull();
+  });
+
+  it("envoie au solveur la cote, corrigée par les saisies", () => {
+    expect(prixPourPlan({ "Chaos Orb": 1, "Exalted Orb": 0.4 }, { "Exalted Orb": 0.5, "Divine Orb": 90 })).toEqual({
+      "Chaos Orb": 1,
+      "Exalted Orb": 0.5,
+      "Divine Orb": 90,
+    });
   });
 
   it("classe les méthodes par coût moyen, sans prix à la fin", () => {

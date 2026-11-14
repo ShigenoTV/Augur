@@ -310,6 +310,7 @@ fn essence_garantit_son_mod() {
     assert!(c > chance_rare(&pb.pool, &goal, 86, None, None));
 
     let r = planifier(&DemandePoe1 {
+        prix: Default::default(),
         base_id: ANNEAU.into(),
         ilvl: 86,
         influence: None,
@@ -451,6 +452,7 @@ fn etabli_finit_un_magique() {
     proche(aug, augs as f64 / n as f64, 0.05);
 
     let r = planifier(&DemandePoe1 {
+        prix: Default::default(),
         base_id: ANNEAU.into(),
         ilvl: 86,
         influence: None,

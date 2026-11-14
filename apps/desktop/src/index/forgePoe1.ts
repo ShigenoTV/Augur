@@ -28,6 +28,14 @@ export function prixEffectif(nom: string, ninja: Record<string, number>, saisis:
   return ninja[nom] ?? null;
 }
 
+/** Prix envoyés au solveur : cote du marché, remplacée par les saisies du joueur. */
+export function prixPourPlan(ninja: Record<string, number>, saisis: Record<string, number>): Record<string, number> {
+  return { ...ninja, ...saisis };
+}
+
+/** Le solveur ne propose un plan que jusqu'à ce nombre de mods voulus. */
+export const VOULUS_MAX_PLAN = 4;
+
 /** Chiffre chaque méthode et les classe : coût moyen croissant, méthodes sans prix à la fin. */
 export function chiffrer(
   methodes: ForgePoe1Method[],
