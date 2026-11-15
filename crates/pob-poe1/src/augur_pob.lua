@@ -61,6 +61,22 @@ end
 
 local build = nil
 
+-- EHP comme pour PoE 2 : moyenne des plus gros coups encaissables des cinq types.
+-- Le TotalEHP de PoB dépend de l'ennemi configuré (boss par défaut) : quand ce
+-- dernier tue en un coup, il ne bouge plus quoi qu'on change.
+local TYPES_COUPS = { "Physical", "Fire", "Cold", "Lightning", "Chaos" }
+local function ehp(out)
+	local somme, n = 0, 0
+	for _, t in ipairs(TYPES_COUPS) do
+		local v = out[t .. "MaximumHitTaken"]
+		if type(v) == "number" and v == v and v < math.huge then
+			somme, n = somme + v, n + 1
+		end
+	end
+	if n == 0 then return out.TotalEHP or 0 end
+	return somme / n
+end
+
 function augur_version()
 	return launch.versionNumber
 end
@@ -92,7 +108,7 @@ function augur_load(xml)
 		fullDps = out.FullDPS,
 		combinedDps = out.CombinedDPS,
 		life = out.Life,
-		ehp = out.TotalEHP,
+		ehp = ehp(out),
 	}
 end
 
@@ -105,7 +121,7 @@ local function resume(out)
 		life = out.Life or 0,
 		energyShield = out.EnergyShield or 0,
 		mana = out.Mana or 0,
-		ehp = out.TotalEHP or 0,
+		ehp = ehp(out),
 		resistances = {},
 	}
 	for _, e in ipairs(RESISTANCES) do

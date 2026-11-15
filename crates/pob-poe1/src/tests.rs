@@ -154,3 +154,52 @@ fn recherche_sans_emplacement() {
     let e = moteur().recherche_upgrade("Nulle part", None).unwrap_err();
     assert!(matches!(e, ErreurPob::Calcul(_)), "{e:?}");
 }
+
+/// Personnage niveau 4 que le boss par défaut de PoB tue en un coup : son TotalEHP ne bouge
+/// pas, l'EHP d'Augur (moyenne des coups max, comme PoE 2) suit l'armure gagnée.
+#[test]
+fn ehp_bouge_a_bas_niveau() {
+    let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<PathOfBuilding>
+<Build level="4" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None"/>
+<Tree activeSpec="1"><Spec treeVersion="3_26" classId="5" ascendClassId="0" nodes="" masteryEffects=""/></Tree>
+<Items activeItemSet="1">
+<Item id="1">Rarity: NORMAL
+Superior Shabby Jerkin
+Shabby Jerkin
+Quality: 16
+Evasion Rating: 39
+Item Level: 2
+</Item>
+<ItemSet id="1" useSecondWeaponSet="false"><Slot name="Body Armour" itemId="1"/></ItemSet>
+</Items>
+<Skills activeSkillSet="1"><SkillSet id="1"/></Skills>
+<Config/>
+</PathOfBuilding>"#;
+    let dir = tempfile::tempdir().unwrap();
+    let m = Moteur::demarrer(dir.path().to_path_buf());
+    m.charger(xml).unwrap();
+    let vest = "Item Class: Body Armours
+Rarity: Magic
+Beetle's Plate Vest of the Newt
+--------
+Armour: 26
+--------
+Item Level: 3
+--------
+7% increased Armour
+7% increased Stun and Block Recovery
+Regenerate 1.3 Life per second
+";
+    let c = m.comparer(vest).unwrap();
+    let s = &c.slots[0];
+    assert_eq!(s.equipped.as_deref(), Some("Superior Shabby Jerkin"));
+    assert!(
+        s.after.ehp > c.before.ehp,
+        "{} -> {}",
+        c.before.ehp,
+        s.after.ehp
+    );
+    // Moyenne des cinq coups max : physique, feu, froid, foudre, chaos.
+    assert!(c.before.ehp < c.before.life, "{c:?}");
+}

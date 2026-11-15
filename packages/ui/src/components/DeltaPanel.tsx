@@ -6,6 +6,7 @@ import { elementLabel, mechanicLabel, slotLabel } from "../lib/labels";
 import {
   computeVerdict,
   dpsPerExalted,
+  headline,
   pointsTrend,
   ratio,
   trend,
@@ -144,7 +145,8 @@ export function DeltaPanel({ delta, price, exaltedPerDivine }: DeltaPanelProps) 
   }
 
   const verdict = computeVerdict(delta);
-  const dpsTrend = trend(delta.dps);
+  const tete = headline(delta);
+  const nomTete = tete.stat === "ehp" ? "EHP" : "DPS";
   const warnings = uncappedResistances(delta);
   const perEx = dpsPerExalted(delta, price, exaltedPerDivine);
   const approx = delta.support === "approximate";
@@ -158,13 +160,13 @@ export function DeltaPanel({ delta, price, exaltedPerDivine }: DeltaPanelProps) 
             {verdict.label}
           </p>
           <p
-            className={cx("flex items-center gap-1.5 text-verdict font-bold tabular-nums", trendColor[dpsTrend])}
-            aria-label={`DPS ${formatSignedPercent(verdict.dpsRatio)}`}
+            className={cx("flex items-center gap-1.5 text-verdict font-bold tabular-nums", trendColor[tete.trend])}
+            aria-label={`${nomTete} ${formatSignedPercent(tete.ratio)}`}
           >
-            <Icon name={trendIcon[dpsTrend]} size={18} />
+            <Icon name={trendIcon[tete.trend]} size={18} />
             {approx && <span className="text-signal-warn">≈</span>}
-            {formatSignedPercent(verdict.dpsRatio)}
-            <span className="self-end pb-1 text-sm font-medium text-text-muted">DPS</span>
+            {formatSignedPercent(tete.ratio)}
+            <span className="self-end pb-1 text-sm font-medium text-text-muted">{nomTete}</span>
           </p>
         </div>
         {perEx !== undefined && (
