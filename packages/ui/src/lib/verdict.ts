@@ -53,6 +53,25 @@ export function computeVerdict(delta: ItemDelta): Verdict {
   return { kind, label: labels[kind], dpsRatio: ratio(delta.dps), ehpRatio: ratio(delta.ehp) };
 }
 
+/** Chiffre mis en avant par l'overlay : le DPS, ou l'EHP quand seul l'EHP bouge. */
+export interface Headline {
+  stat: "dps" | "ehp";
+  ratio: number;
+  trend: Trend;
+}
+
+/**
+ * Le DPS est le chiffre principal ; sur une pièce défensive (DPS stable, EHP qui bouge),
+ * c'est l'EHP qui dit si l'objet vaut mieux. Même règle pour PoE 1 et PoE 2.
+ */
+export function headline(delta: ItemDelta): Headline {
+  const ehpCalcule = delta.ehp.before !== 0 || delta.ehp.after !== 0;
+  if (trend(delta.dps) === "flat" && ehpCalcule && trend(delta.ehp) !== "flat") {
+    return { stat: "ehp", ratio: ratio(delta.ehp), trend: trend(delta.ehp) };
+  }
+  return { stat: "dps", ratio: ratio(delta.dps), trend: trend(delta.dps) };
+}
+
 /**
  * Résistances qui passent sous leur plafond avec cet objet :
  * c'est l'alerte la plus coûteuse à rater en jeu.

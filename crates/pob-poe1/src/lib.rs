@@ -82,6 +82,7 @@ pub struct Resume {
     pub life: f64,
     pub energy_shield: f64,
     pub mana: f64,
+    /// EHP comme pour PoE 2 : moyenne des plus gros coups encaissables des cinq types de dégâts.
     pub ehp: f64,
     pub resistances: Resistances,
 }
