@@ -68,6 +68,18 @@ export type Poe1ItemInfo = {
   league: string;
 };
 
+/** Ligne de comparaison de Path of Building (src-tauri/src/poe1_calc.rs). */
+export type Poe1Line = { label: string; before: number; after: number; lowerIsBetter: boolean };
+
+/** « Cet objet est-il mieux ? » en PoE 1, calculé par Path of Building embarqué. */
+export type Poe1Evaluation = {
+  delta: ItemDelta;
+  /** Autres emplacements essayés (second anneau, autre main). */
+  others: ItemDelta[];
+  lines: Poe1Line[];
+  pobVersion: string;
+};
+
 /** Onglet de coffre de PoE 1 (poe2_core::poe1::coffre::Onglet). */
 export type StashTab = { index: number; nom: string; genre: string };
 
@@ -101,6 +113,10 @@ export type GameSettings = {
   league: string | null;
   account?: string | null;
   stashTabs?: number[];
+  /** Budget de la recherche d'upgrades PoE 1 ; null : sans limite. */
+  upgradeBudget?: number | null;
+  /** Devise du budget PoE 1 : « chaos » (défaut) ou « divine ». */
+  upgradeBudgetCurrency?: string | null;
 };
 
 export type Settings = {
@@ -335,6 +351,33 @@ export type ForgePoe1Result = {
 /** Objet de départ PoE 1 lu par la Forge (poe1::forge::depart). */
 export type ForgePoe1StartItem = ForgeStartItem & { influence: string | null; metamod: string | null };
 export type ForgePoe1Prices = { league: string; prix: Record<string, number>; erreur: string | null };
+
+/** Conseil de l'overlay pour l'objet en cours de craft, plan PoE 1 suivi (poe1::forge::suivi). */
+export type ForgePoe1Tip = {
+  baseNom: string;
+  rarete: string;
+  presents: string[];
+  manquants: string[];
+  fini: boolean;
+  action: string | null;
+  /** En Chaos. */
+  cout: number | null;
+  reste: number | null;
+};
+
+/** Plan PoE 1 calculé (src-tauri/src/forge_poe1.rs). */
+export type ForgePoe1HistoryEntry = {
+  id: number;
+  at: number;
+  baseNom: string;
+  ilvl: number;
+  influence: string | null;
+  labels: string[];
+  /** En Chaos, aux prix du calcul. */
+  coutMoyen: number;
+  demande: ForgePoe1Request;
+};
+export type ForgePoe1History = { entrees: ForgePoe1HistoryEntry[]; suivi: number | null };
 export type ForgeCatalogueEntry = { id: string; nom: string; genre: "base" | "monnaie" | "omen" | "essence" };
 export type ForgePriceSource = "joueur" | "poeNinja" | "indicatif";
 export type ForgeMarket = {
@@ -519,6 +562,7 @@ export const commands = {
   getSettings: () => invoke<Settings>("get_settings"),
   setGame: (game: Game) => invoke<Settings>("set_game", { game }),
   getPoe1ItemInfo: () => invoke<Poe1ItemInfo>("get_poe1_item_info"),
+  evaluatePoe1Item: () => invoke<Poe1Evaluation>("evaluate_poe1_item"),
   openPoe1TradeSearch: () => invoke<string>("open_poe1_trade_search"),
   getPoe1Stash: () => invoke<StashStatus>("get_poe1_stash"),
   connectPoe1Stash: (account: string, session: string | null) =>
@@ -532,7 +576,9 @@ export const commands = {
   setClientLogPath: (path: string | null) => invoke<Settings>("set_client_log_path", { path }),
   getLeagues: () => invoke<string[]>("get_leagues"),
   setLeague: (league: string | null) => invoke<Settings>("set_league", { league }),
-  setUpgradeBudget: (budget: number | null) => invoke<Settings>("set_upgrade_budget", { budget }),
+  /** Budget du jeu actif (PoE 2 en exalts ; PoE 1 en chaos ou en divines). */
+  setUpgradeBudget: (budget: number | null, currency: "chaos" | "divine" | null = null) =>
+    invoke<Settings>("set_upgrade_budget", { budget, currency }),
   setShortcuts: (shortcuts: ShortcutSettings) => invoke<Settings>("set_shortcuts", { shortcuts }),
   getMeasureStatus: () => invoke<MeasureStatus>("get_measure_status"),
   startMeasureSession: () => invoke<MeasureStatus>("start_measure_session"),
@@ -560,6 +606,12 @@ export const commands = {
   planForgePoe1: (demande: ForgePoe1Request) => invoke<ForgePoe1Result>("plan_forge_poe1", { demande }),
   analyzeForgePoe1Item: (texte: string) => invoke<ForgePoe1StartItem>("analyze_forge_poe1_item", { texte }),
   getForgePoe1Prices: () => invoke<ForgePoe1Prices>("get_forge_poe1_prices"),
+  getForgePoe1Advice: () => invoke<ForgePoe1Tip | null>("get_forge_poe1_advice"),
+  getForgePoe1History: () => invoke<ForgePoe1History>("get_forge_poe1_history"),
+  deleteForgePoe1HistoryEntry: (id: number) => invoke<ForgePoe1History>("delete_forge_poe1_history_entry", { id }),
+  followForgePoe1Entry: (id: number | null) => invoke<ForgePoe1History>("follow_forge_poe1_entry", { id }),
+  openForgePoe1BuySearch: (demande: ForgePoe1Request) =>
+    invoke<ForgeBuySearch>("open_forge_poe1_buy_search", { demande }),
   getForgeAffixes: (baseId: string, ilvl: number) => invoke<ForgeAffixes>("get_forge_affixes", { baseId, ilvl }),
   analyzeForgeItem: (texte: string) => invoke<ForgeStartItem>("analyze_forge_item", { texte }),
   openForgeBuySearch: (demande: ForgePlanRequest) => invoke<ForgeBuySearch>("open_forge_buy_search", { demande }),
@@ -577,6 +629,8 @@ export const commands = {
   // Commandes du chantier Architecture / moteur, branchées dès leur fusion.
   evaluateItem: (item: ParsedItem) => invoke<ItemDelta>("evaluate_item", { item }),
   openUpgradeSearch: (item: ParsedItem) => invoke<UpgradeSearch>("open_upgrade_search", { item }),
+  /** PoE 1, Alt+U : recherche pondérée par Path of Building pour l'objet copié. */
+  openPoe1UpgradeSearch: () => invoke<UpgradeSearch>("open_poe1_upgrade_search"),
   estimatePrice: (item: ParsedItem) => invoke<PriceEstimate>("estimate_price", { item }),
 };
 

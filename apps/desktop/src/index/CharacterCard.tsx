@@ -69,7 +69,8 @@ export function CharacterCard({ game = "poe2" }: { game?: Game }) {
           </p>
           {poe1 && (
             <p className="text-xs text-text-subtle">
-              PoE 1 : Augur garde le résumé du build. Le gain de DPS des objets n'est pas encore calculé pour PoE 1.
+              PoE 1 : Path of Building tourne dans Augur. Ctrl+C sur un objet en jeu dit s'il est mieux que le tien (DPS,
+              EHP, vie, résistances).
             </p>
           )}
           {!poe1 && !info.skillSupported && (

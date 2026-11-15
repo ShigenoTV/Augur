@@ -20,15 +20,22 @@ use std::sync::OnceLock;
 const TRADE_STATS: &str = include_str!("../../data/trade-stats.json");
 
 #[derive(Debug, Deserialize)]
-struct EntreeStat {
+pub(crate) struct EntreeStat {
     ids: Vec<String>,
     #[serde(default)]
     negate: bool,
 }
 
+/// Texte de mod normalisé → identifiants du site de trade (un fichier par jeu).
 #[derive(Debug, Deserialize)]
-struct TableStats {
+pub(crate) struct TableStats {
     stats: BTreeMap<String, EntreeStat>,
+}
+
+impl TableStats {
+    pub(crate) fn lire(json: &str) -> TableStats {
+        serde_json::from_str(json).expect("table des stats de trade embarquée valide")
+    }
 }
 
 fn table() -> &'static TableStats {
@@ -116,8 +123,20 @@ fn arrondi(v: f64) -> f64 {
 }
 
 /// Filtre d'une ligne de mod pour les paliers acceptés : borne basse la plus faible d'entre eux.
+#[cfg(test)]
 fn filtre_ligne(ligne_ref: &str, rang: usize, paliers: &[&PalierAffixe]) -> Option<FiltreAchat> {
-    let e = table().stats.get(&normaliser(ligne_ref))?;
+    filtre_ligne_dans(table(), ligne_ref, rang, paliers)
+}
+
+/// Filtre d'une ligne de mod pour les paliers acceptés (borne basse la plus faible d'entre eux),
+/// avec la table de stats d'un jeu.
+pub(crate) fn filtre_ligne_dans(
+    table: &TableStats,
+    ligne_ref: &str,
+    rang: usize,
+    paliers: &[&PalierAffixe],
+) -> Option<FiltreAchat> {
+    let e = table.stats.get(&normaliser(ligne_ref))?;
     let seuil = paliers
         .iter()
         .filter_map(|p| p.texte.split('\n').nth(rang))
@@ -195,33 +214,42 @@ pub fn recherche(demande: &DemandePlan) -> Result<RechercheAchat, ErreurAtelier>
         .map(|b| b.nom)
         .ok_or_else(|| ErreurAtelier::BaseInconnue(demande.base_id.clone()))?;
     let affixes = atelier::affixes(&demande.base_id, demande.ilvl)?;
-    let mut filtres = Vec::new();
-    let mut ignorees = Vec::new();
-    for w in &demande.voulus {
-        let g = affixes
-            .affixes
-            .iter()
-            .find(|a| a.group == w.group && a.family == w.family)
-            .ok_or_else(|| {
-                ErreurAtelier::Objectif(format!("groupe {} absent de cette base", w.group))
-            })?;
-        let acceptes: Vec<&PalierAffixe> =
-            g.paliers.iter().filter(|p| p.tier <= w.max_tier).collect();
-        let reference = acceptes.last().copied().or(g.paliers.first());
-        let Some(reference) = reference else { continue };
-        for (rang, ligne) in reference.texte.split('\n').enumerate() {
-            match filtre_ligne(ligne, rang, &acceptes) {
-                Some(f) => filtres.push(f),
-                None => ignorees.push(ligne.to_string()),
-            }
-        }
-    }
+    let (filtres, ignorees) = filtres_voulus(table(), &affixes.affixes, &demande.voulus)
+        .map_err(ErreurAtelier::Objectif)?;
     Ok(RechercheAchat {
         requete: requete(&base_nom, &filtres),
         base_nom,
         filtres,
         ignorees,
     })
+}
+
+/// Filtres de stats des mods voulus (meilleur palier accepté) et lignes que le site ne sait pas
+/// chercher. Erreur : un voulu dont le groupe n'est pas sur la base.
+pub(crate) fn filtres_voulus(
+    table: &TableStats,
+    affixes: &[atelier::GroupeAffixe],
+    voulus: &[crate::forge::WantedAffix],
+) -> Result<(Vec<FiltreAchat>, Vec<String>), String> {
+    let mut filtres = Vec::new();
+    let mut ignorees = Vec::new();
+    for w in voulus {
+        let g = affixes
+            .iter()
+            .find(|a| a.group == w.group && a.family == w.family)
+            .ok_or_else(|| format!("groupe {} absent de cette base", w.group))?;
+        let acceptes: Vec<&PalierAffixe> =
+            g.paliers.iter().filter(|p| p.tier <= w.max_tier).collect();
+        let reference = acceptes.last().copied().or(g.paliers.first());
+        let Some(reference) = reference else { continue };
+        for (rang, ligne) in reference.texte.split('\n').enumerate() {
+            match filtre_ligne_dans(table, ligne, rang, &acceptes) {
+                Some(f) => filtres.push(f),
+                None => ignorees.push(ligne.to_string()),
+            }
+        }
+    }
+    Ok((filtres, ignorees))
 }
 
 #[cfg(test)]

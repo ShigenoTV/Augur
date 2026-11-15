@@ -758,3 +758,62 @@ fn objet_fracture_lu_et_planifie() {
         Err(ErreurForgePoe1::ObjetDepart(_))
     ));
 }
+
+#[test]
+fn suivi_de_l_objet_en_cours() {
+    let pb = construire_pool(PLAQUE, 84, None).unwrap();
+    let voulus = vec![
+        voulu(&pb.pool, "IncreasedLife8"),
+        voulu(&pb.pool, "FireResist4"),
+        voulu(&pb.pool, "ColdResist4"),
+    ];
+    let prix: std::collections::BTreeMap<String, f64> = [
+        ("Chaos Orb", 1.0),
+        ("Orb of Alchemy", 0.03),
+        ("Orb of Transmutation", 0.03),
+        ("Orb of Alteration", 0.07),
+        ("Orb of Augmentation", 0.04),
+        ("Regal Orb", 0.35),
+        ("Exalted Orb", 12.0),
+        ("Orb of Annulment", 3.0),
+        ("Orb of Scouring", 0.4),
+        ("Divine Orb", 150.0),
+    ]
+    .into_iter()
+    .map(|(n, p)| (n.to_string(), p))
+    .collect();
+    let d = DemandePoe1 {
+        base_id: PLAQUE.into(),
+        ilvl: 84,
+        influence: None,
+        voulus,
+        prix,
+        objet_depart: None,
+    };
+    let noms = suivi::libelles(&d).unwrap();
+    assert_eq!(noms.len(), 3);
+    assert!(noms[0].contains("Life"), "{noms:?}");
+
+    let c = suivi::conseiller(&d, PLAQUE_COPIEE).unwrap().unwrap();
+    assert_eq!(c.base_nom, "Glorious Plate");
+    assert_eq!(c.rarete, "Rare");
+    assert_eq!(c.presents.len(), 2);
+    assert_eq!(c.manquants.len(), 1);
+    assert!(!c.fini);
+    assert!(
+        c.action.is_some() && c.reste.is_some_and(|r| r > 0.0),
+        "{c:?}"
+    );
+
+    // Objet fini : plus d'action.
+    let mut deux = d.clone();
+    deux.voulus.pop();
+    let c = suivi::conseiller(&deux, PLAQUE_COPIEE).unwrap().unwrap();
+    assert!(c.fini && c.action.is_none());
+
+    // Autre base : pas de conseil.
+    let mut autre = d.clone();
+    autre.base_id = "Metadata/Items/Armours/BodyArmours/BodyStr16".into();
+    assert!(suivi::conseiller(&autre, PLAQUE_COPIEE).unwrap().is_none());
+    assert!(suivi::conseiller(&d, "pas un objet").unwrap().is_none());
+}

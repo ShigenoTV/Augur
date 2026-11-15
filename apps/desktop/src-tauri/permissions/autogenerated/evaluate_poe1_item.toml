@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-evaluate-poe1-item"
+description = "Enables the evaluate_poe1_item command without any pre-configured scope."
+commands.allow = ["evaluate_poe1_item"]
+
+[[permission]]
+identifier = "deny-evaluate-poe1-item"
+description = "Denies the evaluate_poe1_item command without any pre-configured scope."
+commands.deny = ["evaluate_poe1_item"]

@@ -91,11 +91,29 @@ export function LeagueCard({ settings, onSettings }: { settings: Settings | null
 }
 
 /** Budget de la recherche d'upgrades (Alt+U dans l'overlay), en exalts. */
+/** Devise et montant du budget de recherche du jeu actif. */
+export function budgetDuJeu(settings: Settings | null): { montant: number | null; devise: "exalts" | "chaos" | "divine" } {
+  if (!settings) return { montant: null, devise: "exalts" };
+  if (settings.game === "poe1") {
+    return {
+      montant: settings.poe1.upgradeBudget ?? null,
+      devise: settings.poe1.upgradeBudgetCurrency === "divine" ? "divine" : "chaos",
+    };
+  }
+  return { montant: settings.upgradeBudget, devise: "exalts" };
+}
+
+const NOM_DEVISE = { exalts: "exalts", chaos: "chaos", divine: "divines" } as const;
+
 export function UpgradeBudgetCard({ settings, onSettings }: { settings: Settings | null; onSettings: (s: Settings) => void }) {
   const [saisie, setSaisie] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-  const valeur = saisie ?? (settings?.upgradeBudget ? String(settings.upgradeBudget) : "");
+  const actuel = budgetDuJeu(settings);
+  const poe1 = settings?.game === "poe1";
+  const [devisePoe1, setDevisePoe1] = useState<"chaos" | "divine" | null>(null);
+  const devise = poe1 ? (devisePoe1 ?? (actuel.devise as "chaos" | "divine")) : "exalts";
+  const valeur = saisie ?? (actuel.montant ? String(actuel.montant) : "");
 
   async function enregistrer() {
     setError(null);
@@ -103,13 +121,14 @@ export function UpgradeBudgetCard({ settings, onSettings }: { settings: Settings
     const texte = valeur.trim();
     const budget = texte === "" ? null : Number(texte);
     if (budget !== null && (!Number.isInteger(budget) || budget < 0)) {
-      setError("Indique un nombre entier d'exalts, ou laisse vide pour chercher sans limite.");
+      setError(`Indique un nombre entier de ${NOM_DEVISE[devise]}, ou laisse vide pour chercher sans limite.`);
       return;
     }
     try {
-      onSettings(await commands.setUpgradeBudget(budget || null));
+      onSettings(await commands.setUpgradeBudget(budget || null, poe1 ? (devise as "chaos" | "divine") : null));
       setSaisie(null);
-      setInfo(budget ? `Budget enregistré : ${budget} exalts au plus.` : "Recherche sans limite de prix.");
+      setDevisePoe1(null);
+      setInfo(budget ? `Budget enregistré : ${budget} ${NOM_DEVISE[devise]} au plus.` : "Recherche sans limite de prix.");
     } catch (err) {
       setError(message(err));
     }
@@ -128,10 +147,22 @@ export function UpgradeBudgetCard({ settings, onSettings }: { settings: Settings
           onChange={(e) => setSaisie(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && void enregistrer()}
           placeholder="sans limite"
-          aria-label="Budget en exalts"
+          aria-label={`Budget en ${NOM_DEVISE[devise]}`}
           className={`${champ} w-32 disabled:opacity-50`}
         />
-        <span className="text-text-muted">exalts</span>
+        {poe1 ? (
+          <select
+            value={devise}
+            onChange={(e) => setDevisePoe1(e.target.value as "chaos" | "divine")}
+            aria-label="Devise du budget"
+            className={champ}
+          >
+            <option value="chaos">chaos</option>
+            <option value="divine">divines</option>
+          </select>
+        ) : (
+          <span className="text-text-muted">exalts</span>
+        )}
         <button type="button" onClick={() => void enregistrer()} disabled={!settings} className={btnSecondary}>
           Enregistrer
         </button>

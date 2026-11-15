@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-delete-forge-poe1-history-entry"
+description = "Enables the delete_forge_poe1_history_entry command without any pre-configured scope."
+commands.allow = ["delete_forge_poe1_history_entry"]
+
+[[permission]]
+identifier = "deny-delete-forge-poe1-history-entry"
+description = "Denies the delete_forge_poe1_history_entry command without any pre-configured scope."
+commands.deny = ["delete_forge_poe1_history_entry"]

@@ -55,10 +55,20 @@ pub struct CharacterInfo {
 struct Charge {
     build: BuildPob,
     info: CharacterInfo,
+    /// XML du code PoB, pour le moteur PoE 1 (Path of Building embarqué).
+    xml: Option<String>,
 }
 
-/// Personnage importé de chaque jeu. Le moteur de calcul ne sert que PoE 2 :
-/// pour PoE 1, seul le résumé est affiché.
+/// XML d'un code PoE 1 (le moteur PoE 2 n'en a pas besoin).
+fn xml_pour(game: Game, code: &str) -> Option<String> {
+    match game {
+        Game::Poe1 => pob::decoder(code).ok(),
+        Game::Poe2 => None,
+    }
+}
+
+/// Personnage importé de chaque jeu. PoE 2 passe par le moteur d'Augur, PoE 1
+/// par Path of Building embarqué (`poe1_calc`).
 #[derive(Default)]
 struct Slots {
     poe2: Option<Charge>,
@@ -138,7 +148,8 @@ fn charger(app: &AppHandle, game: Game) -> Option<Charge> {
         .and_then(|f| match lire_code(game, &f.code) {
             Ok(build) => {
                 let info = describe_for(game, &build, f.imported_at);
-                Some(Charge { build, info })
+                let xml = xml_pour(game, &f.code);
+                Some(Charge { build, info, xml })
             }
             Err(e) => {
                 log::warn!("personnage {} enregistré illisible : {e}", game.label());
@@ -204,6 +215,11 @@ impl CharacterState {
         self.lock().poe2.as_ref().map(|c| c.info.summary.clone())
     }
 
+    /// XML du build PoE 1 importé (pour Path of Building embarqué).
+    pub fn poe1_xml(&self) -> Option<String> {
+        self.lock().poe1.as_ref().and_then(|c| c.xml.clone())
+    }
+
     /// Exécute `f` sur le build PoE 2 chargé (pour le moteur de calcul).
     pub fn with_build<T>(&self, f: impl FnOnce(&BuildPob) -> T) -> Option<T> {
         self.lock().poe2.as_ref().map(|c| f(&c.build))
@@ -236,6 +252,7 @@ pub fn import(app: &AppHandle, code: &str) -> Result<CharacterInfo, String> {
     *app.state::<CharacterState>().lock().of(game) = Some(Charge {
         build,
         info: info.clone(),
+        xml: xml_pour(game, code),
     });
     let _ = app.emit(EVENT_CHANGED, Some(&info));
     Ok(info)

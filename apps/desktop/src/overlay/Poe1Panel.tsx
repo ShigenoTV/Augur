@@ -1,10 +1,34 @@
-import { Kbd, StatePanel } from "@augur/ui";
-import type { Poe1ItemInfo, Poe1Price } from "../bridge";
+import { DeltaPanel, Kbd, StatePanel, formatNumber, slotLabel } from "@augur/ui";
+import type { Poe1Evaluation, Poe1ItemInfo, Poe1Line, Poe1Price } from "../bridge";
 
 export type Poe1View =
   | { status: "loading" }
   | { status: "ready"; info: Poe1ItemInfo }
   | { status: "error"; message: string };
+
+/** Comparaison avec l'équipement du build importé (Path of Building embarqué). */
+export type Poe1EvalView =
+  | { status: "loading" }
+  | { status: "ready"; evaluation: Poe1Evaluation }
+  | { status: "noCharacter" }
+  | { status: "error"; message: string }
+  | { status: "none" };
+
+/** Lignes de PoB affichées sous le delta, pour garder l'overlay compact. */
+const MAX_LIGNES = 8;
+
+/** Une ligne de PoB est-elle un gain ? (certaines stats valent mieux en baisse). */
+export function ligneGagnante(l: Poe1Line): boolean {
+  return l.lowerIsBetter ? l.after < l.before : l.after > l.before;
+}
+
+/** Écart d'une ligne de PoB : « +72 » ou « −3,5 ». */
+export function ecart(l: Poe1Line): string {
+  const d = l.after - l.before;
+  const abs = Math.abs(d);
+  const txt = abs >= 100 ? formatNumber(Math.round(abs)) : abs.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
+  return `${d >= 0 ? "+" : "−"}${txt}`;
+}
 
 const RARETE: Record<string, string> = {
   normal: "Normal",
@@ -28,12 +52,14 @@ export function formatCote(p: Poe1Price): string {
 /** Overlay de PoE 1 : l'objet copié, sa cote poe.ninja et la recherche de trade. */
 export function Poe1Panel({
   view,
+  evaluation,
   onClose,
   onTrade,
   fermer,
   trade,
 }: {
   view: Poe1View;
+  evaluation?: Poe1EvalView;
   onClose?: () => void;
   onTrade?: () => void;
   fermer: string;
@@ -41,7 +67,7 @@ export function Poe1Panel({
 }) {
   return (
     <div
-      className="augur-panel w-[340px] p-3.5 text-text-primary motion-safe:animate-[augur-enter_120ms_var(--ease-out-quick)]"
+      className="augur-panel w-[360px] p-3.5 text-text-primary motion-safe:animate-[augur-enter_120ms_var(--ease-out-quick)]"
       style={{ zoom: "var(--augur-scale)" }}
     >
       <p className="mb-2 text-2xs font-semibold uppercase tracking-wider text-accent">PoE 1</p>
@@ -51,14 +77,14 @@ export function Poe1Panel({
           {view.message}
         </StatePanel>
       )}
-      {view.status === "ready" && <Contenu info={view.info} />}
+      {view.status === "ready" && <Contenu info={view.info} evaluation={evaluation ?? { status: "none" }} />}
       <footer className="mt-3 flex items-center justify-between gap-2 border-t border-ink-700 pt-2 text-2xs text-text-subtle">
         <button type="button" onClick={onClose} className="flex items-center gap-1 hover:text-text-muted">
           <Kbd>{fermer}</Kbd> fermer
         </button>
         {view.status === "ready" && (
           <button type="button" onClick={onTrade} className="flex items-center gap-1 hover:text-text-muted">
-            <Kbd>{trade}</Kbd> chercher sur le trade
+            <Kbd>{trade}</Kbd> chercher mieux sur le trade
           </button>
         )}
       </footer>
@@ -66,7 +92,48 @@ export function Poe1Panel({
   );
 }
 
-function Contenu({ info }: { info: Poe1ItemInfo }) {
+function Comparaison({ view }: { view: Poe1EvalView }) {
+  if (view.status === "none") return null;
+  if (view.status === "loading") {
+    return <p className="text-2xs text-text-subtle">Comparaison avec ton build…</p>;
+  }
+  if (view.status === "noCharacter") {
+    return (
+      <p className="text-2xs text-text-subtle">
+        Importe ton code Path of Building (page Copilot) pour savoir si cet objet est mieux que le tien.
+      </p>
+    );
+  }
+  if (view.status === "error") {
+    return <p className="text-2xs text-signal-warn">Comparaison impossible : {view.message}</p>;
+  }
+  const { delta, others, lines } = view.evaluation;
+  const shown = lines.slice(0, MAX_LIGNES);
+  return (
+    <div className="space-y-2">
+      <DeltaPanel delta={delta} />
+      {shown.length > 0 && (
+        <ul className="space-y-0.5 text-2xs" aria-label="Détail du calcul">
+          {shown.map((l) => (
+            <li key={l.label} className="flex justify-between gap-2">
+              <span className="text-text-muted">{l.label}</span>
+              <span className={`tabular-nums ${ligneGagnante(l) ? "text-signal-gain" : "text-signal-loss"}`}>{ecart(l)}</span>
+            </li>
+          ))}
+          {lines.length > shown.length && <li className="text-text-subtle">et {lines.length - shown.length} autres</li>}
+        </ul>
+      )}
+      {others.map((o) => (
+        <p key={o.slot} className="text-2xs text-text-subtle">
+          À la place de {o.equippedName ?? slotLabel(o.slot)} ({slotLabel(o.slot)}) : DPS{" "}
+          {o.dps.before > 0 ? `${o.dps.after >= o.dps.before ? "+" : "−"}${Math.abs(((o.dps.after - o.dps.before) / o.dps.before) * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %` : "inchangé"}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function Contenu({ info, evaluation }: { info: Poe1ItemInfo; evaluation: Poe1EvalView }) {
   const details = [
     RARETE[info.rarity] ?? info.rarity,
     info.itemLevel ? `niveau d'objet ${info.itemLevel}` : null,
@@ -85,6 +152,12 @@ function Contenu({ info }: { info: Poe1ItemInfo }) {
             <li key={i}>{m}</li>
           ))}
         </ul>
+      )}
+      {evaluation.status !== "none" && (
+        <>
+          <div className="augur-divider my-3" />
+          <Comparaison view={evaluation} />
+        </>
       )}
       <div className="augur-divider my-3" />
       {info.price ? (

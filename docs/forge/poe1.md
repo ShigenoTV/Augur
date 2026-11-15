@@ -191,3 +191,21 @@ Scouring laisse un objet Magique (un mod fracturé) ou Rare (deux et plus). Une 
 par un mod fracturé n'est pas proposée. Un mod fracturé non reconnu, ou au mauvais tier d'un mod voulu,
 est refusé avec un message (objectif impossible). Le calcul est recoupé par simulation sur le moteur exact
 (`objet_fracture_garde_son_mod`).
+
+## Suivi en jeu, historique et « crafter ou acheter »
+
+Comme en PoE 2 (demande de Max du 15/11/2026, « toutes les fonctionnalités du 2 dans le 1 ») :
+
+- **Historique** : chaque plan conseillé calculé avec des prix entre dans `forge-poe1-historique.json`
+  (30 plans au plus ; une même demande recalculée remonte en tête). Le panneau peut rouvrir, suivre ou
+  supprimer un plan.
+- **Suivi par l'overlay** : le dernier plan calculé (ou celui choisi avec « Suivre ») est suivi. Ctrl+Alt+C
+  sur un objet de la même base affiche les mods voulus présents et manquants, puis l'action conseillée,
+  recalculée depuis l'objet tel qu'il est (`poe1::forge::suivi::conseiller`, qui s'appuie sur l'objet de
+  départ). Un objet d'une autre base garde l'overlay habituel (cote et comparaison avec le build).
+- **Crafter ou acheter** : la recherche de l'objet visé s'ouvre sur le site de trade de PoE 1 (même base,
+  influence, chaque mod voulu au tier visé ou mieux, du moins cher au plus cher). Le joueur reporte le prix
+  vu ; Forge le compare au coût moyen du plan (hors prix de la base), avec la même marge « équivalent »
+  de 10 % qu'en PoE 2. Les identifiants des stats viennent de `data/trade-stats-poe1.json`, généré par
+  `tools/gamedata/trade_stats_poe1.py` depuis `TradeSiteStats.lua` de Path of Building (MIT). Une ligne
+  sans stat de trade est signalée « non filtrée ».

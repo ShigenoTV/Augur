@@ -17,6 +17,7 @@ import {
 import { DecisionTree } from "./DecisionTree";
 import { AffichagePoe1Context, useCoutPoe1 } from "./devisePoe1";
 import { AffixColumn, StartItemPicker } from "./ForgeCard";
+import { AchatPoe1, HistoriquePoe1 } from "./ForgePoe1Suivi";
 import { cleAffixe, etapes, formatCount, libelleCourt, lirePrix } from "./forge";
 import {
   VOULUS_MAX_PLAN,
@@ -507,6 +508,9 @@ export function ForgePoe1Card() {
   const [affixes, setAffixes] = useState<ForgePoe1Affixes | null>(null);
   const [voulus, setVoulus] = useState<ForgeWanted[]>([]);
   const [result, setResult] = useState<ForgePoe1Result | null>(null);
+  // Demande du dernier calcul (« crafter ou acheter ») et compteur pour relire l'historique.
+  const [demandeCalcul, setDemandeCalcul] = useState<ForgePoe1Request | null>(null);
+  const [versionHistorique, setVersionHistorique] = useState(0);
   const [prix, setPrix] = useState<ForgePoe1Prices | null>(null);
   const [saisis, setSaisis] = useState<Record<string, number>>(lirePrixSaisis);
   const [busy, setBusy] = useState(false);
@@ -586,12 +590,29 @@ export function ForgePoe1Card() {
         objetDepart: depart?.texte ?? null,
       };
       setResult(await commands.planForgePoe1(demande));
+      setDemandeCalcul(demande);
+      setVersionHistorique((v) => v + 1);
       setPrixCalcul(JSON.stringify(envoyes));
     } catch (err) {
       setError(message(err));
     } finally {
       setBusy(false);
     }
+  }
+
+  /** Remet dans le panneau un plan de l'historique (base, niveau, influence, affixes voulus). */
+  function rouvrir(d: ForgePoe1Request) {
+    const b = bases.find((x) => x.id === d.baseId);
+    if (!b) return setError("Cette base n'est plus dans les données de la Forge PoE 1.");
+    setClasse(b.classe);
+    setBaseId(d.baseId);
+    setIlvl(d.ilvl);
+    setInfluence(d.influence);
+    setVoulus(d.voulus);
+    setDepart(null);
+    setCleDepart((k) => k + 1);
+    setResult(null);
+    setError(null);
   }
 
   function saisir(nom: string, v: number | null) {
@@ -802,6 +823,12 @@ export function ForgePoe1Card() {
           prixChanges={prixCalcul !== "" && prixCalcul !== JSON.stringify(prixPourPlan(prix?.prix ?? {}, saisis))}
         />
       )}
+      {result?.plan && demandeCalcul && <AchatPoe1 demande={demandeCalcul} coutCraft={result.plan.coutMoyen} />}
+
+      <div className="space-y-2 border-t border-ink-700 pt-3">
+        <p className="text-sm font-semibold text-text-primary">Historique et suivi en jeu</p>
+        <HistoriquePoe1 version={versionHistorique} onRouvrir={rouvrir} />
+      </div>
     </div>
   );
 }

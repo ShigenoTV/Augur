@@ -4,8 +4,9 @@ import { StrictMode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createRoot } from "react-dom/client";
 import { commands, isAppError, isTauri, on } from "../bridge";
 import { afficherRaccourci, SHORTCUTS_PAR_DEFAUT } from "../index/shortcuts";
+import { ForgePoe1TipPanel, type ForgePoe1View } from "./ForgePoe1TipPanel";
 import { ForgeTipPanel, type ForgeView } from "./ForgeTipPanel";
-import { Poe1Panel, type Poe1View } from "./Poe1Panel";
+import { Poe1Panel, type Poe1EvalView, type Poe1View } from "./Poe1Panel";
 import { EVALUATING_DELAY_MS, runCopilot } from "./copilot";
 
 function Overlay() {
@@ -25,14 +26,25 @@ function Overlay() {
   const [search, setSearch] = useState<{ ok: boolean; text: string } | null>(null);
   // PoE 1 : objet copié, cote poe.ninja et recherche de trade.
   const [poe1, setPoe1] = useState<Poe1View | null>(null);
+  const [poe1Eval, setPoe1Eval] = useState<Poe1EvalView>({ status: "none" });
+  // Plan Forge PoE 1 suivi : l'objet copié est celui du craft en cours.
+  const [forgePoe1, setForgePoe1] = useState<ForgePoe1View | null>(null);
   const poe1Shown = useRef<Poe1View | null>(null);
   poe1Shown.current = poe1;
   const openPoe1Trade = () => {
     if (poe1Shown.current?.status !== "ready") return;
-    setSearch({ ok: true, text: "Ouverture de la recherche…" });
+    setSearch({ ok: true, text: "Path of Building pèse les stats de cet emplacement…" });
     void commands
-      .openPoe1TradeSearch()
-      .then(() => setSearch({ ok: true, text: "Recherche ouverte dans ton navigateur." }))
+      .openPoe1UpgradeSearch()
+      .then((r) =>
+        setSearch({
+          ok: true,
+          text:
+            r.stats.length > 0
+              ? `Recherche d'upgrades ouverte dans ton navigateur : ${r.stats.slice(0, 3).join(", ")}${r.stats.length > 3 ? "…" : ""}`
+              : "Recherche de l'objet ouverte dans ton navigateur.",
+        }),
+      )
       .catch((error: unknown) => setSearch({ ok: false, text: isAppError(error) ? error.message : String(error) }));
   };
   const openSearch = () => {
@@ -69,6 +81,7 @@ function Overlay() {
         const id = ++run.current;
         setSearch(null);
         setPoe1(null);
+        setForgePoe1(null);
         const settings = commands.getSettings().catch(() => null);
         void settings.then((s) => s && setRaccourcis(s.shortcuts));
         const emit = (v: CopilotView) => {
@@ -92,9 +105,21 @@ function Overlay() {
         };
         // Un plan Forge suivi passe d'abord : l'objet copié peut être le craft en cours.
         setForge(null);
-        const startPoe1 = () => {
+        const startPoe1Copilot = () => {
           setView({ status: "hidden" });
           setPoe1({ status: "loading" });
+          setPoe1Eval({ status: "loading" });
+          // Comparaison avec le build (Path of Building) en parallèle de la cote.
+          void commands
+            .evaluatePoe1Item()
+            .then((evaluation) => run.current === id && setPoe1Eval({ status: "ready", evaluation }))
+            .catch((error: unknown) => {
+              if (run.current !== id) return;
+              if (!isAppError(error)) return setPoe1Eval({ status: "error", message: String(error) });
+              if (error.code === "noCharacter") return setPoe1Eval({ status: "noCharacter" });
+              if (error.code === "unsupported") return setPoe1Eval({ status: "none" });
+              setPoe1Eval({ status: "error", message: error.message });
+            });
           void commands
             .getPoe1ItemInfo()
             .then((info) => run.current === id && setPoe1({ status: "ready", info }))
@@ -102,6 +127,26 @@ function Overlay() {
               (error: unknown) =>
                 run.current === id && setPoe1({ status: "error", message: isAppError(error) ? error.message : String(error) }),
             );
+        };
+        // Un plan Forge PoE 1 suivi passe d'abord, comme en PoE 2.
+        const startPoe1 = () => {
+          setForgePoe1(null);
+          void commands
+            .getForgePoe1Advice()
+            .then((tip) => {
+              if (run.current !== id) return;
+              if (!tip) return startPoe1Copilot();
+              setView({ status: "hidden" });
+              setPoe1(null);
+              setForgePoe1({ status: "tip", tip });
+            })
+            .catch((error: unknown) => {
+              if (run.current !== id) return;
+              if (!isAppError(error)) return startPoe1Copilot();
+              setView({ status: "hidden" });
+              setPoe1(null);
+              setForgePoe1({ status: "error", message: error.message });
+            });
         };
         const startPoe2 = () => void commands
           .getForgeAdvice()
@@ -126,12 +171,14 @@ function Overlay() {
       on.itemUnrecognized((error) => {
         run.current++;
         setForge(null);
+        setForgePoe1(null);
         setPoe1(null);
         setView({ status: "unrecognized", error });
       }),
       on.overlayHidden(() => {
         run.current++;
         setForge(null);
+        setForgePoe1(null);
         setPoe1(null);
         setView({ status: "hidden" });
       }),
@@ -160,9 +207,16 @@ function Overlay() {
           Mesures en cours : objet enregistré
         </p>
       )}
-      {poe1 ? (
+      {forgePoe1 ? (
+        <ForgePoe1TipPanel
+          view={forgePoe1}
+          fermer={hotkeys.close}
+          onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)}
+        />
+      ) : poe1 ? (
         <Poe1Panel
           view={poe1}
+          evaluation={poe1Eval}
           fermer={hotkeys.close}
           trade={hotkeys.upgradeSearch}
           onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)}
@@ -178,7 +232,7 @@ function Overlay() {
           onUpgradeSearch={openSearch}
         />
       )}
-      {search && !forge && (
+      {search && !forge && !forgePoe1 && (
         <p className={`mt-1 max-w-[360px] text-[11px] ${search.ok ? "text-text-subtle" : "text-signal-loss"}`}>{search.text}</p>
       )}
     </div>

@@ -116,6 +116,9 @@ pub fn set_game(
     })?;
     crate::game::set_active(game);
     log::info!("jeu actif : {}", game.label());
+    if game == crate::game::Game::Poe1 {
+        crate::poe1_calc::prechauffer(&app);
+    }
     let _ = app.emit(crate::game::EVENT_CHANGED, game);
     Ok(settings)
 }
@@ -129,9 +132,34 @@ pub async fn get_poe1_item_info(
 }
 
 /// PoE 1 : ouvre la recherche de l'objet copié sur le site de trade (Alt+U).
+/// PoE 1 : l'objet copié comparé à celui porté (Path of Building embarqué).
+#[tauri::command]
+pub async fn evaluate_poe1_item(
+    app: AppHandle,
+) -> Result<crate::poe1_calc::Poe1Evaluation, AppError> {
+    tauri::async_runtime::spawn_blocking(move || crate::poe1_calc::evaluer(&app))
+        .await
+        .map_err(|e| {
+            crate::contracts::app_error(crate::contracts::ErrorCode::Internal, e.to_string())
+        })?
+}
+
 #[tauri::command]
 pub fn open_poe1_trade_search(app: AppHandle) -> Result<String, AppError> {
     crate::poe1_items::open_trade(&app)
+}
+
+/// PoE 1, Alt+U : recherche de trade pondérée par Path of Building pour
+/// l'emplacement de l'objet copié (sinon, la recherche de l'objet lui-même).
+#[tauri::command]
+pub async fn open_poe1_upgrade_search(
+    app: AppHandle,
+) -> Result<crate::upgrade_search::UpgradeSearch, AppError> {
+    tauri::async_runtime::spawn_blocking(move || crate::poe1_calc::rechercher_upgrade(&app))
+        .await
+        .map_err(|e| {
+            crate::contracts::app_error(crate::contracts::ErrorCode::Internal, e.to_string())
+        })?
 }
 
 /// PoE 1 : état de la carte « Coffres » (compte, onglets suivis, deux derniers relevés).
@@ -204,16 +232,25 @@ pub fn set_league(
         })
 }
 
-/// Budget de la recherche d'upgrades, en exalts. `None` ou 0 : sans limite.
+/// Budget de la recherche d'upgrades du jeu actif. `None` ou 0 : sans limite.
+/// PoE 2 : en exalts. PoE 1 : en chaos ou en divines (`currency`).
 #[tauri::command]
 pub fn set_upgrade_budget(
     app: AppHandle,
     store: State<'_, crate::settings::SettingsStore>,
     budget: Option<u32>,
+    currency: Option<String>,
 ) -> Result<crate::settings::Settings, AppError> {
     let budget = budget.filter(|b| *b > 0);
+    let devise = currency.filter(|c| c == "chaos" || c == "divine");
     store
-        .update(&app, |s| s.upgrade_budget = budget)
+        .update(&app, |s| match crate::game::active() {
+            crate::game::Game::Poe2 => s.upgrade_budget = budget,
+            crate::game::Game::Poe1 => {
+                s.poe1.upgrade_budget = budget;
+                s.poe1.upgrade_budget_currency = devise;
+            }
+        })
         .map_err(|e| {
             app_error(
                 crate::contracts::ErrorCode::Internal,
@@ -436,7 +473,11 @@ pub fn import_pob_code(
     app: AppHandle,
     code: String,
 ) -> Result<crate::character::CharacterInfo, AppError> {
-    crate::character::import(&app, &code).map_err(internal)
+    let info = crate::character::import(&app, &code).map_err(internal)?;
+    if crate::game::active() == crate::game::Game::Poe1 {
+        crate::poe1_calc::prechauffer(&app);
+    }
+    Ok(info)
 }
 
 #[tauri::command]
@@ -522,9 +563,69 @@ pub fn get_forge_poe1_affixes(
 /// Forge PoE 1 : méthodes de spam et chance de réussite d'un essai.
 #[tauri::command]
 pub async fn plan_forge_poe1(
+    app: AppHandle,
     demande: poe2_core::poe1::forge::DemandePoe1,
 ) -> Result<poe2_core::poe1::forge::ResultatPoe1, AppError> {
-    crate::forge_poe1::planifier(demande).await
+    crate::forge_poe1::planifier(&app, demande).await
+}
+
+/// Forge PoE 1 : conseil pour l'objet copié en jeu (plan suivi par l'overlay).
+#[tauri::command]
+pub fn get_forge_poe1_advice(
+    state: State<'_, crate::AppState>,
+    forge: State<'_, crate::forge_poe1::ForgePoe1State>,
+) -> Result<Option<poe2_core::poe1::forge::suivi::ConseilPoe1>, AppError> {
+    match state.last_text() {
+        Some(text) => forge.conseil(&text),
+        None => Ok(None),
+    }
+}
+
+/// Forge PoE 1 : plans calculés et plan suivi.
+#[tauri::command]
+pub fn get_forge_poe1_history(
+    forge: State<'_, crate::forge_poe1::ForgePoe1State>,
+) -> crate::forge_poe1::HistoriquePoe1 {
+    forge.historique()
+}
+
+#[tauri::command]
+pub fn delete_forge_poe1_history_entry(
+    app: AppHandle,
+    forge: State<'_, crate::forge_poe1::ForgePoe1State>,
+    id: u64,
+) -> crate::forge_poe1::HistoriquePoe1 {
+    forge.supprimer(&app, id)
+}
+
+/// Forge PoE 1 : suit un plan de l'historique (`None` : arrête le suivi).
+#[tauri::command]
+pub fn follow_forge_poe1_entry(
+    app: AppHandle,
+    forge: State<'_, crate::forge_poe1::ForgePoe1State>,
+    id: Option<u64>,
+) -> crate::forge_poe1::HistoriquePoe1 {
+    forge.suivre(&app, id)
+}
+
+/// Forge PoE 1, « crafter ou acheter » : recherche de l'objet visé sur le site de trade de PoE 1.
+#[tauri::command]
+pub fn open_forge_poe1_buy_search(
+    store: State<'_, crate::settings::SettingsStore>,
+    demande: poe2_core::poe1::forge::DemandePoe1,
+) -> Result<crate::upgrade_search::ForgeBuySearch, AppError> {
+    let r = poe2_core::poe1::forge::achat::recherche(&demande)
+        .map_err(|e| app_error(crate::contracts::ErrorCode::Unsupported, e.to_string()))?;
+    let url = crate::upgrade_search::adresse_requete_poe1(
+        store.get().league_for(crate::game::Game::Poe1),
+        &r.requete,
+    );
+    crate::upgrade_search::ouvrir(&url)?;
+    Ok(crate::upgrade_search::ForgeBuySearch {
+        url,
+        filtres: r.filtres.len(),
+        ignorees: r.ignorees,
+    })
 }
 
 /// Forge PoE 1 : objet de départ collé (Ctrl+Alt+C en jeu) : base, niveau, influence et mods lus.

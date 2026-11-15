@@ -1,0 +1,3393 @@
+{
+ "sans_stat": [
+  "# [valourfunction|valour] consumed for that banner",
+  "# metres to melee strike range if you have killed recently",
+  "# to maximum number of spectral spirits",
+  "#% chance to block attack damage if there are at least # nearby enemies",
+  "#% critical strike multiplier while a rare or unique enemy is nearby",
+  "#% increased attack and cast speed for each nearby enemy, up to a maximum of #%",
+  "#% increased attack speed while a rare or unique enemy is nearby",
+  "#% increased movement speed for each nearby enemy, up to a maximum of #%",
+  "#% increased rarity of items dropped by slain rare or unique enemies",
+  "#% increased rarity of items found",
+  "#% increased rarity of items found from slain unique enemies",
+  "bow attacks fire an additional arrow",
+  "chill nearby enemies when you block",
+  "drops burning ground while moving, dealing # fire damage per second for # seconds",
+  "eternal iron hook",
+  "gain [phasing] on hit with this weapon",
+  "gain alchemist's genius when you use a flask",
+  "grants level # clarity skill",
+  "grants level # convocation skill",
+  "grants level # decoy totem skill",
+  "grants level # enduring cry skill",
+  "grants level # envy skill",
+  "grants level # herald of ash skill",
+  "grants level # herald of ice skill",
+  "grants level # herald of thunder skill",
+  "grants level # intimidating cry skill",
+  "grants level # rallying cry skill",
+  "grants level # vitality skill",
+  "nearby enemies are blinded",
+  "nearby enemies have #% to chaos resistance",
+  "nearby enemies have #% to cold resistance",
+  "nearby enemies have #% to fire resistance",
+  "nearby enemies have #% to lightning resistance",
+  "nearby enemies take #% increased elemental damage",
+  "nearby enemies take #% increased physical damage",
+  "non-channelling skills have -# to total mana cost",
+  "prefixes cannot be changed",
+  "projectiles pierce an additional target",
+  "regenerate # energy shield per second while a rare or unique enemy is nearby",
+  "shock nearby enemies for # seconds when you focus",
+  "socketed gems are supported by level # power charge on critical strike",
+  "spells triggered this way have #% more cost",
+  "suffixes cannot be changed",
+  "totemic wood lure",
+  "trigger a socketed spell when you use a skill, with a # second cooldown",
+  "trigger socketed spells when you focus, with a # second cooldown",
+  "triggers level # spectral spirits when equipped",
+  "you and allies near your banner have #% to damage over time multiplier per",
+  "you can apply an additional curse"
+ ],
+ "schema": 1,
+ "source": "Path of Building Community (PoE 1), src/Data/TradeSiteStats.lua (https://github.com/PathOfBuildingCommunity/PathOfBuilding), licence MIT",
+ "stats": {
+  "# armour if you've blocked recently": {
+   "ids": [
+    "explicit.stat_4091848539"
+   ]
+  },
+  "# metres to melee strike range": {
+   "ids": [
+    "explicit.stat_2264295449"
+   ]
+  },
+  "# metres to weapon range": {
+   "ids": [
+    "explicit.stat_350598685"
+   ]
+  },
+  "# to # added cold damage per frenzy charge": {
+   "ids": [
+    "explicit.stat_3648858570"
+   ]
+  },
+  "# to # added fire damage against burning enemies": {
+   "ids": [
+    "explicit.stat_165402179"
+   ]
+  },
+  "# to # fire damage per endurance charge": {
+   "ids": [
+    "explicit.stat_1073447019"
+   ]
+  },
+  "# to # lightning damage per power charge": {
+   "ids": [
+    "explicit.stat_1917107159"
+   ]
+  },
+  "# to accuracy rating": {
+   "ids": [
+    "explicit.stat_691932474",
+    "explicit.stat_803737631"
+   ]
+  },
+  "# to accuracy rating per # dexterity": {
+   "ids": [
+    "explicit.stat_773731062"
+   ]
+  },
+  "# to all attributes": {
+   "ids": [
+    "explicit.stat_1379411836"
+   ]
+  },
+  "# to armour": {
+   "ids": [
+    "explicit.stat_3484657501",
+    "explicit.stat_809229260"
+   ]
+  },
+  "# to armour and evasion rating": {
+   "ids": [
+    "explicit.stat_2316658489"
+   ]
+  },
+  "# to armour during soul gain prevention": {
+   "ids": [
+    "explicit.stat_1539825365"
+   ]
+  },
+  "# to dexterity": {
+   "ids": [
+    "explicit.stat_3261801346"
+   ]
+  },
+  "# to dexterity and intelligence": {
+   "ids": [
+    "explicit.stat_2300185227"
+   ]
+  },
+  "# to evasion rating": {
+   "ids": [
+    "explicit.stat_2144192055",
+    "explicit.stat_53045048"
+   ]
+  },
+  "# to intelligence": {
+   "ids": [
+    "explicit.stat_328541901"
+   ]
+  },
+  "# to level of all chaos skill gems": {
+   "ids": [
+    "explicit.stat_67169579"
+   ]
+  },
+  "# to level of all chaos spell skill gems": {
+   "ids": [
+    "explicit.stat_4226189338"
+   ]
+  },
+  "# to level of all cold skill gems": {
+   "ids": [
+    "explicit.stat_1078455967"
+   ]
+  },
+  "# to level of all cold spell skill gems": {
+   "ids": [
+    "explicit.stat_2254480358"
+   ]
+  },
+  "# to level of all fire skill gems": {
+   "ids": [
+    "explicit.stat_599749213"
+   ]
+  },
+  "# to level of all fire spell skill gems": {
+   "ids": [
+    "explicit.stat_591105508"
+   ]
+  },
+  "# to level of all lightning skill gems": {
+   "ids": [
+    "explicit.stat_1147690586"
+   ]
+  },
+  "# to level of all lightning spell skill gems": {
+   "ids": [
+    "explicit.stat_1545858329"
+   ]
+  },
+  "# to level of all minion skill gems": {
+   "ids": [
+    "explicit.stat_2162097452"
+   ]
+  },
+  "# to level of all physical skill gems": {
+   "ids": [
+    "explicit.stat_619213329"
+   ]
+  },
+  "# to level of all physical spell skill gems": {
+   "ids": [
+    "explicit.stat_1600707273"
+   ]
+  },
+  "# to level of all raise spectre gems": {
+   "ids": [
+    "explicit.indexable_skill_29",
+    "explicit.stat_3235814433"
+   ]
+  },
+  "# to level of all skill gems": {
+   "ids": [
+    "explicit.stat_4283407333"
+   ]
+  },
+  "# to level of all spell skill gems": {
+   "ids": [
+    "explicit.stat_124131830"
+   ]
+  },
+  "# to level of socketed aoe gems": {
+   "ids": [
+    "explicit.stat_2551600084"
+   ]
+  },
+  "# to level of socketed aura gems": {
+   "ids": [
+    "explicit.stat_2452998583"
+   ]
+  },
+  "# to level of socketed bow gems": {
+   "ids": [
+    "explicit.stat_2027269580"
+   ]
+  },
+  "# to level of socketed chaos gems": {
+   "ids": [
+    "explicit.stat_2675603254"
+   ]
+  },
+  "# to level of socketed cold gems": {
+   "ids": [
+    "explicit.stat_1645459191"
+   ]
+  },
+  "# to level of socketed fire gems": {
+   "ids": [
+    "explicit.stat_339179093"
+   ]
+  },
+  "# to level of socketed gems": {
+   "ids": [
+    "explicit.stat_2843100721"
+   ]
+  },
+  "# to level of socketed gems while there is a single gem socketed in this item": {
+   "ids": [
+    "explicit.stat_3298991976"
+   ]
+  },
+  "# to level of socketed lightning gems": {
+   "ids": [
+    "explicit.stat_4043416969"
+   ]
+  },
+  "# to level of socketed melee gems": {
+   "ids": [
+    "explicit.stat_829382474"
+   ]
+  },
+  "# to level of socketed projectile gems": {
+   "ids": [
+    "explicit.stat_2176571093"
+   ]
+  },
+  "# to level of socketed skill gems": {
+   "ids": [
+    "explicit.stat_524797741"
+   ]
+  },
+  "# to level of socketed support gems": {
+   "ids": [
+    "explicit.stat_4154259475"
+   ]
+  },
+  "# to maximum endurance charges": {
+   "ids": [
+    "explicit.stat_1515657623"
+   ]
+  },
+  "# to maximum energy shield": {
+   "ids": [
+    "explicit.stat_3489782002",
+    "explicit.stat_4052037485"
+   ]
+  },
+  "# to maximum fortification while focused": {
+   "ids": [
+    "explicit.stat_922014346"
+   ]
+  },
+  "# to maximum frenzy charges": {
+   "ids": [
+    "explicit.stat_4078695"
+   ]
+  },
+  "# to maximum life": {
+   "ids": [
+    "explicit.stat_3299347043"
+   ]
+  },
+  "# to maximum mana": {
+   "ids": [
+    "explicit.stat_1050105434"
+   ]
+  },
+  "# to maximum mana per # intelligence": {
+   "ids": [
+    "explicit.stat_3822999954"
+   ]
+  },
+  "# to maximum number of raised zombies": {
+   "ids": [
+    "explicit.stat_966747987"
+   ]
+  },
+  "# to maximum number of skeletons": {
+   "ids": [
+    "explicit.stat_1225383362"
+   ]
+  },
+  "# to maximum number of summoned totems": {
+   "ids": [
+    "explicit.stat_429867172"
+   ]
+  },
+  "# to maximum power charges": {
+   "ids": [
+    "explicit.stat_227523295"
+   ]
+  },
+  "# to minimum endurance charges": {
+   "ids": [
+    "explicit.stat_3706959521"
+   ]
+  },
+  "# to minimum frenzy charges": {
+   "ids": [
+    "explicit.stat_658456881"
+   ]
+  },
+  "# to minimum power charges": {
+   "ids": [
+    "explicit.stat_1999711879"
+   ]
+  },
+  "# to strength": {
+   "ids": [
+    "explicit.stat_4080418644"
+   ]
+  },
+  "# to strength and dexterity": {
+   "ids": [
+    "explicit.stat_538848803"
+   ]
+  },
+  "# to strength and intelligence": {
+   "ids": [
+    "explicit.stat_1535626285",
+    "explicit.stat_2543977012"
+   ]
+  },
+  "# to ward": {
+   "ids": [
+    "explicit.stat_774059442"
+   ]
+  },
+  "#% additional physical damage reduction": {
+   "ids": [
+    "explicit.stat_3771516363"
+   ]
+  },
+  "#% additional physical damage reduction while focused": {
+   "ids": [
+    "explicit.stat_3753650187"
+   ]
+  },
+  "#% chance to avoid being chilled": {
+   "ids": [
+    "explicit.stat_3483999943"
+   ]
+  },
+  "#% chance to avoid being frozen": {
+   "ids": [
+    "explicit.stat_1514829491"
+   ]
+  },
+  "#% chance to avoid being ignited": {
+   "ids": [
+    "explicit.stat_1783006896"
+   ]
+  },
+  "#% chance to avoid being poisoned": {
+   "ids": [
+    "explicit.stat_4053951709"
+   ]
+  },
+  "#% chance to avoid being shocked": {
+   "ids": [
+    "explicit.stat_1871765599"
+   ]
+  },
+  "#% chance to avoid being stunned": {
+   "ids": [
+    "explicit.stat_4262448838"
+   ]
+  },
+  "#% chance to avoid bleeding": {
+   "ids": [
+    "explicit.stat_1618589784"
+   ]
+  },
+  "#% chance to avoid cold damage from hits": {
+   "ids": [
+    "explicit.stat_3743375737"
+   ]
+  },
+  "#% chance to avoid damage of each element from hits during soul gain prevention": {
+   "ids": [
+    "explicit.stat_720398262"
+   ]
+  },
+  "#% chance to avoid elemental ailments": {
+   "ids": [
+    "explicit.stat_3005472710"
+   ]
+  },
+  "#% chance to avoid fire damage from hits": {
+   "ids": [
+    "explicit.stat_42242677"
+   ]
+  },
+  "#% chance to avoid lightning damage from hits": {
+   "ids": [
+    "explicit.stat_2889664727"
+   ]
+  },
+  "#% chance to avoid physical damage from hits": {
+   "ids": [
+    "explicit.stat_2415497478"
+   ]
+  },
+  "#% chance to avoid projectiles": {
+   "ids": [
+    "explicit.stat_3452269808"
+   ]
+  },
+  "#% chance to blind enemies on hit": {
+   "ids": [
+    "explicit.stat_2301191210"
+   ]
+  },
+  "#% chance to blind enemies on hit with attacks": {
+   "ids": [
+    "explicit.stat_318953428"
+   ]
+  },
+  "#% chance to block attack damage": {
+   "ids": [
+    "explicit.stat_1702195217",
+    "explicit.stat_2530372417"
+   ]
+  },
+  "#% chance to block attack damage if you have blocked attack damage recently": {
+   "ids": [
+    "explicit.stat_3789765926"
+   ]
+  },
+  "#% chance to block attack damage if you were damaged by a hit recently": {
+   "ids": [
+    "explicit.stat_852195286"
+   ]
+  },
+  "#% chance to block attack damage per endurance charge": {
+   "ids": [
+    "explicit.stat_2355741828",
+    "explicit.stat_3039589351"
+   ]
+  },
+  "#% chance to block attack damage while dual wielding": {
+   "ids": [
+    "explicit.stat_2166444903"
+   ]
+  },
+  "#% chance to block spell damage": {
+   "ids": [
+    "explicit.stat_19803471",
+    "explicit.stat_561307714"
+   ]
+  },
+  "#% chance to block spell damage if you have blocked spell damage recently": {
+   "ids": [
+    "explicit.stat_4263513561"
+   ]
+  },
+  "#% chance to block spell damage if you were damaged by a hit recently": {
+   "ids": [
+    "explicit.stat_1101206134"
+   ]
+  },
+  "#% chance to block spell damage while on low life": {
+   "ids": [
+    "explicit.stat_2253286128",
+    "explicit.stat_4070519133"
+   ]
+  },
+  "#% chance to cause bleeding on hit": {
+   "ids": [
+    "explicit.stat_1519615863"
+   ]
+  },
+  "#% chance to chill attackers for # seconds on block": {
+   "ids": [
+    "explicit.stat_864879045"
+   ]
+  },
+  "#% chance to crush on hit": {
+   "ids": [
+    "explicit.stat_2228892313"
+   ]
+  },
+  "#% chance to deal double damage": {
+   "ids": [
+    "explicit.stat_1172810729"
+   ]
+  },
+  "#% chance to deal double damage against enemies for each type of ailment you have inflicted on them": {
+   "ids": [
+    "explicit.stat_1916537902"
+   ]
+  },
+  "#% chance to deal double damage if you have stunned an enemy recently": {
+   "ids": [
+    "explicit.stat_4224978303"
+   ]
+  },
+  "#% chance to deal double damage while focused": {
+   "ids": [
+    "explicit.stat_2908886986"
+   ]
+  },
+  "#% chance to defend with #% of armour": {
+   "ids": [
+    "explicit.stat_327253797"
+   ]
+  },
+  "#% chance to double stun duration": {
+   "ids": [
+    "explicit.stat_2622251413"
+   ]
+  },
+  "#% chance to freeze": {
+   "ids": [
+    "explicit.stat_2309614417"
+   ]
+  },
+  "#% chance to freeze, shock and ignite": {
+   "ids": [
+    "explicit.stat_800141891"
+   ]
+  },
+  "#% chance to gain a frenzy charge on critical strike": {
+   "ids": [
+    "explicit.stat_3032585258"
+   ]
+  },
+  "#% chance to gain a frenzy charge on hit": {
+   "ids": [
+    "explicit.stat_2323242761"
+   ]
+  },
+  "#% chance to gain a frenzy charge on kill": {
+   "ids": [
+    "explicit.stat_1826802197"
+   ]
+  },
+  "#% chance to gain a frenzy charge when you block": {
+   "ids": [
+    "explicit.stat_3769211656"
+   ]
+  },
+  "#% chance to gain a frenzy charge when you hit a rare or unique enemy": {
+   "ids": [
+    "explicit.stat_4179663748"
+   ]
+  },
+  "#% chance to gain a power charge on critical strike": {
+   "ids": [
+    "explicit.stat_3814876985"
+   ]
+  },
+  "#% chance to gain a power charge on kill": {
+   "ids": [
+    "explicit.stat_2483795307"
+   ]
+  },
+  "#% chance to gain a power charge when you block": {
+   "ids": [
+    "explicit.stat_3945147290"
+   ]
+  },
+  "#% chance to gain a power, frenzy or endurance charge on kill": {
+   "ids": [
+    "explicit.stat_498214257"
+   ]
+  },
+  "#% chance to gain an endurance charge on critical strike": {
+   "ids": [
+    "explicit.stat_2542650946"
+   ]
+  },
+  "#% chance to gain an endurance charge on kill": {
+   "ids": [
+    "explicit.stat_1054322244"
+   ]
+  },
+  "#% chance to gain an endurance charge when you block": {
+   "ids": [
+    "explicit.stat_417188801"
+   ]
+  },
+  "#% chance to gain an endurance charge when you hit a bleeding enemy": {
+   "ids": [
+    "explicit.stat_1536266147"
+   ]
+  },
+  "#% chance to gain an endurance charge when you taunt an enemy": {
+   "ids": [
+    "explicit.stat_1657549833"
+   ]
+  },
+  "#% chance to gain arcane surge when you deal a critical strike": {
+   "ids": [
+    "explicit.stat_446027070"
+   ]
+  },
+  "#% chance to gain arcane surge when you kill an enemy": {
+   "ids": [
+    "explicit.stat_573223427"
+   ]
+  },
+  "#% chance to gain elusive on critical strike": {
+   "ids": [
+    "explicit.stat_2896192589"
+   ]
+  },
+  "#% chance to gain onslaught for # seconds on kill": {
+   "ids": [
+    "explicit.stat_2453026567",
+    "explicit.stat_3023957681",
+    "explicit.stat_665823128"
+   ]
+  },
+  "#% chance to gain phasing for # seconds on kill": {
+   "ids": [
+    "explicit.stat_2918708827"
+   ]
+  },
+  "#% chance to gain unholy might for # seconds on kill": {
+   "ids": [
+    "explicit.stat_3562211447"
+   ]
+  },
+  "#% chance to hinder enemies on hit with spells": {
+   "ids": [
+    "explicit.stat_3002506763"
+   ]
+  },
+  "#% chance to ignite": {
+   "ids": [
+    "explicit.stat_1335054179"
+   ]
+  },
+  "#% chance to ignore stuns while casting": {
+   "ids": [
+    "explicit.stat_1916706958"
+   ]
+  },
+  "#% chance to impale enemies on hit with attacks": {
+   "ids": [
+    "explicit.stat_3739863694",
+    "explicit.stat_725880290"
+   ]
+  },
+  "#% chance to inflict cold exposure on hit": {
+   "ids": [
+    "explicit.stat_2630708439"
+   ]
+  },
+  "#% chance to inflict fire exposure on hit": {
+   "ids": [
+    "explicit.stat_3602667353"
+   ]
+  },
+  "#% chance to inflict lightning exposure on hit": {
+   "ids": [
+    "explicit.stat_4265906483"
+   ]
+  },
+  "#% chance to intimidate enemies for # seconds on hit": {
+   "ids": [
+    "explicit.stat_2089652545",
+    "explicit.stat_78985352"
+   ]
+  },
+  "#% chance to intimidate enemies for # seconds on hit with attacks": {
+   "ids": [
+    "explicit.stat_3438201750"
+   ]
+  },
+  "#% chance to maim on hit": {
+   "ids": [
+    "explicit.stat_2763429652"
+   ]
+  },
+  "#% chance to poison on hit": {
+   "ids": [
+    "explicit.stat_3885634897",
+    "explicit.stat_795138349"
+   ]
+  },
+  "#% chance to recover #% of mana when you use a skill": {
+   "ids": [
+    "explicit.stat_308309328"
+   ]
+  },
+  "#% chance to shock": {
+   "ids": [
+    "explicit.stat_1538773178"
+   ]
+  },
+  "#% chance to shock attackers for # seconds on block": {
+   "ids": [
+    "explicit.stat_575111651"
+   ]
+  },
+  "#% chance to suppress spell damage": {
+   "ids": [
+    "explicit.stat_3680664274",
+    "explicit.stat_492027537"
+   ]
+  },
+  "#% chance to taunt enemies on hit with attacks": {
+   "ids": [
+    "explicit.stat_280213220"
+   ]
+  },
+  "#% chance to trigger level # blood rage when you kill an enemy": {
+   "ids": [
+    "explicit.stat_205619502"
+   ]
+  },
+  "#% chance to unnerve enemies for # seconds on hit": {
+   "ids": [
+    "explicit.stat_763611529"
+   ]
+  },
+  "#% chance to unnerve enemies for # seconds on hit with spells": {
+   "ids": [
+    "explicit.stat_220991810"
+   ]
+  },
+  "#% chaos resistance against damage over time": {
+   "ids": [
+    "explicit.stat_2266636761"
+   ]
+  },
+  "#% faster restoration of ward": {
+   "ids": [
+    "explicit.stat_1130670241"
+   ]
+  },
+  "#% faster start of energy shield recharge": {
+   "ids": [
+    "explicit.stat_1782086450"
+   ]
+  },
+  "#% global chance to blind enemies on hit": {
+   "ids": [
+    "explicit.stat_2221570601"
+   ]
+  },
+  "#% increased accuracy rating per frenzy charge": {
+   "ids": [
+    "explicit.stat_3700381193"
+   ]
+  },
+  "#% increased area damage": {
+   "ids": [
+    "explicit.stat_4251717817"
+   ]
+  },
+  "#% increased area of effect": {
+   "ids": [
+    "explicit.stat_280731498"
+   ]
+  },
+  "#% increased area of effect if you have stunned an enemy recently": {
+   "ids": [
+    "explicit.stat_430248187"
+   ]
+  },
+  "#% increased area of effect if you've killed recently": {
+   "ids": [
+    "explicit.stat_3481736410"
+   ]
+  },
+  "#% increased area of effect per # strength": {
+   "ids": [
+    "explicit.stat_2611023406"
+   ]
+  },
+  "#% increased area of effect per endurance charge": {
+   "ids": [
+    "explicit.stat_2448279015"
+   ]
+  },
+  "#% increased armour": {
+   "ids": [
+    "explicit.stat_1062208444",
+    "explicit.stat_2866361420"
+   ]
+  },
+  "#% increased armour and energy shield": {
+   "ids": [
+    "explicit.stat_3321629045"
+   ]
+  },
+  "#% increased armour and evasion": {
+   "ids": [
+    "explicit.stat_2451402625"
+   ]
+  },
+  "#% increased armour, evasion and energy shield": {
+   "ids": [
+    "explicit.stat_3523867985"
+   ]
+  },
+  "#% increased attack and cast speed": {
+   "ids": [
+    "explicit.stat_2672805335"
+   ]
+  },
+  "#% increased attack and cast speed while focused": {
+   "ids": [
+    "explicit.stat_2628163981"
+   ]
+  },
+  "#% increased attack speed": {
+   "ids": [
+    "explicit.stat_210067635",
+    "explicit.stat_681332047"
+   ]
+  },
+  "#% increased attack speed during any flask effect": {
+   "ids": [
+    "explicit.stat_1365052901"
+   ]
+  },
+  "#% increased attack speed if you've been hit recently": {
+   "ids": [
+    "explicit.stat_4137521191"
+   ]
+  },
+  "#% increased attack speed if you've killed recently": {
+   "ids": [
+    "explicit.stat_1507059769"
+   ]
+  },
+  "#% increased attack speed while fortified": {
+   "ids": [
+    "explicit.stat_122450405"
+   ]
+  },
+  "#% increased attributes": {
+   "ids": [
+    "explicit.stat_3143208761"
+   ]
+  },
+  "#% increased bleeding duration": {
+   "ids": [
+    "explicit.stat_1459321413"
+   ]
+  },
+  "#% increased brand attachment range": {
+   "ids": [
+    "explicit.stat_4223377453"
+   ]
+  },
+  "#% increased burning damage": {
+   "ids": [
+    "explicit.stat_1175385867"
+   ]
+  },
+  "#% increased cast speed": {
+   "ids": [
+    "explicit.stat_2891184298"
+   ]
+  },
+  "#% increased cast speed during any flask effect": {
+   "ids": [
+    "explicit.stat_252194507"
+   ]
+  },
+  "#% increased cast speed if you've killed recently": {
+   "ids": [
+    "explicit.stat_2072625596"
+   ]
+  },
+  "#% increased chance to block": {
+   "ids": [
+    "explicit.stat_2481353198"
+   ]
+  },
+  "#% increased chaos damage": {
+   "ids": [
+    "explicit.stat_736967255"
+   ]
+  },
+  "#% increased chaos damage over time": {
+   "ids": [
+    "explicit.stat_601272515"
+   ]
+  },
+  "#% increased cold damage": {
+   "ids": [
+    "explicit.stat_3291658075"
+   ]
+  },
+  "#% increased cooldown recovery rate": {
+   "ids": [
+    "explicit.stat_1004011302",
+    "explicit.stat_239144"
+   ]
+  },
+  "#% increased critical strike chance": {
+   "ids": [
+    "explicit.stat_2375316951"
+   ]
+  },
+  "#% increased critical strike chance against blinded enemies": {
+   "ids": [
+    "explicit.stat_1939202111"
+   ]
+  },
+  "#% increased critical strike chance against poisoned enemies": {
+   "ids": [
+    "explicit.stat_1345659139"
+   ]
+  },
+  "#% increased critical strike chance against shocked enemies": {
+   "ids": [
+    "explicit.stat_276103140"
+   ]
+  },
+  "#% increased critical strike chance if you have killed recently": {
+   "ids": [
+    "explicit.stat_3914638685"
+   ]
+  },
+  "#% increased critical strike chance if you haven't dealt a critical strike recently": {
+   "ids": [
+    "explicit.stat_2856328513"
+   ]
+  },
+  "#% increased critical strike chance with bows": {
+   "ids": [
+    "explicit.stat_2091591880"
+   ]
+  },
+  "#% increased damage": {
+   "ids": [
+    "explicit.stat_2154246560"
+   ]
+  },
+  "#% increased damage during any flask effect": {
+   "ids": [
+    "explicit.stat_2947215268"
+   ]
+  },
+  "#% increased damage over time": {
+   "ids": [
+    "explicit.stat_967627487"
+   ]
+  },
+  "#% increased damage per # dexterity": {
+   "ids": [
+    "explicit.stat_2062174346"
+   ]
+  },
+  "#% increased damage per # intelligence": {
+   "ids": [
+    "explicit.stat_3801128794"
+   ]
+  },
+  "#% increased damage per # strength": {
+   "ids": [
+    "explicit.stat_3948776386"
+   ]
+  },
+  "#% increased damage per #% chance to block attack damage": {
+   "ids": [
+    "explicit.stat_3400437584"
+   ]
+  },
+  "#% increased damage per endurance charge": {
+   "ids": [
+    "explicit.stat_3515686789"
+   ]
+  },
+  "#% increased damage per frenzy charge": {
+   "ids": [
+    "explicit.stat_902747843"
+   ]
+  },
+  "#% increased damage per power charge": {
+   "ids": [
+    "explicit.stat_2034658008"
+   ]
+  },
+  "#% increased damage while leeching": {
+   "ids": [
+    "explicit.stat_310246444"
+   ]
+  },
+  "#% increased damage with bleeding": {
+   "ids": [
+    "explicit.stat_1294118672"
+   ]
+  },
+  "#% increased damage with bow skills": {
+   "ids": [
+    "explicit.stat_1241625305"
+   ]
+  },
+  "#% increased damage with hits against chilled enemies": {
+   "ids": [
+    "explicit.stat_2805714016"
+   ]
+  },
+  "#% increased damage with non-vaal skills during soul gain prevention": {
+   "ids": [
+    "explicit.stat_1583385065"
+   ]
+  },
+  "#% increased damage with poison": {
+   "ids": [
+    "explicit.stat_1290399200"
+   ]
+  },
+  "#% increased damage with vaal skills": {
+   "ids": [
+    "explicit.stat_2257141320"
+   ]
+  },
+  "#% increased dexterity": {
+   "ids": [
+    "explicit.stat_4139681126"
+   ]
+  },
+  "#% increased duration of ailments of types you haven't inflicted recently": {
+   "ids": [
+    "explicit.stat_967840105"
+   ]
+  },
+  "#% increased duration of ailments on enemies": {
+   "ids": [
+    "explicit.stat_2419712247"
+   ]
+  },
+  "#% increased duration of ailments you inflict while focused": {
+   "ids": [
+    "explicit.stat_1840751341"
+   ]
+  },
+  "#% increased effect of cold ailments": {
+   "ids": [
+    "explicit.stat_1793818220"
+   ]
+  },
+  "#% increased effect of lightning ailments": {
+   "ids": [
+    "explicit.stat_3081816887"
+   ]
+  },
+  "#% increased effect of non-curse auras from your skills": {
+   "ids": [
+    "explicit.stat_1880071428"
+   ]
+  },
+  "#% increased effect of non-damaging ailments": {
+   "ids": [
+    "explicit.stat_782230869"
+   ]
+  },
+  "#% increased effect of offerings": {
+   "ids": [
+    "explicit.stat_3191479793"
+   ]
+  },
+  "#% increased effect of your curses": {
+   "ids": [
+    "explicit.stat_2353576063"
+   ]
+  },
+  "#% increased effect of your marks": {
+   "ids": [
+    "explicit.stat_803185500"
+   ]
+  },
+  "#% increased elemental damage": {
+   "ids": [
+    "explicit.stat_3141070085"
+   ]
+  },
+  "#% increased elemental damage if you've dealt a critical strike recently": {
+   "ids": [
+    "explicit.stat_2379781920"
+   ]
+  },
+  "#% increased elemental damage taken": {
+   "ids": [
+    "explicit.stat_2734809852"
+   ]
+  },
+  "#% increased elemental damage with attack skills": {
+   "ids": [
+    "explicit.stat_387439868"
+   ]
+  },
+  "#% increased energy shield": {
+   "ids": [
+    "explicit.stat_4015621042"
+   ]
+  },
+  "#% increased energy shield from equipped body armour": {
+   "ids": [
+    "explicit.stat_1195319608"
+   ]
+  },
+  "#% increased energy shield recharge rate": {
+   "ids": [
+    "explicit.stat_2339757871"
+   ]
+  },
+  "#% increased energy shield recovery rate": {
+   "ids": [
+    "explicit.stat_988575597"
+   ]
+  },
+  "#% increased evasion and energy shield": {
+   "ids": [
+    "explicit.stat_1999113824"
+   ]
+  },
+  "#% increased evasion rating": {
+   "ids": [
+    "explicit.stat_124859000",
+    "explicit.stat_2106365538"
+   ]
+  },
+  "#% increased evasion rating while focused": {
+   "ids": [
+    "explicit.stat_3839620417"
+   ]
+  },
+  "#% increased experience gain": {
+   "ids": [
+    "explicit.stat_3666934677"
+   ]
+  },
+  "#% increased fire damage": {
+   "ids": [
+    "explicit.stat_3962278098"
+   ]
+  },
+  "#% increased fishing line strength": {
+   "ids": [
+    "explicit.stat_1842038569"
+   ]
+  },
+  "#% increased fishing range": {
+   "ids": [
+    "explicit.stat_170497091"
+   ]
+  },
+  "#% increased flask charges gained": {
+   "ids": [
+    "explicit.stat_1452809865"
+   ]
+  },
+  "#% increased flask effect duration": {
+   "ids": [
+    "explicit.stat_3741323227"
+   ]
+  },
+  "#% increased flask life recovery rate": {
+   "ids": [
+    "explicit.stat_51994685"
+   ]
+  },
+  "#% increased flask mana recovery rate": {
+   "ids": [
+    "explicit.stat_1412217137"
+   ]
+  },
+  "#% increased freeze duration on enemies": {
+   "ids": [
+    "explicit.stat_1073942215"
+   ]
+  },
+  "#% increased global accuracy rating": {
+   "ids": [
+    "explicit.stat_624954515"
+   ]
+  },
+  "#% increased global critical strike chance": {
+   "ids": [
+    "explicit.stat_587431675"
+   ]
+  },
+  "#% increased global defences if there are no defence modifiers on other equipped items": {
+   "ids": [
+    "explicit.stat_2939710712"
+   ]
+  },
+  "#% increased global physical damage": {
+   "ids": [
+    "explicit.stat_1310194496"
+   ]
+  },
+  "#% increased ignite duration on enemies": {
+   "ids": [
+    "explicit.stat_1086147743"
+   ]
+  },
+  "#% increased impale effect": {
+   "ids": [
+    "explicit.stat_298173317"
+   ]
+  },
+  "#% increased intelligence": {
+   "ids": [
+    "explicit.stat_656461285"
+   ]
+  },
+  "#% increased life recovery rate": {
+   "ids": [
+    "explicit.stat_3240073117"
+   ]
+  },
+  "#% increased life regeneration rate": {
+   "ids": [
+    "explicit.stat_44972811"
+   ]
+  },
+  "#% increased life reservation efficiency of skills": {
+   "ids": [
+    "explicit.stat_635485889"
+   ]
+  },
+  "#% increased light radius": {
+   "ids": [
+    "explicit.stat_1263695895"
+   ]
+  },
+  "#% increased lightning damage": {
+   "ids": [
+    "explicit.stat_2231156303"
+   ]
+  },
+  "#% increased mana cost efficiency": {
+   "ids": [
+    "explicit.stat_4101445926"
+   ]
+  },
+  "#% increased mana recovery rate": {
+   "ids": [
+    "explicit.stat_3513180117"
+   ]
+  },
+  "#% increased mana regeneration rate": {
+   "ids": [
+    "explicit.stat_789117908"
+   ]
+  },
+  "#% increased mana regeneration rate while shocked": {
+   "ids": [
+    "explicit.stat_2076519255"
+   ]
+  },
+  "#% increased mana reservation efficiency of skills": {
+   "ids": [
+    "explicit.stat_1269219558",
+    "explicit.stat_4237190083"
+   ]
+  },
+  "#% increased maximum energy shield": {
+   "ids": [
+    "explicit.stat_2482852589"
+   ]
+  },
+  "#% increased maximum life": {
+   "ids": [
+    "explicit.stat_983749596"
+   ]
+  },
+  "#% increased maximum mana": {
+   "ids": [
+    "explicit.stat_2748665614"
+   ]
+  },
+  "#% increased maximum total energy shield recovery per second from leech": {
+   "ids": [
+    "explicit.stat_2013799819"
+   ]
+  },
+  "#% increased maximum total life recovery per second from leech": {
+   "ids": [
+    "explicit.stat_2916634441",
+    "explicit.stat_4118987751"
+   ]
+  },
+  "#% increased melee damage": {
+   "ids": [
+    "explicit.stat_1002362373"
+   ]
+  },
+  "#% increased melee damage during any flask effect": {
+   "ids": [
+    "explicit.stat_4091369450"
+   ]
+  },
+  "#% increased mine damage": {
+   "ids": [
+    "explicit.stat_2137912951"
+   ]
+  },
+  "#% increased mine throwing speed": {
+   "ids": [
+    "explicit.stat_1896971621"
+   ]
+  },
+  "#% increased movement speed": {
+   "ids": [
+    "explicit.stat_2250533757"
+   ]
+  },
+  "#% increased movement speed during any flask effect": {
+   "ids": [
+    "explicit.stat_304970526"
+   ]
+  },
+  "#% increased movement speed if you haven't been hit recently": {
+   "ids": [
+    "explicit.stat_1177358866",
+    "explicit.stat_308396001"
+   ]
+  },
+  "#% increased movement speed if you've hit an enemy recently": {
+   "ids": [
+    "explicit.stat_3178542354"
+   ]
+  },
+  "#% increased physical attack damage while dual wielding": {
+   "ids": [
+    "explicit.stat_1274831335"
+   ]
+  },
+  "#% increased physical damage": {
+   "ids": [
+    "explicit.stat_1509134228"
+   ]
+  },
+  "#% increased physical damage over time": {
+   "ids": [
+    "explicit.stat_1692565595"
+   ]
+  },
+  "#% increased physical damage taken": {
+   "ids": [
+    "explicit.stat_3853018505"
+   ]
+  },
+  "#% increased poison duration": {
+   "ids": [
+    "explicit.stat_2011656677"
+   ]
+  },
+  "#% increased projectile attack damage": {
+   "ids": [
+    "explicit.stat_2162876159"
+   ]
+  },
+  "#% increased projectile attack damage during any flask effect": {
+   "ids": [
+    "explicit.stat_2771016039"
+   ]
+  },
+  "#% increased projectile attack damage per # accuracy rating": {
+   "ids": [
+    "explicit.stat_4157767905"
+   ]
+  },
+  "#% increased projectile damage": {
+   "ids": [
+    "explicit.stat_1839076647"
+   ]
+  },
+  "#% increased projectile speed": {
+   "ids": [
+    "explicit.stat_3759663284"
+   ]
+  },
+  "#% increased quantity of fish caught": {
+   "ids": [
+    "explicit.stat_3802667447"
+   ]
+  },
+  "#% increased rarity of fish caught": {
+   "ids": [
+    "explicit.stat_3310914132"
+   ]
+  },
+  "#% increased skill effect duration": {
+   "ids": [
+    "explicit.stat_3377888098"
+   ]
+  },
+  "#% increased spell critical strike chance": {
+   "ids": [
+    "explicit.stat_737908626"
+   ]
+  },
+  "#% increased spell damage": {
+   "ids": [
+    "explicit.stat_2974417149"
+   ]
+  },
+  "#% increased spell damage during any flask effect": {
+   "ids": [
+    "explicit.stat_2080171093"
+   ]
+  },
+  "#% increased spell damage per # dexterity": {
+   "ids": [
+    "explicit.stat_2612056840"
+   ]
+  },
+  "#% increased spell damage per # intelligence": {
+   "ids": [
+    "explicit.stat_2818518881",
+    "explicit.stat_3961014595"
+   ]
+  },
+  "#% increased spell damage per # strength": {
+   "ids": [
+    "explicit.stat_1073314277",
+    "explicit.stat_4249521944"
+   ]
+  },
+  "#% increased strength": {
+   "ids": [
+    "explicit.stat_734614379"
+   ]
+  },
+  "#% increased stun and block recovery": {
+   "ids": [
+    "explicit.stat_2511217560"
+   ]
+  },
+  "#% increased stun duration on enemies": {
+   "ids": [
+    "explicit.stat_2517001139"
+   ]
+  },
+  "#% increased stun threshold": {
+   "ids": [
+    "explicit.stat_680068163"
+   ]
+  },
+  "#% increased total recovery per second from life leech": {
+   "ids": [
+    "explicit.stat_2633745731"
+   ]
+  },
+  "#% increased totem damage": {
+   "ids": [
+    "explicit.stat_3851254963"
+   ]
+  },
+  "#% increased totem placement speed": {
+   "ids": [
+    "explicit.stat_3374165039"
+   ]
+  },
+  "#% increased trap and mine throwing speed": {
+   "ids": [
+    "explicit.stat_464535071"
+   ]
+  },
+  "#% increased trap damage": {
+   "ids": [
+    "explicit.stat_2941585404"
+   ]
+  },
+  "#% increased trap throwing speed": {
+   "ids": [
+    "explicit.stat_118398748"
+   ]
+  },
+  "#% increased warcry buff effect": {
+   "ids": [
+    "explicit.stat_3037553757"
+   ]
+  },
+  "#% increased warcry cooldown recovery rate": {
+   "ids": [
+    "explicit.stat_4159248054"
+   ]
+  },
+  "#% increased warcry speed": {
+   "ids": [
+    "explicit.stat_1316278494"
+   ]
+  },
+  "#% increased ward": {
+   "ids": [
+    "explicit.stat_830161081"
+   ]
+  },
+  "#% more melee damage while burning": {
+   "ids": [
+    "explicit.stat_1353128245"
+   ]
+  },
+  "#% of armour applies to fire, cold and lightning damage taken from hits if you have blocked recently": {
+   "ids": [
+    "explicit.stat_1239225602"
+   ]
+  },
+  "#% of chaos damage leeched as life": {
+   "ids": [
+    "explicit.stat_744082851"
+   ]
+  },
+  "#% of cold damage leeched as energy shield": {
+   "ids": [
+    "explicit.stat_1939452467"
+   ]
+  },
+  "#% of cold damage leeched as life": {
+   "ids": [
+    "explicit.stat_3999401129"
+   ]
+  },
+  "#% of damage is taken from mana before life while focused": {
+   "ids": [
+    "explicit.stat_1588539856"
+   ]
+  },
+  "#% of damage leeched as life while focused": {
+   "ids": [
+    "explicit.stat_3324747104"
+   ]
+  },
+  "#% of damage taken recouped as life": {
+   "ids": [
+    "explicit.stat_1444556985"
+   ]
+  },
+  "#% of damage taken recouped as mana": {
+   "ids": [
+    "explicit.stat_472520716"
+   ]
+  },
+  "#% of evasion rating is regenerated as life per second while focused": {
+   "ids": [
+    "explicit.stat_3244118730"
+   ]
+  },
+  "#% of fire damage leeched as energy shield": {
+   "ids": [
+    "explicit.stat_3885409671"
+   ]
+  },
+  "#% of fire damage leeched as life": {
+   "ids": [
+    "explicit.stat_3848282610"
+   ]
+  },
+  "#% of lightning damage leeched as energy shield": {
+   "ids": [
+    "explicit.stat_308127151"
+   ]
+  },
+  "#% of lightning damage leeched as life": {
+   "ids": [
+    "explicit.stat_80079005"
+   ]
+  },
+  "#% of physical attack damage leeched as life": {
+   "ids": [
+    "explicit.stat_3593843976",
+    "explicit.stat_55876295"
+   ]
+  },
+  "#% of physical attack damage leeched as mana": {
+   "ids": [
+    "explicit.stat_3237948413",
+    "explicit.stat_669069897"
+   ]
+  },
+  "#% of physical damage converted to chaos damage": {
+   "ids": [
+    "explicit.stat_490098963"
+   ]
+  },
+  "#% of physical damage converted to cold damage": {
+   "ids": [
+    "explicit.stat_2133341901"
+   ]
+  },
+  "#% of physical damage converted to fire damage": {
+   "ids": [
+    "explicit.stat_1533563525"
+   ]
+  },
+  "#% of physical damage converted to lightning damage": {
+   "ids": [
+    "explicit.stat_3240769289"
+   ]
+  },
+  "#% of physical damage from hits taken as chaos damage": {
+   "ids": [
+    "explicit.stat_4129825612"
+   ]
+  },
+  "#% of physical damage from hits taken as cold damage": {
+   "ids": [
+    "explicit.stat_1871056256"
+   ]
+  },
+  "#% of physical damage from hits taken as fire damage": {
+   "ids": [
+    "explicit.stat_3342989455"
+   ]
+  },
+  "#% of physical damage from hits taken as lightning damage": {
+   "ids": [
+    "explicit.stat_425242359"
+   ]
+  },
+  "#% of physical damage leeched as life": {
+   "ids": [
+    "explicit.stat_3764265320"
+   ]
+  },
+  "#% reduced attribute requirements": {
+   "ids": [
+    "explicit.stat_3639275092"
+   ],
+   "negate": true
+  },
+  "#% reduced bleed duration on you": {
+   "ids": [
+    "explicit.stat_1692879867"
+   ],
+   "negate": true
+  },
+  "#% reduced chaos damage taken over time": {
+   "ids": [
+    "explicit.stat_3762784591"
+   ]
+  },
+  "#% reduced damage taken from damage over time": {
+   "ids": [
+    "explicit.stat_1101403182"
+   ]
+  },
+  "#% reduced effect of chill and shock on you": {
+   "ids": [
+    "explicit.stat_1984113628"
+   ],
+   "negate": true
+  },
+  "#% reduced effect of chill on you": {
+   "ids": [
+    "explicit.stat_1478653032"
+   ]
+  },
+  "#% reduced effect of curses on you": {
+   "ids": [
+    "explicit.stat_3407849389"
+   ]
+  },
+  "#% reduced effect of freeze on you": {
+   "ids": [
+    "explicit.stat_2069161757"
+   ],
+   "negate": true
+  },
+  "#% reduced effect of shock on you": {
+   "ids": [
+    "explicit.stat_3801067695"
+   ]
+  },
+  "#% reduced elemental damage taken while stationary": {
+   "ids": [
+    "explicit.stat_3859593448",
+    "explicit.stat_983989924"
+   ]
+  },
+  "#% reduced enemy stun threshold": {
+   "ids": [
+    "explicit.stat_1443060084"
+   ]
+  },
+  "#% reduced fishing pool consumption": {
+   "ids": [
+    "explicit.stat_1550221644"
+   ]
+  },
+  "#% reduced flask charges gained": {
+   "ids": [
+    "explicit.stat_1452809865"
+   ],
+   "negate": true
+  },
+  "#% reduced flask charges used": {
+   "ids": [
+    "explicit.stat_644456512"
+   ]
+  },
+  "#% reduced freeze duration on you": {
+   "ids": [
+    "explicit.stat_2160282525"
+   ]
+  },
+  "#% reduced ignite duration on you": {
+   "ids": [
+    "explicit.stat_986397080"
+   ]
+  },
+  "#% reduced poison duration on you": {
+   "ids": [
+    "explicit.stat_3301100256"
+   ],
+   "negate": true
+  },
+  "#% to all elemental resistances": {
+   "ids": [
+    "explicit.stat_2901986750"
+   ]
+  },
+  "#% to all maximum resistances": {
+   "ids": [
+    "explicit.stat_569299859"
+   ]
+  },
+  "#% to all resistances": {
+   "ids": [
+    "explicit.stat_2016723660"
+   ]
+  },
+  "#% to chaos damage over time multiplier": {
+   "ids": [
+    "explicit.stat_4055307827"
+   ]
+  },
+  "#% to chaos damage over time multiplier with attack skills": {
+   "ids": [
+    "explicit.stat_3913282911"
+   ]
+  },
+  "#% to chaos resistance": {
+   "ids": [
+    "explicit.stat_2923486259"
+   ]
+  },
+  "#% to chaos resistance during any flask effect": {
+   "ids": [
+    "explicit.stat_392168009"
+   ]
+  },
+  "#% to cold and chaos resistances": {
+   "ids": [
+    "explicit.stat_3393628375"
+   ]
+  },
+  "#% to cold and lightning resistances": {
+   "ids": [
+    "explicit.stat_4277795662"
+   ]
+  },
+  "#% to cold damage over time multiplier": {
+   "ids": [
+    "explicit.stat_1950806024"
+   ]
+  },
+  "#% to cold resistance": {
+   "ids": [
+    "explicit.stat_4220027924"
+   ]
+  },
+  "#% to critical strike multiplier against enemies that are on full life": {
+   "ids": [
+    "explicit.stat_2355615476"
+   ]
+  },
+  "#% to critical strike multiplier if you have blocked recently": {
+   "ids": [
+    "explicit.stat_3527458221"
+   ]
+  },
+  "#% to critical strike multiplier if you haven't dealt a critical strike recently": {
+   "ids": [
+    "explicit.stat_1478247313"
+   ]
+  },
+  "#% to critical strike multiplier if you've killed recently": {
+   "ids": [
+    "explicit.stat_2937483991"
+   ]
+  },
+  "#% to critical strike multiplier if you've shattered an enemy recently": {
+   "ids": [
+    "explicit.stat_536929014"
+   ]
+  },
+  "#% to critical strike multiplier with bows": {
+   "ids": [
+    "explicit.stat_1712221299"
+   ]
+  },
+  "#% to damage over time multiplier": {
+   "ids": [
+    "explicit.stat_3988349707"
+   ]
+  },
+  "#% to damage over time multiplier for bleeding from hits with this weapon": {
+   "ids": [
+    "explicit.stat_951608773"
+   ]
+  },
+  "#% to damage over time multiplier for poison inflicted with this weapon": {
+   "ids": [
+    "explicit.stat_4096656097"
+   ]
+  },
+  "#% to damage over time multiplier with attack skills": {
+   "ids": [
+    "explicit.stat_693959086"
+   ]
+  },
+  "#% to fire and chaos resistances": {
+   "ids": [
+    "explicit.stat_378817135"
+   ]
+  },
+  "#% to fire and cold resistances": {
+   "ids": [
+    "explicit.stat_2915988346"
+   ]
+  },
+  "#% to fire and lightning resistances": {
+   "ids": [
+    "explicit.stat_3441501978"
+   ]
+  },
+  "#% to fire damage over time multiplier": {
+   "ids": [
+    "explicit.stat_3382807662"
+   ]
+  },
+  "#% to fire damage over time multiplier with attack skills": {
+   "ids": [
+    "explicit.stat_2139660169"
+   ]
+  },
+  "#% to fire resistance": {
+   "ids": [
+    "explicit.stat_3372524247"
+   ]
+  },
+  "#% to global critical strike multiplier": {
+   "ids": [
+    "explicit.stat_3556824919"
+   ]
+  },
+  "#% to lightning and chaos resistances": {
+   "ids": [
+    "explicit.stat_3465022881"
+   ]
+  },
+  "#% to lightning resistance": {
+   "ids": [
+    "explicit.stat_1671376347"
+   ]
+  },
+  "#% to maximum chance to block attack damage": {
+   "ids": [
+    "explicit.stat_4124805414"
+   ]
+  },
+  "#% to maximum chance to block spell damage": {
+   "ids": [
+    "explicit.stat_2388574377"
+   ]
+  },
+  "#% to maximum chaos resistance": {
+   "ids": [
+    "explicit.stat_1301765461"
+   ]
+  },
+  "#% to maximum cold resistance": {
+   "ids": [
+    "explicit.stat_3676141501"
+   ]
+  },
+  "#% to maximum fire resistance": {
+   "ids": [
+    "explicit.stat_4095671657"
+   ]
+  },
+  "#% to maximum lightning resistance": {
+   "ids": [
+    "explicit.stat_1011760251"
+   ]
+  },
+  "#% to physical damage over time multiplier": {
+   "ids": [
+    "explicit.stat_1314617696"
+   ]
+  },
+  "#% to physical damage over time multiplier with attack skills": {
+   "ids": [
+    "explicit.stat_709768359"
+   ]
+  },
+  "#% to quality of socketed gems": {
+   "ids": [
+    "explicit.stat_3828613551"
+   ]
+  },
+  "#% to spell critical strike chance": {
+   "ids": [
+    "explicit.stat_791835907"
+   ]
+  },
+  "-# physical damage taken from attack hits": {
+   "ids": [
+    "explicit.stat_3441651621"
+   ],
+   "negate": true
+  },
+  "adds # to # chaos damage": {
+   "ids": [
+    "explicit.stat_2223678961",
+    "explicit.stat_3531280422"
+   ]
+  },
+  "adds # to # chaos damage if you've dealt a critical strike recently": {
+   "ids": [
+    "explicit.stat_2523334466"
+   ]
+  },
+  "adds # to # chaos damage to attacks": {
+   "ids": [
+    "explicit.stat_674553446"
+   ]
+  },
+  "adds # to # chaos damage to spells": {
+   "ids": [
+    "explicit.stat_2300399854"
+   ]
+  },
+  "adds # to # cold damage": {
+   "ids": [
+    "explicit.stat_1037193709",
+    "explicit.stat_2387423236"
+   ]
+  },
+  "adds # to # cold damage against chilled or frozen enemies": {
+   "ids": [
+    "explicit.stat_2233361223"
+   ]
+  },
+  "adds # to # cold damage if you've dealt a critical strike recently": {
+   "ids": [
+    "explicit.stat_3370223014"
+   ]
+  },
+  "adds # to # cold damage to attacks": {
+   "ids": [
+    "explicit.stat_4067062424"
+   ]
+  },
+  "adds # to # cold damage to attacks with this weapon per # dexterity": {
+   "ids": [
+    "explicit.stat_149574107"
+   ]
+  },
+  "adds # to # cold damage to spells": {
+   "ids": [
+    "explicit.stat_2469416729"
+   ]
+  },
+  "adds # to # fire damage": {
+   "ids": [
+    "explicit.stat_321077055",
+    "explicit.stat_709508406"
+   ]
+  },
+  "adds # to # fire damage against ignited enemies": {
+   "ids": [
+    "explicit.stat_794830148"
+   ]
+  },
+  "adds # to # fire damage if you've blocked recently": {
+   "ids": [
+    "explicit.stat_3623716321"
+   ]
+  },
+  "adds # to # fire damage if you've dealt a critical strike recently": {
+   "ids": [
+    "explicit.stat_3144358296"
+   ]
+  },
+  "adds # to # fire damage to attacks": {
+   "ids": [
+    "explicit.stat_1573130764"
+   ]
+  },
+  "adds # to # fire damage to attacks with this weapon per # strength": {
+   "ids": [
+    "explicit.stat_1060540099"
+   ]
+  },
+  "adds # to # fire damage to spells": {
+   "ids": [
+    "explicit.stat_1133016593"
+   ]
+  },
+  "adds # to # lightning damage": {
+   "ids": [
+    "explicit.stat_1334060246",
+    "explicit.stat_3336890334"
+   ]
+  },
+  "adds # to # lightning damage against shocked enemies": {
+   "ids": [
+    "explicit.stat_90012347"
+   ]
+  },
+  "adds # to # lightning damage if you've dealt a critical strike recently": {
+   "ids": [
+    "explicit.stat_935623115"
+   ]
+  },
+  "adds # to # lightning damage to attacks": {
+   "ids": [
+    "explicit.stat_1754445556"
+   ]
+  },
+  "adds # to # lightning damage to attacks with this weapon per # intelligence": {
+   "ids": [
+    "explicit.stat_3390848861"
+   ]
+  },
+  "adds # to # lightning damage to spells": {
+   "ids": [
+    "explicit.stat_2831165374"
+   ]
+  },
+  "adds # to # physical damage": {
+   "ids": [
+    "explicit.stat_1940865751",
+    "explicit.stat_960081730"
+   ]
+  },
+  "adds # to # physical damage if you've dealt a critical strike recently": {
+   "ids": [
+    "explicit.stat_2723101291"
+   ]
+  },
+  "adds # to # physical damage to attacks": {
+   "ids": [
+    "explicit.stat_3032590688"
+   ]
+  },
+  "adds # to # physical damage to spells": {
+   "ids": [
+    "explicit.stat_2435536961"
+   ]
+  },
+  "always hits burning enemies": {
+   "ids": [
+    "explicit.stat_270993809"
+   ]
+  },
+  "anger has #% increased aura effect": {
+   "ids": [
+    "explicit.stat_1592278124"
+   ]
+  },
+  "anger has #% increased mana reservation efficiency": {
+   "ids": [
+    "explicit.stat_2549369799",
+    "explicit.stat_2963485753"
+   ]
+  },
+  "attacks fire an additional projectile": {
+   "ids": [
+    "explicit.stat_1195705739"
+   ]
+  },
+  "attacks have #% chance to cause bleeding": {
+   "ids": [
+    "explicit.stat_1923879260"
+   ]
+  },
+  "attacks have #% chance to maim on hit": {
+   "ids": [
+    "explicit.stat_1510714129"
+   ]
+  },
+  "attacks have #% to critical strike chance": {
+   "ids": [
+    "explicit.stat_2572042788"
+   ]
+  },
+  "attacks with this weapon penetrate #% chaos resistance": {
+   "ids": [
+    "explicit.stat_3762412853"
+   ]
+  },
+  "attacks with this weapon penetrate #% cold resistance": {
+   "ids": [
+    "explicit.stat_1740229525"
+   ]
+  },
+  "attacks with this weapon penetrate #% elemental resistances": {
+   "ids": [
+    "explicit.stat_4064396395"
+   ]
+  },
+  "attacks with this weapon penetrate #% fire resistance": {
+   "ids": [
+    "explicit.stat_3398283493"
+   ]
+  },
+  "attacks with this weapon penetrate #% lightning resistance": {
+   "ids": [
+    "explicit.stat_2387539034"
+   ]
+  },
+  "auras from your skills grant #% increased damage to you and allies": {
+   "ids": [
+    "explicit.stat_3729445224"
+   ]
+  },
+  "banner skills have #% increased aura effect": {
+   "ids": [
+    "explicit.stat_2729804981"
+   ]
+  },
+  "bleeding you inflict deals damage #% faster": {
+   "ids": [
+    "explicit.stat_3828375170"
+   ]
+  },
+  "bow attacks fire # additional arrows": {
+   "ids": [
+    "explicit.stat_3885405204"
+   ]
+  },
+  "can have up to # crafted modifiers": {
+   "ids": [
+    "explicit.stat_1859333175"
+   ]
+  },
+  "cannot be blinded": {
+   "ids": [
+    "explicit.stat_1436284579"
+   ]
+  },
+  "cannot be knocked back": {
+   "ids": [
+    "explicit.stat_4212255859"
+   ]
+  },
+  "cannot be poisoned": {
+   "ids": [
+    "explicit.stat_3835551335"
+   ]
+  },
+  "cannot roll attack modifiers": {
+   "ids": [
+    "explicit.stat_4122424929"
+   ]
+  },
+  "cannot roll caster modifiers": {
+   "ids": [
+    "explicit.stat_1149326139"
+   ]
+  },
+  "cast level # fire burst on hit": {
+   "ids": [
+    "explicit.stat_1621470436"
+   ]
+  },
+  "channelling skills have # to total mana cost": {
+   "ids": [
+    "explicit.stat_2421446548"
+   ]
+  },
+  "chaos skills have #% increased skill effect duration": {
+   "ids": [
+    "explicit.stat_289885185"
+   ]
+  },
+  "cold resistance cannot be penetrated": {
+   "ids": [
+    "explicit.stat_1864616755"
+   ]
+  },
+  "corrupted blood cannot be inflicted on you": {
+   "ids": [
+    "explicit.stat_1658498488"
+   ]
+  },
+  "culling strike": {
+   "ids": [
+    "explicit.stat_2524254339"
+   ]
+  },
+  "curse enemies with conductivity on hit": {
+   "ids": [
+    "explicit.stat_710372469"
+   ]
+  },
+  "curse enemies with despair on hit": {
+   "ids": [
+    "explicit.stat_2764915899"
+   ]
+  },
+  "curse enemies with elemental weakness on hit": {
+   "ids": [
+    "explicit.stat_2028847114"
+   ]
+  },
+  "curse enemies with flammability on hit": {
+   "ids": [
+    "explicit.stat_338121249",
+    "explicit.stat_654274615"
+   ]
+  },
+  "curse enemies with frostbite on hit": {
+   "ids": [
+    "explicit.stat_426847518"
+   ]
+  },
+  "curse enemies with vulnerability on hit": {
+   "ids": [
+    "explicit.stat_3967845372"
+   ]
+  },
+  "damage penetrates #% cold resistance": {
+   "ids": [
+    "explicit.stat_3417711605"
+   ]
+  },
+  "damage penetrates #% elemental resistances": {
+   "ids": [
+    "explicit.stat_2101383955"
+   ]
+  },
+  "damage penetrates #% elemental resistances during any flask effect": {
+   "ids": [
+    "explicit.stat_3392890360"
+   ]
+  },
+  "damage penetrates #% fire resistance": {
+   "ids": [
+    "explicit.stat_2653955271"
+   ]
+  },
+  "damage penetrates #% lightning resistance": {
+   "ids": [
+    "explicit.stat_818778753"
+   ]
+  },
+  "determination has #% increased mana reservation efficiency": {
+   "ids": [
+    "explicit.stat_2721871046",
+    "explicit.stat_325889252"
+   ]
+  },
+  "discipline has #% increased mana reservation efficiency": {
+   "ids": [
+    "explicit.stat_1692887998",
+    "explicit.stat_2081344089"
+   ]
+  },
+  "enemies have #% reduced evasion if you have hit them recently": {
+   "ids": [
+    "explicit.stat_1773891268"
+   ]
+  },
+  "enemies killed with attack or spell hits explode, dealing #% of their life as fire damage": {
+   "ids": [
+    "explicit.stat_3457687358"
+   ]
+  },
+  "enemies you kill have a #% chance to explode, dealing a tenth of their maximum life as physical damage": {
+   "ids": [
+    "explicit.stat_3295179224"
+   ]
+  },
+  "equipped magic flasks have #% increased effect on you if no flasks are adjacent to them": {
+   "ids": [
+    "explicit.stat_2649904663"
+   ]
+  },
+  "every # seconds, regenerate #% of life over one second": {
+   "ids": [
+    "explicit.stat_1242155304"
+   ]
+  },
+  "exerted attacks deal #% increased damage": {
+   "ids": [
+    "explicit.stat_1569101201"
+   ]
+  },
+  "fire resistance cannot be penetrated": {
+   "ids": [
+    "explicit.stat_1138860262"
+   ]
+  },
+  "flasks applied to you have #% increased effect": {
+   "ids": [
+    "explicit.stat_114734841"
+   ]
+  },
+  "focus has #% increased cooldown recovery rate": {
+   "ids": [
+    "explicit.stat_3610263531"
+   ]
+  },
+  "gain # endurance charge every second if you've been hit recently": {
+   "ids": [
+    "explicit.stat_2894476716"
+   ]
+  },
+  "gain # life per blinded enemy hit with this weapon": {
+   "ids": [
+    "explicit.stat_1649099067"
+   ]
+  },
+  "gain # life per enemy hit with attacks": {
+   "ids": [
+    "explicit.stat_2797971005"
+   ]
+  },
+  "gain # life per enemy hit with spells": {
+   "ids": [
+    "explicit.stat_2018035324"
+   ]
+  },
+  "gain # life per enemy killed": {
+   "ids": [
+    "explicit.stat_3695891184"
+   ]
+  },
+  "gain # mana per enemy hit with attacks": {
+   "ids": [
+    "explicit.stat_820939409"
+   ]
+  },
+  "gain # mana per enemy hit with spells": {
+   "ids": [
+    "explicit.stat_2474196346"
+   ]
+  },
+  "gain # mana per enemy killed": {
+   "ids": [
+    "explicit.stat_1368271171"
+   ]
+  },
+  "gain #% of cold damage as extra chaos damage": {
+   "ids": [
+    "explicit.stat_2915373966"
+   ]
+  },
+  "gain #% of elemental damage as extra chaos damage": {
+   "ids": [
+    "explicit.stat_3495544060"
+   ]
+  },
+  "gain #% of fire damage as extra chaos damage": {
+   "ids": [
+    "explicit.stat_1599775597"
+   ]
+  },
+  "gain #% of lightning damage as extra chaos damage": {
+   "ids": [
+    "explicit.stat_2402136583"
+   ]
+  },
+  "gain #% of non-chaos damage as extra chaos damage": {
+   "ids": [
+    "explicit.stat_2063695047"
+   ]
+  },
+  "gain #% of physical damage as extra chaos damage": {
+   "ids": [
+    "explicit.stat_3319896421"
+   ]
+  },
+  "gain #% of physical damage as extra cold damage": {
+   "ids": [
+    "explicit.stat_979246511"
+   ]
+  },
+  "gain #% of physical damage as extra damage of a random element": {
+   "ids": [
+    "explicit.stat_3753703249"
+   ]
+  },
+  "gain #% of physical damage as extra fire damage": {
+   "ids": [
+    "explicit.stat_369494213"
+   ]
+  },
+  "gain #% of physical damage as extra lightning damage": {
+   "ids": [
+    "explicit.stat_219391121"
+   ]
+  },
+  "gain a flask charge when you deal a critical strike": {
+   "ids": [
+    "explicit.stat_1546046884"
+   ]
+  },
+  "gain a power charge after spending a total of # mana": {
+   "ids": [
+    "explicit.stat_3269060224"
+   ]
+  },
+  "gain accuracy rating equal to your strength": {
+   "ids": [
+    "explicit.stat_1575519214"
+   ]
+  },
+  "gain an endurance charge every # seconds while stationary": {
+   "ids": [
+    "explicit.stat_2156210979"
+   ]
+  },
+  "gain an endurance, frenzy or power charge when you block": {
+   "ids": [
+    "explicit.stat_2199099676"
+   ]
+  },
+  "gain arcane surge after spending a total of # mana": {
+   "ids": [
+    "explicit.stat_913614572"
+   ]
+  },
+  "gems socketed always have the quality bonus from socket colour": {
+   "ids": [
+    "explicit.stat_899329924"
+   ]
+  },
+  "grace has #% increased mana reservation efficiency": {
+   "ids": [
+    "explicit.stat_1803598623",
+    "explicit.stat_900639351"
+   ]
+  },
+  "grants # life per enemy hit": {
+   "ids": [
+    "explicit.stat_821021828"
+   ]
+  },
+  "grants level # anger skill": {
+   "ids": [
+    "explicit.stat_449494711"
+   ]
+  },
+  "grants level # determination skill": {
+   "ids": [
+    "explicit.stat_3231614028"
+   ]
+  },
+  "grants level # discipline skill": {
+   "ids": [
+    "explicit.stat_2578176147"
+   ]
+  },
+  "grants level # grace skill": {
+   "ids": [
+    "explicit.stat_3914774028"
+   ]
+  },
+  "grants level # haste skill": {
+   "ids": [
+    "explicit.stat_2923442950"
+   ]
+  },
+  "grants level # hatred skill": {
+   "ids": [
+    "explicit.stat_178394804"
+   ]
+  },
+  "grants level # wrath skill": {
+   "ids": [
+    "explicit.stat_1568319697"
+   ]
+  },
+  "has no attribute requirements": {
+   "ids": [
+    "explicit.stat_2739148464"
+   ]
+  },
+  "hatred has #% increased aura effect": {
+   "ids": [
+    "explicit.stat_3742945352"
+   ]
+  },
+  "hatred has #% increased mana reservation efficiency": {
+   "ids": [
+    "explicit.stat_1920370417",
+    "explicit.stat_2156140483"
+   ]
+  },
+  "hits can't be evaded": {
+   "ids": [
+    "explicit.stat_4126210832"
+   ]
+  },
+  "hits have #% chance to ignore enemy physical damage reduction": {
+   "ids": [
+    "explicit.stat_2839577586"
+   ]
+  },
+  "hits with melee movement skills have #% chance to fortify": {
+   "ids": [
+    "explicit.stat_59547568"
+   ]
+  },
+  "hits with this weapon have #% chance to ignore enemy physical damage reduction": {
+   "ids": [
+    "explicit.stat_1907260000"
+   ]
+  },
+  "hits with this weapon have culling strike against bleeding enemies": {
+   "ids": [
+    "explicit.stat_2558253923"
+   ]
+  },
+  "ignites you inflict deal damage #% faster": {
+   "ids": [
+    "explicit.stat_2443492284"
+   ]
+  },
+  "items and gems have #% reduced attribute requirements": {
+   "ids": [
+    "explicit.stat_752930724"
+   ],
+   "negate": true
+  },
+  "left ring slot: skills supported by unleash have # to maximum number of seals": {
+   "ids": [
+    "explicit.stat_597522922"
+   ]
+  },
+  "light radius is based on energy shield instead of life": {
+   "ids": [
+    "explicit.stat_3836017971"
+   ]
+  },
+  "lightning resistance cannot be penetrated": {
+   "ids": [
+    "explicit.stat_3515979920"
+   ]
+  },
+  "malevolence has #% increased aura effect": {
+   "ids": [
+    "explicit.stat_4175197580"
+   ]
+  },
+  "malevolence has #% increased mana reservation efficiency": {
+   "ids": [
+    "explicit.stat_3266567165",
+    "explicit.stat_3383226338"
+   ]
+  },
+  "melee attacks knock enemies back on hit": {
+   "ids": [
+    "explicit.stat_3962823719"
+   ]
+  },
+  "melee hits which stun have #% chance to fortify": {
+   "ids": [
+    "explicit.stat_3206381437"
+   ]
+  },
+  "melee strikes curse enemies with flammability on hit, ignoring curse limit": {
+   "ids": [
+    "explicit.stat_3814785829"
+   ]
+  },
+  "minions deal #% increased damage": {
+   "ids": [
+    "explicit.stat_1589917703"
+   ]
+  },
+  "minions have #% additional physical damage reduction": {
+   "ids": [
+    "explicit.stat_3119612865"
+   ]
+  },
+  "minions have #% increased attack and cast speed": {
+   "ids": [
+    "explicit.stat_3091578504"
+   ]
+  },
+  "minions have #% increased attack speed": {
+   "ids": [
+    "explicit.stat_3375935924"
+   ]
+  },
+  "minions have #% increased cast speed": {
+   "ids": [
+    "explicit.stat_4000101551"
+   ]
+  },
+  "minions have #% increased critical strike chance": {
+   "ids": [
+    "explicit.stat_491450213"
+   ]
+  },
+  "minions have #% increased maximum life": {
+   "ids": [
+    "explicit.stat_770672621"
+   ]
+  },
+  "minions have #% increased movement speed": {
+   "ids": [
+    "explicit.stat_174664100"
+   ]
+  },
+  "minions have #% to all elemental resistances": {
+   "ids": [
+    "explicit.stat_1423639565"
+   ]
+  },
+  "minions have #% to all maximum elemental resistances": {
+   "ids": [
+    "explicit.stat_10224385"
+   ]
+  },
+  "minions have #% to critical strike multiplier": {
+   "ids": [
+    "explicit.stat_1854213750"
+   ]
+  },
+  "minions recover #% of their life when you focus": {
+   "ids": [
+    "explicit.stat_3500359417"
+   ]
+  },
+  "movement speed cannot be modified to below base value": {
+   "ids": [
+    "explicit.stat_3875592188"
+   ]
+  },
+  "moving while bleeding doesn't cause you to take extra damage": {
+   "ids": [
+    "explicit.stat_935326447"
+   ]
+  },
+  "non-channelling skills have # to total mana cost": {
+   "ids": [
+    "explicit.stat_677564538"
+   ]
+  },
+  "non-vaal strike skills target # additional nearby enemy": {
+   "ids": [
+    "explicit.stat_1661253443"
+   ]
+  },
+  "poisons you inflict deal damage #% faster": {
+   "ids": [
+    "explicit.stat_2907156609"
+   ]
+  },
+  "prevent #% of suppressed spell damage": {
+   "ids": [
+    "explicit.stat_4116705863"
+   ]
+  },
+  "pride has #% increased mana reservation efficiency": {
+   "ids": [
+    "explicit.stat_3484910620",
+    "explicit.stat_3993865658"
+   ]
+  },
+  "projectiles can chain from any number of additional targets in close range": {
+   "ids": [
+    "explicit.stat_2940232338"
+   ]
+  },
+  "projectiles deal #% increased damage with hits and ailments for each enemy pierced": {
+   "ids": [
+    "explicit.stat_883169830"
+   ]
+  },
+  "projectiles from socketed gems fork": {
+   "ids": [
+    "explicit.stat_1519665289"
+   ]
+  },
+  "projectiles pierce # additional targets": {
+   "ids": [
+    "explicit.stat_2067062068",
+    "explicit.stat_3640956958"
+   ]
+  },
+  "purity of fire has #% increased mana reservation efficiency": {
+   "ids": [
+    "explicit.stat_1135152940",
+    "explicit.stat_3003688066"
+   ]
+  },
+  "purity of ice has #% increased mana reservation efficiency": {
+   "ids": [
+    "explicit.stat_139925400",
+    "explicit.stat_2665518524"
+   ]
+  },
+  "purity of lightning has #% increased mana reservation efficiency": {
+   "ids": [
+    "explicit.stat_1450978702",
+    "explicit.stat_3411256933"
+   ]
+  },
+  "recover #% of energy shield on kill": {
+   "ids": [
+    "explicit.stat_2406605753"
+   ]
+  },
+  "recover #% of energy shield when you block": {
+   "ids": [
+    "explicit.stat_1606263610"
+   ]
+  },
+  "recover #% of life on kill": {
+   "ids": [
+    "explicit.stat_2023107756"
+   ]
+  },
+  "recover #% of life when you block": {
+   "ids": [
+    "explicit.stat_2442647190"
+   ]
+  },
+  "recover #% of mana and energy shield when you focus": {
+   "ids": [
+    "explicit.stat_2992263716"
+   ]
+  },
+  "recover #% of mana on kill": {
+   "ids": [
+    "explicit.stat_1030153674",
+    "explicit.stat_1604736568"
+   ]
+  },
+  "recover #% of your maximum mana when you block": {
+   "ids": [
+    "explicit.stat_3041288981"
+   ]
+  },
+  "reflects # physical damage to melee attackers": {
+   "ids": [
+    "explicit.stat_3767873853"
+   ]
+  },
+  "regenerate # life per second": {
+   "ids": [
+    "explicit.stat_3325883026"
+   ]
+  },
+  "regenerate # mana per second": {
+   "ids": [
+    "explicit.stat_4291461939"
+   ]
+  },
+  "regenerate #% of mana per second": {
+   "ids": [
+    "explicit.stat_3188455409"
+   ]
+  },
+  "remove chill and freeze when you use a flask": {
+   "ids": [
+    "explicit.stat_3296873305"
+   ]
+  },
+  "remove ignite and burning when you use a flask": {
+   "ids": [
+    "explicit.stat_1162425204"
+   ]
+  },
+  "remove shock when you use a flask": {
+   "ids": [
+    "explicit.stat_561861132"
+   ]
+  },
+  "removes bleeding when you use a warcry": {
+   "ids": [
+    "explicit.stat_3936926420"
+   ]
+  },
+  "right ring slot: shockwave has # to cooldown uses": {
+   "ids": [
+    "explicit.stat_651133374"
+   ]
+  },
+  "skills fire an additional projectile": {
+   "ids": [
+    "explicit.stat_74338099"
+   ]
+  },
+  "skills supported by unleash have # to maximum number of seals": {
+   "ids": [
+    "explicit.stat_1264919148"
+   ]
+  },
+  "socketed attacks have # to total mana cost": {
+   "ids": [
+    "explicit.stat_2264586521"
+   ]
+  },
+  "socketed attacks have #% to critical strike chance": {
+   "ids": [
+    "explicit.stat_2867348718"
+   ]
+  },
+  "socketed attacks have #% to critical strike multiplier": {
+   "ids": [
+    "explicit.stat_356456977"
+   ]
+  },
+  "socketed gems are supported by level # added fire damage": {
+   "ids": [
+    "explicit.indexable_support_126"
+   ]
+  },
+  "socketed gems are supported by level # additional accuracy": {
+   "ids": [
+    "explicit.indexable_support_124"
+   ]
+  },
+  "socketed gems are supported by level # advanced traps": {
+   "ids": [
+    "explicit.indexable_support_6"
+   ]
+  },
+  "socketed gems are supported by level # ancestral call": {
+   "ids": [
+    "explicit.indexable_support_14"
+   ]
+  },
+  "socketed gems are supported by level # arcane surge": {
+   "ids": [
+    "explicit.indexable_support_123"
+   ]
+  },
+  "socketed gems are supported by level # ballista totem": {
+   "ids": [
+    "explicit.indexable_support_27"
+   ]
+  },
+  "socketed gems are supported by level # blastchain mine": {
+   "ids": [
+    "explicit.indexable_support_23"
+   ]
+  },
+  "socketed gems are supported by level # blind": {
+   "ids": [
+    "explicit.indexable_support_118"
+   ]
+  },
+  "socketed gems are supported by level # brutality": {
+   "ids": [
+    "explicit.indexable_support_114"
+   ]
+  },
+  "socketed gems are supported by level # burning damage": {
+   "ids": [
+    "explicit.indexable_support_68"
+   ]
+  },
+  "socketed gems are supported by level # cast on critical strike": {
+   "ids": [
+    "explicit.indexable_support_113"
+   ]
+  },
+  "socketed gems are supported by level # cast on melee kill": {
+   "ids": [
+    "explicit.indexable_support_110"
+   ]
+  },
+  "socketed gems are supported by level # cast when damage taken": {
+   "ids": [
+    "explicit.indexable_support_112"
+   ]
+  },
+  "socketed gems are supported by level # cast while channelling": {
+   "ids": [
+    "explicit.indexable_support_108"
+   ]
+  },
+  "socketed gems are supported by level # chance to bleed": {
+   "ids": [
+    "explicit.indexable_support_106"
+   ]
+  },
+  "socketed gems are supported by level # chance to poison": {
+   "ids": [
+    "explicit.indexable_support_54"
+   ]
+  },
+  "socketed gems are supported by level # cold penetration": {
+   "ids": [
+    "explicit.indexable_support_100"
+   ]
+  },
+  "socketed gems are supported by level # combustion": {
+   "ids": [
+    "explicit.indexable_support_105"
+   ]
+  },
+  "socketed gems are supported by level # concentrated effect": {
+   "ids": [
+    "explicit.indexable_support_98"
+   ]
+  },
+  "socketed gems are supported by level # controlled destruction": {
+   "ids": [
+    "explicit.indexable_support_97"
+   ]
+  },
+  "socketed gems are supported by level # critical strike affliction": {
+   "ids": [
+    "explicit.indexable_support_31"
+   ]
+  },
+  "socketed gems are supported by level # efficacy": {
+   "ids": [
+    "explicit.indexable_support_91"
+   ]
+  },
+  "socketed gems are supported by level # elemental damage with attacks": {
+   "ids": [
+    "explicit.indexable_support_76"
+   ]
+  },
+  "socketed gems are supported by level # elemental focus": {
+   "ids": [
+    "explicit.indexable_support_90"
+   ]
+  },
+  "socketed gems are supported by level # elemental proliferation": {
+   "ids": [
+    "explicit.indexable_support_89"
+   ]
+  },
+  "socketed gems are supported by level # endurance charge on melee stun": {
+   "ids": [
+    "explicit.indexable_support_88"
+   ]
+  },
+  "socketed gems are supported by level # faster attacks": {
+   "ids": [
+    "explicit.indexable_support_86"
+   ]
+  },
+  "socketed gems are supported by level # faster casting": {
+   "ids": [
+    "explicit.indexable_support_85"
+   ]
+  },
+  "socketed gems are supported by level # faster projectiles": {
+   "ids": [
+    "explicit.indexable_support_84"
+   ]
+  },
+  "socketed gems are supported by level # fire penetration": {
+   "ids": [
+    "explicit.indexable_support_82"
+   ]
+  },
+  "socketed gems are supported by level # fortify": {
+   "ids": [
+    "explicit.indexable_support_79"
+   ]
+  },
+  "socketed gems are supported by level # hypothermia": {
+   "ids": [
+    "explicit.indexable_support_74"
+   ]
+  },
+  "socketed gems are supported by level # immolate": {
+   "ids": [
+    "explicit.indexable_support_71"
+   ]
+  },
+  "socketed gems are supported by level # increased area of effect": {
+   "ids": [
+    "explicit.indexable_support_69"
+   ]
+  },
+  "socketed gems are supported by level # increased critical damage": {
+   "ids": [
+    "explicit.indexable_support_67"
+   ]
+  },
+  "socketed gems are supported by level # increased critical strikes": {
+   "ids": [
+    "explicit.indexable_support_66"
+   ]
+  },
+  "socketed gems are supported by level # innervate": {
+   "ids": [
+    "explicit.indexable_support_60"
+   ]
+  },
+  "socketed gems are supported by level # inspiration": {
+   "ids": [
+    "explicit.indexable_support_24"
+   ]
+  },
+  "socketed gems are supported by level # item rarity": {
+   "ids": [
+    "explicit.indexable_support_57"
+   ]
+  },
+  "socketed gems are supported by level # less duration": {
+   "ids": [
+    "explicit.indexable_support_25"
+   ]
+  },
+  "socketed gems are supported by level # life leech": {
+   "ids": [
+    "explicit.indexable_support_52"
+   ]
+  },
+  "socketed gems are supported by level # lightning penetration": {
+   "ids": [
+    "explicit.indexable_support_51"
+   ]
+  },
+  "socketed gems are supported by level # maim": {
+   "ids": [
+    "explicit.indexable_support_50"
+   ]
+  },
+  "socketed gems are supported by level # mana leech": {
+   "ids": [
+    "explicit.indexable_support_49"
+   ]
+  },
+  "socketed gems are supported by level # melee physical damage": {
+   "ids": [
+    "explicit.indexable_support_46"
+   ]
+  },
+  "socketed gems are supported by level # melee splash": {
+   "ids": [
+    "explicit.indexable_support_45"
+   ]
+  },
+  "socketed gems are supported by level # minion damage": {
+   "ids": [
+    "explicit.indexable_support_64"
+   ]
+  },
+  "socketed gems are supported by level # minion life": {
+   "ids": [
+    "explicit.indexable_support_63"
+   ]
+  },
+  "socketed gems are supported by level # momentum": {
+   "ids": [
+    "explicit.indexable_support_37"
+   ]
+  },
+  "socketed gems are supported by level # more duration": {
+   "ids": [
+    "explicit.indexable_support_65"
+   ]
+  },
+  "socketed gems are supported by level # multiple projectiles": {
+   "ids": [
+    "explicit.indexable_support_55"
+   ]
+  },
+  "socketed gems are supported by level # multistrike": {
+   "ids": [
+    "explicit.indexable_support_41"
+   ]
+  },
+  "socketed gems are supported by level # ruthless": {
+   "ids": [
+    "explicit.indexable_support_21"
+   ]
+  },
+  "socketed gems are supported by level # slower projectiles": {
+   "ids": [
+    "explicit.indexable_support_18"
+   ]
+  },
+  "socketed gems are supported by level # spell cascade": {
+   "ids": [
+    "explicit.indexable_support_17"
+   ]
+  },
+  "socketed gems are supported by level # spell echo": {
+   "ids": [
+    "explicit.indexable_support_42"
+   ]
+  },
+  "socketed gems are supported by level # spell totem": {
+   "ids": [
+    "explicit.indexable_support_15"
+   ]
+  },
+  "socketed gems are supported by level # trap": {
+   "ids": [
+    "explicit.indexable_support_8"
+   ]
+  },
+  "socketed gems are supported by level # trap and mine damage": {
+   "ids": [
+    "explicit.indexable_support_7"
+   ]
+  },
+  "socketed gems are supported by level # unbound ailments": {
+   "ids": [
+    "explicit.indexable_support_5"
+   ]
+  },
+  "socketed gems are supported by level # volley": {
+   "ids": [
+    "explicit.indexable_support_36"
+   ]
+  },
+  "socketed gems chain # additional times": {
+   "ids": [
+    "explicit.stat_2788729902"
+   ]
+  },
+  "socketed gems deal # to # added fire damage": {
+   "ids": [
+    "explicit.stat_1289910726"
+   ]
+  },
+  "socketed gems deal #% more damage over time": {
+   "ids": [
+    "explicit.stat_3846088475"
+   ]
+  },
+  "socketed gems deal #% more damage while on low life": {
+   "ids": [
+    "explicit.stat_1235873320"
+   ]
+  },
+  "socketed gems deal #% more elemental damage": {
+   "ids": [
+    "explicit.stat_3835899275"
+   ]
+  },
+  "socketed gems gain #% of physical damage as extra lightning damage": {
+   "ids": [
+    "explicit.stat_1859937391"
+   ]
+  },
+  "socketed gems have #% critical strike chance": {
+   "ids": [
+    "explicit.stat_1681904129"
+   ]
+  },
+  "socketed gems have #% increased reservation efficiency": {
+   "ids": [
+    "explicit.stat_3289633055"
+   ]
+  },
+  "socketed gems have #% more attack and cast speed": {
+   "ids": [
+    "explicit.stat_346351023"
+   ]
+  },
+  "socketed movement skills cost no mana": {
+   "ids": [
+    "explicit.stat_3263216405"
+   ]
+  },
+  "socketed skills deal #% more attack damage": {
+   "ids": [
+    "explicit.stat_1970781345"
+   ]
+  },
+  "socketed skills deal #% more spell damage": {
+   "ids": [
+    "explicit.stat_2964800094"
+   ]
+  },
+  "socketed spells have #% to critical strike chance": {
+   "ids": [
+    "explicit.stat_135378852"
+   ]
+  },
+  "socketed spells have #% to critical strike multiplier": {
+   "ids": [
+    "explicit.stat_2828710986"
+   ]
+  },
+  "spells have a #% chance to deal double damage": {
+   "ids": [
+    "explicit.stat_2813626504"
+   ]
+  },
+  "trigger level # ghostly artillery when you attack with this weapon": {
+   "ids": [
+    "explicit.stat_1273709603"
+   ]
+  },
+  "trigger level # summon spectral wolf on kill": {
+   "ids": [
+    "explicit.stat_1468606528"
+   ]
+  },
+  "unaffected by burning ground": {
+   "ids": [
+    "explicit.stat_1643688236"
+   ]
+  },
+  "unaffected by chilled ground": {
+   "ids": [
+    "explicit.stat_3653191834"
+   ]
+  },
+  "unaffected by desecrated ground": {
+   "ids": [
+    "explicit.stat_4004298002"
+   ]
+  },
+  "unaffected by shocked ground": {
+   "ids": [
+    "explicit.stat_2234049899"
+   ]
+  },
+  "warcries cannot exert travel skills": {
+   "ids": [
+    "explicit.stat_2174134106"
+   ]
+  },
+  "warcry skills have #% increased area of effect": {
+   "ids": [
+    "explicit.stat_2567751411"
+   ]
+  },
+  "when you kill a rare monster, #% chance to gain one of its modifiers for # seconds": {
+   "ids": [
+    "explicit.stat_2736829661"
+   ]
+  },
+  "wrath has #% increased aura effect": {
+   "ids": [
+    "explicit.stat_2181791238"
+   ]
+  },
+  "wrath has #% increased mana reservation efficiency": {
+   "ids": [
+    "explicit.stat_1761642973",
+    "explicit.stat_3444518809"
+   ]
+  },
+  "you and your minions prevent #% of reflected damage": {
+   "ids": [
+    "explicit.stat_1567747544"
+   ]
+  },
+  "you and your minions prevent #% of reflected elemental damage": {
+   "ids": [
+    "explicit.stat_3408683611"
+   ]
+  },
+  "you and your minions prevent #% of reflected physical damage": {
+   "ids": [
+    "explicit.stat_1818622832"
+   ]
+  },
+  "you are immune to ailments while focused": {
+   "ids": [
+    "explicit.stat_1766730250"
+   ]
+  },
+  "you gain onslaught for # seconds when hit": {
+   "ids": [
+    "explicit.stat_2764164760"
+   ]
+  },
+  "you have chilling conflux for # seconds every # seconds": {
+   "ids": [
+    "explicit.stat_1190121450|1"
+   ]
+  },
+  "you have consecrated ground around you while stationary": {
+   "ids": [
+    "explicit.stat_880970200"
+   ]
+  },
+  "you have igniting conflux for # seconds every # seconds": {
+   "ids": [
+    "explicit.stat_1190121450|3"
+   ]
+  },
+  "you have onslaught during soul gain prevention": {
+   "ids": [
+    "explicit.stat_1572897579"
+   ]
+  },
+  "you have shocking conflux for # seconds every # seconds": {
+   "ids": [
+    "explicit.stat_1190121450|2"
+   ]
+  },
+  "you have tailwind if you have dealt a critical strike recently": {
+   "ids": [
+    "explicit.stat_1085545682"
+   ]
+  },
+  "you have vaal pact while focused": {
+   "ids": [
+    "explicit.stat_2022851697"
+   ]
+  },
+  "you take #% reduced extra damage from critical strikes": {
+   "ids": [
+    "explicit.stat_3855016469"
+   ]
+  },
+  "you take #% reduced extra damage from critical strikes per endurance charge": {
+   "ids": [
+    "explicit.stat_2380848911"
+   ]
+  },
+  "your critical strike chance is lucky while focused": {
+   "ids": [
+    "explicit.stat_1349659520"
+   ]
+  },
+  "your hits inflict decay, dealing # chaos damage per second for # seconds": {
+   "ids": [
+    "explicit.stat_3322709337"
+   ]
+  },
+  "your warcries open chests": {
+   "ids": [
+    "explicit.stat_3452963763"
+   ]
+  },
+  "zealotry has #% increased aura effect": {
+   "ids": [
+    "explicit.stat_4096052153"
+   ]
+  },
+  "zealotry has #% increased mana reservation efficiency": {
+   "ids": [
+    "explicit.stat_168308685",
+    "explicit.stat_4216444167"
+   ]
+  }
+ }
+}

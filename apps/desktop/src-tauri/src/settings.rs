@@ -46,6 +46,10 @@ pub struct GameSettings {
     pub account: Option<String>,
     /// Onglets de coffre suivis (index du jeu).
     pub stash_tabs: Vec<u32>,
+    /// Budget de la recherche d'upgrades (`None` : sans limite).
+    pub upgrade_budget: Option<u32>,
+    /// Devise du budget : « chaos » (par défaut) ou « divine ».
+    pub upgrade_budget_currency: Option<String>,
 }
 
 fn non_vide(s: &Option<String>) -> Option<&str> {

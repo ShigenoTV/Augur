@@ -11,10 +11,12 @@
 //! Le coût des méthodes de spam est appliqué par l'appli. Le solveur, lui, reçoit les prix : la
 //! meilleure décision en dépend.
 
+pub mod achat;
 pub mod calcul;
 pub mod depart;
 pub mod donnees;
 pub mod solveur;
+pub mod suivi;
 
 use std::collections::BTreeMap;
 
@@ -112,7 +114,7 @@ pub fn affixes(
 }
 
 /// Demande de l'appli : base, niveau d'objet, influence et mods voulus.
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DemandePoe1 {
     pub base_id: String,
