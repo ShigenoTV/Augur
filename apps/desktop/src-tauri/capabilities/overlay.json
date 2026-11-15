@@ -17,6 +17,7 @@
     "allow-open-upgrade-search",
     "allow-get-poe1-item-info",
     "allow-evaluate-poe1-item",
+    "allow-get-forge-poe1-advice",
     "allow-open-poe1-upgrade-search",
     "allow-open-poe1-trade-search",
     "allow-estimate-price",

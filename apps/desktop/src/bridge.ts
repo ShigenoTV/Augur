@@ -351,6 +351,33 @@ export type ForgePoe1Result = {
 /** Objet de départ PoE 1 lu par la Forge (poe1::forge::depart). */
 export type ForgePoe1StartItem = ForgeStartItem & { influence: string | null; metamod: string | null };
 export type ForgePoe1Prices = { league: string; prix: Record<string, number>; erreur: string | null };
+
+/** Conseil de l'overlay pour l'objet en cours de craft, plan PoE 1 suivi (poe1::forge::suivi). */
+export type ForgePoe1Tip = {
+  baseNom: string;
+  rarete: string;
+  presents: string[];
+  manquants: string[];
+  fini: boolean;
+  action: string | null;
+  /** En Chaos. */
+  cout: number | null;
+  reste: number | null;
+};
+
+/** Plan PoE 1 calculé (src-tauri/src/forge_poe1.rs). */
+export type ForgePoe1HistoryEntry = {
+  id: number;
+  at: number;
+  baseNom: string;
+  ilvl: number;
+  influence: string | null;
+  labels: string[];
+  /** En Chaos, aux prix du calcul. */
+  coutMoyen: number;
+  demande: ForgePoe1Request;
+};
+export type ForgePoe1History = { entrees: ForgePoe1HistoryEntry[]; suivi: number | null };
 export type ForgeCatalogueEntry = { id: string; nom: string; genre: "base" | "monnaie" | "omen" | "essence" };
 export type ForgePriceSource = "joueur" | "poeNinja" | "indicatif";
 export type ForgeMarket = {
@@ -579,6 +606,12 @@ export const commands = {
   planForgePoe1: (demande: ForgePoe1Request) => invoke<ForgePoe1Result>("plan_forge_poe1", { demande }),
   analyzeForgePoe1Item: (texte: string) => invoke<ForgePoe1StartItem>("analyze_forge_poe1_item", { texte }),
   getForgePoe1Prices: () => invoke<ForgePoe1Prices>("get_forge_poe1_prices"),
+  getForgePoe1Advice: () => invoke<ForgePoe1Tip | null>("get_forge_poe1_advice"),
+  getForgePoe1History: () => invoke<ForgePoe1History>("get_forge_poe1_history"),
+  deleteForgePoe1HistoryEntry: (id: number) => invoke<ForgePoe1History>("delete_forge_poe1_history_entry", { id }),
+  followForgePoe1Entry: (id: number | null) => invoke<ForgePoe1History>("follow_forge_poe1_entry", { id }),
+  openForgePoe1BuySearch: (demande: ForgePoe1Request) =>
+    invoke<ForgeBuySearch>("open_forge_poe1_buy_search", { demande }),
   getForgeAffixes: (baseId: string, ilvl: number) => invoke<ForgeAffixes>("get_forge_affixes", { baseId, ilvl }),
   analyzeForgeItem: (texte: string) => invoke<ForgeStartItem>("analyze_forge_item", { texte }),
   openForgeBuySearch: (demande: ForgePlanRequest) => invoke<ForgeBuySearch>("open_forge_buy_search", { demande }),

@@ -353,11 +353,9 @@ function App() {
                   <li>
                     <Kbd>Ctrl+C</Kbd> sur un objet en jeu : ouvre l'overlay{poe1 ? " avec sa cote poe.ninja" : ""}
                   </li>
-                  {!poe1 && (
-                    <li>
-                      <Kbd>Ctrl+Alt+C</Kbd> sur l'objet en cours de craft : prochaine étape du plan Forge
-                    </li>
-                  )}
+                  <li>
+                    <Kbd>Ctrl+Alt+C</Kbd> sur l'objet en cours de craft : prochaine étape du plan Forge
+                  </li>
                   <li>
                     <Kbd>{afficherRaccourci(raccourcis.closeOverlay)}</Kbd> ferme l'overlay (actif seulement quand il est affiché)
                   </li>

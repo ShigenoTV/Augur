@@ -314,3 +314,15 @@ describe("arbre du plan PoE 1", () => {
     expect(p2.nodes.fini?.expectedVisits).toBeCloseTo(1);
   });
 });
+
+describe("crafter ou acheter (PoE 1)", () => {
+  it("compare en Chaos avec une marge d'équivalence", async () => {
+    const { comparerAchatPoe1, versChaos } = await import("./ForgePoe1Suivi");
+    expect(comparerAchatPoe1(100, 200)).toEqual({ ecart: 100, verdict: "crafter" });
+    expect(comparerAchatPoe1(200, 100)).toEqual({ ecart: -100, verdict: "acheter" });
+    expect(comparerAchatPoe1(100, 105).verdict).toBe("equivalent");
+    expect(versChaos(2, "divine", 150)).toBe(300);
+    expect(versChaos(2, "divine", 0)).toBe(2);
+    expect(versChaos(40, "chaos", 150)).toBe(40);
+  });
+});

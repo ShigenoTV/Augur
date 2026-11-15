@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-open-forge-poe1-buy-search"
+description = "Enables the open_forge_poe1_buy_search command without any pre-configured scope."
+commands.allow = ["open_forge_poe1_buy_search"]
+
+[[permission]]
+identifier = "deny-open-forge-poe1-buy-search"
+description = "Denies the open_forge_poe1_buy_search command without any pre-configured scope."
+commands.deny = ["open_forge_poe1_buy_search"]

@@ -143,6 +143,11 @@ pub fn run() {
             commands::get_forge_poe1_bases,
             commands::get_forge_poe1_affixes,
             commands::plan_forge_poe1,
+            commands::get_forge_poe1_advice,
+            commands::get_forge_poe1_history,
+            commands::delete_forge_poe1_history_entry,
+            commands::follow_forge_poe1_entry,
+            commands::open_forge_poe1_buy_search,
             commands::analyze_forge_poe1_item,
             commands::get_forge_poe1_prices,
             commands::get_forge_affixes,
@@ -177,6 +182,7 @@ pub fn run() {
             app.manage(poe1_stash::Poe1Stash::load(handle));
             app.manage(forge_prices::ForgePrices::load(handle));
             app.manage(forge::ForgePlanner::load(handle));
+            app.manage(forge_poe1::ForgePoe1State::load(handle));
             // plan suivi avant la fermeture : recalculé en arrière-plan, aux prix du moment
             let h = handle.clone();
             tauri::async_runtime::spawn(async move {

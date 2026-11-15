@@ -185,3 +185,17 @@ pub fn objet_depart(
     }
     Ok((mods, o))
 }
+
+/// Base d'un objet déjà lu (pour le suivi de l'overlay).
+pub(super) fn base_de_texte(objet: &Objet) -> Result<super::BaseVue, ErreurForgePoe1> {
+    base_de(objet)
+}
+
+/// Mods de l'objet lus contre l'objectif (pour le suivi de l'overlay).
+pub(super) fn lire_objet_pour(
+    pb: &PoolPoe1,
+    goal: &Goal,
+    objet: &Objet,
+) -> Result<Vec<ModLu>, ErreurForgePoe1> {
+    lire(pb, Some(goal), objet).map(|(mods, _)| mods)
+}

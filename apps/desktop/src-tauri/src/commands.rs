@@ -563,9 +563,69 @@ pub fn get_forge_poe1_affixes(
 /// Forge PoE 1 : méthodes de spam et chance de réussite d'un essai.
 #[tauri::command]
 pub async fn plan_forge_poe1(
+    app: AppHandle,
     demande: poe2_core::poe1::forge::DemandePoe1,
 ) -> Result<poe2_core::poe1::forge::ResultatPoe1, AppError> {
-    crate::forge_poe1::planifier(demande).await
+    crate::forge_poe1::planifier(&app, demande).await
+}
+
+/// Forge PoE 1 : conseil pour l'objet copié en jeu (plan suivi par l'overlay).
+#[tauri::command]
+pub fn get_forge_poe1_advice(
+    state: State<'_, crate::AppState>,
+    forge: State<'_, crate::forge_poe1::ForgePoe1State>,
+) -> Result<Option<poe2_core::poe1::forge::suivi::ConseilPoe1>, AppError> {
+    match state.last_text() {
+        Some(text) => forge.conseil(&text),
+        None => Ok(None),
+    }
+}
+
+/// Forge PoE 1 : plans calculés et plan suivi.
+#[tauri::command]
+pub fn get_forge_poe1_history(
+    forge: State<'_, crate::forge_poe1::ForgePoe1State>,
+) -> crate::forge_poe1::HistoriquePoe1 {
+    forge.historique()
+}
+
+#[tauri::command]
+pub fn delete_forge_poe1_history_entry(
+    app: AppHandle,
+    forge: State<'_, crate::forge_poe1::ForgePoe1State>,
+    id: u64,
+) -> crate::forge_poe1::HistoriquePoe1 {
+    forge.supprimer(&app, id)
+}
+
+/// Forge PoE 1 : suit un plan de l'historique (`None` : arrête le suivi).
+#[tauri::command]
+pub fn follow_forge_poe1_entry(
+    app: AppHandle,
+    forge: State<'_, crate::forge_poe1::ForgePoe1State>,
+    id: Option<u64>,
+) -> crate::forge_poe1::HistoriquePoe1 {
+    forge.suivre(&app, id)
+}
+
+/// Forge PoE 1, « crafter ou acheter » : recherche de l'objet visé sur le site de trade de PoE 1.
+#[tauri::command]
+pub fn open_forge_poe1_buy_search(
+    store: State<'_, crate::settings::SettingsStore>,
+    demande: poe2_core::poe1::forge::DemandePoe1,
+) -> Result<crate::upgrade_search::ForgeBuySearch, AppError> {
+    let r = poe2_core::poe1::forge::achat::recherche(&demande)
+        .map_err(|e| app_error(crate::contracts::ErrorCode::Unsupported, e.to_string()))?;
+    let url = crate::upgrade_search::adresse_requete_poe1(
+        store.get().league_for(crate::game::Game::Poe1),
+        &r.requete,
+    );
+    crate::upgrade_search::ouvrir(&url)?;
+    Ok(crate::upgrade_search::ForgeBuySearch {
+        url,
+        filtres: r.filtres.len(),
+        ignorees: r.ignorees,
+    })
 }
 
 /// Forge PoE 1 : objet de départ collé (Ctrl+Alt+C en jeu) : base, niveau, influence et mods lus.
