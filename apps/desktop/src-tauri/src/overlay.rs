@@ -144,12 +144,14 @@ fn spawn_dismiss_guard(app: AppHandle) {
 mod native {
     use tauri::WebviewWindow;
     use windows::Win32::Foundation::HWND;
-    use windows::Win32::Foundation::RECT;
+    use windows::Win32::Foundation::{POINT, RECT};
+    use windows::Win32::System::Threading::GetCurrentProcessId;
     use windows::Win32::UI::WindowsAndMessaging::{
-        GWL_EXSTYLE, GetWindowLongPtrW, GetWindowRect, HWND_TOPMOST, IsWindowVisible, SW_HIDE,
-        SW_SHOWNOACTIVATE, SWP_HIDEWINDOW, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER,
-        SWP_SHOWWINDOW, SetWindowLongPtrW, SetWindowPos, ShowWindow, WS_EX_NOACTIVATE,
-        WS_EX_TOOLWINDOW,
+        GA_ROOT, GWL_EXSTYLE, GetAncestor, GetClassNameW, GetWindowLongPtrW, GetWindowRect,
+        GetWindowThreadProcessId, HWND_TOPMOST, IsWindowVisible, SW_HIDE, SW_SHOWNOACTIVATE,
+        SWP_HIDEWINDOW, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SWP_SHOWWINDOW,
+        SetWindowLongPtrW, SetWindowPos, ShowWindow, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
+        WindowFromPoint,
     };
 
     /// Coordonnée hors de tout écran (convention Windows des fenêtres réduites).
@@ -199,7 +201,13 @@ mod native {
     pub fn hide(win: &WebviewWindow) {
         match hwnd(win) {
             Some(hwnd) => {
+                let mut before = RECT::default();
+                // SAFETY : hwnd désigne notre propre fenêtre.
+                let _ = unsafe { GetWindowRect(hwnd, &mut before) };
                 hide_hwnd(hwnd);
+                if before.left > OFF_SCREEN / 2 {
+                    spawn_blocker_probe(before);
+                }
                 // SAFETY : hwnd désigne notre propre fenêtre.
                 let still_visible = unsafe { IsWindowVisible(hwnd).as_bool() };
                 let mut rect = RECT::default();
@@ -221,6 +229,59 @@ mod native {
                 let _ = win.hide();
             }
         }
+    }
+
+    /// Diagnostic : peu après le masquage, note dans le journal quelle fenêtre
+    /// se trouve sous l'ancienne place de l'overlay (classe, et si elle
+    /// appartient à Augur). Si la zone reste bloquée, on sait qui la bloque.
+    fn spawn_blocker_probe(area: RECT) {
+        let _ = std::thread::Builder::new()
+            .name("augur-overlay-probe".into())
+            .spawn(move || {
+                std::thread::sleep(std::time::Duration::from_millis(400));
+                let point = POINT {
+                    x: (area.left + area.right) / 2,
+                    y: (area.top + area.bottom) / 2,
+                };
+                // SAFETY : lecture seule de l'état des fenêtres du bureau.
+                unsafe {
+                    let hit = WindowFromPoint(point);
+                    if hit.is_invalid() {
+                        log::info!("sous l'ancien overlay : aucune fenêtre");
+                        return;
+                    }
+                    let root = GetAncestor(hit, GA_ROOT);
+                    let describe = |h: HWND| {
+                        let mut buf = [0u16; 128];
+                        let n = GetClassNameW(h, &mut buf).max(0) as usize;
+                        let mut pid = 0u32;
+                        GetWindowThreadProcessId(h, Some(&mut pid));
+                        let ours = pid == GetCurrentProcessId();
+                        let mut r = RECT::default();
+                        let _ = GetWindowRect(h, &mut r);
+                        format!(
+                            "classe « {} », {}, visible {}, rect ({}, {}, {}, {})",
+                            String::from_utf16_lossy(&buf[..n]),
+                            if ours { "fenêtre d'Augur" } else { "autre programme" },
+                            IsWindowVisible(h).as_bool(),
+                            r.left,
+                            r.top,
+                            r.right,
+                            r.bottom
+                        )
+                    };
+                    let (hit_txt, root_txt) = (describe(hit), describe(root));
+                    let mut pid = 0u32;
+                    GetWindowThreadProcessId(root, Some(&mut pid));
+                    if pid == GetCurrentProcessId() {
+                        log::warn!(
+                            "sous l'ancien overlay, une fenêtre d'Augur capte les clics : {hit_txt} ; racine : {root_txt}"
+                        );
+                    } else {
+                        log::info!("sous l'ancien overlay : {root_txt}");
+                    }
+                }
+            });
     }
 
     pub(super) fn show_hwnd(hwnd: HWND, pos: Option<(i32, i32)>) {
