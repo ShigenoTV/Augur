@@ -5,7 +5,7 @@ import { createRoot } from "react-dom/client";
 import { commands, isAppError, isTauri, on } from "../bridge";
 import { afficherRaccourci, SHORTCUTS_PAR_DEFAUT } from "../index/shortcuts";
 import { ForgeTipPanel, type ForgeView } from "./ForgeTipPanel";
-import { Poe1Panel, type Poe1View } from "./Poe1Panel";
+import { Poe1Panel, type Poe1EvalView, type Poe1View } from "./Poe1Panel";
 import { EVALUATING_DELAY_MS, runCopilot } from "./copilot";
 
 function Overlay() {
@@ -25,6 +25,7 @@ function Overlay() {
   const [search, setSearch] = useState<{ ok: boolean; text: string } | null>(null);
   // PoE 1 : objet copié, cote poe.ninja et recherche de trade.
   const [poe1, setPoe1] = useState<Poe1View | null>(null);
+  const [poe1Eval, setPoe1Eval] = useState<Poe1EvalView>({ status: "none" });
   const poe1Shown = useRef<Poe1View | null>(null);
   poe1Shown.current = poe1;
   const openPoe1Trade = () => {
@@ -95,6 +96,18 @@ function Overlay() {
         const startPoe1 = () => {
           setView({ status: "hidden" });
           setPoe1({ status: "loading" });
+          setPoe1Eval({ status: "loading" });
+          // Comparaison avec le build (Path of Building) en parallèle de la cote.
+          void commands
+            .evaluatePoe1Item()
+            .then((evaluation) => run.current === id && setPoe1Eval({ status: "ready", evaluation }))
+            .catch((error: unknown) => {
+              if (run.current !== id) return;
+              if (!isAppError(error)) return setPoe1Eval({ status: "error", message: String(error) });
+              if (error.code === "noCharacter") return setPoe1Eval({ status: "noCharacter" });
+              if (error.code === "unsupported") return setPoe1Eval({ status: "none" });
+              setPoe1Eval({ status: "error", message: error.message });
+            });
           void commands
             .getPoe1ItemInfo()
             .then((info) => run.current === id && setPoe1({ status: "ready", info }))
@@ -163,6 +176,7 @@ function Overlay() {
       {poe1 ? (
         <Poe1Panel
           view={poe1}
+          evaluation={poe1Eval}
           fermer={hotkeys.close}
           trade={hotkeys.upgradeSearch}
           onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)}

@@ -16,6 +16,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 augur-contracts = { path = "../../../crates/augur-contracts" }
 poe2-core = { path = "../../../crates/poe2-core" }
+pob-poe1 = { path = "../../../crates/pob-poe1" }
 tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-single-instance = "2"

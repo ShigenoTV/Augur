@@ -116,6 +116,9 @@ pub fn set_game(
     })?;
     crate::game::set_active(game);
     log::info!("jeu actif : {}", game.label());
+    if game == crate::game::Game::Poe1 {
+        crate::poe1_calc::prechauffer(&app);
+    }
     let _ = app.emit(crate::game::EVENT_CHANGED, game);
     Ok(settings)
 }
@@ -129,6 +132,18 @@ pub async fn get_poe1_item_info(
 }
 
 /// PoE 1 : ouvre la recherche de l'objet copié sur le site de trade (Alt+U).
+/// PoE 1 : l'objet copié comparé à celui porté (Path of Building embarqué).
+#[tauri::command]
+pub async fn evaluate_poe1_item(
+    app: AppHandle,
+) -> Result<crate::poe1_calc::Poe1Evaluation, AppError> {
+    tauri::async_runtime::spawn_blocking(move || crate::poe1_calc::evaluer(&app))
+        .await
+        .map_err(|e| {
+            crate::contracts::app_error(crate::contracts::ErrorCode::Internal, e.to_string())
+        })?
+}
+
 #[tauri::command]
 pub fn open_poe1_trade_search(app: AppHandle) -> Result<String, AppError> {
     crate::poe1_items::open_trade(&app)
@@ -436,7 +451,11 @@ pub fn import_pob_code(
     app: AppHandle,
     code: String,
 ) -> Result<crate::character::CharacterInfo, AppError> {
-    crate::character::import(&app, &code).map_err(internal)
+    let info = crate::character::import(&app, &code).map_err(internal)?;
+    if crate::game::active() == crate::game::Game::Poe1 {
+        crate::poe1_calc::prechauffer(&app);
+    }
+    Ok(info)
 }
 
 #[tauri::command]

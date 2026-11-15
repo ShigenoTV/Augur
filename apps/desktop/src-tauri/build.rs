@@ -13,6 +13,7 @@ fn main() {
             "get_settings",
             "set_game",
             "get_poe1_item_info",
+            "evaluate_poe1_item",
             "open_poe1_trade_search",
             "get_poe1_stash",
             "connect_poe1_stash",

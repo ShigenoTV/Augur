@@ -33,6 +33,7 @@ mod log_locator;
 pub mod measures;
 mod overlay;
 pub mod placement;
+mod poe1_calc;
 mod poe1_items;
 mod poe1_stash;
 mod secret;
@@ -88,6 +89,7 @@ pub fn run() {
         .manage(client_log::ClientLogState::default())
         .manage(measures::MeasureState::default())
         .manage(poe1_items::Poe1Ninja::default())
+        .manage(poe1_calc::Poe1Calc::default())
         .invoke_handler(tauri::generate_handler![
             commands::parse_clipboard_item,
             commands::get_overlay_state,
@@ -99,6 +101,7 @@ pub fn run() {
             commands::get_settings,
             commands::set_game,
             commands::get_poe1_item_info,
+            commands::evaluate_poe1_item,
             commands::open_poe1_trade_search,
             commands::get_poe1_stash,
             commands::connect_poe1_stash,
@@ -165,6 +168,10 @@ pub fn run() {
             // Avant le Ledger et le suivi de Client.txt, qui dépendent du jeu actif.
             game::set_active(handle.state::<settings::SettingsStore>().get().game);
             app.manage(character::CharacterState::load(handle));
+            // PoB PoE 1 met quelques secondes à démarrer : prêt avant le premier Ctrl+C.
+            if game::active() == game::Game::Poe1 {
+                poe1_calc::prechauffer(handle);
+            }
             app.manage(ledger::LedgerState::open(handle));
             app.manage(poe1_stash::Poe1Stash::load(handle));
             app.manage(forge_prices::ForgePrices::load(handle));

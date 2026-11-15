@@ -68,6 +68,18 @@ export type Poe1ItemInfo = {
   league: string;
 };
 
+/** Ligne de comparaison de Path of Building (src-tauri/src/poe1_calc.rs). */
+export type Poe1Line = { label: string; before: number; after: number; lowerIsBetter: boolean };
+
+/** « Cet objet est-il mieux ? » en PoE 1, calculé par Path of Building embarqué. */
+export type Poe1Evaluation = {
+  delta: ItemDelta;
+  /** Autres emplacements essayés (second anneau, autre main). */
+  others: ItemDelta[];
+  lines: Poe1Line[];
+  pobVersion: string;
+};
+
 /** Onglet de coffre de PoE 1 (poe2_core::poe1::coffre::Onglet). */
 export type StashTab = { index: number; nom: string; genre: string };
 
@@ -519,6 +531,7 @@ export const commands = {
   getSettings: () => invoke<Settings>("get_settings"),
   setGame: (game: Game) => invoke<Settings>("set_game", { game }),
   getPoe1ItemInfo: () => invoke<Poe1ItemInfo>("get_poe1_item_info"),
+  evaluatePoe1Item: () => invoke<Poe1Evaluation>("evaluate_poe1_item"),
   openPoe1TradeSearch: () => invoke<string>("open_poe1_trade_search"),
   getPoe1Stash: () => invoke<StashStatus>("get_poe1_stash"),
   connectPoe1Stash: (account: string, session: string | null) =>
