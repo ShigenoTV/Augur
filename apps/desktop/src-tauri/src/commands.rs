@@ -149,6 +149,19 @@ pub fn open_poe1_trade_search(app: AppHandle) -> Result<String, AppError> {
     crate::poe1_items::open_trade(&app)
 }
 
+/// PoE 1, Alt+U : recherche de trade pondérée par Path of Building pour
+/// l'emplacement de l'objet copié (sinon, la recherche de l'objet lui-même).
+#[tauri::command]
+pub async fn open_poe1_upgrade_search(
+    app: AppHandle,
+) -> Result<crate::upgrade_search::UpgradeSearch, AppError> {
+    tauri::async_runtime::spawn_blocking(move || crate::poe1_calc::rechercher_upgrade(&app))
+        .await
+        .map_err(|e| {
+            crate::contracts::app_error(crate::contracts::ErrorCode::Internal, e.to_string())
+        })?
+}
+
 /// PoE 1 : état de la carte « Coffres » (compte, onglets suivis, deux derniers relevés).
 #[tauri::command]
 pub fn get_poe1_stash(app: AppHandle) -> crate::poe1_stash::StashStatus {
@@ -219,16 +232,25 @@ pub fn set_league(
         })
 }
 
-/// Budget de la recherche d'upgrades, en exalts. `None` ou 0 : sans limite.
+/// Budget de la recherche d'upgrades du jeu actif. `None` ou 0 : sans limite.
+/// PoE 2 : en exalts. PoE 1 : en chaos ou en divines (`currency`).
 #[tauri::command]
 pub fn set_upgrade_budget(
     app: AppHandle,
     store: State<'_, crate::settings::SettingsStore>,
     budget: Option<u32>,
+    currency: Option<String>,
 ) -> Result<crate::settings::Settings, AppError> {
     let budget = budget.filter(|b| *b > 0);
+    let devise = currency.filter(|c| c == "chaos" || c == "divine");
     store
-        .update(&app, |s| s.upgrade_budget = budget)
+        .update(&app, |s| match crate::game::active() {
+            crate::game::Game::Poe2 => s.upgrade_budget = budget,
+            crate::game::Game::Poe1 => {
+                s.poe1.upgrade_budget = budget;
+                s.poe1.upgrade_budget_currency = devise;
+            }
+        })
         .map_err(|e| {
             app_error(
                 crate::contracts::ErrorCode::Internal,

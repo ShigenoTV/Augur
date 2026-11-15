@@ -362,10 +362,7 @@ function App() {
                     <Kbd>{afficherRaccourci(raccourcis.closeOverlay)}</Kbd> ferme l'overlay (actif seulement quand il est affiché)
                   </li>
                   <li>
-                    <Kbd>{afficherRaccourci(raccourcis.upgradeSearch)}</Kbd>{" "}
-                    {poe1
-                      ? "cherche l'objet affiché sur le site de trade de PoE 1"
-                      : "cherche un meilleur objet pour cet emplacement (ouvre le site de trade)"}
+                    <Kbd>{afficherRaccourci(raccourcis.upgradeSearch)}</Kbd> cherche un meilleur objet pour cet emplacement (ouvre le site de trade)
                   </li>
                 </ul>
                 <button type="button" onClick={() => ouvrir("reglages")} className="mt-2 text-xs text-accent hover:underline">
@@ -452,11 +449,9 @@ function App() {
             <Card title="Ligue souhaitée">
               <LeagueCard settings={settings} onSettings={setSettings} />
             </Card>
-            {!poe1 && (
-              <Card title="Budget de la recherche d'upgrades">
-                <UpgradeBudgetCard settings={settings} onSettings={setSettings} />
-              </Card>
-            )}
+            <Card title="Budget de la recherche d'upgrades">
+              <UpgradeBudgetCard key={game} settings={settings} onSettings={setSettings} />
+            </Card>
             <Card title="Raccourcis de l'overlay">
               <ShortcutsCard settings={settings} onSettings={setSettings} />
             </Card>

@@ -113,6 +113,10 @@ export type GameSettings = {
   league: string | null;
   account?: string | null;
   stashTabs?: number[];
+  /** Budget de la recherche d'upgrades PoE 1 ; null : sans limite. */
+  upgradeBudget?: number | null;
+  /** Devise du budget PoE 1 : « chaos » (défaut) ou « divine ». */
+  upgradeBudgetCurrency?: string | null;
 };
 
 export type Settings = {
@@ -545,7 +549,9 @@ export const commands = {
   setClientLogPath: (path: string | null) => invoke<Settings>("set_client_log_path", { path }),
   getLeagues: () => invoke<string[]>("get_leagues"),
   setLeague: (league: string | null) => invoke<Settings>("set_league", { league }),
-  setUpgradeBudget: (budget: number | null) => invoke<Settings>("set_upgrade_budget", { budget }),
+  /** Budget du jeu actif (PoE 2 en exalts ; PoE 1 en chaos ou en divines). */
+  setUpgradeBudget: (budget: number | null, currency: "chaos" | "divine" | null = null) =>
+    invoke<Settings>("set_upgrade_budget", { budget, currency }),
   setShortcuts: (shortcuts: ShortcutSettings) => invoke<Settings>("set_shortcuts", { shortcuts }),
   getMeasureStatus: () => invoke<MeasureStatus>("get_measure_status"),
   startMeasureSession: () => invoke<MeasureStatus>("start_measure_session"),
@@ -590,6 +596,8 @@ export const commands = {
   // Commandes du chantier Architecture / moteur, branchées dès leur fusion.
   evaluateItem: (item: ParsedItem) => invoke<ItemDelta>("evaluate_item", { item }),
   openUpgradeSearch: (item: ParsedItem) => invoke<UpgradeSearch>("open_upgrade_search", { item }),
+  /** PoE 1, Alt+U : recherche pondérée par Path of Building pour l'objet copié. */
+  openPoe1UpgradeSearch: () => invoke<UpgradeSearch>("open_poe1_upgrade_search"),
   estimatePrice: (item: ParsedItem) => invoke<PriceEstimate>("estimate_price", { item }),
 };
 

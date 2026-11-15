@@ -124,3 +124,33 @@ fn erreurs_sans_couleurs() {
         mlua::Error::RuntimeError("^1Error:\n\n^0In 'Init': boum\nstack traceback:\n...".into());
     assert_eq!(texte_erreur(&e), "In 'Init': boum ...");
 }
+
+#[test]
+fn recherche_d_upgrade_ponderee() {
+    let budget = Budget {
+        max: 50,
+        devise: "chaos".into(),
+    };
+    let r = moteur().recherche_upgrade("Ring 1", Some(budget)).unwrap();
+    eprintln!("{} ms, {} filtres, {:?}", r.compute_ms, r.filtres, r.stats);
+    let q = &r.requete["query"];
+    let groupe = &q["stats"][0];
+    assert_eq!(groupe["type"], "weight");
+    assert!(
+        groupe["filters"].as_array().is_some_and(|f| !f.is_empty()),
+        "{q}"
+    );
+    assert_eq!(
+        q["filters"]["type_filters"]["filters"]["category"]["option"],
+        "accessory.ring"
+    );
+    assert_eq!(q["filters"]["trade_filters"]["filters"]["price"]["max"], 50);
+    assert_eq!(q["status"]["option"], "online");
+    assert!(!r.stats.is_empty());
+}
+
+#[test]
+fn recherche_sans_emplacement() {
+    let e = moteur().recherche_upgrade("Nulle part", None).unwrap_err();
+    assert!(matches!(e, ErreurPob::Calcul(_)), "{e:?}");
+}

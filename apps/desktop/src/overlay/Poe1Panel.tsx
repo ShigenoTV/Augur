@@ -84,7 +84,7 @@ export function Poe1Panel({
         </button>
         {view.status === "ready" && (
           <button type="button" onClick={onTrade} className="flex items-center gap-1 hover:text-text-muted">
-            <Kbd>{trade}</Kbd> chercher sur le trade
+            <Kbd>{trade}</Kbd> chercher mieux sur le trade
           </button>
         )}
       </footer>

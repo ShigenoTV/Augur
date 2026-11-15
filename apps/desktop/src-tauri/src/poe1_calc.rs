@@ -222,6 +222,85 @@ pub fn evaluer(app: &AppHandle) -> Result<Poe1Evaluation, AppError> {
     })
 }
 
+/// Budget PoE 1 des réglages, au format du site de trade.
+fn budget(settings: &crate::settings::Settings) -> Option<pob_poe1::Budget> {
+    let max = settings.poe1.upgrade_budget.filter(|b| *b > 0)?;
+    let devise = match settings.poe1.upgrade_budget_currency.as_deref() {
+        Some("divine") => "divine",
+        _ => "chaos",
+    };
+    Some(pob_poe1::Budget {
+        max,
+        devise: devise.into(),
+    })
+}
+
+/// Alt+U en PoE 1 : PoB pèse chaque mod possible de l'emplacement de l'objet
+/// copié (gain de Full DPS et d'EHP), puis Augur ouvre la recherche pondérée.
+/// Sans build ou pour un objet hors équipement, la recherche de l'objet lui-même.
+pub fn rechercher_upgrade(
+    app: &AppHandle,
+) -> Result<crate::upgrade_search::UpgradeSearch, AppError> {
+    let simple = |app: &AppHandle| {
+        crate::poe1_items::open_trade(app).map(|url| crate::upgrade_search::UpgradeSearch {
+            url,
+            stats: Vec::new(),
+            with_dps: false,
+        })
+    };
+    let evaluation = match evaluer(app) {
+        Ok(e) => e,
+        Err(e) if matches!(e.code, ErrorCode::NoCharacter | ErrorCode::Unsupported) => {
+            return simple(app);
+        }
+        Err(e) => return Err(e),
+    };
+    let slot = pob_slot(&evaluation.delta.slot);
+    let settings = app.state::<crate::settings::SettingsStore>().get();
+    let moteur = app.state::<Poe1Calc>().inner().moteur(app);
+    let r = match moteur.recherche_upgrade(&slot, budget(&settings)) {
+        Ok(r) => r,
+        Err(ErreurPob::Calcul(m)) => {
+            log::warn!("recherche d'upgrade PoE 1 ({slot}) : {m}");
+            return simple(app);
+        }
+        Err(e) => return Err(erreur(e)),
+    };
+    log::info!(
+        "recherche d'upgrade PoE 1 : {slot}, {} stats pesées en {} ms",
+        r.filtres,
+        r.compute_ms
+    );
+    let url = crate::upgrade_search::adresse_requete_poe1(
+        settings.league_for(crate::game::Game::Poe1),
+        &r.requete,
+    );
+    crate::upgrade_search::ouvrir(&url)?;
+    Ok(crate::upgrade_search::UpgradeSearch {
+        url,
+        stats: r.stats,
+        with_dps: evaluation.delta.dps.before > 0.0,
+    })
+}
+
+/// Nom PoB d'un emplacement à partir de son identifiant de contrat.
+fn pob_slot(id: &str) -> String {
+    match id {
+        "weapon1" => "Weapon 1",
+        "offhand1" => "Weapon 2",
+        "helmet" => "Helmet",
+        "bodyArmour" => "Body Armour",
+        "gloves" => "Gloves",
+        "boots" => "Boots",
+        "belt" => "Belt",
+        "amulet" => "Amulet",
+        "ring1" => "Ring 1",
+        "ring2" => "Ring 2",
+        autre => autre,
+    }
+    .to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -281,6 +360,35 @@ mod tests {
         assert_eq!(e.others.len(), 1);
         assert_eq!(e.others[0].slot, "ring1");
         assert_eq!(e.lines.len(), 1);
+    }
+
+    #[test]
+    fn emplacements_aller_retour() {
+        for s in [
+            "Weapon 1",
+            "Weapon 2",
+            "Helmet",
+            "Body Armour",
+            "Gloves",
+            "Boots",
+            "Belt",
+            "Amulet",
+            "Ring 1",
+            "Ring 2",
+        ] {
+            assert_eq!(pob_slot(&crate::evaluation::slot_id(s)), s);
+        }
+    }
+
+    #[test]
+    fn budget_poe1() {
+        let mut s = crate::settings::Settings::default();
+        assert!(budget(&s).is_none());
+        s.poe1.upgrade_budget = Some(3);
+        assert_eq!(budget(&s).unwrap().devise, "chaos");
+        s.poe1.upgrade_budget_currency = Some("divine".into());
+        let b = budget(&s).unwrap();
+        assert_eq!((b.max, b.devise.as_str()), (3, "divine"));
     }
 
     #[test]

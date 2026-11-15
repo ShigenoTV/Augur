@@ -148,9 +148,29 @@ impl Comparaison {
 
 type Reponse<T> = mpsc::Sender<Result<T, ErreurPob>>;
 
+/// Recherche d'upgrades générée par PoB pour un emplacement.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RechercheUpgrade {
+    /// Requête du site de trade (`query` + `sort`).
+    pub requete: serde_json::Value,
+    /// Stats pesées les plus fortes (texte du site de trade, « # » pour la valeur).
+    pub stats: Vec<String>,
+    /// Nombre de stats pesées.
+    pub filtres: usize,
+    pub compute_ms: u32,
+}
+
+/// Prix maximum de la recherche : montant et devise du site (« chaos », « divine »).
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct Budget {
+    pub max: u32,
+    pub devise: String,
+}
+
 enum Demande {
     Charger(String, Reponse<InfoBuild>),
     Comparer(String, Reponse<Comparaison>),
+    Upgrade(String, Option<Budget>, Reponse<RechercheUpgrade>),
 }
 
 /// Poignée vers le thread qui possède Path of Building.
@@ -213,6 +233,23 @@ impl Moteur {
         }
         self.envoyer(|r| Demande::Comparer(texte_objet.to_string(), r))
     }
+
+    /// Recherche de trade pondérée pour l'emplacement PoB `slot` (« Ring 1 »…).
+    pub fn recherche_upgrade(
+        &self,
+        slot: &str,
+        budget: Option<Budget>,
+    ) -> Result<RechercheUpgrade, ErreurPob> {
+        if self
+            .charge
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .is_none()
+        {
+            return Err(ErreurPob::SansBuild);
+        }
+        self.envoyer(|r| Demande::Upgrade(slot.to_string(), budget, r))
+    }
 }
 
 fn boucle(cache: &Path, rx: mpsc::Receiver<Demande>) {
@@ -227,6 +264,12 @@ fn boucle(cache: &Path, rx: mpsc::Receiver<Demande>) {
             }
             (Err(e), Demande::Comparer(_, r)) => {
                 let _ = r.send(Err(e.clone()));
+            }
+            (Err(e), Demande::Upgrade(_, _, r)) => {
+                let _ = r.send(Err(e.clone()));
+            }
+            (Ok(lua), Demande::Upgrade(slot, budget, r)) => {
+                let _ = r.send(upgrade(lua, &slot, budget));
             }
             (Ok(lua), Demande::Charger(xml, r)) => {
                 let _ = r.send(charger(lua, &xml));
@@ -392,6 +435,39 @@ fn comparer(lua: &Lua, texte: &str) -> Result<Comparaison, ErreurPob> {
     Ok(Comparaison {
         before: brut.before,
         slots: brut.slots,
+        compute_ms: debut.elapsed().as_millis().min(u128::from(u32::MAX)) as u32,
+    })
+}
+
+fn upgrade(lua: &Lua, slot: &str, budget: Option<Budget>) -> Result<RechercheUpgrade, ErreurPob> {
+    let debut = Instant::now();
+    let err = |e: mlua::Error| ErreurPob::Calcul(texte_erreur(&e));
+    let args = lua.create_table().map_err(err)?;
+    args.set("slot", slot).map_err(err)?;
+    if let Some(b) = budget.filter(|b| b.max > 0) {
+        args.set("maxPrice", b.max).map_err(err)?;
+        args.set("maxPriceType", b.devise).map_err(err)?;
+    }
+    let f: Function = lua.globals().get("augur_upgrade_query").map_err(err)?;
+    let v: Value = f.call(args).map_err(err)?;
+    if let Value::Table(t) = &v
+        && let Ok(Some(msg)) = t.get::<Option<String>>("error")
+    {
+        return Err(ErreurPob::Calcul(msg));
+    }
+    #[derive(Deserialize)]
+    struct Brut {
+        query: serde_json::Value,
+        #[serde(default)]
+        stats: Vec<String>,
+        #[serde(default)]
+        filters: usize,
+    }
+    let brut: Brut = lua.from_value(v).map_err(err)?;
+    Ok(RechercheUpgrade {
+        requete: serde_json::json!({ "query": brut.query, "sort": { "statgroup.0": "desc" } }),
+        stats: brut.stats,
+        filtres: brut.filters,
         compute_ms: debut.elapsed().as_millis().min(u128::from(u32::MAX)) as u32,
     })
 }

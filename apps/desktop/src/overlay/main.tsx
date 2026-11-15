@@ -30,10 +30,18 @@ function Overlay() {
   poe1Shown.current = poe1;
   const openPoe1Trade = () => {
     if (poe1Shown.current?.status !== "ready") return;
-    setSearch({ ok: true, text: "Ouverture de la recherche…" });
+    setSearch({ ok: true, text: "Path of Building pèse les stats de cet emplacement…" });
     void commands
-      .openPoe1TradeSearch()
-      .then(() => setSearch({ ok: true, text: "Recherche ouverte dans ton navigateur." }))
+      .openPoe1UpgradeSearch()
+      .then((r) =>
+        setSearch({
+          ok: true,
+          text:
+            r.stats.length > 0
+              ? `Recherche d'upgrades ouverte dans ton navigateur : ${r.stats.slice(0, 3).join(", ")}${r.stats.length > 3 ? "…" : ""}`
+              : "Recherche de l'objet ouverte dans ton navigateur.",
+        }),
+      )
       .catch((error: unknown) => setSearch({ ok: false, text: isAppError(error) ? error.message : String(error) }));
   };
   const openSearch = () => {

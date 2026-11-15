@@ -102,6 +102,7 @@ pub fn run() {
             commands::set_game,
             commands::get_poe1_item_info,
             commands::evaluate_poe1_item,
+            commands::open_poe1_upgrade_search,
             commands::open_poe1_trade_search,
             commands::get_poe1_stash,
             commands::connect_poe1_stash,

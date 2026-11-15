@@ -175,3 +175,70 @@ function augur_compare(texte)
 	end
 	return res
 end
+
+-- Recherche d'upgrades pondérée : le générateur de PoB (TradeQueryGenerator) teste
+-- chaque mod possible de l'emplacement et pèse son gain (Full DPS ×1, EHP ×0,5,
+-- les poids par défaut de PoB). Rend la requête du site de trade de PoE 1.
+local function vide(t)
+	return type(t) ~= "table" or next(t) == nil
+end
+
+function augur_upgrade_query(args)
+	if not build then error("Aucun build chargé.", 0) end
+	local slot = build.itemsTab.slots[args.slot]
+	if not slot then return { error = "Emplacement inconnu : " .. tostring(args.slot) } end
+	local gen = new("TradeQueryGenerator"):TradeQueryGenerator(build.itemsTab.tradeQuery)
+	gen.tradeTypeIndex = 4 -- « online »
+	local requete, erreur
+	gen.requesterContext = {}
+	gen.requesterCallback = function(_, q, e) requete, erreur = q, e end
+	gen:StartQuery(slot, {
+		statWeights = { { stat = "FullDPS", weightMult = 1.0 }, { stat = "TotalEHP", weightMult = 0.5 } },
+		includeCorrupted = false,
+		includeMirrored = true,
+		includeEldritch = "Remove",
+		maxPrice = args.maxPrice,
+		maxPriceType = args.maxPriceType,
+	})
+	if not gen.calcContext or not gen.calcContext.co then
+		return { error = "Path of Building ne sait pas chercher cet emplacement." }
+	end
+	local tours = 0
+	while gen.calcContext.co and tours < 10000 do
+		gen:OnFrame()
+		tours = tours + 1
+	end
+	if erreur then return { error = erreur } end
+	if not requete then return { error = "Recherche non générée." } end
+	-- Groupes « et » / « pas » vides : retirés (une table Lua vide ne se distingue
+	-- pas d'un objet en JSON).
+	local groupes = {}
+	for _, g in ipairs(requete.stats) do
+		if not vide(g.filters) then table.insert(groupes, g) end
+	end
+	requete.stats = groupes
+	-- Libellés des stats pesées, de la plus forte à la plus faible.
+	local textes = {}
+	for _, cat in pairs(gen.modData or {}) do
+		for _, m in pairs(cat) do
+			if type(m) == "table" and m.tradeMod then textes[m.tradeMod.id] = m.tradeMod.text end
+		end
+	end
+	local pseudos = {
+		["pseudo.pseudo_total_fire_resistance"] = "+#% total to Fire Resistance",
+		["pseudo.pseudo_total_cold_resistance"] = "+#% total to Cold Resistance",
+		["pseudo.pseudo_total_lightning_resistance"] = "+#% total to Lightning Resistance",
+		["pseudo.pseudo_total_chaos_resistance"] = "+#% total to Chaos Resistance",
+		["pseudo.pseudo_total_strength"] = "+# total to Strength",
+		["pseudo.pseudo_total_dexterity"] = "+# total to Dexterity",
+		["pseudo.pseudo_total_intelligence"] = "+# total to Intelligence",
+	}
+	for id, t in pairs(pseudos) do textes[id] = t end
+	local libelles = {}
+	local poids = requete.stats[1] and requete.stats[1].type == "weight" and requete.stats[1].filters or {}
+	for i, f in ipairs(poids) do
+		if i > 6 then break end
+		table.insert(libelles, textes[f.id] or f.id)
+	end
+	return { query = requete, stats = libelles, filters = #poids }
+end
