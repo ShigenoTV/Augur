@@ -6,7 +6,7 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, WebviewWindow};
+use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 use crate::placement::{self, Rect};
 use crate::shortcuts;
@@ -20,6 +20,8 @@ const GUARD_POLL: Duration = Duration::from_millis(100);
 pub struct OverlayCtl {
     visible: AtomicBool,
     anchor: Mutex<Option<(f64, f64)>>,
+    /// Dernière position à l'écran : le masquage envoie la fenêtre hors écran.
+    last_pos: Mutex<Option<(i32, i32)>>,
 }
 
 impl OverlayCtl {
@@ -64,12 +66,14 @@ pub fn show_near_cursor(app: &AppHandle) {
             });
         if let Some(screen) = screen {
             let (x, y) = placement::place_panel((cursor.x, cursor.y), size, screen);
-            let _ = win.set_position(PhysicalPosition::new(x.round() as i32, y.round() as i32));
+            *ctl.last_pos.lock().unwrap_or_else(|e| e.into_inner()) =
+                Some((x.round() as i32, y.round() as i32));
         }
         *ctl.anchor.lock().unwrap_or_else(|e| e.into_inner()) = Some((cursor.x, cursor.y));
     }
 
-    native::show_without_focus(&win);
+    let pos = *ctl.last_pos.lock().unwrap_or_else(|e| e.into_inner());
+    native::show_without_focus(&win, pos);
     let was_visible = ctl.visible.swap(true, Ordering::AcqRel);
     if !was_visible {
         shortcuts::register_overlay(app);
@@ -79,13 +83,16 @@ pub fn show_near_cursor(app: &AppHandle) {
 
 pub fn hide(app: &AppHandle) {
     let ctl = app.state::<OverlayCtl>();
-    if !ctl.visible.swap(false, Ordering::AcqRel) {
-        return;
-    }
-    shortcuts::unregister_overlay(app);
+    let was_visible = ctl.visible.swap(false, Ordering::AcqRel);
+    // Toujours masquer la fenêtre, même si l'état la croit déjà cachée :
+    // une fenêtre restée à l'écran par erreur bloquerait les clics du jeu.
     if let Some(win) = window(app) {
         native::hide(&win);
     }
+    if !was_visible {
+        return;
+    }
+    shortcuts::unregister_overlay(app);
     let _ = app.emit_to(LABEL, EVENT_HIDDEN, ());
 }
 
@@ -137,11 +144,18 @@ fn spawn_dismiss_guard(app: AppHandle) {
 mod native {
     use tauri::WebviewWindow;
     use windows::Win32::Foundation::HWND;
+    use windows::Win32::Foundation::{POINT, RECT};
+    use windows::Win32::System::Threading::GetCurrentProcessId;
     use windows::Win32::UI::WindowsAndMessaging::{
-        GWL_EXSTYLE, GetWindowLongPtrW, HWND_TOPMOST, SW_HIDE, SW_SHOWNOACTIVATE, SWP_NOACTIVATE,
-        SWP_NOMOVE, SWP_NOSIZE, SetWindowLongPtrW, SetWindowPos, ShowWindow, WS_EX_NOACTIVATE,
-        WS_EX_TOOLWINDOW,
+        GA_ROOT, GWL_EXSTYLE, GetAncestor, GetClassNameW, GetWindowLongPtrW, GetWindowRect,
+        GetWindowThreadProcessId, HWND_TOPMOST, IsWindowVisible, SW_HIDE, SW_SHOWNOACTIVATE,
+        SWP_HIDEWINDOW, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SWP_SHOWWINDOW,
+        SetWindowLongPtrW, SetWindowPos, ShowWindow, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
+        WindowFromPoint,
     };
+
+    /// Coordonnée hors de tout écran (convention Windows des fenêtres réduites).
+    const OFF_SCREEN: i32 = -32000;
 
     fn hwnd(win: &WebviewWindow) -> Option<HWND> {
         // Tauri peut dépendre d'une autre version du crate `windows` : on ne
@@ -163,43 +177,123 @@ mod native {
         }
     }
 
-    pub fn show_without_focus(win: &WebviewWindow) {
+    /// Affiche l'overlay à `pos` (coin haut gauche, pixels physiques), au
+    /// premier plan, sans prendre le focus. Position et affichage en un seul
+    /// appel synchrone : la fenêtre n'apparaît jamais ailleurs.
+    pub fn show_without_focus(win: &WebviewWindow, pos: Option<(i32, i32)>) {
         let Some(hwnd) = hwnd(win) else {
+            if let Some((x, y)) = pos {
+                let _ = win.set_position(tauri::PhysicalPosition::new(x, y));
+            }
             let _ = win.show();
             return;
         };
-        show_hwnd(hwnd);
+        show_hwnd(hwnd, pos);
     }
 
     /// Masque l'overlay par la même voie Win32 que son affichage.
     ///
     /// `WebviewWindow::hide()` ne suffit PAS : l'overlay est affiché par
-    /// `ShowWindow` en direct (pour ne pas voler le focus au jeu), donc Tauri
-    /// le croit toujours caché et son `hide()` ne fait rien. La fenêtre
-    /// restait alors à l'écran, vidée et transparente, et mangeait les clics
-    /// destinés au jeu à l'endroit où était le panneau.
+    /// Win32 en direct (pour ne pas voler le focus au jeu), donc Tauri le
+    /// croit toujours caché et son `hide()` ne fait rien. En plus du
+    /// masquage, la fenêtre part hors écran : même si quelque chose la
+    /// réaffichait sans contenu, elle ne pourrait plus capter les clics du jeu.
     pub fn hide(win: &WebviewWindow) {
         match hwnd(win) {
-            Some(hwnd) => hide_hwnd(hwnd),
+            Some(hwnd) => {
+                let mut before = RECT::default();
+                // SAFETY : hwnd désigne notre propre fenêtre.
+                let _ = unsafe { GetWindowRect(hwnd, &mut before) };
+                hide_hwnd(hwnd);
+                if before.left > OFF_SCREEN / 2 {
+                    spawn_blocker_probe(before);
+                }
+                // SAFETY : hwnd désigne notre propre fenêtre.
+                let still_visible = unsafe { IsWindowVisible(hwnd).as_bool() };
+                let mut rect = RECT::default();
+                // SAFETY : idem.
+                let _ = unsafe { GetWindowRect(hwnd, &mut rect) };
+                if still_visible {
+                    log::warn!(
+                        "overlay encore visible après masquage ({}, {}, {}, {})",
+                        rect.left,
+                        rect.top,
+                        rect.right,
+                        rect.bottom
+                    );
+                } else {
+                    log::info!("overlay masqué (fenêtre en {}, {})", rect.left, rect.top);
+                }
+            }
             None => {
                 let _ = win.hide();
             }
         }
     }
 
-    pub(super) fn show_hwnd(hwnd: HWND) {
+    /// Diagnostic : peu après le masquage, note dans le journal quelle fenêtre
+    /// se trouve sous l'ancienne place de l'overlay (classe, et si elle
+    /// appartient à Augur). Si la zone reste bloquée, on sait qui la bloque.
+    fn spawn_blocker_probe(area: RECT) {
+        let _ = std::thread::Builder::new()
+            .name("augur-overlay-probe".into())
+            .spawn(move || {
+                std::thread::sleep(std::time::Duration::from_millis(400));
+                let point = POINT {
+                    x: (area.left + area.right) / 2,
+                    y: (area.top + area.bottom) / 2,
+                };
+                // SAFETY : lecture seule de l'état des fenêtres du bureau.
+                unsafe {
+                    let hit = WindowFromPoint(point);
+                    if hit.is_invalid() {
+                        log::info!("sous l'ancien overlay : aucune fenêtre");
+                        return;
+                    }
+                    let root = GetAncestor(hit, GA_ROOT);
+                    let describe = |h: HWND| {
+                        let mut buf = [0u16; 128];
+                        let n = GetClassNameW(h, &mut buf).max(0) as usize;
+                        let mut pid = 0u32;
+                        GetWindowThreadProcessId(h, Some(&mut pid));
+                        let ours = pid == GetCurrentProcessId();
+                        let mut r = RECT::default();
+                        let _ = GetWindowRect(h, &mut r);
+                        format!(
+                            "classe « {} », {}, visible {}, rect ({}, {}, {}, {})",
+                            String::from_utf16_lossy(&buf[..n]),
+                            if ours { "fenêtre d'Augur" } else { "autre programme" },
+                            IsWindowVisible(h).as_bool(),
+                            r.left,
+                            r.top,
+                            r.right,
+                            r.bottom
+                        )
+                    };
+                    let (hit_txt, root_txt) = (describe(hit), describe(root));
+                    let mut pid = 0u32;
+                    GetWindowThreadProcessId(root, Some(&mut pid));
+                    if pid == GetCurrentProcessId() {
+                        log::warn!(
+                            "sous l'ancien overlay, une fenêtre d'Augur capte les clics : {hit_txt} ; racine : {root_txt}"
+                        );
+                    } else {
+                        log::info!("sous l'ancien overlay : {root_txt}");
+                    }
+                }
+            });
+    }
+
+    pub(super) fn show_hwnd(hwnd: HWND, pos: Option<(i32, i32)>) {
+        let (x, y) = pos.unwrap_or((0, 0));
+        let mut flags = SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW;
+        if pos.is_none() {
+            flags |= SWP_NOMOVE;
+        }
         // SAFETY : hwnd désigne notre propre fenêtre.
         unsafe {
+            let _ = SetWindowPos(hwnd, Some(HWND_TOPMOST), x, y, 0, 0, flags);
             let _ = ShowWindow(hwnd, SW_SHOWNOACTIVATE);
-            let _ = SetWindowPos(
-                hwnd,
-                Some(HWND_TOPMOST),
-                0,
-                0,
-                0,
-                0,
-                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
-            );
         }
     }
 
@@ -207,6 +301,15 @@ mod native {
         // SAFETY : hwnd désigne notre propre fenêtre.
         unsafe {
             let _ = ShowWindow(hwnd, SW_HIDE);
+            let _ = SetWindowPos(
+                hwnd,
+                None,
+                OFF_SCREEN,
+                OFF_SCREEN,
+                0,
+                0,
+                SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_HIDEWINDOW,
+            );
         }
     }
 
@@ -239,14 +342,41 @@ mod native {
                     None,
                 )
                 .expect("fenêtre de test");
-                show_hwnd(hwnd);
+                let rect = |hwnd| {
+                    let mut r = RECT::default();
+                    GetWindowRect(hwnd, &mut r).expect("rect");
+                    r
+                };
+                show_hwnd(hwnd, Some((120, 80)));
                 assert!(IsWindowVisible(hwnd).as_bool(), "affichée");
+                assert_eq!(
+                    (rect(hwnd).left, rect(hwnd).top),
+                    (120, 80),
+                    "à la position demandée"
+                );
                 hide_hwnd(hwnd);
                 assert!(!IsWindowVisible(hwnd).as_bool(), "masquée");
-                show_hwnd(hwnd);
+                assert_eq!(rect(hwnd).left, OFF_SCREEN, "hors écran une fois masquée");
+                // Même réaffichée sans position, elle ne revient pas sur le jeu.
+                show_hwnd(hwnd, None);
                 assert!(IsWindowVisible(hwnd).as_bool(), "réaffichée");
+                assert_eq!(
+                    rect(hwnd).left,
+                    OFF_SCREEN,
+                    "reste hors écran sans position"
+                );
+                show_hwnd(hwnd, Some((200, 150)));
+                assert_eq!(
+                    (rect(hwnd).left, rect(hwnd).top),
+                    (200, 150),
+                    "revient à la position demandée"
+                );
                 hide_hwnd(hwnd);
-                assert!(!IsWindowVisible(hwnd).as_bool(), "masquée à nouveau");
+                hide_hwnd(hwnd);
+                assert!(
+                    !IsWindowVisible(hwnd).as_bool(),
+                    "masquer deux fois reste masqué"
+                );
                 let _ = DestroyWindow(hwnd);
             }
         }
@@ -259,7 +389,10 @@ mod native {
 
     pub fn make_non_activating(_win: &WebviewWindow) {}
 
-    pub fn show_without_focus(win: &WebviewWindow) {
+    pub fn show_without_focus(win: &WebviewWindow, pos: Option<(i32, i32)>) {
+        if let Some((x, y)) = pos {
+            let _ = win.set_position(tauri::PhysicalPosition::new(x, y));
+        }
         let _ = win.show();
     }
 
