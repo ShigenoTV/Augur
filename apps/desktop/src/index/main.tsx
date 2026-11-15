@@ -87,7 +87,7 @@ const PAGES: { id: PageId; nom: string; desc: string; groupe: 0 | 1 }[] = [
     groupe: 0,
   },
   { id: "ledger", nom: "Atlas Ledger", desc: "Suivi de tes sessions de farm de cartes et historique.", groupe: 0 },
-  { id: "outils", nom: "Outils", desc: "Session de mesures (PoE 2) et banc d'essai du parseur.", groupe: 1 },
+  { id: "outils", nom: "Outils", desc: "Session de mesures et banc d'essai du parseur.", groupe: 1 },
   { id: "reglages", nom: "Réglages", desc: "Journal du jeu, ligue souhaitée, raccourcis, mises à jour, diagnostic et signalement de bug.", groupe: 1 },
 ];
 
@@ -395,12 +395,10 @@ function App() {
           </div>
 
           <div hidden={page !== "outils"} className="space-y-4">
-            {/* Les sessions de mesures servent le moteur de PoE 2 ; PoE 1 passe par Path of Building. */}
-            {!poe1 && (
-              <Card title="Session de mesures">
-                <MeasureCard />
-              </Card>
-            )}
+            {/* Une session note le jeu actif à son début (PoE 1 ou PoE 2). */}
+            <Card title="Session de mesures">
+              <MeasureCard />
+            </Card>
             <Card title="Banc d'essai du parseur">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
