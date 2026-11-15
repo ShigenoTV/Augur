@@ -118,6 +118,12 @@ def main() -> None:
         type=Path,
         help="clone local de PoB déjà à la bonne version (sinon clone)",
     )
+    p.add_argument(
+        "--sortie",
+        type=Path,
+        default=SORTIE,
+        help="dossier de sortie (défaut : la crate pob-poe1)",
+    )
     args = p.parse_args()
     with tempfile.TemporaryDirectory() as tmp:
         depot = args.depot
@@ -164,10 +170,11 @@ def main() -> None:
             (depot / "manifest.xml").read_text(encoding="utf-8"),
         )
         arbre = dernier_arbre(depot / "src")
-    SORTIE.mkdir(parents=True, exist_ok=True)
-    (SORTIE / "pob-poe1.tar.gz").write_bytes(contenu)
+    sortie = args.sortie
+    sortie.mkdir(parents=True, exist_ok=True)
+    (sortie / "pob-poe1.tar.gz").write_bytes(contenu)
     etiquette = f"{version.group(1) if version else '?'}+{commit[:7]} (arbre {arbre.replace('_', '.')})"
-    (SORTIE / "VERSION").write_text(etiquette + "\n", encoding="utf-8")
+    (sortie / "VERSION").write_text(etiquette + "\n", encoding="utf-8")
     print(
         f"pob-poe1.tar.gz : {len(contenu) / 1e6:.1f} Mo, Path of Building {etiquette}"
     )

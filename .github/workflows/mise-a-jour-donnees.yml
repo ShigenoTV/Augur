@@ -15,6 +15,13 @@ on:
         description: "Rafraîchir aussi les poids et Essences Craft of Exile"
         type: boolean
         default: false
+      poe1:
+        description: "Mettre aussi à jour les données PoE 1 (Forge PoE 1, stats de trade)"
+        type: boolean
+        default: false
+      pob_poe1:
+        description: "Version de Path of Building PoE 1 à embarquer (tag ou commit) ; vide = inchangée"
+        default: ""
 
 permissions:
   contents: read
@@ -35,11 +42,23 @@ jobs:
         run: |
           python tools/gamedata/mise_a_jour.py --arbre "$ARBRE" $COE --rapport rapport.md
           cat rapport.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Mise à jour des données PoE 1
+        if: inputs.poe1
+        env:
+          POB: ${{ inputs.pob_poe1 }}
+        run: |
+          python tools/gamedata/mise_a_jour_poe1.py ${POB:+--pob "$POB"} --rapport rapport-poe1.md
+          cat rapport-poe1.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
         with:
           name: mise-a-jour-donnees
           path: |
             rapport.md
+            rapport-poe1.md
+            crates/poe2-core/data/forge-poe1.json.gz
+            crates/poe2-core/data/trade-stats-poe1.json
+            crates/pob-poe1/paquet/pob-poe1.tar.gz
+            crates/pob-poe1/paquet/VERSION
             crates/poe2-core/data/gemmes.json
             crates/poe2-core/data/arbre.json
             crates/poe2-core/data/forge.json.gz

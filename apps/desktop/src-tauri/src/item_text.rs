@@ -134,6 +134,17 @@ mod tests {
 
     const UNIQUE: &str = "Item Class: Gloves\nRarity: Unique\nNorthpaw\nRingmail Gauntlets\n--------\nItem Level: 72\n--------\n+40 to Dexterity\n--------\nThe great bear sleeps beneath the ice\n";
 
+    /// Objet de PoE 1 : même format de copie, lu par le même parseur (page Copilot, banc d'essai).
+    #[test]
+    fn lit_un_objet_de_poe1() {
+        let anneau = "Item Class: Rings\nRarity: Rare\nGale Loop\nTwo-Stone Ring\n--------\nRequirements:\nLevel: 60\n--------\nItem Level: 84\n--------\n+16% to Fire and Lightning Resistances (implicit)\n--------\n+72 to maximum Life\n+45% to Cold Resistance\n--------\nShaper Item";
+        assert!(looks_like_item(anneau));
+        let item = parse(anneau).unwrap();
+        assert_eq!(item.item_class, "Rings");
+        assert_eq!(item.base_type, "Two-Stone Ring");
+        assert!(item.mods.iter().any(|m| m.text.contains("maximum Life")));
+    }
+
     #[test]
     fn reconnait_un_objet() {
         assert!(looks_like_item(BOW));

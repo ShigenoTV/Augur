@@ -75,18 +75,6 @@ function GameSwitch({ game, disabled, onChoose }: { game: Game; disabled: boolea
   );
 }
 
-/** Module pas encore disponible pour PoE 1. */
-function BientotPoe1({ module }: { module: string }) {
-  return (
-    <section className="rounded-panel border border-ink-700 bg-ink-900 p-4">
-      <StatePanel icon="flat" title={`${module} : bientôt pour PoE 1`}>
-        Ce module ne connaît encore que Path of Exile 2. Repasse sur « POE 2 » en haut à gauche pour l'utiliser.
-        Le Copilot (lecture d'objet, cote et trade), l'Atlas Ledger et les réglages fonctionnent déjà avec PoE 1.
-      </StatePanel>
-    </section>
-  );
-}
-
 type PageId = "copilot" | "forge" | "ledger" | "outils" | "reglages";
 
 /** Barre latérale (reprise de l'ancienne appli de craft de Max) : modules, puis outils et réglages. */
@@ -99,7 +87,7 @@ const PAGES: { id: PageId; nom: string; desc: string; groupe: 0 | 1 }[] = [
     groupe: 0,
   },
   { id: "ledger", nom: "Atlas Ledger", desc: "Suivi de tes sessions de farm de cartes et historique.", groupe: 0 },
-  { id: "outils", nom: "Outils", desc: "Session de mesures et banc d'essai du parseur.", groupe: 1 },
+  { id: "outils", nom: "Outils", desc: "Session de mesures (PoE 2) et banc d'essai du parseur.", groupe: 1 },
   { id: "reglages", nom: "Réglages", desc: "Journal du jeu, ligue souhaitée, raccourcis, mises à jour, diagnostic et signalement de bug.", groupe: 1 },
 ];
 
@@ -341,7 +329,6 @@ function App() {
           <UpdateBanner update={updates.visible} onInstall={() => void updates.install()} onLater={updates.later} />
 
           {/* Les pages restent montées : changer de page ne perd ni un plan Forge ni une session Ledger. */}
-          {page === "outils" && poe1 && <BientotPoe1 module="Outils" />}
 
           <div hidden={page !== "copilot"} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -407,10 +394,13 @@ function App() {
             )}
           </div>
 
-          <div hidden={page !== "outils" || poe1} className="space-y-4">
-            <Card title="Session de mesures">
-              <MeasureCard />
-            </Card>
+          <div hidden={page !== "outils"} className="space-y-4">
+            {/* Les sessions de mesures servent le moteur de PoE 2 ; PoE 1 passe par Path of Building. */}
+            {!poe1 && (
+              <Card title="Session de mesures">
+                <MeasureCard />
+              </Card>
+            )}
             <Card title="Banc d'essai du parseur">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
