@@ -84,7 +84,7 @@ pub fn hide(app: &AppHandle) {
     }
     shortcuts::unregister_overlay(app);
     if let Some(win) = window(app) {
-        let _ = win.hide();
+        native::hide(&win);
     }
     let _ = app.emit_to(LABEL, EVENT_HIDDEN, ());
 }
@@ -138,7 +138,7 @@ mod native {
     use tauri::WebviewWindow;
     use windows::Win32::Foundation::HWND;
     use windows::Win32::UI::WindowsAndMessaging::{
-        GWL_EXSTYLE, GetWindowLongPtrW, HWND_TOPMOST, SW_SHOWNOACTIVATE, SWP_NOACTIVATE,
+        GWL_EXSTYLE, GetWindowLongPtrW, HWND_TOPMOST, SW_HIDE, SW_SHOWNOACTIVATE, SWP_NOACTIVATE,
         SWP_NOMOVE, SWP_NOSIZE, SetWindowLongPtrW, SetWindowPos, ShowWindow, WS_EX_NOACTIVATE,
         WS_EX_TOOLWINDOW,
     };
@@ -168,7 +168,27 @@ mod native {
             let _ = win.show();
             return;
         };
-        // SAFETY : idem, notre propre fenêtre.
+        show_hwnd(hwnd);
+    }
+
+    /// Masque l'overlay par la même voie Win32 que son affichage.
+    ///
+    /// `WebviewWindow::hide()` ne suffit PAS : l'overlay est affiché par
+    /// `ShowWindow` en direct (pour ne pas voler le focus au jeu), donc Tauri
+    /// le croit toujours caché et son `hide()` ne fait rien. La fenêtre
+    /// restait alors à l'écran, vidée et transparente, et mangeait les clics
+    /// destinés au jeu à l'endroit où était le panneau.
+    pub fn hide(win: &WebviewWindow) {
+        match hwnd(win) {
+            Some(hwnd) => hide_hwnd(hwnd),
+            None => {
+                let _ = win.hide();
+            }
+        }
+    }
+
+    pub(super) fn show_hwnd(hwnd: HWND) {
+        // SAFETY : hwnd désigne notre propre fenêtre.
         unsafe {
             let _ = ShowWindow(hwnd, SW_SHOWNOACTIVATE);
             let _ = SetWindowPos(
@@ -182,6 +202,55 @@ mod native {
             );
         }
     }
+
+    pub(super) fn hide_hwnd(hwnd: HWND) {
+        // SAFETY : hwnd désigne notre propre fenêtre.
+        unsafe {
+            let _ = ShowWindow(hwnd, SW_HIDE);
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use windows::Win32::UI::WindowsAndMessaging::{
+            CreateWindowExW, DestroyWindow, IsWindowVisible, WINDOW_EX_STYLE, WS_POPUP,
+        };
+        use windows::core::w;
+
+        /// Après un affichage sans focus puis un masquage, la fenêtre n'est
+        /// plus visible, donc ne capte plus aucun clic.
+        #[test]
+        fn hide_undoes_show_without_focus() {
+            // SAFETY : fenêtre de test créée et détruite ici.
+            unsafe {
+                let hwnd = CreateWindowExW(
+                    WINDOW_EX_STYLE(WS_EX_NOACTIVATE.0 | WS_EX_TOOLWINDOW.0),
+                    w!("STATIC"),
+                    w!("augur-overlay-test"),
+                    WS_POPUP,
+                    0,
+                    0,
+                    100,
+                    100,
+                    None,
+                    None,
+                    None,
+                    None,
+                )
+                .expect("fenêtre de test");
+                show_hwnd(hwnd);
+                assert!(IsWindowVisible(hwnd).as_bool(), "affichée");
+                hide_hwnd(hwnd);
+                assert!(!IsWindowVisible(hwnd).as_bool(), "masquée");
+                show_hwnd(hwnd);
+                assert!(IsWindowVisible(hwnd).as_bool(), "réaffichée");
+                hide_hwnd(hwnd);
+                assert!(!IsWindowVisible(hwnd).as_bool(), "masquée à nouveau");
+                let _ = DestroyWindow(hwnd);
+            }
+        }
+    }
 }
 
 #[cfg(not(windows))]
@@ -192,5 +261,9 @@ mod native {
 
     pub fn show_without_focus(win: &WebviewWindow) {
         let _ = win.show();
+    }
+
+    pub fn hide(win: &WebviewWindow) {
+        let _ = win.hide();
     }
 }
