@@ -65,6 +65,8 @@ pub enum Entry {
 pub struct Session {
     pub format: &'static str,
     pub augur_version: String,
+    /// Jeu actif au début de la session (`poe1` ou `poe2`).
+    pub game: crate::game::Game,
     pub started_at: String,
     pub ended_at: Option<String>,
     pub client_log: Option<String>,
@@ -85,6 +87,7 @@ impl Session {
         Self {
             format: FORMAT,
             augur_version,
+            game: crate::game::Game::default(),
             started_at,
             ended_at: None,
             client_log: None,
@@ -133,8 +136,12 @@ impl Session {
         let mut out = String::new();
         out.push_str("# Session de mesures Augur\n\n");
         out.push_str(&format!(
-            "- Augur {}\n- Début : {}\n- Fin : {}\n- Relevés : {} objet(s), {} code(s) PoB, {} zone(s), {} note(s)\n",
+            "- Augur {}\n- Jeu : {}\n- Début : {}\n- Fin : {}\n- Relevés : {} objet(s), {} code(s) PoB, {} zone(s), {} note(s)\n",
             self.augur_version,
+            match self.game {
+                crate::game::Game::Poe1 => "PoE 1",
+                crate::game::Game::Poe2 => "PoE 2",
+            },
             self.started_at,
             self.ended_at.as_deref().unwrap_or("en cours"),
             c.items,
@@ -353,6 +360,7 @@ pub fn start(app: &AppHandle) -> MeasureStatus {
         let mut g = state.lock();
         if g.session.is_none() {
             let mut s = Session::new(app.package_info().version.to_string(), rfc3339_now());
+            s.game = crate::game::active();
             s.client_log = app.state::<crate::client_log::ClientLogState>().get().path;
             g.session = Some(s);
             g.pending_area = None;
@@ -544,6 +552,7 @@ mod tests {
     #[test]
     fn exporte_json_et_resume() {
         let mut s = Session::new("0.1.3".into(), "2026-11-05T15:30:12Z".into());
+        s.game = crate::game::Game::Poe1;
         s.push(Entry::Item {
             at: "2026-11-05T15:31:00Z".into(),
             copy: CopyKind::Advanced,
@@ -578,6 +587,7 @@ mod tests {
         let json: serde_json::Value =
             serde_json::from_str(&std::fs::read_to_string(&info.json_path).unwrap()).unwrap();
         assert_eq!(json["format"], FORMAT);
+        assert_eq!(json["game"], "poe1");
         assert_eq!(json["entries"][0]["kind"], "item");
         assert_eq!(json["entries"][0]["copy"], "advanced");
         assert_eq!(json["entries"][0]["rawText"], AVANCE);
@@ -585,6 +595,7 @@ mod tests {
         assert_eq!(json["entries"][2]["text"], "DPS Arc : 12 345");
 
         let md = std::fs::read_to_string(&info.markdown_path).unwrap();
+        assert!(md.contains("- Jeu : PoE 1"));
         assert!(md.contains("Objet (Ctrl+Alt+C) : objet non reconnu"));
         assert!(md.contains("Refusé par le parseur : base inconnue"));
         assert!(md.contains("Zone : Plantation, niveau 66 (MapPlantation)"));
