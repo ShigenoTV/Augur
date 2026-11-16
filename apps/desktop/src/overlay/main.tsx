@@ -7,6 +7,8 @@ import { afficherRaccourci, SHORTCUTS_PAR_DEFAUT } from "../index/shortcuts";
 import { ForgePoe1TipPanel, type ForgePoe1View } from "./ForgePoe1TipPanel";
 import { ForgeTipPanel, type ForgeView } from "./ForgeTipPanel";
 import { Poe1Panel, type Poe1EvalView, type Poe1View } from "./Poe1Panel";
+import { TargetLine } from "./TargetLine";
+import type { TargetProgress } from "../bridge";
 import { EVALUATING_DELAY_MS, runCopilot } from "./copilot";
 
 function Overlay() {
@@ -31,6 +33,26 @@ function Overlay() {
   const [forgePoe1, setForgePoe1] = useState<ForgePoe1View | null>(null);
   const poe1Shown = useRef<Poe1View | null>(null);
   poe1Shown.current = poe1;
+  // Objet copié face à l'objet de la cible (personnage cible de Copilot).
+  const [target, setTarget] = useState<TargetProgress | null>(null);
+  const targetShown = useRef<TargetProgress | null>(null);
+  targetShown.current = target;
+  // Alt+U vise l'objet de la cible (Réglages).
+  const searchTarget = useRef(false);
+  const openTargetSearch = (slot: string) => {
+    setSearch({ ok: true, text: "Préparation de la recherche de l'objet cible…" });
+    void commands
+      .openTargetSearch(slot)
+      .then((r) =>
+        setSearch({
+          ok: true,
+          text: r.unique
+            ? `Recherche de ${r.unique} ouverte dans ton navigateur.`
+            : `Recherche de l'objet cible ouverte dans ton navigateur : ${r.filters.length} mod${r.filters.length > 1 ? "s" : ""}${r.ignored.length > 0 ? ` (${r.ignored.length} non cherché${r.ignored.length > 1 ? "s" : ""})` : ""}.`,
+        }),
+      )
+      .catch((error: unknown) => setSearch({ ok: false, text: isAppError(error) ? error.message : String(error) }));
+  };
   const openPoe1Trade = () => {
     if (poe1Shown.current?.status !== "ready") return;
     setSearch({ ok: true, text: "Path of Building pèse les stats de cet emplacement…" });
@@ -48,6 +70,8 @@ function Overlay() {
       .catch((error: unknown) => setSearch({ ok: false, text: isAppError(error) ? error.message : String(error) }));
   };
   const openSearch = () => {
+    const t = targetShown.current;
+    if (searchTarget.current && t && t.status !== "reached") return openTargetSearch(t.slot);
     if (poe1Shown.current) return openPoe1Trade();
     const v = shown.current;
     if (v.status !== "ready" || !v.delta || v.delta.support === "unsupported") return;
@@ -82,8 +106,18 @@ function Overlay() {
         setSearch(null);
         setPoe1(null);
         setForgePoe1(null);
+        setTarget(null);
         const settings = commands.getSettings().catch(() => null);
-        void settings.then((s) => s && setRaccourcis(s.shortcuts));
+        void settings.then((s) => {
+          if (!s) return;
+          setRaccourcis(s.shortcuts);
+          searchTarget.current = s.upgradeSearchTarget ?? false;
+        });
+        // Où en est cet objet par rapport à celui de la cible (rien sans cible).
+        void commands
+          .getTargetProgress()
+          .then((t) => run.current === id && setTarget(t))
+          .catch(() => undefined);
         const emit = (v: CopilotView) => {
           if (run.current === id) setView(v);
         };
@@ -170,6 +204,7 @@ function Overlay() {
       }),
       on.itemUnrecognized((error) => {
         run.current++;
+        setTarget(null);
         setForge(null);
         setForgePoe1(null);
         setPoe1(null);
@@ -177,6 +212,7 @@ function Overlay() {
       }),
       on.overlayHidden(() => {
         run.current++;
+        setTarget(null);
         setForge(null);
         setForgePoe1(null);
         setPoe1(null);
@@ -231,6 +267,9 @@ function Overlay() {
           onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)}
           onUpgradeSearch={openSearch}
         />
+      )}
+      {target && !forge && !forgePoe1 && (poe1 || view.status !== "hidden") && (
+        <TargetLine target={target} onSearch={() => openTargetSearch(target.slot)} />
       )}
       {search && !forge && !forgePoe1 && (
         <p className={`mt-1 max-w-[360px] text-[11px] ${search.ok ? "text-text-subtle" : "text-signal-loss"}`}>{search.text}</p>

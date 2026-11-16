@@ -28,6 +28,9 @@ pub struct Settings {
     pub shortcuts: ShortcutSettings,
     /// Budget de la recherche d'upgrades, en exalts (`None` : sans limite).
     pub upgrade_budget: Option<u32>,
+    /// Alt+U cherche l'objet du personnage cible pour l'emplacement (quand la
+    /// cible en a un), au lieu d'un objet meilleur que celui porté.
+    pub upgrade_search_target: bool,
     /// Jeu actif (sélecteur « POE 1 / POE 2 »). Les champs ci-dessus sans
     /// préfixe sont ceux de PoE 2, pour relire les anciens fichiers à l'identique.
     pub game: Game,

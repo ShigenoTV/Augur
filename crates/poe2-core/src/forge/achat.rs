@@ -206,6 +206,63 @@ pub fn requete(base_nom: &str, filtres: &[FiltreAchat]) -> Value {
     })
 }
 
+/// Part de la valeur de l'objet cible demandée au site de trade : un jet un peu
+/// plus bas passe (même règle que l'écart actuel → cible).
+pub const PART_CIBLE: f64 = 0.8;
+
+/// Recherche de l'objet du personnage cible pour un emplacement (Alt+U « vers
+/// la cible ») : l'unique par son nom, sinon la même base avec chaque mod de la
+/// cible à au moins [`PART_CIBLE`] de sa valeur. `poe1` choisit la table de stats.
+pub fn recherche_objet_cible(o: &crate::cible::ObjetCible, poe1: bool) -> RechercheAchat {
+    let base_nom = o.base.clone().unwrap_or_default();
+    if let Some(nom) = &o.unique {
+        let mut query = json!({
+            "status": { "option": "online" },
+            "name": nom,
+            "filters": { "type_filters": { "filters": { "rarity": { "option": "unique" } } } },
+        });
+        if !base_nom.is_empty() && &base_nom != nom {
+            query["type"] = json!(base_nom);
+        }
+        return RechercheAchat {
+            base_nom,
+            requete: json!({ "query": query, "sort": { "price": "asc" } }),
+            filtres: Vec::new(),
+            ignorees: Vec::new(),
+        };
+    }
+    let table = if poe1 {
+        crate::poe1::forge::achat::table_stats()
+    } else {
+        table()
+    };
+    let mut filtres = Vec::new();
+    let mut ignorees = Vec::new();
+    for ligne in &o.lignes {
+        let Some(e) = table.stats.get(&normaliser(ligne)) else {
+            ignorees.push(ligne.clone());
+            continue;
+        };
+        let v = valeur_trade(&bornes_basses(ligne)).map(|v| arrondi(v * PART_CIBLE));
+        let (min, max) = match v {
+            Some(v) if e.negate => (None, Some(-v)),
+            v => (v, None),
+        };
+        filtres.push(FiltreAchat {
+            libelle: ligne.clone(),
+            ids: e.ids.clone(),
+            min,
+            max,
+        });
+    }
+    RechercheAchat {
+        requete: requete(&base_nom, &filtres),
+        base_nom,
+        filtres,
+        ignorees,
+    }
+}
+
 /// Recherche de l'objet que le plan vise.
 pub fn recherche(demande: &DemandePlan) -> Result<RechercheAchat, ErreurAtelier> {
     let base_nom = atelier::bases()?
@@ -256,6 +313,35 @@ pub(crate) fn filtres_voulus(
 mod tests {
     use super::*;
     use crate::forge::WantedAffix;
+
+    #[test]
+    fn recherche_de_l_objet_cible() {
+        let o = crate::cible::ObjetCible {
+            emplacement: "Helmet".into(),
+            unique: None,
+            base: Some("Voltaic Helm".into()),
+            lignes: vec![
+                "+80 to maximum Life".into(),
+                "+40% to Fire Resistance".into(),
+                "Ligne inconnue du site".into(),
+            ],
+        };
+        let r = recherche_objet_cible(&o, false);
+        assert_eq!(r.filtres.len(), 2);
+        assert_eq!(r.filtres[0].min, Some(64.0));
+        assert_eq!(r.filtres[1].min, Some(32.0));
+        assert_eq!(r.ignorees, vec!["Ligne inconnue du site"]);
+        assert_eq!(r.requete["query"]["type"], "Voltaic Helm");
+        let u = crate::cible::ObjetCible {
+            unique: Some("Crown of Eyes".into()),
+            base: Some("Hubris Circlet".into()),
+            ..o
+        };
+        let r = recherche_objet_cible(&u, true);
+        assert_eq!(r.requete["query"]["name"], "Crown of Eyes");
+        assert_eq!(r.requete["query"]["type"], "Hubris Circlet");
+        assert!(r.filtres.is_empty());
+    }
 
     #[test]
     fn normalisation_identique_au_script() {

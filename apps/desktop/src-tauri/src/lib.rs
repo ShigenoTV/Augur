@@ -26,6 +26,7 @@ mod forge_poe1;
 mod forge_prices;
 mod game;
 mod game_window;
+mod gap;
 pub mod item_text;
 mod ledger;
 pub mod ledger_store;
@@ -135,6 +136,13 @@ pub fn run() {
             commands::estimate_price,
             commands::import_pob_code,
             commands::clear_character,
+            commands::get_target,
+            commands::import_target_code,
+            commands::clear_target,
+            commands::get_gap,
+            commands::get_target_progress,
+            commands::open_target_search,
+            commands::set_upgrade_search_target,
             commands::get_forge_prices,
             commands::set_forge_prices,
             commands::reset_forge_prices,

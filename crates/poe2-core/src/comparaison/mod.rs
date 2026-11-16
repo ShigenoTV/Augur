@@ -547,6 +547,42 @@ fn dps(perso: &Personnage) -> Result<(f64, BTreeSet<String>), ErreurComparaison>
     Ok((total, ailments))
 }
 
+/// Chiffres d'un build entier (personnage cible, onglet « Écart »).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Chiffres {
+    /// Compétence calculée (celle que l'overlay compare).
+    pub competence: Option<String>,
+    /// DPS total, si le moteur calcule la compétence.
+    pub dps: Option<f64>,
+    /// Vie, bouclier d'énergie, résistances (étalonnées sur PoB si l'export a ses stats).
+    pub defenses: defense::Defenses,
+    /// Le résultat n'est pas exact (mods non traduits, formule générique…).
+    pub approximatif: bool,
+}
+
+/// DPS et défenses du build tel qu'il est, avec les mêmes calculs que
+/// l'overlay : deux builds passés ici se comparent entre eux.
+pub fn chiffres(build: &BuildPob) -> Chiffres {
+    let bilan = bilan_defense(build, &[], None);
+    let defense = defense::comparer(build, &bilan, &bilan);
+    let mut rapport = Rapport::default();
+    let comparee = competence_comparee(build);
+    let dps = comparee
+        .filter(|(_, _, supportee)| *supportee)
+        .and_then(|(groupe, gemme, _)| {
+            let (perso, _) = modeliser(build, groupe, gemme, &[], None, &mut rapport).ok()?;
+            let (total, ailments) = dps(&perso).ok()?;
+            rapport.ailments = ailments;
+            Some(total)
+        });
+    Chiffres {
+        competence: comparee.map(|(_, g, _)| g.nom.clone()),
+        dps,
+        approximatif: !rapport.complet() || !defense.etalonnee,
+        defenses: defense.avant,
+    }
+}
+
 /// Compare un objet (classe du jeu, nom, lignes de mods telles qu'affichées)
 /// à l'équipement du build, sans base ni qualité connues.
 pub fn comparer(
@@ -677,6 +713,26 @@ Implicits: 0
 
     fn lignes(v: &[&str]) -> Vec<String> {
         v.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn chiffres_du_build_entier() {
+        let b = build(BAGUETTE, "", "");
+        let c = chiffres(&b);
+        assert_eq!(c.competence.as_deref(), Some("Lightning Bolt"));
+        // Même DPS que l'« avant » de la comparaison d'un objet.
+        let avant = comparer(
+            &b,
+            "Wands",
+            "X",
+            &lignes(&["10% increased Lightning Damage"]),
+        )
+        .unwrap()
+        .dps_avant;
+        assert!((c.dps.unwrap() - avant).abs() < 1e-6);
+        assert!(c.defenses.vie > 0.0);
+        // Sans stats PoB exportées, les défenses ne sont pas étalonnées.
+        assert!(c.approximatif);
     }
 
     #[test]

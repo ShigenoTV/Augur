@@ -1,14 +1,18 @@
 import { StatePanel } from "@augur/ui";
 import { useEffect, useState } from "react";
 import { commands, isAppError, isTauri, on, type CharacterInfo, type Game } from "../bridge";
-import { describeSkill } from "./character";
+import { describeSkill, describeTargetSkill } from "./character";
 
 /**
  * Personnage du joueur du jeu actif : import d'un code d'export Path of Building
  * (PoE 2 ou PoE 1). Le code est collé à la main ; Augur ne télécharge rien.
+ * `target` : le personnage cible (build visé), pour la carte Écart, l'overlay et Alt+U.
  */
-export function CharacterCard({ game = "poe2" }: { game?: Game }) {
+export function CharacterCard({ game = "poe2", target = false }: { game?: Game; target?: boolean }) {
   const poe1 = game === "poe1";
+  const api = target
+    ? { get: commands.getTarget, import: commands.importTargetCode, clear: commands.clearTarget, changed: on.targetChanged }
+    : { get: commands.getCharacter, import: commands.importPobCode, clear: commands.clearCharacter, changed: on.characterChanged };
   const [info, setInfo] = useState<CharacterInfo | null>(null);
   const [editing, setEditing] = useState(false);
   const [code, setCode] = useState("");
@@ -17,9 +21,10 @@ export function CharacterCard({ game = "poe2" }: { game?: Game }) {
 
   useEffect(() => {
     if (!isTauri()) return;
-    void commands.getCharacter().then(setInfo).catch(() => undefined);
-    const unlisten = on.characterChanged(setInfo);
+    void api.get().then(setInfo).catch(() => undefined);
+    const unlisten = api.changed(setInfo);
     return () => void unlisten.then((f) => f());
+    // `target` ne change pas pendant la vie de la carte.
   }, []);
 
   async function importCode() {
@@ -30,7 +35,7 @@ export function CharacterCard({ game = "poe2" }: { game?: Game }) {
     }
     setBusy(true);
     try {
-      setInfo(await commands.importPobCode(code));
+      setInfo(await api.import(code));
       setCode("");
       setEditing(false);
     } catch (err) {
@@ -43,7 +48,7 @@ export function CharacterCard({ game = "poe2" }: { game?: Game }) {
   async function clear() {
     setError(null);
     try {
-      await commands.clearCharacter();
+      await api.clear();
       setInfo(null);
     } catch (err) {
       setError(isAppError(err) ? err.message : String(err));
@@ -60,20 +65,20 @@ export function CharacterCard({ game = "poe2" }: { game?: Game }) {
           <p>
             {info.summary.class} niveau {info.summary.level}
           </p>
-          <p className="text-text-muted">{describeSkill(info)}</p>
+          <p className="text-text-muted">{target ? describeTargetSkill(info) : describeSkill(info)}</p>
           {info.supports.length > 0 && (
             <p className="text-xs text-text-subtle">Supports : {info.supports.join(", ")}</p>
           )}
           <p className="text-xs text-text-subtle">
             {info.equippedSlots.length} objets équipés, {info.passives} passifs
           </p>
-          {poe1 && (
+          {poe1 && !target && (
             <p className="text-xs text-text-subtle">
               PoE 1 : Path of Building tourne dans Augur. Ctrl+C sur un objet en jeu dit s'il est mieux que le tien (DPS,
               EHP, vie, résistances).
             </p>
           )}
-          {!poe1 && !info.skillSupported && (
+          {!poe1 && !target && !info.skillSupported && (
             <p className="text-xs text-signal-loss">
               Augur ne calcule que les compétences qui infligent des dégâts (sorts, attaques, minions) : le gain de DPS ne sera pas affiché pour cette
               compétence.
@@ -102,6 +107,11 @@ export function CharacterCard({ game = "poe2" }: { game?: Game }) {
 
       {showForm && (
         <div className="space-y-2">
+          {target && (
+            <p className="text-xs text-text-subtle">
+              Le build que tu vises (le tien plus tard, ou celui d'un guide). Augur te montre l'écart avec ton personnage actuel et, en jeu, si un objet copié t'en rapproche.
+            </p>
+          )}
           <p className="text-xs text-text-subtle">
             Dans Path of Building {poe1 ? "(PoE 1)" : "PoE 2"} : Import/Export Build &gt; Generate &gt; Copy, puis colle le code ici. Sur pobb.in,
             utilise le bouton de copie du code (pas le lien).

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-upgrade-search-target"
+description = "Enables the set_upgrade_search_target command without any pre-configured scope."
+commands.allow = ["set_upgrade_search_target"]
+
+[[permission]]
+identifier = "deny-set-upgrade-search-target"
+description = "Denies the set_upgrade_search_target command without any pre-configured scope."
+commands.deny = ["set_upgrade_search_target"]

@@ -19,6 +19,7 @@
 #![forbid(unsafe_code)]
 
 pub mod calc;
+pub mod cible;
 pub mod comparaison;
 pub mod forge;
 pub mod ledger;
