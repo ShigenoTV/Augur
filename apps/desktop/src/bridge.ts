@@ -34,6 +34,8 @@ export const EVENTS = {
   ledgerSession: "augur://ledger-session",
   poe1Stash: "augur://poe1-stash",
   characterChanged: "augur://character-changed",
+  /** Personnage cible importé ou oublié (charge : CharacterInfo | null). */
+  targetChanged: "augur://target-changed",
 } as const;
 
 /** Raccourcis de l'overlay, au format « Alt+U », « Ctrl+Shift+F2 », « Escape » (src-tauri/src/shortcuts.rs). */
@@ -241,6 +243,39 @@ export type CharacterInfo = {
   equippedSlots: string[];
   passives: number;
   treeVersion: string | null;
+};
+
+/** Écart actuel → cible (apps/desktop/src-tauri/src/gap.rs). */
+export type GapResistance = { element: "fire" | "cold" | "lightning" | "chaos"; value: number; cap: number | null };
+export type BuildNumbers = {
+  skill: string | null;
+  dps: number | null;
+  ehp: number | null;
+  life: number | null;
+  energyShield: number | null;
+  resistances: GapResistance[];
+};
+export type GapStatus = "reached" | "improve" | "otherItem" | "empty";
+export type GapItem = {
+  /** Emplacement PoB (« Helmet », « Ring 1 »…). */
+  slot: string;
+  current: string | null;
+  target: string | null;
+  targetUnique: boolean;
+  status: GapStatus;
+  targetMods: number;
+  missingMods: string[];
+  weakerMods: { target: string; current: string }[];
+};
+export type GapReport = {
+  numbers: { source: "augur" | "pob"; approximate: boolean; current: BuildNumbers; target: BuildNumbers };
+  otherClass: boolean;
+  currentClass: string;
+  targetClass: string;
+  items: GapItem[];
+  missingSkills: string[];
+  missingSupports: { skill: string; support: string }[];
+  passives: { toTake: number; toRemove: number; current: number; target: number };
 };
 
 /** Forge (crates/poe2-core/src/forge/atelier.rs, prix.rs, ninja.rs, solveur/plan.rs). */
@@ -599,6 +634,10 @@ export const commands = {
   getCharacter: () => invoke<CharacterInfo | null>("get_character"),
   importPobCode: (code: string) => invoke<CharacterInfo>("import_pob_code", { code }),
   clearCharacter: () => invoke<void>("clear_character"),
+  getTarget: () => invoke<CharacterInfo | null>("get_target"),
+  importTargetCode: (code: string) => invoke<CharacterInfo>("import_target_code", { code }),
+  clearTarget: () => invoke<void>("clear_target"),
+  getGap: () => invoke<GapReport | null>("get_gap"),
   getForgeBases: () => invoke<ForgeBase[]>("get_forge_bases"),
   getForgePoe1Bases: () => invoke<ForgePoe1Base[]>("get_forge_poe1_bases"),
   getForgePoe1Affixes: (baseId: string, ilvl: number, influence: string | null) =>
@@ -658,4 +697,6 @@ export const on = {
     listen<StashStatus>(EVENTS.poe1Stash, (e) => cb(e.payload)),
   characterChanged: (cb: (p: CharacterInfo | null) => void): Promise<UnlistenFn> =>
     listen<CharacterInfo | null>(EVENTS.characterChanged, (e) => cb(e.payload)),
+  targetChanged: (cb: (p: CharacterInfo | null) => void): Promise<UnlistenFn> =>
+    listen<CharacterInfo | null>(EVENTS.targetChanged, (e) => cb(e.payload)),
 };

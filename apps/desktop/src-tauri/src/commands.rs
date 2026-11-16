@@ -485,6 +485,40 @@ pub fn clear_character(app: AppHandle) -> Result<(), AppError> {
     crate::character::clear(&app).map_err(internal)
 }
 
+/// Personnage cible (build visé) du jeu actif.
+#[tauri::command]
+pub fn get_target(
+    state: State<'_, crate::character::CharacterState>,
+) -> Option<crate::character::CharacterInfo> {
+    state.info_role(crate::character::Role::Cible)
+}
+
+/// Importe le personnage cible d'un code d'export Path of Building, comme
+/// `import_pob_code`. Il ne sert qu'à l'écart : l'overlay compare toujours
+/// au personnage actuel.
+#[tauri::command]
+pub fn import_target_code(
+    app: AppHandle,
+    code: String,
+) -> Result<crate::character::CharacterInfo, AppError> {
+    crate::character::import_role(&app, &code, crate::character::Role::Cible).map_err(internal)
+}
+
+#[tauri::command]
+pub fn clear_target(app: AppHandle) -> Result<(), AppError> {
+    crate::character::clear_role(&app, crate::character::Role::Cible).map_err(internal)
+}
+
+/// Écart entre le personnage actuel et la cible du jeu actif (`None` s'il
+/// manque l'un des deux).
+#[tauri::command]
+pub fn get_gap(
+    state: State<'_, crate::character::CharacterState>,
+) -> Option<crate::gap::GapReport> {
+    let game = crate::game::active();
+    state.with_pair(game, |a, c| crate::gap::report(game, a, c))
+}
+
 /// Gain de DPS de l'objet pour le personnage importé (calcul local).
 #[tauri::command]
 pub fn evaluate_item(

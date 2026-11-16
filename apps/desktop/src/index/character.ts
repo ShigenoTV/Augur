@@ -7,3 +7,10 @@ export function describeSkill(info: CharacterInfo): string {
   const quality = s.quality > 0 ? `, qualité ${s.quality} %` : "";
   return `Compétence comparée : ${s.name} niveau ${s.level}${quality}`;
 }
+
+/** « Compétence principale : Arc niveau 21 » : pour le personnage cible. */
+export function describeTargetSkill(info: CharacterInfo): string {
+  const s = info.skill;
+  if (!s) return "Aucune compétence active dans le build";
+  return `Compétence principale : ${s.name} niveau ${s.level}`;
+}

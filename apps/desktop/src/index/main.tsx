@@ -14,6 +14,7 @@ import { createRoot } from "react-dom/client";
 import { commands, isAppError, isTauri, on, type ClientLogStatus, type Game, type Settings } from "../bridge";
 import { JEUX, jeuActif } from "./game";
 import { CharacterCard } from "./CharacterCard";
+import { GapCard } from "./GapCard";
 import { ClientLogCard } from "./ClientLogCard";
 import { BugReportCard, DiagnosticCard } from "./DiagnosticCards";
 import { LeagueCard, ShortcutsCard, UpgradeBudgetCard } from "./SettingsCards";
@@ -79,7 +80,12 @@ type PageId = "copilot" | "forge" | "ledger" | "outils" | "reglages";
 
 /** Barre latérale (reprise de l'ancienne appli de craft de Max) : modules, puis outils et réglages. */
 const PAGES: { id: PageId; nom: string; desc: string; groupe: 0 | 1 }[] = [
-  { id: "copilot", nom: "Copilot", desc: "Ton personnage, les raccourcis en jeu et le dernier objet analysé.", groupe: 0 },
+  {
+    id: "copilot",
+    nom: "Copilot",
+    desc: "Ton personnage, ta cible et ce qui les sépare, les raccourcis en jeu et le dernier objet analysé.",
+    groupe: 0,
+  },
   {
     id: "forge",
     nom: "Forge",
@@ -332,9 +338,17 @@ function App() {
 
           <div hidden={page !== "copilot"} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Card title={poe1 ? "Personnage PoE 1" : "Personnage"}>
+              <Card title={poe1 ? "Personnage PoE 1 : où j'en suis" : "Personnage : où j'en suis"}>
                 <CharacterCard key={game} game={game} />
               </Card>
+              <Card title={poe1 ? "Cible PoE 1 : où je vais" : "Cible : où je vais"}>
+                <CharacterCard key={`${game}-cible`} game={game} target />
+              </Card>
+            </div>
+            <Card title="Écart actuel → cible">
+              <GapCard key={game} game={game} />
+            </Card>
+            <div className="grid grid-cols-2 gap-4">
               <Card title="Raccourcis">
                 <ul className="space-y-2 text-sm text-text-muted">
                   <li>
@@ -357,21 +371,21 @@ function App() {
                   Le jeu doit être en mode « fenêtré sans bordure » pour que l'overlay s'affiche par-dessus.
                 </p>
               </Card>
-            </div>
-            <Card title="Dernier objet analysé">
-              {dernier ? (
-                <div className="space-y-2">
-                  <p className="text-xs text-text-subtle">
-                    Copié en jeu à {dernier.a.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+              <Card title="Dernier objet analysé">
+                {dernier ? (
+                  <div className="space-y-2">
+                    <p className="text-xs text-text-subtle">
+                      Copié en jeu à {dernier.a.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                    <ItemTooltip item={dernier.item} />
+                  </div>
+                ) : (
+                  <p className="text-sm text-text-subtle">
+                    Aucun objet depuis l'ouverture d'Augur : fais <Kbd>Ctrl+C</Kbd> sur un objet en jeu, il s'affichera ici.
                   </p>
-                  <ItemTooltip item={dernier.item} />
-                </div>
-              ) : (
-                <p className="text-sm text-text-subtle">
-                  Aucun objet depuis l'ouverture d'Augur : fais <Kbd>Ctrl+C</Kbd> sur un objet en jeu, il s'affichera ici.
-                </p>
-              )}
-            </Card>
+                )}
+              </Card>
+            </div>
           </div>
 
           <div hidden={page !== "forge" || poe1}>
