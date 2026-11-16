@@ -519,6 +519,78 @@ pub fn get_gap(
     state.with_pair(game, |a, c| crate::gap::report(game, a, c))
 }
 
+/// L'objet copié en dernier face à l'objet de la cible pour son emplacement
+/// (ligne « vers la cible » de l'overlay). `None` sans cible ou sans objet cible.
+#[tauri::command]
+pub fn get_target_progress(
+    app: AppHandle,
+    state: State<'_, crate::character::CharacterState>,
+) -> Option<crate::gap::TargetProgress> {
+    let texte = app.state::<crate::AppState>().last_text()?;
+    state
+        .with_target(crate::game::active(), |a, c| {
+            crate::gap::progress(a, c, &texte)
+        })
+        .flatten()
+}
+
+/// Alt+U « vers la cible » : ouvre la recherche de l'objet de la cible pour
+/// l'emplacement de l'objet copié (ou `slot`, s'il est donné).
+#[tauri::command]
+pub fn open_target_search(
+    app: AppHandle,
+    state: State<'_, crate::character::CharacterState>,
+    store: State<'_, crate::settings::SettingsStore>,
+    slot: Option<String>,
+) -> Result<crate::gap::TargetSearch, AppError> {
+    let game = crate::game::active();
+    let settings = store.get();
+    let texte = app.state::<crate::AppState>().last_text();
+    let r = state
+        .with_target(game, |a, c| {
+            let slot = slot
+                .clone()
+                .or_else(|| {
+                    texte
+                        .as_deref()
+                        .and_then(|t| crate::gap::progress(a, c, t))
+                        .map(|p| p.slot)
+                })
+                .ok_or_else(|| {
+                    app_error(
+                        crate::contracts::ErrorCode::Unsupported,
+                        "Ta cible n'a pas d'objet pour cet emplacement.",
+                    )
+                })?;
+            crate::gap::target_search(game, c, &slot, &settings)
+        })
+        .unwrap_or_else(|| {
+            Err(app_error(
+                crate::contracts::ErrorCode::NoCharacter,
+                "Importe un personnage cible dans Copilot.",
+            ))
+        })?;
+    crate::upgrade_search::ouvrir(&r.url)?;
+    Ok(r)
+}
+
+/// Alt+U : objet meilleur que celui porté (`false`) ou objet de la cible (`true`).
+#[tauri::command]
+pub fn set_upgrade_search_target(
+    app: AppHandle,
+    store: State<'_, crate::settings::SettingsStore>,
+    enabled: bool,
+) -> Result<crate::settings::Settings, AppError> {
+    store
+        .update(&app, |s| s.upgrade_search_target = enabled)
+        .map_err(|e| {
+            app_error(
+                crate::contracts::ErrorCode::Internal,
+                format!("Réglage non enregistré ({e})."),
+            )
+        })
+}
+
 /// Gain de DPS de l'objet pour le personnage importé (calcul local).
 #[tauri::command]
 pub fn evaluate_item(

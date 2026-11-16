@@ -27,6 +27,7 @@
     "allow-get-leagues",
     "allow-set-league",
     "allow-set-upgrade-budget",
+    "allow-set-upgrade-search-target",
     "allow-set-shortcuts",
     "allow-get-measure-status",
     "allow-start-measure-session",

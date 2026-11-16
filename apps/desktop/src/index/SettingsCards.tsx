@@ -115,6 +115,17 @@ export function UpgradeBudgetCard({ settings, onSettings }: { settings: Settings
   const devise = poe1 ? (devisePoe1 ?? (actuel.devise as "chaos" | "divine")) : "exalts";
   const valeur = saisie ?? (actuel.montant ? String(actuel.montant) : "");
 
+  async function choisirMode(cible: boolean) {
+    setError(null);
+    setInfo(null);
+    try {
+      onSettings(await commands.setUpgradeSearchTarget(cible));
+      setInfo(cible ? "Alt+U cherchera l'objet de ta cible." : "Alt+U cherchera mieux que ton objet.");
+    } catch (err) {
+      setError(message(err));
+    }
+  }
+
   async function enregistrer() {
     setError(null);
     setInfo(null);
@@ -167,9 +178,39 @@ export function UpgradeBudgetCard({ settings, onSettings }: { settings: Settings
           Enregistrer
         </button>
       </div>
+      <div className="space-y-1 pt-1">
+        <p className="text-text-muted">Ce que cherche le raccourci de recherche (Alt+U par défaut) :</p>
+        <div role="radiogroup" aria-label="Mode de la recherche d'upgrades" className="flex gap-2">
+          {(
+            [
+              [false, "Mieux que mon objet"],
+              [true, "L'objet de ma cible"],
+            ] as const
+          ).map(([cible, nom]) => {
+            const actif = (settings?.upgradeSearchTarget ?? false) === cible;
+            return (
+              <button
+                key={nom}
+                type="button"
+                role="radio"
+                aria-checked={actif}
+                disabled={!settings}
+                onClick={() => void choisirMode(cible)}
+                className={`rounded-chip border px-3 py-1.5 text-sm disabled:opacity-50 ${actif ? "border-accent bg-accent text-accent-ink" : "border-ink-600 text-text-primary hover:bg-ink-800"}`}
+              >
+                {nom}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-text-subtle">
+          « L'objet de ma cible » cherche l'objet du personnage cible pour l'emplacement de l'objet copié (l'unique, ou ses mods à
+          80 % de leur valeur). Sans objet cible à cet emplacement, Alt+U cherche mieux que ton objet.
+        </p>
+      </div>
       {info && <p className="text-xs text-signal-gain">{info}</p>}
       {error && (
-        <StatePanel icon="alert" title="Budget non enregistré" variant="warn">
+        <StatePanel icon="alert" title="Réglage non enregistré" variant="warn">
           {error}
         </StatePanel>
       )}

@@ -428,6 +428,156 @@ fn remplir(modele: &str, valeurs: &[f64]) -> String {
     sortie
 }
 
+// --- Objet copié en jeu (overlay, Alt+U) ----------------------------------
+
+/// Emplacements PoB possibles pour une classe d'objet du jeu (PoE 1 et PoE 2).
+/// Flacons, charmes et joyaux : `None` (non suivis).
+pub fn emplacements(classe: &str) -> Option<Vec<&'static str>> {
+    if let Some((choix, _)) = crate::comparaison::emplacements(classe) {
+        return Some(choix.to_vec());
+    }
+    if classe.starts_with("Two Hand") || classe == "Fishing Rods" {
+        return Some(vec!["Weapon 1"]);
+    }
+    if classe.starts_with("One Hand") || classe.starts_with("Thrusting") || classe == "Rune Daggers"
+    {
+        return Some(vec!["Weapon 1", "Weapon 2"]);
+    }
+    None
+}
+
+/// Où en est l'objet copié par rapport à l'objet de la cible pour son emplacement.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Progression {
+    pub emplacement: String,
+    pub cible: Option<String>,
+    pub cible_unique: bool,
+    pub statut: Statut,
+    /// Mods de l'objet cible atteints par l'objet copié (unique : 1 si c'est lui).
+    pub atteints: usize,
+    /// Mods de l'objet cible (unique : 1).
+    pub total: usize,
+    pub mods_manquants: Vec<String>,
+    pub mods_plus_faibles: Vec<ModPlusFaible>,
+    /// Même décompte pour l'objet porté à cet emplacement (`None` : rien d'équipé
+    /// ou pas de personnage actuel).
+    pub actuel_atteints: Option<usize>,
+}
+
+fn atteints(e: &EcartObjet) -> (usize, usize) {
+    if e.cible_unique {
+        (usize::from(e.statut == Statut::Atteint), 1)
+    } else {
+        (
+            e.mods_cible
+                .saturating_sub(e.mods_manquants.len() + e.mods_plus_faibles.len()),
+            e.mods_cible,
+        )
+    }
+}
+
+/// Objet copié en jeu, comparé à l'objet de la cible. `rarete` : « RARE »,
+/// « UNIQUE »… ; `lignes` : mods tels qu'affichés (sans plages ni suffixes).
+/// Pour les anneaux, l'emplacement où l'objet est le plus proche de la cible.
+pub fn progression(
+    actuel: Option<&BuildPob>,
+    cible: &BuildPob,
+    classe: &str,
+    rarete: &str,
+    nom: Option<&str>,
+    base: &str,
+    lignes: &[String],
+) -> Option<Progression> {
+    let mut texte = format!("Rarity: {rarete}\n");
+    if let Some(n) = nom {
+        texte.push_str(n);
+        texte.push('\n');
+    }
+    texte.push_str(base);
+    texte.push_str("\nImplicits: 0");
+    for l in lignes {
+        texte.push('\n');
+        texte.push_str(l);
+    }
+    let copie = ObjetPob {
+        emplacement: String::new(),
+        rarete: Some(rarete.to_string()),
+        nom: Some(nom.unwrap_or(base).to_string()),
+        base: Some(base.to_string()),
+        texte,
+    };
+    emplacements(classe)?
+        .into_iter()
+        .filter_map(|e| {
+            let objet_cible = cible.objet(e)?;
+            let ecart = comparer_objet(e, Some(&copie), objet_cible);
+            let actuel_atteints = actuel
+                .and_then(|a| a.objet(e))
+                .map(|o| atteints(&comparer_objet(e, Some(o), objet_cible)).0);
+            Some((ecart, actuel_atteints))
+        })
+        .min_by_key(|(e, _)| cout(e))
+        .map(|(e, actuel_atteints)| {
+            let (a, total) = atteints(&e);
+            Progression {
+                emplacement: e.emplacement,
+                cible: e.cible,
+                cible_unique: e.cible_unique,
+                statut: e.statut,
+                atteints: a,
+                total,
+                mods_manquants: e.mods_manquants,
+                mods_plus_faibles: e.mods_plus_faibles,
+                actuel_atteints,
+            }
+        })
+}
+
+/// L'objet de la cible pour un emplacement, de quoi le chercher sur le site de trade.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ObjetCible {
+    pub emplacement: String,
+    /// Nom de l'unique (`None` pour un rare ou un magique).
+    pub unique: Option<String>,
+    pub base: Option<String>,
+    /// Mods explicites (sans implicites, enchantements ni runes), plages résolues.
+    pub lignes: Vec<String>,
+}
+
+/// Objet de la cible à l'emplacement `emplacement`.
+pub fn objet_cible(cible: &BuildPob, emplacement: &str) -> Option<ObjetCible> {
+    let o = cible.objet(emplacement)?;
+    let lignes: Vec<&str> = o.texte.lines().collect();
+    let variante = lignes
+        .iter()
+        .find_map(|l| l.strip_prefix("Selected Variant:"))
+        .and_then(|v| v.trim().parse::<u32>().ok());
+    let (debut, implicites) = lignes
+        .iter()
+        .position(|l| l.starts_with("Implicits:"))
+        .map_or((0, 0), |i| {
+            let n = lignes[i]["Implicits:".len()..].trim().parse().unwrap_or(0);
+            (i + 1, n)
+        });
+    let explicites = lignes[debut..]
+        .iter()
+        .skip(implicites)
+        .filter(|l| {
+            let t = l.trim_start();
+            !(t.starts_with("{enchant}") || t.starts_with("{rune}") || t.starts_with("{implicit}"))
+        })
+        .filter_map(|l| nettoyer(l, variante))
+        .filter(|l| !l.is_empty() && !ligne_ignoree(l))
+        .collect();
+    let base = o.base.clone().or_else(|| o.nom.clone());
+    Some(ObjetCible {
+        emplacement: emplacement.to_string(),
+        unique: unique(o).then(|| o.nom.clone()).flatten(),
+        base,
+        lignes: explicites,
+    })
+}
+
 // --- Gemmes ---------------------------------------------------------------
 
 fn cle(nom: &str, skill_id: &str) -> String {
@@ -717,6 +867,117 @@ mod tests {
         assert_eq!((e.passifs_actuels, e.passifs_cible), (3, 4));
         assert!(!e.autre_classe);
         assert!(ecart(&a, &build("Witch", "", "", "")).autre_classe);
+    }
+
+    #[test]
+    fn progression_de_l_objet_copie() {
+        let a = build(
+            "Sorceress",
+            "",
+            &(item(1, CASQUE_ACTUEL) + &set(&[("Helmet", 1)])),
+            "",
+        );
+        let c = build(
+            "Sorceress",
+            "",
+            &(item(1, CASQUE_CIBLE) + &set(&[("Helmet", 1)])),
+            "",
+        );
+        let copie = |l: &[&str]| l.iter().map(|x| x.to_string()).collect::<Vec<_>>();
+        let p = progression(
+            Some(&a),
+            &c,
+            "Helmets",
+            "RARE",
+            Some("New Crown"),
+            "Voltaic Helm",
+            &copie(&[
+                "+78 to maximum Life",
+                "+31% to Fire Resistance",
+                "+20% to Cold Resistance",
+            ]),
+        )
+        .unwrap();
+        assert_eq!(p.emplacement, "Helmet");
+        assert_eq!((p.atteints, p.total), (2, 4));
+        assert_eq!(p.mods_manquants, vec!["+35% to Lightning Resistance"]);
+        assert_eq!(p.mods_plus_faibles.len(), 1);
+        // Le casque porté n'atteint que la résistance au feu.
+        assert_eq!(p.actuel_atteints, Some(1));
+        // Pas d'objet cible pour cet emplacement, ou classe non suivie.
+        assert!(progression(Some(&a), &c, "Gloves", "RARE", None, "X", &[]).is_none());
+        assert!(progression(Some(&a), &c, "Life Flasks", "MAGIC", None, "X", &[]).is_none());
+    }
+
+    #[test]
+    fn progression_vers_un_unique() {
+        let tete =
+            "Rarity: UNIQUE\nCrown of Eyes\nHubris Circlet\nImplicits: 0\n+50 to maximum Life";
+        let c = build(
+            "Sorceress",
+            "",
+            &(item(1, tete) + &set(&[("Helmet", 1)])),
+            "",
+        );
+        let p = progression(
+            None,
+            &c,
+            "Helmets",
+            "UNIQUE",
+            Some("Crown of Eyes"),
+            "Hubris Circlet",
+            &[],
+        )
+        .unwrap();
+        assert_eq!((p.statut, p.atteints, p.total), (Statut::Atteint, 1, 1));
+        assert_eq!(p.actuel_atteints, None);
+        let p = progression(
+            None,
+            &c,
+            "Helmets",
+            "RARE",
+            Some("Doom Visor"),
+            "Hubris Circlet",
+            &[],
+        )
+        .unwrap();
+        assert_eq!((p.statut, p.atteints), (Statut::AutreObjet, 0));
+    }
+
+    #[test]
+    fn objet_cible_pour_le_trade() {
+        let texte = "Rarity: RARE\nDoom Visor\nVoltaic Helm\nImplicits: 1\n+20 to maximum Mana\n{enchant}10% increased Life\n{crafted}+80 to maximum Life\n{range:1}+(30-34)% to Fire Resistance";
+        let c = build(
+            "Sorceress",
+            "",
+            &(item(1, texte) + &set(&[("Helmet", 1)])),
+            "",
+        );
+        let o = objet_cible(&c, "Helmet").unwrap();
+        assert_eq!(o.unique, None);
+        assert_eq!(o.base.as_deref(), Some("Voltaic Helm"));
+        assert_eq!(
+            o.lignes,
+            vec!["+80 to maximum Life", "+34% to Fire Resistance"]
+        );
+        let u = "Rarity: UNIQUE\nCrown of Eyes\nHubris Circlet\nImplicits: 0\n+50 to maximum Life";
+        let c = build("Sorceress", "", &(item(1, u) + &set(&[("Helmet", 1)])), "");
+        assert_eq!(
+            objet_cible(&c, "Helmet").unwrap().unique.as_deref(),
+            Some("Crown of Eyes")
+        );
+        assert!(objet_cible(&c, "Gloves").is_none());
+    }
+
+    #[test]
+    fn emplacements_poe1() {
+        assert_eq!(emplacements("Rings").unwrap(), vec!["Ring 1", "Ring 2"]);
+        assert_eq!(
+            emplacements("Thrusting One Hand Swords").unwrap(),
+            vec!["Weapon 1", "Weapon 2"]
+        );
+        assert_eq!(emplacements("Two Hand Axes").unwrap(), vec!["Weapon 1"]);
+        assert!(emplacements("Life Flasks").is_none());
     }
 
     #[test]

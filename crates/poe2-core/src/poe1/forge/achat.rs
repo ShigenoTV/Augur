@@ -21,6 +21,11 @@ fn table() -> &'static TableStats {
     T.get_or_init(|| TableStats::lire(TRADE_STATS_POE1))
 }
 
+/// Table des stats du site de trade de PoE 1 (pour la recherche de l'objet cible).
+pub(crate) fn table_stats() -> &'static TableStats {
+    table()
+}
+
 /// Filtre du site de trade de PoE 1 pour une influence de la Forge (Shaper, Elder…).
 fn filtre_influence(influence: &str) -> Option<&'static str> {
     Some(match influence {

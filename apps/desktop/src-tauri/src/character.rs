@@ -254,6 +254,21 @@ impl CharacterState {
             .map(|c| c.info.clone())
     }
 
+    /// Exécute `f` sur le build actuel (s'il y en a un) et la cible du jeu `game`,
+    /// si la cible est importée.
+    pub fn with_target<T>(
+        &self,
+        game: Game,
+        f: impl FnOnce(Option<&BuildPob>, &BuildPob) -> T,
+    ) -> Option<T> {
+        let slots = self.lock();
+        let (actuel, cible) = match game {
+            Game::Poe2 => (&slots.poe2, &slots.poe2_cible),
+            Game::Poe1 => (&slots.poe1, &slots.poe1_cible),
+        };
+        Some(f(actuel.as_ref().map(|c| &c.build), &cible.as_ref()?.build))
+    }
+
     /// Exécute `f` sur le build actuel et la cible du jeu `game`, s'ils sont importés tous les deux.
     pub fn with_pair<T>(&self, game: Game, f: impl FnOnce(&BuildPob, &BuildPob) -> T) -> Option<T> {
         let slots = self.lock();

@@ -11,8 +11,9 @@ use poe2_core::comparaison::{self, Chiffres};
 use poe2_core::pob::BuildPob;
 use serde::Serialize;
 
-use crate::contracts::Element;
+use crate::contracts::{AppError, Element, ErrorCode, app_error};
 use crate::game::Game;
+use poe2_core::parser::{self, Rarete};
 
 /// D'où viennent les chiffres.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -249,6 +250,152 @@ pub fn report(game: Game, actuel: &BuildPob, cible: &BuildPob) -> GapReport {
     }
 }
 
+// --- Objet copié en jeu face à la cible (overlay et Alt+U) ----------------
+
+/// Ce que l'overlay affiche sous l'objet copié : où il en est par rapport à
+/// l'objet de la cible pour son emplacement.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TargetProgress {
+    /// Emplacement PoB (« Helmet », « Ring 1 »…).
+    pub slot: String,
+    pub target: Option<String>,
+    pub target_unique: bool,
+    pub status: GapStatus,
+    pub reached: usize,
+    pub total: usize,
+    pub missing_mods: Vec<String>,
+    pub weaker_mods: Vec<WeakerMod>,
+    /// Même décompte pour l'objet porté (`None` : rien d'équipé ou pas de personnage).
+    pub current_reached: Option<usize>,
+}
+
+/// Recherche de l'objet cible ouverte (Alt+U « vers la cible »).
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TargetSearch {
+    pub url: String,
+    pub slot: String,
+    pub unique: Option<String>,
+    /// Mods cherchés (à au moins 80 % de la valeur de la cible).
+    pub filters: Vec<String>,
+    /// Mods de la cible que le site de trade ne sait pas chercher.
+    pub ignored: Vec<String>,
+}
+
+fn rarete(r: Rarete) -> &'static str {
+    match r {
+        Rarete::Unique => "UNIQUE",
+        Rarete::Rare => "RARE",
+        Rarete::Magique => "MAGIC",
+        _ => "NORMAL",
+    }
+}
+
+/// Objet copié (texte du presse-papier) face à l'objet cible de son emplacement.
+/// `None` : objet hors équipement, illisible, ou pas d'objet cible à cet emplacement.
+pub fn progress(
+    actuel: Option<&BuildPob>,
+    cible: &BuildPob,
+    texte: &str,
+) -> Option<TargetProgress> {
+    let objet = parser::parser(texte).ok()?;
+    if objet.non_identifie {
+        return None;
+    }
+    let lignes: Vec<String> = objet.mods.iter().map(|m| m.texte.clone()).collect();
+    let p = cible::progression(
+        actuel,
+        cible,
+        objet.classe.as_deref()?,
+        rarete(objet.rarete),
+        objet.nom.as_deref(),
+        &objet.base,
+        &lignes,
+    )?;
+    Some(TargetProgress {
+        slot: p.emplacement,
+        target: p.cible,
+        target_unique: p.cible_unique,
+        status: status(p.statut),
+        reached: p.atteints,
+        total: p.total,
+        missing_mods: p.mods_manquants,
+        weaker_mods: p
+            .mods_plus_faibles
+            .into_iter()
+            .map(|m| WeakerMod {
+                target: m.cible,
+                current: m.actuel,
+            })
+            .collect(),
+        current_reached: p.actuel_atteints,
+    })
+}
+
+/// Budget de la recherche (réglages de la recherche d'upgrades du jeu).
+fn budget(game: Game, settings: &crate::settings::Settings) -> Option<(u32, &'static str)> {
+    match game {
+        Game::Poe2 => settings
+            .upgrade_budget
+            .filter(|b| *b > 0)
+            .map(|b| (b, "exalted")),
+        Game::Poe1 => settings.poe1.upgrade_budget.filter(|b| *b > 0).map(|b| {
+            let devise = match settings.poe1.upgrade_budget_currency.as_deref() {
+                Some("divine") => "divine",
+                _ => "chaos",
+            };
+            (b, devise)
+        }),
+    }
+}
+
+/// Prépare la recherche de l'objet cible de l'emplacement `slot` (sans l'ouvrir).
+pub fn target_search(
+    game: Game,
+    cible: &BuildPob,
+    slot: &str,
+    settings: &crate::settings::Settings,
+) -> Result<TargetSearch, AppError> {
+    let o = cible::objet_cible(cible, slot).ok_or_else(|| {
+        app_error(
+            ErrorCode::Unsupported,
+            "Ta cible n'a pas d'objet à cet emplacement.",
+        )
+    })?;
+    let r = poe2_core::forge::achat::recherche_objet_cible(&o, game == Game::Poe1);
+    if o.unique.is_none() && r.filtres.is_empty() {
+        return Err(app_error(
+            ErrorCode::Unsupported,
+            "Aucun mod de l'objet cible ne se cherche sur le site de trade.",
+        ));
+    }
+    let mut requete = r.requete;
+    if let Some((max, devise)) = budget(game, settings)
+        && let Some(filters) = requete["query"]
+            .as_object_mut()
+            .map(|q| q.entry("filters").or_insert_with(|| serde_json::json!({})))
+            .and_then(|f| f.as_object_mut())
+    {
+        filters.insert(
+            "trade_filters".into(),
+            serde_json::json!({ "filters": { "price": { "max": max, "option": devise } } }),
+        );
+    }
+    let ligue = settings.league_for(game);
+    let url = match game {
+        Game::Poe2 => crate::upgrade_search::adresse_requete(ligue, &requete),
+        Game::Poe1 => crate::upgrade_search::adresse_requete_poe1(ligue, &requete),
+    };
+    Ok(TargetSearch {
+        url,
+        slot: o.emplacement,
+        unique: o.unique,
+        filters: r.filtres.into_iter().map(|f| f.libelle).collect(),
+        ignored: r.ignorees,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -284,6 +431,36 @@ Implicits: 0
         assert_eq!(r.numbers.current.resistances[0].element, Element::Fire);
         assert_eq!(r.items[0].status, GapStatus::Improve);
         assert_eq!(r.items[0].weaker_mods[0].target, "+90 to maximum Life");
+    }
+
+    #[test]
+    fn objet_copie_et_recherche_de_la_cible() {
+        let a = build("PathOfBuilding2", 3000.0, "+50 to maximum Life");
+        let c = build(
+            "PathOfBuilding2",
+            3000.0,
+            "+90 to maximum Life\n+40% to Fire Resistance",
+        );
+        let texte = "Item Class: Helmets\nRarity: Rare\nGale Crown\nVoltaic Helm\n--------\nItem Level: 80\n--------\n+85 to maximum Life\n+12% to Cold Resistance\n";
+        let p = progress(Some(&a), &c, texte).unwrap();
+        assert_eq!(p.slot, "Helmet");
+        assert_eq!((p.reached, p.total), (1, 2));
+        assert_eq!(p.missing_mods, vec!["+40% to Fire Resistance"]);
+        assert_eq!(p.current_reached, Some(0));
+        assert!(progress(Some(&a), &c, "pas un objet").is_none());
+
+        let s = crate::settings::Settings {
+            upgrade_budget: Some(5),
+            ..Default::default()
+        };
+        let r = target_search(Game::Poe2, &c, "Helmet", &s).unwrap();
+        assert_eq!(r.filters.len(), 2);
+        assert!(
+            r.url
+                .starts_with("https://www.pathofexile.com/trade2/search/poe2/")
+        );
+        assert!(r.url.contains("exalted"));
+        assert!(target_search(Game::Poe2, &c, "Gloves", &s).is_err());
     }
 
     #[test]

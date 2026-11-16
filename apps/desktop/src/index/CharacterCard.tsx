@@ -6,7 +6,7 @@ import { describeSkill, describeTargetSkill } from "./character";
 /**
  * Personnage du joueur du jeu actif : import d'un code d'export Path of Building
  * (PoE 2 ou PoE 1). Le code est collé à la main ; Augur ne télécharge rien.
- * `target` : le personnage cible (build visé), qui ne sert qu'à la carte Écart.
+ * `target` : le personnage cible (build visé), pour la carte Écart, l'overlay et Alt+U.
  */
 export function CharacterCard({ game = "poe2", target = false }: { game?: Game; target?: boolean }) {
   const poe1 = game === "poe1";
@@ -109,7 +109,7 @@ export function CharacterCard({ game = "poe2", target = false }: { game?: Game; 
         <div className="space-y-2">
           {target && (
             <p className="text-xs text-text-subtle">
-              Le build que tu vises (le tien plus tard, ou celui d'un guide). Augur te montre l'écart avec ton personnage actuel.
+              Le build que tu vises (le tien plus tard, ou celui d'un guide). Augur te montre l'écart avec ton personnage actuel et, en jeu, si un objet copié t'en rapproche.
             </p>
           )}
           <p className="text-xs text-text-subtle">

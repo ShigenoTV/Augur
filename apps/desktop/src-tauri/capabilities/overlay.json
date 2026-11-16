@@ -15,6 +15,8 @@
     "allow-get-measure-status",
     "allow-evaluate-item",
     "allow-open-upgrade-search",
+    "allow-get-target-progress",
+    "allow-open-target-search",
     "allow-get-poe1-item-info",
     "allow-evaluate-poe1-item",
     "allow-get-forge-poe1-advice",

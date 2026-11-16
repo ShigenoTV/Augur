@@ -129,6 +129,8 @@ export type Settings = {
   shortcuts: ShortcutSettings;
   /** Budget de la recherche d'upgrades, en exalts ; null : sans limite. */
   upgradeBudget: number | null;
+  /** Alt+U cherche l'objet du personnage cible (quand il en a un pour l'emplacement). */
+  upgradeSearchTarget?: boolean;
   /** Jeu actif ; les champs ci-dessus sans préfixe sont ceux de PoE 2. */
   game: Game;
   poe1: GameSettings;
@@ -277,6 +279,21 @@ export type GapReport = {
   missingSupports: { skill: string; support: string }[];
   passives: { toTake: number; toRemove: number; current: number; target: number };
 };
+
+/** Objet copié face à l'objet cible de son emplacement (overlay). */
+export type TargetProgress = {
+  slot: string;
+  target: string | null;
+  targetUnique: boolean;
+  status: GapStatus;
+  reached: number;
+  total: number;
+  missingMods: string[];
+  weakerMods: { target: string; current: string }[];
+  currentReached: number | null;
+};
+/** Recherche de l'objet cible ouverte (Alt+U « vers la cible »). */
+export type TargetSearch = { url: string; slot: string; unique: string | null; filters: string[]; ignored: string[] };
 
 /** Forge (crates/poe2-core/src/forge/atelier.rs, prix.rs, ninja.rs, solveur/plan.rs). */
 export type ForgeSlot = "prefix" | "suffix";
@@ -638,6 +655,9 @@ export const commands = {
   importTargetCode: (code: string) => invoke<CharacterInfo>("import_target_code", { code }),
   clearTarget: () => invoke<void>("clear_target"),
   getGap: () => invoke<GapReport | null>("get_gap"),
+  getTargetProgress: () => invoke<TargetProgress | null>("get_target_progress"),
+  openTargetSearch: (slot: string | null) => invoke<TargetSearch>("open_target_search", { slot }),
+  setUpgradeSearchTarget: (enabled: boolean) => invoke<Settings>("set_upgrade_search_target", { enabled }),
   getForgeBases: () => invoke<ForgeBase[]>("get_forge_bases"),
   getForgePoe1Bases: () => invoke<ForgePoe1Base[]>("get_forge_poe1_bases"),
   getForgePoe1Affixes: (baseId: string, ilvl: number, influence: string | null) =>

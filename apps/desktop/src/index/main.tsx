@@ -449,7 +449,7 @@ function App() {
             <Card title="Ligue souhaitée">
               <LeagueCard settings={settings} onSettings={setSettings} />
             </Card>
-            <Card title="Budget de la recherche d'upgrades">
+            <Card title="Recherche d'upgrades (Alt+U)">
               <UpgradeBudgetCard key={game} settings={settings} onSettings={setSettings} />
             </Card>
             <Card title="Raccourcis de l'overlay">
