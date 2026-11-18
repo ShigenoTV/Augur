@@ -46,6 +46,47 @@ pub fn fit_overlay(app: AppHandle, width: f64, height: f64) {
     overlay::fit(&app, width, height);
 }
 
+/// Version compacte et taille de l'overlay (Réglages).
+#[tauri::command]
+pub fn set_overlay_display(
+    app: AppHandle,
+    store: State<'_, crate::settings::SettingsStore>,
+    compact: bool,
+    scale: u16,
+) -> Result<crate::settings::Settings, AppError> {
+    let scale = scale.clamp(
+        crate::settings::OVERLAY_SCALE_MIN,
+        crate::settings::OVERLAY_SCALE_MAX,
+    );
+    let settings = store
+        .update(&app, |s| {
+            s.overlay.compact = compact;
+            s.overlay.scale = scale;
+        })
+        .map_err(|e| {
+            app_error(
+                crate::contracts::ErrorCode::Internal,
+                format!("Réglage non enregistré ({e})."),
+            )
+        })?;
+    overlay::emit_settings(&app, &settings);
+    Ok(settings)
+}
+
+/// Épingle ou libère l'overlay (Réglages ou bouton de l'overlay).
+#[tauri::command]
+pub fn set_overlay_pinned(
+    app: AppHandle,
+    pinned: bool,
+) -> Result<crate::settings::Settings, AppError> {
+    overlay::set_pinned(&app, pinned).map_err(|e| {
+        app_error(
+            crate::contracts::ErrorCode::Internal,
+            format!("Réglage non enregistré ({e})."),
+        )
+    })
+}
+
 #[tauri::command]
 pub fn open_main_window(app: AppHandle) {
     crate::show_main_window(&app);

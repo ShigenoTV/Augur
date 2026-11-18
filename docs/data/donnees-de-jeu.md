@@ -47,6 +47,14 @@ version d'arbre ; nouveaux mods sans poids (probabilité indisponible, jamais de
 encore visé par une Essence. Si une étape échoue (format RePoE changé, Essence qui vise un mod disparu…), la
 commande s'arrête avec le message de l'outil et ne touche à aucun fichier.
 
+Texte des mods : depuis RePoE 0.5.5.10, `mods.min.json` ne donne plus le texte des mods. La commande télécharge
+aussi `stat_translations/stat_descriptions.min.json` et `import_repoe.py --traductions` reconstruit le texte
+(`traduction_stats.py`), à l'identique de l'ancien champ. L'import s'arrête si plus de 5 % des mods restent sans
+texte. Chaque fichier note sa version RePoE (`repoe_version` dans `gemmes.json` et `forge.json.gz`).
+
+Procédure complète pour le patch 1.0 (calendrier, cas à re-mesurer, fiche de mesures) :
+[kit-patch-1.0.md](kit-patch-1.0.md).
+
 Sur GitHub, le workflow manuel « Mise à jour des données » lance la même commande, affiche le rapport dans le
 résumé du run et dépose le rapport et les fichiers régénérés en artefact (il ne pousse rien).
 

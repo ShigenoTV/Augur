@@ -1,6 +1,9 @@
 //! Fenêtre de l'overlay : affichage près du curseur SANS prendre le focus au
 //! jeu, fermeture quand le curseur s'éloigne, raccourcis actifs seulement
 //! pendant l'affichage.
+//!
+//! Épinglé (Réglages ou bouton de l'overlay), l'overlay ne se ferme plus quand
+//! le curseur s'éloigne et reste à la place où le joueur l'a glissé.
 
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -9,10 +12,16 @@ use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 use crate::placement::{self, Rect};
+use crate::settings::{Settings, SettingsStore};
 use crate::shortcuts;
 
 pub const LABEL: &str = "overlay";
 pub const EVENT_HIDDEN: &str = "augur://overlay-hidden";
+/// Affichage de l'overlay changé (charge : `OverlaySettings`), pour les deux fenêtres.
+pub const EVENT_SETTINGS: &str = "augur://overlay-settings";
+
+/// En deçà, la fenêtre est la fenêtre masquée envoyée hors écran.
+const OFF_SCREEN_LIMIT: i32 = -16000;
 
 const GUARD_POLL: Duration = Duration::from_millis(100);
 
@@ -22,11 +31,17 @@ pub struct OverlayCtl {
     anchor: Mutex<Option<(f64, f64)>>,
     /// Dernière position à l'écran : le masquage envoie la fenêtre hors écran.
     last_pos: Mutex<Option<(i32, i32)>>,
+    /// Copie de `OverlaySettings::pinned`, lue par la garde toutes les 100 ms.
+    pinned: AtomicBool,
 }
 
 impl OverlayCtl {
     pub fn is_visible(&self) -> bool {
         self.visible.load(Ordering::Acquire)
+    }
+
+    pub fn is_pinned(&self) -> bool {
+        self.pinned.load(Ordering::Acquire)
     }
 }
 
@@ -40,39 +55,133 @@ pub fn prepare(app: &AppHandle) -> tauri::Result<()> {
         win.set_ignore_cursor_events(false)?;
         native::make_non_activating(&win);
     }
+    if let Some(store) = app.try_state::<SettingsStore>() {
+        let pinned = store.get().overlay.pinned;
+        app.state::<OverlayCtl>()
+            .pinned
+            .store(pinned, Ordering::Release);
+    }
     Ok(())
+}
+
+/// Place actuelle de l'overlay s'il est à l'écran (pixels physiques).
+fn on_screen_position(win: &WebviewWindow) -> Option<(i32, i32)> {
+    win.outer_position()
+        .ok()
+        .map(|p| (p.x, p.y))
+        .filter(|&(x, y)| x > OFF_SCREEN_LIMIT && y > OFF_SCREEN_LIMIT)
+}
+
+fn monitor_rect(m: &tauri::Monitor) -> Rect {
+    Rect {
+        x: m.position().x as f64,
+        y: m.position().y as f64,
+        width: m.size().width as f64,
+        height: m.size().height as f64,
+    }
+}
+
+/// Place enregistrée de l'overlay épinglé, ramenée dans son écran ; `None`
+/// si cet écran n'existe plus (écran débranché, résolution changée).
+fn pinned_position(win: &WebviewWindow, app: &AppHandle, size: (f64, f64)) -> Option<(f64, f64)> {
+    let (x, y) = app
+        .try_state::<SettingsStore>()?
+        .get()
+        .overlay
+        .pinned_position?;
+    let monitor = win.monitor_from_point(x as f64, y as f64).ok().flatten()?;
+    Some(placement::keep_inside(
+        (x as f64, y as f64),
+        size,
+        monitor_rect(&monitor),
+    ))
+}
+
+/// Enregistre la place de l'overlay épinglé, si elle a changé.
+fn save_pinned_position(app: &AppHandle, pos: (i32, i32)) {
+    let Some(store) = app.try_state::<SettingsStore>() else {
+        return;
+    };
+    if store.get().overlay.pinned_position == Some(pos) {
+        return;
+    }
+    if let Err(err) = store.update(app, |s| s.overlay.pinned_position = Some(pos)) {
+        log::warn!("place de l'overlay épinglé non enregistrée : {err}");
+    }
+}
+
+/// Épingle ou libère l'overlay. Épinglé à l'écran, il garde sa place
+/// actuelle ; libéré à l'écran, il se fermera quand le curseur s'éloignera
+/// de l'endroit où il se trouve maintenant.
+pub fn set_pinned(app: &AppHandle, pinned: bool) -> std::io::Result<Settings> {
+    let ctl = app.state::<OverlayCtl>();
+    let visible = ctl.is_visible();
+    let pos = window(app).as_ref().and_then(on_screen_position);
+    let settings = app.state::<SettingsStore>().update(app, |s| {
+        s.overlay.pinned = pinned;
+        if pinned && visible && pos.is_some() {
+            s.overlay.pinned_position = pos;
+        }
+    })?;
+    ctl.pinned.store(pinned, Ordering::Release);
+    if !pinned
+        && visible
+        && let Ok(cursor) = app.cursor_position()
+    {
+        *ctl.anchor.lock().unwrap_or_else(|e| e.into_inner()) = Some((cursor.x, cursor.y));
+    }
+    emit_settings(app, &settings);
+    Ok(settings)
+}
+
+/// Prévient les deux fenêtres d'un changement d'affichage de l'overlay.
+pub fn emit_settings(app: &AppHandle, settings: &Settings) {
+    let _ = app.emit(EVENT_SETTINGS, settings.overlay.clone());
 }
 
 /// Affiche l'overlay à côté du curseur. Appelé après un Ctrl+C sur un objet.
 pub fn show_near_cursor(app: &AppHandle) {
     let Some(win) = window(app) else { return };
     let ctl = app.state::<OverlayCtl>();
+    let size = win
+        .outer_size()
+        .map(|s| (s.width as f64, s.height as f64))
+        .unwrap_or((380.0, 600.0));
+    let set_pos = |(x, y): (f64, f64)| {
+        *ctl.last_pos.lock().unwrap_or_else(|e| e.into_inner()) =
+            Some((x.round() as i32, y.round() as i32));
+    };
+    // Épinglé et déjà affiché : le nouvel objet s'affiche à la même place.
+    let stay = ctl.is_pinned() && ctl.is_visible();
+    let pinned_at = if ctl.is_pinned() && !stay {
+        pinned_position(&win, app, size)
+    } else {
+        None
+    };
+    if let Some(p) = pinned_at {
+        set_pos(p);
+    }
 
     if let Ok(cursor) = app.cursor_position() {
-        let size = win
-            .outer_size()
-            .map(|s| (s.width as f64, s.height as f64))
-            .unwrap_or((380.0, 600.0));
-        let screen = win
-            .monitor_from_point(cursor.x, cursor.y)
-            .ok()
-            .flatten()
-            .or_else(|| win.current_monitor().ok().flatten())
-            .map(|m| Rect {
-                x: m.position().x as f64,
-                y: m.position().y as f64,
-                width: m.size().width as f64,
-                height: m.size().height as f64,
-            });
-        if let Some(screen) = screen {
-            let (x, y) = placement::place_panel((cursor.x, cursor.y), size, screen);
-            *ctl.last_pos.lock().unwrap_or_else(|e| e.into_inner()) =
-                Some((x.round() as i32, y.round() as i32));
+        if !stay && pinned_at.is_none() {
+            let screen = win
+                .monitor_from_point(cursor.x, cursor.y)
+                .ok()
+                .flatten()
+                .or_else(|| win.current_monitor().ok().flatten())
+                .map(|m| monitor_rect(&m));
+            if let Some(screen) = screen {
+                set_pos(placement::place_panel((cursor.x, cursor.y), size, screen));
+            }
         }
         *ctl.anchor.lock().unwrap_or_else(|e| e.into_inner()) = Some((cursor.x, cursor.y));
     }
 
-    let pos = *ctl.last_pos.lock().unwrap_or_else(|e| e.into_inner());
+    let pos = if stay {
+        None
+    } else {
+        *ctl.last_pos.lock().unwrap_or_else(|e| e.into_inner())
+    };
     native::show_without_focus(&win, pos);
     let was_visible = ctl.visible.swap(true, Ordering::AcqRel);
     if !was_visible {
@@ -83,6 +192,13 @@ pub fn show_near_cursor(app: &AppHandle) {
 
 pub fn hide(app: &AppHandle) {
     let ctl = app.state::<OverlayCtl>();
+    // Épinglé : la place choisie (glissée) sert au prochain affichage.
+    if ctl.is_pinned()
+        && ctl.is_visible()
+        && let Some(pos) = window(app).as_ref().and_then(on_screen_position)
+    {
+        save_pinned_position(app, pos);
+    }
     let was_visible = ctl.visible.swap(false, Ordering::AcqRel);
     // Toujours masquer la fenêtre, même si l'état la croit déjà cachée :
     // une fenêtre restée à l'écran par erreur bloquerait les clics du jeu.
@@ -115,6 +231,9 @@ fn spawn_dismiss_guard(app: AppHandle) {
                 let ctl = app.state::<OverlayCtl>();
                 if !ctl.is_visible() {
                     return;
+                }
+                if ctl.is_pinned() {
+                    continue;
                 }
                 let anchor = *ctl.anchor.lock().unwrap_or_else(|e| e.into_inner());
                 let (Some(anchor), Ok(cursor), Some(win)) =

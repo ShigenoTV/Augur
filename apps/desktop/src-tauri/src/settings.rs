@@ -36,6 +36,38 @@ pub struct Settings {
     pub game: Game,
     /// Réglages propres à PoE 1.
     pub poe1: GameSettings,
+    /// Affichage de l'overlay : version compacte, taille, épinglage.
+    pub overlay: OverlaySettings,
+}
+
+/// Taille de l'overlay, en pour cent (bornes du curseur de Réglages).
+pub const OVERLAY_SCALE_MIN: u16 = 80;
+pub const OVERLAY_SCALE_MAX: u16 = 150;
+
+/// Affichage de l'overlay, commun aux deux jeux.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct OverlaySettings {
+    /// Version compacte : verdict, gain principal, prix et alertes seulement.
+    pub compact: bool,
+    /// Taille en pour cent (100 = taille d'origine).
+    pub scale: u16,
+    /// Épinglé : l'overlay ne se ferme plus quand le curseur s'éloigne et
+    /// reste à la place choisie (fermeture par Échap ou le bouton).
+    pub pinned: bool,
+    /// Dernière place de l'overlay épinglé (coin haut gauche, pixels physiques).
+    pub pinned_position: Option<(i32, i32)>,
+}
+
+impl Default for OverlaySettings {
+    fn default() -> Self {
+        Self {
+            compact: false,
+            scale: 100,
+            pinned: false,
+            pinned_position: None,
+        }
+    }
 }
 
 /// Réglages qui dépendent du jeu (pour PoE 1 ; ceux de PoE 2 sont à la racine).
@@ -208,6 +240,25 @@ mod tests {
         assert_eq!(s.league_for(Game::Poe1), "Covens");
         assert_eq!(s.league_for(Game::Poe2), "Standard");
         assert_eq!(s.client_log_path.as_deref(), Some("D:/jeu"));
+        let relu: Settings = serde_json::from_str(&serde_json::to_string(&s).unwrap()).unwrap();
+        assert_eq!(relu, s);
+    }
+
+    #[test]
+    fn overlay_par_defaut_et_place_epinglee() {
+        // Ancien fichier sans bloc overlay : affichage d'origine.
+        let s: Settings = serde_json::from_str(r#"{"league":"Standard"}"#).unwrap();
+        assert_eq!(s.overlay, OverlaySettings::default());
+        assert_eq!(s.overlay.scale, 100);
+        assert!(!s.overlay.compact && !s.overlay.pinned);
+        let s: Settings =
+            serde_json::from_str(r#"{"overlay":{"scale":400,"pinnedPosition":[10,-20]}}"#).unwrap();
+        assert_eq!(
+            s.overlay.scale, 400,
+            "bornée à l'affichage (overlay/main.tsx)"
+        );
+        assert_eq!(s.overlay.pinned_position, Some((10, -20)));
+        assert!(!s.overlay.pinned);
         let relu: Settings = serde_json::from_str(&serde_json::to_string(&s).unwrap()).unwrap();
         assert_eq!(relu, s);
     }

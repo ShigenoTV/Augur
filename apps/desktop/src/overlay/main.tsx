@@ -1,8 +1,9 @@
 import "@augur/ui/styles.css";
-import { CopilotOverlay, fixtures, type CopilotView } from "@augur/ui";
+import { CopilotOverlay, cx, fixtures, Icon, type CopilotView } from "@augur/ui";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { StrictMode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { commands, isAppError, isTauri, on } from "../bridge";
+import { commands, isAppError, isTauri, on, OVERLAY_PAR_DEFAUT, OVERLAY_SCALE_MAX, OVERLAY_SCALE_MIN, type OverlaySettings } from "../bridge";
 import { afficherRaccourci, SHORTCUTS_PAR_DEFAUT } from "../index/shortcuts";
 import { ForgePoe1TipPanel, type ForgePoe1View } from "./ForgePoe1TipPanel";
 import { ForgeTipPanel, type ForgeView } from "./ForgeTipPanel";
@@ -10,6 +11,27 @@ import { Poe1Panel, type Poe1EvalView, type Poe1View } from "./Poe1Panel";
 import { TargetLine } from "./TargetLine";
 import type { TargetProgress } from "../bridge";
 import { EVALUATING_DELAY_MS, runCopilot, tradable } from "./copilot";
+
+/** Épingle l'overlay : il reste ouvert et à sa place jusqu'à Échap. */
+function PinButton({ pinned, compact, onToggle }: { pinned: boolean; compact: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={pinned}
+      className={cx("flex items-center gap-1 hover:text-text-muted", pinned && "text-accent")}
+      title={
+        pinned
+          ? "Épinglé : l'overlay reste ouvert et à sa place. Glisse le bord du haut pour le déplacer."
+          : "Épingler : l'overlay reste ouvert quand le curseur s'éloigne"
+      }
+    >
+      <Icon name="pin" size={11} />
+      {/* En compact, l'icône seule : le pied tient sur une ligne. */}
+      {compact ? <span className="sr-only">{pinned ? "épinglé" : "épingler"}</span> : pinned ? "épinglé" : "épingler"}
+    </button>
+  );
+}
 
 function Overlay() {
   const [view, setView] = useState<CopilotView>(
@@ -22,6 +44,8 @@ function Overlay() {
   const [forge, setForge] = useState<ForgeView | null>(null);
   // Raccourcis choisis dans Réglages, relus à chaque objet copié.
   const [raccourcis, setRaccourcis] = useState(SHORTCUTS_PAR_DEFAUT);
+  // Affichage choisi dans Réglages : compact, taille, épinglage.
+  const [affichage, setAffichage] = useState<OverlaySettings>(OVERLAY_PAR_DEFAUT);
   // Recherche d'upgrades (Alt+U) : objet affiché et résultat de la dernière demande.
   const shown = useRef<CopilotView>(view);
   shown.current = view;
@@ -123,6 +147,31 @@ function Overlay() {
     priceCheck: afficherRaccourci(raccourcis.priceCheck ?? SHORTCUTS_PAR_DEFAUT.priceCheck),
   };
 
+  // Taille de l'overlay : variable CSS lue par chaque panneau (zoom).
+  useEffect(() => {
+    const pct = Math.min(OVERLAY_SCALE_MAX, Math.max(OVERLAY_SCALE_MIN, affichage.scale || 100));
+    document.documentElement.style.setProperty("--augur-scale", String(pct / 100));
+  }, [affichage.scale]);
+
+  useEffect(() => {
+    if (!isTauri()) return;
+    void commands
+      .getSettings()
+      .then((s) => s.overlay && setAffichage(s.overlay))
+      .catch(() => undefined);
+    const unlisten = on.overlaySettings(setAffichage);
+    return () => void unlisten.then((f) => f());
+  }, []);
+
+  const togglePin = () => {
+    if (!isTauri()) return setAffichage((a) => ({ ...a, pinned: !a.pinned }));
+    void commands
+      .setOverlayPinned(!affichage.pinned)
+      .then((s) => s.overlay && setAffichage(s.overlay))
+      .catch(() => undefined);
+  };
+  const pin = <PinButton pinned={affichage.pinned} compact={affichage.compact} onToggle={togglePin} />;
+
   useEffect(() => {
     if (!isTauri()) return;
     void commands
@@ -147,6 +196,7 @@ function Overlay() {
         void settings.then((s) => {
           if (!s) return;
           setRaccourcis({ ...SHORTCUTS_PAR_DEFAUT, ...s.shortcuts });
+          if (s.overlay) setAffichage(s.overlay);
           searchTarget.current = s.upgradeSearchTarget ?? false;
         });
         // Où en est cet objet par rapport à celui de la cible (rien sans cible).
@@ -273,7 +323,19 @@ function Overlay() {
   }, []);
 
   return (
-    <div ref={panel} className="inline-block">
+    <div ref={panel} className="relative inline-block">
+      {affichage.pinned && (view.status !== "hidden" || forge || forgePoe1 || poe1) && (
+        // Épinglé : le bord du haut (dans la marge du panneau) sert de poignée.
+        <div
+          className="group absolute inset-x-0 top-0 z-10 flex h-2.5 cursor-move justify-center"
+          title="Glisser pour déplacer l'overlay épinglé"
+          onMouseDown={(e) => {
+            if (e.button === 0 && isTauri()) void getCurrentWindow().startDragging();
+          }}
+        >
+          <span className="mt-1 h-0.5 w-8 rounded-full bg-ink-600 group-hover:bg-accent" aria-hidden />
+        </div>
+      )}
       {measuring && !poe1 && (view.status !== "hidden" || forge) && (
         <p className="mb-1 flex items-center gap-1.5 text-[11px] text-text-subtle">
           <span className="inline-block size-1.5 rounded-full bg-signal-loss" aria-hidden />
@@ -283,12 +345,15 @@ function Overlay() {
       {forgePoe1 ? (
         <ForgePoe1TipPanel
           view={forgePoe1}
+          pied={pin}
           fermer={hotkeys.close}
           onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)}
         />
       ) : poe1 ? (
         <Poe1Panel
           view={poe1}
+          compact={affichage.compact}
+          pied={pin}
           evaluation={poe1Eval}
           fermer={hotkeys.close}
           trade={hotkeys.upgradeSearch}
@@ -296,13 +361,15 @@ function Overlay() {
           onTrade={openPoe1Trade}
         />
       ) : forge ? (
-        <ForgeTipPanel view={forge} fermer={hotkeys.close} onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)} />
+        <ForgeTipPanel view={forge} pied={pin} fermer={hotkeys.close} onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)} />
       ) : (
         <CopilotOverlay
           state={view}
           hotkeys={hotkeys}
           onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)}
           onUpgradeSearch={openSearch}
+          compact={affichage.compact}
+          footerExtra={pin}
           onPriceCheck={priceCheck}
         />
       )}

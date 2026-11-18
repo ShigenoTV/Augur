@@ -59,6 +59,7 @@ def test_differences_et_format() -> None:
 def _etat(**changements) -> dict:
     base = {
         "repoe": "0.5.5.7",
+        "repoe_sorts": "0.5.5.7",
         "arbre_version": "0_5",
         "poids_date": "2026-11-05",
         "complement_date": "2026-11-08",
@@ -91,6 +92,7 @@ def _etat(**changements) -> dict:
         "poids": {"IncreasedLife9": {"Rings": 1000}, "Ancien1": {"Rings": 500}},
         "trade": {"# to maximum life": {"ids": ["explicit.stat_3299347043"]}},
         "sans_trade": set(),
+        "sans_texte": set(),
     }
     etat = copy.deepcopy(base)
     etat.update(changements)
@@ -110,11 +112,13 @@ def test_rapport_signale_ce_qui_compte() -> None:
     apres["mods"]["Nouveau1"] = {"id": "Nouveau1", "nom": "New", "slot": "prefix", "texte": "new"}
 
     apres["sans_trade"] = {"new"}
+    apres["sans_texte"] = {"Nouveau1"}
+    remesurer = [{"id": "arc-panneau-mesure-001", "patch": "0.5.5e", "confiance": "mesuré", "fichier": "x.yaml"}]
     texte, resume = maj.rapport(
-        avant, apres, "2026-12-12", ["outil : ok"], ["crates/poe2-core/data/gemmes.json"]
+        avant, apres, "2026-12-12", ["outil : ok"], ["crates/poe2-core/data/gemmes.json"], remesurer
     )
 
-    assert "| RePoE (sorts, mods, bases) | 0.5.5.7 | 1.0.0.1 |" in texte
+    assert "| RePoE (mods et bases de Forge) | 0.5.5.7 | 1.0.0.1 |" in texte
     assert "| Sorts et attaques | 2 | 2 | 1 | 1 | 1 |" in texte
     assert "- Nouveau (`NouveauPlayer`)" in texte
     assert "- Fireball (`FireballPlayer`)" in texte
@@ -128,6 +132,8 @@ def test_rapport_signale_ce_qui_compte() -> None:
     assert "1 mod(s) de Forge sans poids connu" in attention and "`Nouveau1`" in attention
     assert "1 ligne(s) de mod sans stat de trade" in attention and "`new`" in attention
     assert "Mods retirés encore visés par une Essence : Ancien1" in attention
+    assert "1 cas golden mesurés en jeu" in attention and "`arc-panneau-mesure-001`" in attention
+    assert "1 mod(s) de Forge sans texte" in attention
     assert "- `crates/poe2-core/data/gemmes.json`" in texte
     assert resume["comptes"]["mods"] == {"ajouts": 1, "retraits": 1, "modifs": 0}
 
@@ -161,6 +167,11 @@ def _faux_depot(racine: Path) -> None:
         json.dumps({"date_releve": "2026-11-08", "pages": {}}), encoding="utf-8"
     )
     (donnees / "essences-coe.json").write_text(json.dumps({"essences": []}), encoding="utf-8")
+    golden = racine / "tests" / "golden" / "archetype"
+    golden.mkdir(parents=True)
+    (golden / "arc.yaml").write_text(
+        '- id: arc-test-001\n  patch: "0.5.5e"\n  confiance: mesuré\n', encoding="utf-8"
+    )
 
 
 def _faux_reseau(skills: dict, tree: dict, arbres: str = GAME_VERSIONS, repoe: str = "0.5.5.8"):
@@ -170,6 +181,7 @@ def _faux_reseau(skills: dict, tree: dict, arbres: str = GAME_VERSIONS, repoe: s
         maj.REPOE + "base_items.json": (REPOE_TEST / "base_items.min.json").read_bytes(),
         maj.REPOE + "base_items.min.json": (REPOE_TEST / "base_items.min.json").read_bytes(),
         maj.REPOE + "mods.min.json": (REPOE_TEST / "mods.min.json").read_bytes(),
+        maj.REPOE + maj.TRADUCTIONS: (REPOE_TEST / "stat_descriptions.min.json").read_bytes(),
         maj.POB + "GameVersions.lua": arbres.encode(),
         maj.EE2_STATS: STATS_NDJSON.encode(),
     }
@@ -226,7 +238,10 @@ def test_commande_complete(tmp_path: Path) -> None:
     assert maj.POB + "TreeData/1_0/tree.json" in demandes
     assert _embarques(racine) == premier
     texte = rapport3.read_text(encoding="utf-8")
-    assert "| RePoE (sorts, mods, bases) | 0.5.5.8 | 1.0.0.1 |" in texte
+    assert "| RePoE (mods et bases de Forge) | 0.5.5.8 | 1.0.0.1 |" in texte
+    assert "| RePoE (sorts de Copilot) | 0.5.5.8 | 1.0.0.1 |" in texte
+    assert "1 cas golden mesurés en jeu sur une version plus ancienne que les données (1.0.0.1)" in texte
+    assert "`arc-test-001`" in texte
     assert "Sort vérifié en jeu modifié ou retiré (Arc)" in texte
     assert "Nouvelle version d'arbre (0_5 → 1_0)" in texte
     assert "niveau 20 : degats.foudre 20–386 → 20–400" in texte

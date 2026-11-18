@@ -38,6 +38,8 @@ export const EVENTS = {
   characterChanged: "augur://character-changed",
   /** Personnage cible importé ou oublié (charge : CharacterInfo | null). */
   targetChanged: "augur://target-changed",
+  /** Affichage de l'overlay changé (charge : OverlaySettings). */
+  overlaySettings: "augur://overlay-settings",
 } as const;
 
 /** Raccourcis de l'overlay, au format « Alt+U », « Ctrl+Shift+F2 », « Escape » (src-tauri/src/shortcuts.rs). */
@@ -134,6 +136,22 @@ export type GameSettings = {
   upgradeBudgetCurrency?: string | null;
 };
 
+/** Affichage de l'overlay, commun aux deux jeux (src-tauri/src/settings.rs). */
+export type OverlaySettings = {
+  /** Version compacte : verdict, gain principal, prix et alertes seulement. */
+  compact: boolean;
+  /** Taille en pour cent, de 80 à 150. */
+  scale: number;
+  /** Épinglé : ne se ferme plus quand le curseur s'éloigne, garde sa place. */
+  pinned: boolean;
+  /** Dernière place de l'overlay épinglé (pixels physiques). */
+  pinnedPosition?: [number, number] | null;
+};
+
+export const OVERLAY_SCALE_MIN = 80;
+export const OVERLAY_SCALE_MAX = 150;
+export const OVERLAY_PAR_DEFAUT: OverlaySettings = { compact: false, scale: 100, pinned: false, pinnedPosition: null };
+
 export type Settings = {
   betaChannel: boolean;
   clientLogPath: string | null;
@@ -147,6 +165,8 @@ export type Settings = {
   /** Jeu actif ; les champs ci-dessus sans préfixe sont ceux de PoE 2. */
   game: Game;
   poe1: GameSettings;
+  /** Absent des anciennes versions du cœur : OVERLAY_PAR_DEFAUT. */
+  overlay?: OverlaySettings;
 };
 
 /** Recherche d'upgrades ouverte dans le navigateur (Alt+U). */
@@ -621,6 +641,8 @@ export const commands = {
   getOverlayState: () => invoke<OverlayState>("get_overlay_state"),
   hideOverlay: () => invoke<void>("hide_overlay"),
   fitOverlay: (width: number, height: number) => invoke<void>("fit_overlay", { width, height }),
+  setOverlayDisplay: (compact: boolean, scale: number) => invoke<Settings>("set_overlay_display", { compact, scale }),
+  setOverlayPinned: (pinned: boolean) => invoke<Settings>("set_overlay_pinned", { pinned }),
   openMainWindow: () => invoke<void>("open_main_window"),
   checkForUpdate: () => invoke<UpdateInfo | null>("check_for_update"),
   installUpdate: () => invoke<void>("install_update"),
@@ -726,6 +748,8 @@ export const on = {
   updateCheckRequested: (cb: () => void): Promise<UnlistenFn> => listen(EVENTS.updateCheckRequested, () => cb()),
   clientLogStatus: (cb: (p: ClientLogStatus) => void): Promise<UnlistenFn> =>
     listen<ClientLogStatus>(EVENTS.clientLogStatus, (e) => cb(e.payload)),
+  overlaySettings: (cb: (p: OverlaySettings) => void): Promise<UnlistenFn> =>
+    listen<OverlaySettings>(EVENTS.overlaySettings, (e) => cb(e.payload)),
   measureSession: (cb: (p: MeasureStatus) => void): Promise<UnlistenFn> =>
     listen<MeasureStatus>(EVENTS.measureSession, (e) => cb(e.payload)),
   ledgerSession: (cb: (p: LedgerStatus) => void): Promise<UnlistenFn> =>

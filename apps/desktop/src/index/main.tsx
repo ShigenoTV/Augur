@@ -17,7 +17,7 @@ import { CharacterCard } from "./CharacterCard";
 import { GapCard } from "./GapCard";
 import { ClientLogCard } from "./ClientLogCard";
 import { BugReportCard, DiagnosticCard } from "./DiagnosticCards";
-import { LeagueCard, ShortcutsCard, UpgradeBudgetCard } from "./SettingsCards";
+import { LeagueCard, OverlayCard, ShortcutsCard, UpgradeBudgetCard } from "./SettingsCards";
 import { afficherRaccourci, SHORTCUTS_PAR_DEFAUT } from "./shortcuts";
 import { summarizeClientLog } from "./clientLog";
 import { ForgeCard } from "./ForgeCard";
@@ -454,6 +454,9 @@ function App() {
             </Card>
             <Card title="Raccourcis de l'overlay">
               <ShortcutsCard settings={settings} onSettings={setSettings} />
+            </Card>
+            <Card title="Affichage de l'overlay">
+              <OverlayCard settings={settings} onSettings={setSettings} />
             </Card>
             <Card title="Mises à jour">
               <div className="flex flex-wrap items-center gap-4 text-sm">

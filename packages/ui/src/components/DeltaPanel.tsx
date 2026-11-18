@@ -124,6 +124,8 @@ export interface DeltaPanelProps {
   delta: ItemDelta;
   price?: PriceEstimate;
   exaltedPerDivine?: number;
+  /** Overlay compact : verdict, gain principal et alertes seulement. */
+  compact?: boolean;
 }
 
 /**
@@ -131,8 +133,16 @@ export interface DeltaPanelProps {
  * Le verdict et le delta de DPS sont lisibles en un coup d'œil ; le détail
  * suit, puis les alertes (résistances qui décrochent, calcul approximatif).
  */
-export function DeltaPanel({ delta, price, exaltedPerDivine }: DeltaPanelProps) {
+export function DeltaPanel({ delta, price, exaltedPerDivine, compact = false }: DeltaPanelProps) {
   if (delta.support === "unsupported") {
+    if (compact) {
+      return (
+        <p className="flex items-center gap-1.5 text-xs text-text-muted">
+          <Icon name="ban" size={12} className="shrink-0 text-signal-loss" />
+          Archétype pas encore pris en charge.
+        </p>
+      );
+    }
     return (
       <div className="flex gap-2 rounded-panel border border-signal-loss/30 bg-signal-loss/5 p-3 text-sm text-text-muted">
         <Icon name="ban" className="mt-0.5 shrink-0 text-signal-loss" />
@@ -153,7 +163,7 @@ export function DeltaPanel({ delta, price, exaltedPerDivine }: DeltaPanelProps) 
   const notes = delta.mechanics.filter((m) => m.confidence !== "confirmed");
 
   return (
-    <section aria-label="Comparaison avec ton équipement" className="space-y-3">
+    <section aria-label="Comparaison avec ton équipement" className={compact ? "space-y-2" : "space-y-3"}>
       <div className="flex items-end justify-between gap-3">
         <div>
           <p className={cx("text-xs font-semibold uppercase tracking-wider", verdictStyle[verdict.kind])}>
@@ -177,29 +187,33 @@ export function DeltaPanel({ delta, price, exaltedPerDivine }: DeltaPanelProps) 
         )}
       </div>
 
-      <p className="flex flex-wrap items-center gap-x-2 text-xs text-text-subtle">
-        <span>
-          {slotLabel(delta.slot)}
-          {delta.weaponSet && ` · set d'armes ${delta.weaponSet === 1 ? "I" : "II"}`}
-        </span>
-        {delta.equippedName && (
-          <span className="truncate">
-            remplace <span className="text-text-muted">{delta.equippedName}</span>
+      {!compact && (
+        <p className="flex flex-wrap items-center gap-x-2 text-xs text-text-subtle">
+          <span>
+            {slotLabel(delta.slot)}
+            {delta.weaponSet && ` · set d'armes ${delta.weaponSet === 1 ? "I" : "II"}`}
           </span>
-        )}
-      </p>
+          {delta.equippedName && (
+            <span className="truncate">
+              remplace <span className="text-text-muted">{delta.equippedName}</span>
+            </span>
+          )}
+        </p>
+      )}
 
-      <dl className="space-y-1">
-        <StatRow label="DPS total" delta={delta.dps} kind="relative" emphasis />
-        {/* EHP à zéro des deux côtés : pas encore calculé, la ligne serait trompeuse. */}
-        {(delta.ehp.before !== 0 || delta.ehp.after !== 0) && (
-          <StatRow label="EHP" delta={delta.ehp} kind="relative" emphasis />
-        )}
-        {delta.resistances.map((r) => (
-          <StatRow key={r.element} label={elementLabel(r.element)} delta={r} kind="points" cap={r.cap} />
-        ))}
-        {delta.spirit && <StatRow label="Spirit disponible" delta={delta.spirit} kind="points" />}
-      </dl>
+      {!compact && (
+        <dl className="space-y-1">
+          <StatRow label="DPS total" delta={delta.dps} kind="relative" emphasis />
+          {/* EHP à zéro des deux côtés : pas encore calculé, la ligne serait trompeuse. */}
+          {(delta.ehp.before !== 0 || delta.ehp.after !== 0) && (
+            <StatRow label="EHP" delta={delta.ehp} kind="relative" emphasis />
+          )}
+          {delta.resistances.map((r) => (
+            <StatRow key={r.element} label={elementLabel(r.element)} delta={r} kind="points" cap={r.cap} />
+          ))}
+          {delta.spirit && <StatRow label="Spirit disponible" delta={delta.spirit} kind="points" />}
+        </dl>
+      )}
 
       {warnings.length > 0 && (
         <ul className="space-y-1" aria-label="Alertes">
@@ -215,7 +229,7 @@ export function DeltaPanel({ delta, price, exaltedPerDivine }: DeltaPanelProps) 
         </ul>
       )}
 
-      {notes.length > 0 && (
+      {!compact && notes.length > 0 && (
         <div
           className={cx(
             "rounded-chip border px-2 py-1.5 text-xs text-text-muted",

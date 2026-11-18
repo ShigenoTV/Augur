@@ -54,6 +54,32 @@ describe("CopilotOverlay", () => {
     expect(screen.queryByText("Prix")).toBeNull();
   });
 
+  for (const { id, state } of overlayStates) {
+    it(`rend l'état « ${id} » en compact`, () => {
+      const { container } = render(<CopilotOverlay state={state} now={NOW} compact />);
+      if (state.status !== "hidden") expect(container.firstChild).not.toBeNull();
+    });
+  }
+
+  it("compact : verdict et alertes seulement, « détails » déplie la vue complète", () => {
+    const s = overlayStates.find((o) => o.id === "tradeoff")!.state;
+    render(<CopilotOverlay state={s} now={NOW} compact />);
+    expect(screen.queryByText("DPS total")).toBeNull();
+    expect(screen.queryByText(/les \d+ mods/)).toBeNull();
+    expect(screen.getByText(/Résistance au froid sous le plafond/)).toBeTruthy();
+    fireEvent.click(screen.getByText("détails"));
+    expect(screen.getByText("DPS total")).toBeTruthy();
+    fireEvent.click(screen.getByText("réduire"));
+    expect(screen.queryByText("DPS total")).toBeNull();
+  });
+
+  it("affiche le contrôle ajouté au pied", () => {
+    const s = overlayStates.find((o) => o.id === "upgrade")!.state;
+    render(<CopilotOverlay state={s} now={NOW} footerExtra={<button type="button">épingler</button>} />);
+    expect(screen.getByText("épingler")).toBeTruthy();
+    expect(screen.queryByText("détails")).toBeNull();
+  });
+
   it("affiche le prix d'une pile sans comparaison", () => {
     const s = overlayStates.find((o) => o.id === "stack-price")!.state;
     render(<CopilotOverlay state={s} now={NOW} />);
