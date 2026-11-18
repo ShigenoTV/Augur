@@ -6,7 +6,18 @@ import { libelleCourt } from "../index/forge";
 export type ForgePoe1View = { status: "tip"; tip: ForgePoe1Tip } | { status: "error"; message: string };
 
 /** Prochaine action du plan Forge PoE 1 suivi, pour l'objet copié en jeu (Ctrl+Alt+C). */
-export function ForgePoe1TipPanel({ view, onClose, fermer }: { view: ForgePoe1View; onClose?: () => void; fermer: string }) {
+export function ForgePoe1TipPanel({
+  view,
+  onClose,
+  fermer,
+  pied,
+}: {
+  view: ForgePoe1View;
+  onClose?: () => void;
+  fermer: string;
+  /** Contrôle ajouté au pied (épinglage de l'overlay). */
+  pied?: React.ReactNode;
+}) {
   // Même monnaie d'affichage que la fenêtre principale (stockage local partagé).
   const { affichage } = useAffichagePoe1();
   const cout = (v: number | null) => formatPoe1(v, affichage);
@@ -28,6 +39,7 @@ export function ForgePoe1TipPanel({ view, onClose, fermer }: { view: ForgePoe1Vi
           <Kbd>{fermer}</Kbd> fermer
         </button>
         <span>Plan suivi depuis la fenêtre Augur</span>
+        {pied}
       </footer>
     </div>
   );

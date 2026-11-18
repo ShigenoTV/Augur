@@ -1,4 +1,5 @@
-import { DeltaPanel, Kbd, StatePanel, formatNumber, slotLabel } from "@augur/ui";
+import { cx, DeltaPanel, Kbd, StatePanel, formatNumber, slotLabel } from "@augur/ui";
+import { useEffect, useState } from "react";
 import type { Poe1Evaluation, Poe1ItemInfo, Poe1Line, Poe1Price } from "../bridge";
 
 export type Poe1View =
@@ -57,6 +58,8 @@ export function Poe1Panel({
   onTrade,
   fermer,
   trade,
+  compact: compactReglage = false,
+  pied,
 }: {
   view: Poe1View;
   evaluation?: Poe1EvalView;
@@ -64,35 +67,65 @@ export function Poe1Panel({
   onTrade?: () => void;
   fermer: string;
   trade: string;
+  /** Version compacte (Réglages) : nom, verdict, cote ; « détails » déplie le reste. */
+  compact?: boolean;
+  /** Contrôle ajouté au pied (épinglage de l'overlay). */
+  pied?: React.ReactNode;
 }) {
+  // « détails » vaut pour l'objet affiché seulement.
+  const [deplie, setDeplie] = useState(false);
+  const info = view.status === "ready" ? view.info : null;
+  useEffect(() => setDeplie(false), [info]);
+  const compact = compactReglage && !deplie;
   return (
     <div
-      className="augur-panel w-[360px] p-3.5 text-text-primary motion-safe:animate-[augur-enter_120ms_var(--ease-out-quick)]"
+      className={cx(
+        "augur-panel text-text-primary motion-safe:animate-[augur-enter_120ms_var(--ease-out-quick)]",
+        compact ? "w-[280px] p-2.5" : "w-[360px] p-3.5",
+      )}
       style={{ zoom: "var(--augur-scale)" }}
     >
-      <p className="mb-2 text-2xs font-semibold uppercase tracking-wider text-accent">PoE 1</p>
+      <p className={cx("text-2xs font-semibold uppercase tracking-wider text-accent", compact ? "mb-1" : "mb-2")}>PoE 1</p>
       {view.status === "loading" && <p className="text-sm text-text-subtle">Lecture de l'objet…</p>}
       {view.status === "error" && (
         <StatePanel icon="alert" title="Objet non lu" variant="warn">
           {view.message}
         </StatePanel>
       )}
-      {view.status === "ready" && <Contenu info={view.info} evaluation={evaluation ?? { status: "none" }} />}
-      <footer className="mt-3 flex items-center justify-between gap-2 border-t border-ink-700 pt-2 text-2xs text-text-subtle">
+      {view.status === "ready" && (
+        <Contenu info={view.info} evaluation={evaluation ?? { status: "none" }} compact={compact} />
+      )}
+      <footer
+        className={cx(
+          "flex items-center justify-between gap-2 border-t border-ink-700 pt-2 text-2xs text-text-subtle",
+          compact ? "mt-2" : "mt-3",
+        )}
+      >
         <button type="button" onClick={onClose} className="flex items-center gap-1 hover:text-text-muted">
           <Kbd>{fermer}</Kbd> fermer
         </button>
-        {view.status === "ready" && (
-          <button type="button" onClick={onTrade} className="flex items-center gap-1 hover:text-text-muted">
-            <Kbd>{trade}</Kbd> chercher mieux sur le trade
+        {compactReglage && view.status === "ready" && (
+          <button
+            type="button"
+            onClick={() => setDeplie((v) => !v)}
+            aria-expanded={deplie}
+            className="hover:text-text-muted"
+          >
+            {deplie ? "réduire" : "détails"}
           </button>
         )}
+        {view.status === "ready" && (
+          <button type="button" onClick={onTrade} className="flex items-center gap-1 hover:text-text-muted">
+            <Kbd>{trade}</Kbd> {compact ? "trade" : "chercher mieux sur le trade"}
+          </button>
+        )}
+        {pied}
       </footer>
     </div>
   );
 }
 
-function Comparaison({ view }: { view: Poe1EvalView }) {
+function Comparaison({ view, compact = false }: { view: Poe1EvalView; compact?: boolean }) {
   if (view.status === "none") return null;
   if (view.status === "loading") {
     return <p className="text-2xs text-text-subtle">Comparaison avec ton build…</p>;
@@ -108,6 +141,7 @@ function Comparaison({ view }: { view: Poe1EvalView }) {
     return <p className="text-2xs text-signal-warn">Comparaison impossible : {view.message}</p>;
   }
   const { delta, others, lines } = view.evaluation;
+  if (compact) return <DeltaPanel delta={delta} compact />;
   const shown = lines.slice(0, MAX_LIGNES);
   return (
     <div className="space-y-2">
@@ -133,7 +167,16 @@ function Comparaison({ view }: { view: Poe1EvalView }) {
   );
 }
 
-function Contenu({ info, evaluation }: { info: Poe1ItemInfo; evaluation: Poe1EvalView }) {
+function Contenu({
+  info,
+  evaluation,
+  compact = false,
+}: {
+  info: Poe1ItemInfo;
+  evaluation: Poe1EvalView;
+  compact?: boolean;
+}) {
+  const separateur = <div className={cx("augur-divider", compact ? "my-2" : "my-3")} />;
   const details = [
     RARETE[info.rarity] ?? info.rarity,
     info.itemLevel ? `niveau d'objet ${info.itemLevel}` : null,
@@ -145,8 +188,8 @@ function Contenu({ info, evaluation }: { info: Poe1ItemInfo; evaluation: Poe1Eva
     <>
       <p className="text-sm font-semibold">{info.name ?? info.base}</p>
       {info.name && <p className="text-2xs text-text-muted">{info.base}</p>}
-      <p className="mt-0.5 text-2xs text-text-subtle">{details.join(" · ")}</p>
-      {info.mods.length > 0 && (
+      {!compact && <p className="mt-0.5 text-2xs text-text-subtle">{details.join(" · ")}</p>}
+      {!compact && info.mods.length > 0 && (
         <ul className="mt-2 max-h-40 space-y-0.5 overflow-hidden text-2xs text-text-muted">
           {info.mods.slice(0, 10).map((m, i) => (
             <li key={i}>{m}</li>
@@ -155,24 +198,26 @@ function Contenu({ info, evaluation }: { info: Poe1ItemInfo; evaluation: Poe1Eva
       )}
       {evaluation.status !== "none" && (
         <>
-          <div className="augur-divider my-3" />
-          <Comparaison view={evaluation} />
+          {separateur}
+          <Comparaison view={evaluation} compact={compact} />
         </>
       )}
-      <div className="augur-divider my-3" />
+      {separateur}
       {info.price ? (
         <div>
           <p className="text-base font-semibold text-signal-gain">{formatCote(info.price)}</p>
-          <p className="text-2xs text-text-subtle">
+          {!compact && (
+            <p className="text-2xs text-text-subtle">
             Cote approximative en {info.league}
             {info.price.annonces !== null ? `, ${info.price.annonces} annonce${info.price.annonces > 1 ? "s" : ""}` : ""}
             {info.price.liens ? `, ${info.price.liens} liens` : ""}.
           </p>
+          )}
         </div>
       ) : (
         <p className="text-2xs text-text-subtle">{info.priceNote ?? "Pas de cote."}</p>
       )}
-      {info.tradeSummary.length > 0 && (
+      {!compact && info.tradeSummary.length > 0 && (
         <p className="mt-2 text-2xs text-text-subtle">Recherche de trade : {info.tradeSummary.join(", ")}.</p>
       )}
     </>

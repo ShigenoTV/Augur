@@ -1,6 +1,18 @@
 import { Kbd, StatePanel } from "@augur/ui";
-import { useEffect, useState, type KeyboardEvent } from "react";
-import { commands, DEFAULT_LEAGUE, isAppError, isTauri, type Settings, type ShortcutSettings } from "../bridge";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import {
+  commands,
+  DEFAULT_LEAGUE,
+  isAppError,
+  isTauri,
+  on,
+  OVERLAY_PAR_DEFAUT,
+  OVERLAY_SCALE_MAX,
+  OVERLAY_SCALE_MIN,
+  type OverlaySettings,
+  type Settings,
+  type ShortcutSettings,
+} from "../bridge";
 import { jeuActif, ligueDuJeu, ligueParDefaut } from "./game";
 import { afficherRaccourci, lireTouche, SHORTCUTS_PAR_DEFAUT } from "./shortcuts";
 
@@ -302,6 +314,101 @@ export function ShortcutsCard({ settings, onSettings }: { settings: Settings | n
       </div>
       {error && (
         <StatePanel icon="alert" title="Raccourci refusé" variant="warn">
+          {error}
+        </StatePanel>
+      )}
+    </div>
+  );
+}
+
+/** Version compacte, taille et épinglage de l'overlay (communs aux deux jeux). */
+export function OverlayCard({ settings, onSettings }: { settings: Settings | null; onSettings: (s: Settings) => void }) {
+  const [error, setError] = useState<string | null>(null);
+  const actuel: OverlaySettings = settings?.overlay ?? OVERLAY_PAR_DEFAUT;
+  const [taille, setTaille] = useState<number | null>(null);
+  const affichee = taille ?? actuel.scale;
+
+  // Épinglé ou libéré depuis l'overlay : la case suit.
+  const reglages = useRef(settings);
+  reglages.current = settings;
+  useEffect(() => {
+    if (!isTauri()) return;
+    const unlisten = on.overlaySettings((overlay) => {
+      if (reglages.current) onSettings({ ...reglages.current, overlay });
+    });
+    return () => void unlisten.then((f) => f());
+  }, [onSettings]);
+
+  async function enregistrer(change: () => Promise<Settings>) {
+    setError(null);
+    try {
+      onSettings(await change());
+    } catch (err) {
+      setError(message(err));
+    }
+  }
+  const affichage = (compact: boolean, scale: number) =>
+    void enregistrer(() => commands.setOverlayDisplay(compact, scale)).then(() => setTaille(null));
+
+  return (
+    <div className="space-y-3 text-sm">
+      <label className="flex items-start gap-2 text-text-muted">
+        <input
+          type="checkbox"
+          checked={actuel.compact}
+          disabled={!settings}
+          onChange={(e) => affichage(e.target.checked, actuel.scale)}
+          className="mt-1 accent-[var(--color-accent)]"
+        />
+        <span>
+          Overlay compact
+          <span className="block text-xs text-text-subtle">
+            Verdict, gain principal, prix et alertes seulement. Le bouton « détails » de l'overlay déplie le reste
+            pour l'objet affiché.
+          </span>
+        </span>
+      </label>
+      <label className="flex items-start gap-2 text-text-muted">
+        <input
+          type="checkbox"
+          checked={actuel.pinned}
+          disabled={!settings}
+          onChange={(e) => void enregistrer(() => commands.setOverlayPinned(e.target.checked))}
+          className="mt-1 accent-[var(--color-accent)]"
+        />
+        <span>
+          Épingler l'overlay
+          <span className="block text-xs text-text-subtle">
+            Il reste ouvert quand le curseur s'éloigne et garde sa place : glisse son bord du haut pour le déplacer.
+            Les objets copiés suivants s'y affichent. {afficherRaccourci(settings?.shortcuts.closeOverlay ?? "Escape")}{" "}
+            le ferme. Aussi réglable depuis l'overlay (bouton « épingler »).
+          </span>
+        </span>
+      </label>
+      <div className="flex flex-wrap items-center gap-3 text-text-muted">
+        <label htmlFor="overlay-taille">Taille</label>
+        <input
+          id="overlay-taille"
+          type="range"
+          min={OVERLAY_SCALE_MIN}
+          max={OVERLAY_SCALE_MAX}
+          step={10}
+          value={affichee}
+          disabled={!settings}
+          onChange={(e) => setTaille(Number(e.target.value))}
+          onPointerUp={() => taille !== null && affichage(actuel.compact, taille)}
+          onKeyUp={() => taille !== null && affichage(actuel.compact, taille)}
+          className="w-48 accent-[var(--color-accent)]"
+        />
+        <span className="w-12 tabular-nums text-text-primary">{affichee} %</span>
+        {affichee !== 100 && (
+          <button type="button" onClick={() => affichage(actuel.compact, 100)} className={btnSecondary}>
+            Taille d'origine
+          </button>
+        )}
+      </div>
+      {error && (
+        <StatePanel icon="alert" title="Réglage non enregistré" variant="warn">
           {error}
         </StatePanel>
       )}
