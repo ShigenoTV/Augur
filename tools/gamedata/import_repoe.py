@@ -38,6 +38,10 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from traduction_stats import Traducteur
+
 SCHEMA_VERSION = 1
 
 # Domaines RePoE des affixes d'équipement : `item` (armes, armures, bijoux),
@@ -75,13 +79,16 @@ def _need(entry: dict, key: str, kind: type, where: str):
     return value
 
 
-def import_mods(mods: dict) -> list[dict]:
+def import_mods(mods: dict, traducteur=None) -> list[dict]:
     """Affixes d'équipement, triés par id.
 
     Contrairement à poe2-craft-assistant (craft seulement), on garde aussi les
     mods d'Essence et ceux de poids nul : le parseur et le pricing doivent
     reconnaître tout mod qu'on peut trouver sur un objet. `tirable` dit si le
     mod peut sortir d'un tirage classique.
+
+    Texte : le champ `text` de RePoE, ou à défaut (RePoE 0.5.5.10 et suivants le laissent vide) le texte
+    reconstruit par `traducteur` (`traduction_stats.Traducteur`) depuis les traductions de stats du jeu.
     """
     if not isinstance(mods, dict):
         raise RepoeError("mods.min.json : un objet { id: mod } est attendu")
@@ -119,7 +126,7 @@ def import_mods(mods: dict) -> list[dict]:
                 "groupes": groups,
                 "type": m.get("type") or "",
                 "niveau": _need(m, "required_level", int, where),
-                "texte": clean_text(m.get("text") or ""),
+                "texte": clean_text(_texte(m, stats, traducteur)),
                 "stats": [
                     {
                         "id": _need(s, "id", str, where),
@@ -137,6 +144,14 @@ def import_mods(mods: dict) -> list[dict]:
         )
     out.sort(key=lambda x: x["id"])
     return out
+
+
+def _texte(m: dict, stats: list, traducteur) -> str:
+    if m.get("text"):
+        return m["text"]
+    if traducteur is None:
+        return ""
+    return traducteur.texte(stats) or ""
 
 
 def import_bases(items: dict) -> list[dict]:
@@ -188,13 +203,27 @@ def canonical_json(obj: object) -> bytes:
     ).encode("utf-8")
 
 
+# Au-delà de cette part de mods sans texte, l'import s'arrête : le parseur et Forge ne reconnaîtraient
+# plus les objets copiés en jeu.
+PART_MAX_SANS_TEXTE = 0.05
+
+
 def build_tables(
-    mods: dict, items: dict, repoe_version: str | None
+    mods: dict, items: dict, repoe_version: str | None, traducteur=None
 ) -> dict[str, bytes]:
-    out_mods = import_mods(mods)
+    out_mods = import_mods(mods, traducteur)
     out_bases = import_bases(items)
     if not out_mods or not out_bases:
         raise RepoeError("aucun mod ou aucune base retenu : le format RePoE a changé ?")
+    sans_texte = sum(not m["texte"] for m in out_mods)
+    if sans_texte > PART_MAX_SANS_TEXTE * len(out_mods):
+        conseil = (
+            "le format des traductions de stats a changé ?"
+            if traducteur is not None
+            else "RePoE ne remplit plus le texte des mods : relancer avec --traductions "
+            "(stat_translations/stat_descriptions.min.json)"
+        )
+        raise RepoeError(f"{sans_texte} mods sur {len(out_mods)} sans texte : {conseil}")
     groups = Counter(m["groupe"] for m in out_mods)
     source = {
         "schema": SCHEMA_VERSION,
@@ -206,6 +235,7 @@ def build_tables(
             "mods_tirables": sum(m["tirable"] for m in out_mods),
             "groupes": len(groups),
             "bases": len(out_bases),
+            "mods_sans_texte": sans_texte,
         },
     }
     return {
@@ -232,11 +262,19 @@ def main(argv: list[str] | None = None) -> int:
         "--repoe-version",
         help="version affichée sur repoe-fork.github.io/poe2 (ex. 4.5.5.2)",
     )
+    ap.add_argument(
+        "--traductions",
+        type=Path,
+        help="stat_translations/stat_descriptions.min.json de RePoE, pour reconstruire le texte des mods",
+    )
     args = ap.parse_args(argv)
     try:
         mods = json.loads(args.mods.read_text(encoding="utf-8"))
         items = json.loads(args.bases.read_text(encoding="utf-8"))
-        tables = build_tables(mods, items, args.repoe_version)
+        traducteur = None
+        if args.traductions:
+            traducteur = Traducteur(json.loads(args.traductions.read_text(encoding="utf-8")))
+        tables = build_tables(mods, items, args.repoe_version, traducteur)
     except (OSError, json.JSONDecodeError, RepoeError) as e:
         print(f"erreur : {e}", file=sys.stderr)
         return 1

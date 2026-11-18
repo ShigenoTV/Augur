@@ -467,6 +467,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--bases", type=Path, help="base_items.json de RePoE (armes)")
     p.add_argument("--tree", type=Path, required=True)
     p.add_argument("--tree-version", required=True)
+    p.add_argument("--repoe-version", help="version RePoE de skills.json, notée dans gemmes.json")
     p.add_argument("--out", type=Path, required=True)
     a = p.parse_args(argv)
     try:
@@ -478,6 +479,8 @@ def main(argv: list[str] | None = None) -> int:
         }
         if a.bases:
             gemmes["armes"] = armes(json.loads(a.bases.read_text(encoding="utf-8")))
+        if a.repoe_version:
+            gemmes["repoe_version"] = a.repoe_version
         arbre = {"version": a.tree_version, "passifs": tree(tree_data)}
     except (DonneesError, KeyError, TypeError, ValueError) as e:
         print(f"erreur : {e}", file=sys.stderr)

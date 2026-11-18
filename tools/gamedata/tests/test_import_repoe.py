@@ -80,6 +80,7 @@ def test_sortie_deterministe_et_canonique():
         "mods_tirables": 2,
         "groupes": 2,
         "bases": 2,
+        "mods_sans_texte": 0,
     }
     assert source["version_repoe"] == "4.5.5.2"
 
