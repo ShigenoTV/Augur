@@ -18,7 +18,11 @@ export type * from "@augur/contracts";
 
 // ── Propre à l'interface ───────────────────────────────────────────────────
 
-export type PricingState = "pending" | "done" | "unavailable" | "disabled";
+/**
+ * `unpriced` : pas de cote automatique pour cet objet (uniques et rares : cote trade sur raccourci).
+ * `unavailable` : la cote n'a pas pu être obtenue (réseau, limite du site de trade…).
+ */
+export type PricingState = "pending" | "done" | "unavailable" | "disabled" | "unpriced";
 
 /**
  * Modèle de vue de l'overlay Upgrade Copilot, union discriminée sur `status`.
@@ -36,8 +40,19 @@ export type CopilotView =
       pricing: PricingState;
       rateLimit?: RateLimitStatus;
       character?: CharacterSummary;
+      /** Objet sans comparaison possible (monnaie, essence…) : seul le prix est affiché. */
+      priceOnly?: boolean;
+      /** Précision affichée sous le prix (pas de cote, erreur du site de trade…). */
+      priceNote?: string;
     }
-  | { status: "noCharacter"; item: ParsedItem }
+  | {
+      status: "noCharacter";
+      item: ParsedItem;
+      /** Le prix reste disponible sans personnage importé. */
+      price?: PriceEstimate;
+      pricing?: PricingState;
+      priceNote?: string;
+    }
   | { status: "unrecognized"; error: AppError }
   | { status: "disabled"; reason: string };
 

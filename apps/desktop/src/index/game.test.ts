@@ -6,7 +6,7 @@ const base: Settings = {
   betaChannel: false,
   clientLogPath: "D:\\poe2",
   league: "Standard",
-  shortcuts: { closeOverlay: "Escape", upgradeSearch: "Alt+U" },
+  shortcuts: { closeOverlay: "Escape", upgradeSearch: "Alt+U", priceCheck: "Alt+D" },
   upgradeBudget: null,
   game: "poe2",
   poe1: { clientLogPath: null, league: null },

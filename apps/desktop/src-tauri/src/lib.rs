@@ -37,10 +37,12 @@ pub mod placement;
 mod poe1_calc;
 mod poe1_items;
 mod poe1_stash;
+mod poe2_price;
 mod secret;
 mod settings;
 mod shortcuts;
 mod time;
+mod trade_price;
 mod tray;
 mod updates;
 mod upgrade_search;
@@ -90,6 +92,8 @@ pub fn run() {
         .manage(client_log::ClientLogState::default())
         .manage(measures::MeasureState::default())
         .manage(poe1_items::Poe1Ninja::default())
+        .manage(poe2_price::Poe2Ninja::default())
+        .manage(trade_price::TradeBudget::default())
         .manage(poe1_calc::Poe1Calc::default())
         .invoke_handler(tauri::generate_handler![
             commands::parse_clipboard_item,
@@ -136,6 +140,8 @@ pub fn run() {
             commands::get_character,
             commands::evaluate_item,
             commands::estimate_price,
+            commands::trade_price_check,
+            commands::open_trade_listings,
             commands::import_pob_code,
             commands::clear_character,
             commands::get_target,

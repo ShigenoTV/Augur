@@ -38,9 +38,11 @@ export function formatSignedNumber(value: number): string {
   return `${sign(rounded)}${formatNumber(Math.abs(rounded))}`;
 }
 
-/** « 12 ex », « 1,5 div ». */
+const petit = new Intl.NumberFormat("fr-FR", { maximumSignificantDigits: 2 });
+
+/** « 12 ex », « 1,5 div », « 0,012 ex » (petites valeurs : deux chiffres significatifs). */
 export function formatPrice(value: number, currency: string): string {
-  const fmt = value < 10 && !Number.isInteger(value) ? oneDecimal : intFmt;
+  const fmt = value > 0 && value < 0.1 ? petit : value < 10 && !Number.isInteger(value) ? oneDecimal : intFmt;
   return `${fmt.format(value)}${NNBSP}${currencyShort(currency)}`;
 }
 

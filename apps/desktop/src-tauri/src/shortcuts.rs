@@ -1,7 +1,7 @@
 //! Raccourcis globaux. Règle GGG : une pression de touche ne déclenche
 //! jamais plus d'une action, et Augur n'envoie aucune touche au jeu.
 //!
-//! Les raccourcis de l'overlay (Échap, Alt+U par défaut, modifiables dans
+//! Les raccourcis de l'overlay (Échap, Alt+U, Alt+D par défaut, modifiables dans
 //! Réglages) ne sont enregistrés que pendant son affichage, pour ne pas
 //! confisquer ces touches au jeu. Ctrl+C et Ctrl+Alt+C passent par le
 //! presse-papier du jeu et ne sont pas modifiables.
@@ -13,6 +13,7 @@ use crate::overlay;
 use crate::settings::{SettingsStore, ShortcutSettings};
 
 pub const EVENT_UPGRADE_SEARCH: &str = "augur://upgrade-search-requested";
+pub const EVENT_PRICE_CHECK: &str = "augur://price-check-requested";
 
 /// Combinaisons du jeu ou de Windows qu'Augur ne doit pas prendre.
 const RESERVED: &[&str] = &[
@@ -78,27 +79,31 @@ pub fn parse(text: &str) -> Result<Shortcut, String> {
     Ok(shortcut)
 }
 
-/// Vérifie le couple de raccourcis de l'overlay.
+/// Vérifie les raccourcis de l'overlay.
 pub fn validate(s: &ShortcutSettings) -> Result<(), String> {
     let close = parse(&s.close_overlay)?;
     let upgrade = parse(&s.upgrade_search)?;
-    if close.id == upgrade.id {
-        return Err("Les deux raccourcis doivent être différents.".into());
+    let price = parse(&s.price_check)?;
+    if close.id == upgrade.id || close.id == price.id || upgrade.id == price.id {
+        return Err("Les raccourcis doivent être différents.".into());
     }
     Ok(())
 }
 
-/// Raccourcis en vigueur (valeurs par défaut si le fichier de réglages est abîmé).
-fn current(app: &AppHandle) -> (Shortcut, Shortcut) {
+/// Raccourcis en vigueur : fermer, chercher mieux, coter (valeurs par défaut si le fichier de
+/// réglages est abîmé).
+fn current(app: &AppHandle) -> [Shortcut; 3] {
     let mut s = app.state::<SettingsStore>().get().shortcuts;
     if validate(&s).is_err() {
         s = ShortcutSettings::default();
     }
     let def = ShortcutSettings::default();
-    (
-        parse(&s.close_overlay).unwrap_or_else(|_| parse(&def.close_overlay).unwrap()),
-        parse(&s.upgrade_search).unwrap_or_else(|_| parse(&def.upgrade_search).unwrap()),
-    )
+    let lire = |v: &str, d: &str| parse(v).unwrap_or_else(|_| parse(d).unwrap());
+    [
+        lire(&s.close_overlay, &def.close_overlay),
+        lire(&s.upgrade_search, &def.upgrade_search),
+        lire(&s.price_check, &def.price_check),
+    ]
 }
 
 /// Plugin avec le gestionnaire unique de tous les raccourcis d'Augur.
@@ -108,21 +113,23 @@ pub fn plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
             if event.state() != ShortcutState::Pressed {
                 return;
             }
-            let (close, upgrade) = current(app);
+            let [close, upgrade, price] = current(app);
             if shortcut.id == close.id {
                 overlay::hide(app);
             } else if shortcut.id == upgrade.id {
                 // Une seule action : demander à l'interface de préparer la
                 // recherche. La requête de trade part ensuite du client, une fois.
                 let _ = app.emit_to(overlay::LABEL, EVENT_UPGRADE_SEARCH, ());
+            } else if shortcut.id == price.id {
+                // Une seule action : la cote trade de l'objet affiché, une fois par appui.
+                let _ = app.emit_to(overlay::LABEL, EVENT_PRICE_CHECK, ());
             }
         })
         .build()
 }
 
 pub fn register_overlay(app: &AppHandle) {
-    let (close, upgrade) = current(app);
-    for s in [close, upgrade] {
+    for s in current(app) {
         if let Err(err) = app.global_shortcut().register(s) {
             log::warn!("raccourci {s:?} indisponible : {err}");
         }
@@ -130,8 +137,7 @@ pub fn register_overlay(app: &AppHandle) {
 }
 
 pub fn unregister_overlay(app: &AppHandle) {
-    let (close, upgrade) = current(app);
-    for s in [close, upgrade] {
+    for s in current(app) {
         let _ = app.global_shortcut().unregister(s);
     }
 }
@@ -144,6 +150,7 @@ mod tests {
         ShortcutSettings {
             close_overlay: close.into(),
             upgrade_search: upgrade.into(),
+            price_check: "Alt+D".into(),
         }
     }
 
@@ -178,5 +185,6 @@ mod tests {
     #[test]
     fn refuse_deux_raccourcis_identiques() {
         assert!(validate(&set("Alt+U", "alt+KeyU")).is_err());
+        assert!(validate(&set("Escape", "Alt+D")).is_err());
     }
 }

@@ -77,7 +77,7 @@ export function currencyShort(currency: string): string {
 
 const sources: Record<PriceSource, string> = {
   trade: "trade",
-  currencyExchange: "échange de devises",
+  currencyExchange: "cote du marché",
   model: "estimation",
 };
 

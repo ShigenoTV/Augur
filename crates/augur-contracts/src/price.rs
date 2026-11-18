@@ -32,4 +32,12 @@ pub struct PriceEstimate {
     /// Vrai si la donnée est plus vieille que la fraîcheur attendue :
     /// l'UI affiche l'horodatage au lieu de masquer le prix.
     pub stale: bool,
+    /// Taille de la pile estimée (objets empilables) : `median` vaut la pile entière.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub quantity: Option<u32>,
+    /// Prix d'une unité de la pile, dans la même devise.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub unit_price: Option<f64>,
 }

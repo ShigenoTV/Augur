@@ -239,6 +239,7 @@ version = "0.1.29"
 dependencies = [
  "arboard",
  "augur-contracts",
+ "augur-ratelimit",
  "log",
  "pob-poe1",
  "poe2-core",

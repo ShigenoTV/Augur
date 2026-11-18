@@ -47,6 +47,8 @@ fn main() {
             "get_character",
             "evaluate_item",
             "estimate_price",
+            "trade_price_check",
+            "open_trade_listings",
             "import_pob_code",
             "clear_character",
             "get_target",
