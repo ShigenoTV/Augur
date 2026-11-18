@@ -9,7 +9,7 @@ import { ForgeTipPanel, type ForgeView } from "./ForgeTipPanel";
 import { Poe1Panel, type Poe1EvalView, type Poe1View } from "./Poe1Panel";
 import { TargetLine } from "./TargetLine";
 import type { TargetProgress } from "../bridge";
-import { EVALUATING_DELAY_MS, runCopilot } from "./copilot";
+import { EVALUATING_DELAY_MS, runCopilot, tradable } from "./copilot";
 
 function Overlay() {
   const [view, setView] = useState<CopilotView>(
@@ -86,7 +86,42 @@ function Overlay() {
       )
       .catch((error: unknown) => setSearch({ ok: false, text: isAppError(error) ? error.message : String(error) }));
   };
-  const hotkeys = { close: afficherRaccourci(raccourcis.closeOverlay), upgradeSearch: afficherRaccourci(raccourcis.upgradeSearch) };
+  // Cote trade (Alt+D) : une recherche à la fois, résultats ouvrables dans le navigateur.
+  const [trade, setTrade] = useState<{ url: string; total: number; ignored: number } | null>(null);
+  const tradeBusy = useRef(false);
+  const priceCheck = () => {
+    const v = shown.current;
+    if ((v.status !== "ready" && v.status !== "noCharacter") || !tradable(v.item) || tradeBusy.current) return;
+    if (poe1Shown.current) return;
+    const id = run.current;
+    tradeBusy.current = true;
+    setTrade(null);
+    setView({ ...v, price: undefined, pricing: "pending", priceNote: undefined });
+    void commands
+      .tradePriceCheck(v.item)
+      .then((r) => {
+        if (run.current !== id) return;
+        setTrade({ url: r.url, total: r.total, ignored: r.ignored.length });
+        setView({
+          ...v,
+          price: r.price ?? undefined,
+          pricing: r.price ? "done" : "unpriced",
+          priceNote: r.price ? undefined : "Aucune annonce comparable en ligne.",
+        });
+      })
+      .catch((error: unknown) => {
+        if (run.current !== id) return;
+        setView({ ...v, price: undefined, pricing: "unavailable", priceNote: isAppError(error) ? error.message : String(error) });
+      })
+      .finally(() => {
+        tradeBusy.current = false;
+      });
+  };
+  const hotkeys = {
+    close: afficherRaccourci(raccourcis.closeOverlay),
+    upgradeSearch: afficherRaccourci(raccourcis.upgradeSearch),
+    priceCheck: afficherRaccourci(raccourcis.priceCheck ?? SHORTCUTS_PAR_DEFAUT.priceCheck),
+  };
 
   useEffect(() => {
     if (!isTauri()) return;
@@ -104,13 +139,14 @@ function Overlay() {
       on.itemCopied((item) => {
         const id = ++run.current;
         setSearch(null);
+        setTrade(null);
         setPoe1(null);
         setForgePoe1(null);
         setTarget(null);
         const settings = commands.getSettings().catch(() => null);
         void settings.then((s) => {
           if (!s) return;
-          setRaccourcis(s.shortcuts);
+          setRaccourcis({ ...SHORTCUTS_PAR_DEFAUT, ...s.shortcuts });
           searchTarget.current = s.upgradeSearchTarget ?? false;
         });
         // Où en est cet objet par rapport à celui de la cible (rien sans cible).
@@ -219,6 +255,7 @@ function Overlay() {
         setView({ status: "hidden" });
       }),
       on.upgradeSearchRequested(() => openSearch()),
+      on.priceCheckRequested(() => priceCheck()),
     ];
     return () => unlisten.forEach((p) => void p.then((f) => f()));
   }, []);
@@ -266,10 +303,21 @@ function Overlay() {
           hotkeys={hotkeys}
           onClose={() => (isTauri() ? void commands.hideOverlay() : undefined)}
           onUpgradeSearch={openSearch}
+          onPriceCheck={priceCheck}
         />
       )}
       {target && !forge && !forgePoe1 && (poe1 || view.status !== "hidden") && (
         <TargetLine target={target} onSearch={() => openTargetSearch(target.slot)} />
+      )}
+      {trade && !forge && !forgePoe1 && !poe1 && view.status !== "hidden" && (
+        <button
+          type="button"
+          onClick={() => void commands.openTradeListings(trade.url).catch(() => undefined)}
+          className="mt-1 block max-w-[360px] text-left text-[11px] text-text-subtle hover:text-text-muted"
+        >
+          {trade.total} annonce{trade.total > 1 ? "s" : ""} comparable{trade.total > 1 ? "s" : ""} en ligne : voir sur le trade
+          {trade.ignored > 0 && ` (${trade.ignored} mod${trade.ignored > 1 ? "s" : ""} non cherché${trade.ignored > 1 ? "s" : ""})`}
+        </button>
       )}
       {search && !forge && !forgePoe1 && (
         <p className={`mt-1 max-w-[360px] text-[11px] ${search.ok ? "text-text-subtle" : "text-signal-loss"}`}>{search.text}</p>

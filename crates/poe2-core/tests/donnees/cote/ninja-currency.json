@@ -1,0 +1,50 @@
+{
+ "core": {
+  "primary": "divine",
+  "rates": {
+   "exalted": 500.2,
+   "chaos": 10.54
+  },
+  "secondary": "chaos"
+ },
+ "lines": [
+  {
+   "id": "alch",
+   "primaryValue": 0.00794
+  },
+  {
+   "id": "exalted",
+   "primaryValue": 0.001999
+  },
+  {
+   "id": "chaos",
+   "primaryValue": 0.09492
+  },
+  {
+   "id": "divine",
+   "primaryValue": 1
+  }
+ ],
+ "items": [
+  {
+   "id": "alch",
+   "name": "Orb of Alchemy",
+   "category": "Currency"
+  },
+  {
+   "id": "exalted",
+   "name": "Exalted Orb",
+   "category": "Currency"
+  },
+  {
+   "id": "chaos",
+   "name": "Chaos Orb",
+   "category": "Currency"
+  },
+  {
+   "id": "divine",
+   "name": "Divine Orb",
+   "category": "Currency"
+  }
+ ]
+}

@@ -53,4 +53,35 @@ describe("CopilotOverlay", () => {
     render(<CopilotOverlay state={s} now={NOW} flags={{ clipboardParse: true, itemEvaluation: true, tradePriceCheck: false, oauthCharacterImport: true, pobImport: true }} />);
     expect(screen.queryByText("Prix")).toBeNull();
   });
+
+  it("affiche le prix d'une pile sans comparaison", () => {
+    const s = overlayStates.find((o) => o.id === "stack-price")!.state;
+    render(<CopilotOverlay state={s} now={NOW} />);
+    expect(screen.getByText("Prix de la pile (20)")).toBeTruthy();
+    expect(screen.getByText(/l'unité/)).toBeTruthy();
+    expect(screen.queryByText("DPS total")).toBeNull();
+  });
+
+  it("propose la cote trade d'un unique sans cote automatique", () => {
+    const s = overlayStates.find((o) => o.id === "unpriced")!.state;
+    let coté = 0;
+    render(
+      <CopilotOverlay
+        state={s}
+        now={NOW}
+        hotkeys={{ close: "Échap", upgradeSearch: "Alt+U", priceCheck: "Alt+D" }}
+        onPriceCheck={() => coté++}
+      />,
+    );
+    expect(screen.getByText(/Alt\+D pour coter sur le trade/)).toBeTruthy();
+    fireEvent.click(screen.getByText("coter"));
+    expect(coté).toBe(1);
+  });
+
+  it("garde le prix sans personnage importé", () => {
+    const s = overlayStates.find((o) => o.id === "no-character")!.state;
+    if (s.status !== "noCharacter") throw new Error("fixture");
+    render(<CopilotOverlay state={{ ...s, pricing: "unpriced" }} now={NOW} />);
+    expect(screen.getByText(/Pas de cote automatique/)).toBeTruthy();
+  });
 });

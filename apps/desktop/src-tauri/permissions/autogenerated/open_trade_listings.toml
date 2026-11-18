@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-open-trade-listings"
+description = "Enables the open_trade_listings command without any pre-configured scope."
+commands.allow = ["open_trade_listings"]
+
+[[permission]]
+identifier = "deny-open-trade-listings"
+description = "Denies the open_trade_listings command without any pre-configured scope."
+commands.deny = ["open_trade_listings"]

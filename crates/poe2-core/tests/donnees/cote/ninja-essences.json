@@ -1,0 +1,32 @@
+{
+ "core": {
+  "primary": "divine",
+  "rates": {
+   "exalted": 500.2,
+   "chaos": 10.54
+  },
+  "secondary": "chaos"
+ },
+ "lines": [
+  {
+   "id": "essence-of-delirium",
+   "primaryValue": 2.54
+  },
+  {
+   "id": "greater-essence-of-ruin",
+   "primaryValue": 0.09492
+  }
+ ],
+ "items": [
+  {
+   "id": "essence-of-delirium",
+   "name": "Essence of Delirium",
+   "category": "Essences"
+  },
+  {
+   "id": "greater-essence-of-ruin",
+   "name": "Greater Essence of Ruin",
+   "category": "Essences"
+  }
+ ]
+}

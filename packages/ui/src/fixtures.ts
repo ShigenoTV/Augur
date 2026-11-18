@@ -77,6 +77,18 @@ export const uniqueGloves: ParsedItem = {
   mods: [m("+15% to Cold Resistance", "enchant"), m("Adds 3 to 7 Physical Damage to Attacks"), m("+40 to Dexterity")],
 };
 
+export const chaosStack: ParsedItem = {
+  ...base,
+  itemClass: "Stackable Currency",
+  rarity: "currency",
+  name: null,
+  baseType: "Chaos Orb",
+  itemLevel: null,
+  quality: null,
+  corrupted: false,
+  mods: [],
+};
+
 export const character: CharacterSummary = {
   name: "VeyraStorm",
   class: "Deadeye",
@@ -186,6 +198,20 @@ export const stalePrice: PriceEstimate = {
   stale: true,
 };
 
+export const stackPrice: PriceEstimate = {
+  currency: "exalted",
+  low: 950,
+  median: 950,
+  high: 950,
+  sampleSize: 0,
+  source: "currencyExchange",
+  league: "Standard",
+  observedAt: minutesAgo(9),
+  stale: false,
+  quantity: 20,
+  unitPrice: 47.5,
+};
+
 export const queued: RateLimitStatus = {
   policies: [
     {
@@ -244,6 +270,16 @@ export const overlayStates: Array<{ id: string; title: string; state: CopilotVie
     id: "unsupported",
     title: "Archétype non supporté",
     state: { status: "ready", item: rareBow, delta: unsupportedDelta, price: tradePrice, pricing: "done", character },
+  },
+  {
+    id: "stack-price",
+    title: "Pile de monnaie : prix seul",
+    state: { status: "ready", item: chaosStack, price: stackPrice, pricing: "done", priceOnly: true },
+  },
+  {
+    id: "unpriced",
+    title: "Unique sans cote automatique (cote trade sur raccourci)",
+    state: { status: "ready", item: uniqueGloves, delta: downgradeDelta, pricing: "unpriced", character },
   },
   {
     id: "evaluating",

@@ -14,15 +14,23 @@ export interface CopilotOverlayProps {
   /** Taux de conversion pour « DPS par exalt » quand le prix est en divines. */
   exaltedPerDivine?: number;
   /** Raccourcis affichés en pied (doivent refléter les réglages). */
-  hotkeys?: { close: string; upgradeSearch: string };
+  hotkeys?: { close: string; upgradeSearch: string; priceCheck?: string };
   /** Horloge injectable pour des captures déterministes. */
   now?: Date;
   onClose?: () => void;
   onUpgradeSearch?: () => void;
+  /** Cote trade de l'unique ou du rare affiché (sur raccourci). */
+  onPriceCheck?: () => void;
   className?: string;
 }
 
 const defaultHotkeys = { close: "Échap", upgradeSearch: "Alt+U" };
+
+/** Uniques et rares : cotés sur le trade à la demande. */
+function tradable(state: CopilotView): boolean {
+  if (state.status !== "ready" && state.status !== "noCharacter") return false;
+  return state.item.rarity === "unique" || state.item.rarity === "rare";
+}
 
 function Shell({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -50,18 +58,30 @@ export function CopilotOverlay({
   now,
   onClose,
   onUpgradeSearch,
+  onPriceCheck,
   className,
 }: CopilotOverlayProps) {
   const [showMods, setShowMods] = useState(false);
 
   if (state.status === "hidden") return null;
+  const coter = onPriceCheck && hotkeys.priceCheck && tradable(state) ? hotkeys.priceCheck : undefined;
 
   const footer = (
     <footer className="mt-3 flex items-center justify-between gap-2 border-t border-ink-700 pt-2 text-2xs text-text-subtle">
       <button type="button" onClick={onClose} className="flex items-center gap-1 hover:text-text-muted">
         <Kbd>{hotkeys.close}</Kbd> fermer
       </button>
-      {state.status === "ready" && state.delta && state.delta.support !== "unsupported" && (
+      {coter && (
+        <button
+          type="button"
+          onClick={onPriceCheck}
+          className="ml-auto flex items-center gap-1 hover:text-text-muted"
+          title="Cherche des objets comparables sur le site de trade depuis ton PC"
+        >
+          <Kbd>{coter}</Kbd> coter
+        </button>
+      )}
+      {state.status === "ready" && !state.priceOnly && state.delta && state.delta.support !== "unsupported" && (
         <button
           type="button"
           onClick={onUpgradeSearch}
@@ -99,6 +119,12 @@ export function CopilotOverlay({
             Importe ton personnage depuis la fenêtre Augur (connexion officielle GGG ou code Path of Building) pour
             voir le gain de DPS et d'EHP.
           </StatePanel>
+          {state.pricing && flags?.tradePriceCheck !== false && (
+            <>
+              <div className="augur-divider my-3" />
+              <PriceTag pricing={state.pricing} price={state.price} note={state.priceNote} priceCheckKey={coter} now={now} />
+            </>
+          )}
           {footer}
         </Shell>
       );
@@ -125,7 +151,17 @@ export function CopilotOverlay({
       );
 
     case "ready": {
-      const { item, delta, price, pricing, rateLimit, character } = state;
+      const { item, delta, price, pricing, rateLimit, character, priceOnly, priceNote } = state;
+      if (priceOnly) {
+        return (
+          <Shell className={className}>
+            <ItemHeader item={item} />
+            <div className="augur-divider my-3" />
+            <PriceTag pricing={pricing} price={price} rateLimit={rateLimit} note={priceNote} now={now} />
+            {footer}
+          </Shell>
+        );
+      }
       return (
         <Shell className={className}>
           <div className="flex items-start justify-between gap-2">
@@ -153,7 +189,14 @@ export function CopilotOverlay({
           {flags?.tradePriceCheck !== false && (
             <>
               <div className="augur-divider my-3" />
-              <PriceTag pricing={pricing} price={price} rateLimit={rateLimit} now={now} />
+              <PriceTag
+                pricing={pricing}
+                price={price}
+                rateLimit={rateLimit}
+                note={priceNote}
+                priceCheckKey={coter}
+                now={now}
+              />
             </>
           )}
 

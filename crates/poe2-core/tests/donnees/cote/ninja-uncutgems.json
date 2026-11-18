@@ -1,0 +1,32 @@
+{
+ "core": {
+  "primary": "divine",
+  "rates": {
+   "exalted": 500.2,
+   "chaos": 10.54
+  },
+  "secondary": "chaos"
+ },
+ "lines": [
+  {
+   "id": "uncut-skill-gem-12",
+   "primaryValue": 0.381
+  },
+  {
+   "id": "uncut-skill-gem-19",
+   "primaryValue": 0.08158
+  }
+ ],
+ "items": [
+  {
+   "id": "uncut-skill-gem-12",
+   "name": "Uncut Skill Gem (Level 12)",
+   "category": "UncutGems"
+  },
+  {
+   "id": "uncut-skill-gem-19",
+   "name": "Uncut Skill Gem (Level 19)",
+   "category": "UncutGems"
+  }
+ ]
+}

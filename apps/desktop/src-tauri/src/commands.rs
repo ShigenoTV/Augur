@@ -295,6 +295,7 @@ pub fn set_shortcuts(
     let shortcuts = crate::settings::ShortcutSettings {
         close_overlay: shortcuts.close_overlay.trim().to_string(),
         upgrade_search: shortcuts.upgrade_search.trim().to_string(),
+        price_check: shortcuts.price_check.trim().to_string(),
     };
     crate::shortcuts::validate(&shortcuts)
         .map_err(|m| app_error(crate::contracts::ErrorCode::Internal, m))?;
@@ -602,13 +603,28 @@ pub fn evaluate_item(
         .unwrap_or_else(|| crate::evaluation::evaluate(None, &item))
 }
 
-/// Prix estimé : pas encore disponible (recherche de trade au sprint 3).
+/// Prix estimé de l'objet copié (cote poe.ninja des objets empilables).
 #[tauri::command]
-pub fn estimate_price(_item: ParsedItem) -> Result<crate::contracts::PriceEstimate, AppError> {
-    Err(app_error(
-        crate::contracts::ErrorCode::FeatureDisabled,
-        "L'estimation de prix arrive dans une prochaine version.",
-    ))
+pub async fn estimate_price(
+    app: AppHandle,
+    item: ParsedItem,
+) -> Result<crate::contracts::PriceEstimate, AppError> {
+    crate::poe2_price::estimer(&app, &item).await
+}
+
+/// Cote trade d'un unique ou d'un rare, sur le raccourci du joueur.
+#[tauri::command]
+pub async fn trade_price_check(
+    app: AppHandle,
+    item: ParsedItem,
+) -> Result<crate::trade_price::TradePriceCheck, AppError> {
+    crate::trade_price::coter(&app, &item).await
+}
+
+/// Ouvre les annonces d'une cote trade dans le navigateur.
+#[tauri::command]
+pub fn open_trade_listings(url: String) -> Result<(), AppError> {
+    crate::trade_price::ouvrir(&url)
 }
 
 #[tauri::command]

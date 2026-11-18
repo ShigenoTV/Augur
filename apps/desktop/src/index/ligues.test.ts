@@ -18,7 +18,7 @@ describe("budgetDuJeu", () => {
     betaChannel: false,
     clientLogPath: null,
     league: null,
-    shortcuts: { closeOverlay: "Escape", upgradeSearch: "Alt+U" },
+    shortcuts: { closeOverlay: "Escape", upgradeSearch: "Alt+U", priceCheck: "Alt+D" },
     upgradeBudget: 40,
     poe1: { clientLogPath: null, league: null, upgradeBudget: 3, upgradeBudgetCurrency: "divine" },
   };

@@ -223,15 +223,15 @@ type Champ = keyof ShortcutSettings;
 const LIGNES: { id: Champ; action: string }[] = [
   { id: "closeOverlay", action: "Fermer l'overlay" },
   { id: "upgradeSearch", action: "Chercher un meilleur objet (recherche de trade pondérée)" },
+  { id: "priceCheck", action: "Coter un unique ou un rare sur le site de trade" },
 ];
 
-/** Raccourcis de l'overlay : Échap et Alt+U modifiables, Ctrl+C et Ctrl+Alt+C fixés par le jeu. */
+/** Raccourcis de l'overlay : Échap, Alt+U et Alt+D modifiables, Ctrl+C et Ctrl+Alt+C fixés par le jeu. */
 export function ShortcutsCard({ settings, onSettings }: { settings: Settings | null; onSettings: (s: Settings) => void }) {
   const [capture, setCapture] = useState<Champ | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const actuels = settings?.shortcuts ?? SHORTCUTS_PAR_DEFAUT;
-  const parDefaut =
-    actuels.closeOverlay === SHORTCUTS_PAR_DEFAUT.closeOverlay && actuels.upgradeSearch === SHORTCUTS_PAR_DEFAUT.upgradeSearch;
+  const actuels = { ...SHORTCUTS_PAR_DEFAUT, ...settings?.shortcuts };
+  const parDefaut = LIGNES.every((l) => actuels[l.id] === SHORTCUTS_PAR_DEFAUT[l.id]);
 
   async function save(shortcuts: ShortcutSettings) {
     setError(null);

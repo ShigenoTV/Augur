@@ -24,6 +24,8 @@ export const EVENTS = {
   zoneChanged: "augur://zone-changed",
   overlayHidden: "augur://overlay-hidden",
   upgradeSearchRequested: "augur://upgrade-search-requested",
+  /** Raccourci de la cote trade (Alt+D par défaut) pendant l'affichage de l'overlay. */
+  priceCheckRequested: "augur://price-check-requested",
   rateLimitChanged: "augur://rate-limit-changed",
   featureFlagsChanged: "augur://feature-flags-changed",
   updateAvailable: "augur://update-available",
@@ -39,7 +41,18 @@ export const EVENTS = {
 } as const;
 
 /** Raccourcis de l'overlay, au format « Alt+U », « Ctrl+Shift+F2 », « Escape » (src-tauri/src/shortcuts.rs). */
-export type ShortcutSettings = { closeOverlay: string; upgradeSearch: string };
+export type ShortcutSettings = { closeOverlay: string; upgradeSearch: string; priceCheck: string };
+
+/** Cote trade d'un unique ou d'un rare (src-tauri/src/trade_price.rs). */
+export type TradePriceCheck = {
+  /** Absent quand aucune annonce comparable n'est en ligne. */
+  price: PriceEstimate | null;
+  total: number;
+  /** Résultats sur le site de trade. */
+  url: string;
+  /** Mods que le site de trade ne sait pas chercher. */
+  ignored: string[];
+};
 
 /** Jeu actif du sélecteur « POE 1 / POE 2 » (src-tauri/src/game.rs). */
 export type Game = "poe1" | "poe2";
@@ -691,6 +704,9 @@ export const commands = {
   /** PoE 1, Alt+U : recherche pondérée par Path of Building pour l'objet copié. */
   openPoe1UpgradeSearch: () => invoke<UpgradeSearch>("open_poe1_upgrade_search"),
   estimatePrice: (item: ParsedItem) => invoke<PriceEstimate>("estimate_price", { item }),
+  /** Cote trade (uniques et rares), une fois par appui sur le raccourci du joueur. */
+  tradePriceCheck: (item: ParsedItem) => invoke<TradePriceCheck>("trade_price_check", { item }),
+  openTradeListings: (url: string) => invoke<void>("open_trade_listings", { url }),
 };
 
 export const on = {
@@ -702,6 +718,7 @@ export const on = {
     listen<AppError>(EVENTS.itemUnrecognized, (e) => cb(e.payload)),
   overlayHidden: (cb: () => void): Promise<UnlistenFn> => listen(EVENTS.overlayHidden, () => cb()),
   upgradeSearchRequested: (cb: () => void): Promise<UnlistenFn> => listen(EVENTS.upgradeSearchRequested, () => cb()),
+  priceCheckRequested: (cb: () => void): Promise<UnlistenFn> => listen(EVENTS.priceCheckRequested, () => cb()),
   updateAvailable: (cb: (p: UpdateInfo) => void): Promise<UnlistenFn> =>
     listen<UpdateInfo>(EVENTS.updateAvailable, (e) => cb(e.payload)),
   updateProgress: (cb: (p: UpdateProgress) => void): Promise<UnlistenFn> =>

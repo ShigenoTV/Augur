@@ -34,9 +34,40 @@ describe("runCopilot", () => {
     expect(final.status === "ready" && final.price?.median).toBe(14);
   });
 
-  it("sans personnage importé", async () => {
+  it("sans personnage importé : le prix reste cherché", async () => {
     const { final } = await run(deps({ overlayState: async () => ({ ...withCharacter, character: null }) }));
     expect(final.status).toBe("noCharacter");
+    expect(final.status === "noCharacter" && final.pricing).toBe("done");
+  });
+
+  it("monnaie : prix seul, sans personnage ni comparaison", async () => {
+    let evaluated = false;
+    const seen: CopilotView[] = [];
+    const final = await runCopilot(
+      fixtures.chaosStack,
+      deps({
+        overlayState: async () => ({ ...withCharacter, character: null }),
+        evaluate: async () => {
+          evaluated = true;
+          return fixtures.upgradeDelta;
+        },
+        price: async () => fixtures.stackPrice,
+      }),
+      (v) => seen.push(v),
+    );
+    expect(evaluated).toBe(false);
+    expect(final.status === "ready" && final.priceOnly && final.price?.quantity).toBe(20);
+    expect(seen[0]?.status === "ready" && seen[0].pricing).toBe("pending");
+  });
+
+  it("unique sans cote automatique : cote trade proposée", async () => {
+    const final = await runCopilot(
+      fixtures.uniqueGloves,
+      deps({ price: async () => Promise.reject({ code: "unsupported", message: "Pas de cote", retryAfterMs: null }) }),
+      () => undefined,
+    );
+    expect(final.status === "ready" && final.pricing).toBe("unpriced");
+    expect(final.status === "ready" && final.priceNote).toBeUndefined();
   });
 
   it("évaluation coupée : on garde le prix", async () => {

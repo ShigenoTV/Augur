@@ -5,7 +5,7 @@
  */
 import type { ShortcutSettings } from "../bridge";
 
-export const SHORTCUTS_PAR_DEFAUT: ShortcutSettings = { closeOverlay: "Escape", upgradeSearch: "Alt+U" };
+export const SHORTCUTS_PAR_DEFAUT: ShortcutSettings = { closeOverlay: "Escape", upgradeSearch: "Alt+U", priceCheck: "Alt+D" };
 
 type Touche = Pick<KeyboardEvent, "code" | "ctrlKey" | "altKey" | "shiftKey" | "metaKey">;
 

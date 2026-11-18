@@ -104,6 +104,8 @@ impl Settings {
 pub struct ShortcutSettings {
     pub close_overlay: String,
     pub upgrade_search: String,
+    /// Cote trade de l'unique ou du rare affiché.
+    pub price_check: String,
 }
 
 impl Default for ShortcutSettings {
@@ -111,6 +113,7 @@ impl Default for ShortcutSettings {
         Self {
             close_overlay: "Escape".into(),
             upgrade_search: "Alt+U".into(),
+            price_check: "Alt+D".into(),
         }
     }
 }

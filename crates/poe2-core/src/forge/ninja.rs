@@ -124,7 +124,7 @@ pub enum ErreurNinja {
 
 /// Facteur « monnaie de référence de la réponse -> Exalted » : la ligne `exalted` sert d'ancre si
 /// elle est là (l'Exalted vaut alors exactement 1), sinon `core.rates.exalted`.
-fn facteur_exalted(doc: &Value) -> Result<f64, ErreurNinja> {
+pub fn facteur_exalted(doc: &Value) -> Result<f64, ErreurNinja> {
     let primary = doc["core"]["primary"]
         .as_str()
         .ok_or_else(|| ErreurNinja::Format("core.primary absent".into()))?;
