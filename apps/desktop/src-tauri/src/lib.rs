@@ -96,6 +96,8 @@ pub fn run() {
             commands::get_overlay_state,
             commands::hide_overlay,
             commands::fit_overlay,
+            commands::set_overlay_display,
+            commands::set_overlay_pinned,
             commands::open_main_window,
             commands::check_for_update,
             commands::install_update,

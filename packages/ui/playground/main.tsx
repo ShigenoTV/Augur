@@ -43,6 +43,10 @@ function App() {
   const only = new URLSearchParams(location.search).get("state");
   const forcedBg = new URLSearchParams(location.search).get("bg") as Bg | null;
   const activeBg = forcedBg ?? bg;
+  // Réglages de l'overlay : ?compact=1 et ?scale=120 (pour cent).
+  const compact = new URLSearchParams(location.search).get("compact") === "1";
+  const scale = Number(new URLSearchParams(location.search).get("scale") ?? 100) / 100;
+  document.documentElement.style.setProperty("--augur-scale", String(scale || 1));
 
   if (view === "updates") {
     return (
@@ -108,7 +112,7 @@ function App() {
         {states.map(({ id, title, state }) => (
           <figure key={id} id={id} className="space-y-2">
             {!only && <figcaption className="augur-panel inline-block px-2 py-1 text-xs text-text-muted">{title}</figcaption>}
-            <CopilotOverlay state={state} now={fixtures.NOW} exaltedPerDivine={110} />
+            <CopilotOverlay state={state} now={fixtures.NOW} exaltedPerDivine={110} compact={compact} />
           </figure>
         ))}
       </div>

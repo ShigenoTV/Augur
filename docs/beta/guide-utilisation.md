@@ -55,6 +55,16 @@ Bon à savoir :
   meilleur des deux emplacements). Le calcul suit le panneau de compétence du jeu
   (cible sans résistance, mana plein). Le signe **≈** et l'encadré « Calcul approximatif »
   listent ce qui n'est pas encore compté (certains mods, passifs ou supports).
+- **Réglages > Affichage de l'overlay** :
+  - **Overlay compact** : verdict, gain principal, prix et alertes de résistance
+    seulement, dans un panneau plus étroit. Le bouton « détails » en bas déplie la vue
+    complète pour l'objet affiché.
+  - **Taille** : de 80 % à 150 %, par pas de 10 %.
+  - **Épingler l'overlay** (aussi depuis le bouton « épingler » en bas de l'overlay) :
+    il ne se ferme plus quand le curseur s'éloigne et les objets copiés suivants
+    s'affichent au même endroit. Glisse son bord du haut pour le déplacer ; Augur
+    retient la place. Échap (ou « fermer ») le ferme toujours. Tant qu'il est affiché,
+    Échap et Alt+U restent captés par Augur : ferme-le pour rendre Échap au jeu.
 - Si l'overlay affiche **« Objet non reconnu »**, c'est exactement ce qu'on cherche :
   signale-le (voir plus bas) avec le texte de l'objet.
 
