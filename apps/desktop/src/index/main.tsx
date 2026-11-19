@@ -5,8 +5,8 @@ import {
   ItemTooltip,
   Kbd,
   StatePanel,
-  UpdateBanner,
   UpdateButton,
+  UpdateStatus,
   type OverlayState,
   type ParsedItem,
 } from "@augur/ui";
@@ -301,12 +301,15 @@ function App() {
             <Status ok={Boolean(state?.gameFocused)} label={state?.gameFocused ? "Jeu au premier plan" : "Jeu non détecté"} />
             <Status ok={logSummary.ok} label={logSummary.label} />
             <Status ok={Boolean(versionDonnees)} label={versionDonnees ? `Données du jeu : ${versionDonnees}` : "Données du jeu indisponibles"} />
-            <UpdateButton
-              update={updates.update}
-              onCheck={() => void updates.check()}
-              onInstall={() => void updates.install()}
-              className="mt-2 w-full whitespace-nowrap px-1 py-1 text-[11px]"
-            />
+            <div className="space-y-1.5 pt-2">
+              <UpdateStatus update={updates.update} />
+              <UpdateButton
+                update={updates.update}
+                onCheck={() => void updates.check()}
+                onInstall={() => void updates.install()}
+                className="w-full whitespace-nowrap px-1 py-1 text-[11px]"
+              />
+            </div>
             <button
               type="button"
               onClick={() => allerA("signaler-bug")}
@@ -333,8 +336,6 @@ function App() {
                 : courante.desc}
             </p>
           </header>
-
-          <UpdateBanner update={updates.visible} onInstall={() => void updates.install()} onLater={updates.later} />
 
           {/* Les pages restent montées : changer de page ne perd ni un plan Forge ni une session Ledger. */}
 

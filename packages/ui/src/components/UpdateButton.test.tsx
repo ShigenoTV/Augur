@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { updateInfo } from "../fixtures";
-import { UpdateButton } from "./UpdateButton";
+import { UpdateButton, UpdateStatus } from "./UpdateButton";
 
 afterEach(cleanup);
 
@@ -42,5 +42,27 @@ describe("UpdateButton", () => {
     rerender(<UpdateButton update={{ phase: "error", message: "hors ligne" }} onCheck={onCheck} idleLabel="Réessayer" />);
     fireEvent.click(screen.getByText("Réessayer"));
     expect(onCheck).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("UpdateStatus", () => {
+  it("annonce la version disponible, sans répéter la version installée", () => {
+    render(<UpdateStatus update={{ phase: "available", info: updateInfo }} />);
+    expect(screen.getByText(`Augur ${updateInfo.version} est disponible`)).toBeTruthy();
+    expect(screen.queryByText(/tu as la/)).toBeNull();
+  });
+
+  it("affiche la progression puis les erreurs", () => {
+    const { rerender } = render(
+      <UpdateStatus update={{ phase: "installing", info: updateInfo, progress: { downloaded: 5, total: 10 } }} />,
+    );
+    expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe("50");
+    rerender(<UpdateStatus update={{ phase: "error", message: "hors ligne" }} />);
+    expect(screen.getByText("hors ligne")).toBeTruthy();
+  });
+
+  it("ne montre rien sans mise à jour", () => {
+    const { container } = render(<UpdateStatus update={{ phase: "upToDate", checkedAt: "2026-11-19T12:00:00Z" }} />);
+    expect(container.firstChild).toBeNull();
   });
 });

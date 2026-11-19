@@ -13,5 +13,5 @@ export * from "./lib/labels";
 export { StatePanel, Kbd } from "./components/StatePanel";
 export { CopilotOverlay, type CopilotOverlayProps } from "./components/CopilotOverlay";
 export { UpdateBanner, type UpdateBannerProps } from "./components/UpdateBanner";
-export { UpdateButton, type UpdateButtonProps } from "./components/UpdateButton";
+export { UpdateButton, UpdateStatus, type UpdateButtonProps } from "./components/UpdateButton";
 export * as fixtures from "./fixtures";
