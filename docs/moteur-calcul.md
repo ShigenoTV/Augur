@@ -16,7 +16,7 @@ infusion, modificateurs conditionnels et cadence du panneau.
 | `calc::trace` | Arbre de calcul (texte et JSON) |
 | `calc::golden` | Lecture et exécution des cas YAML personnage (`tests/golden/`), rapport Markdown pour la CI |
 | `calc::formules` | Cas unitaires de formule du Theorycrafter (`tests/formules/`), rejoués par le moteur |
-| `parser` | Texte Ctrl+C / Ctrl+Alt+C → objet structuré |
+| `parser` | Texte Ctrl+C / Ctrl+Alt+C → objet structuré, qualité de catalyseur appliquée aux mods |
 
 Le crate respecte la frontière de l'ADR-001 : aucune E/S réseau ni fichier,
 aucune dépendance Tauri ou tokio. L'appelant fournit les textes.
@@ -30,6 +30,7 @@ recevoir une fiche mécanique et des cas golden mesurés en jeu.
 |---|---|
 | Ordre des opérations | gemme + ajoutés × efficacité → conversions et gains (étape 1 compétence, étape 2 équipement) → × max(0, 1 + Σ increased du type final) → × Π more (plancher à 0 des increased cumulés) |
 | Conversion (fiche 01) | à chaque étape, gains d'abord, calculés sur les montants d'avant l'étape (`degats` = total), puis conversions sur les montants gains compris, ramenées à 100 % par type source, sans enchaînement ; les dégâts convertis ou gagnés ne profitent que des modificateurs de leur type final |
+| Qualité des mods (catalyseurs) | la copie Ctrl+C / Ctrl+Alt+C donne les valeurs **avant** qualité ; l'en-tête avancé marque les mods touchés (`— 40% Increased`) ; valeur réelle = tronc(valeur × (1 + p / 100)), au centième pour une valeur décimale, plages comprises ; sans effet sur « Unscalable Value » ni sur les runes (déjà comptées). **Mesuré** le 1er novembre 2026 sur l'amulette et l'anneau de Max (+3 → +4 à 40 %, 14 → 16 et 24 → 28 à 20 %), même règle en PoE 1 |
 | Défenses des objets (fiche 07) | valeur locale = base × (1 + increased local / 100) × (1 + qualité / 100) (qualité multiplicative, **mesuré** sur 4 objets pour l'ES le 1er novembre 2026, PR #36 ; appliqué aussi à l'armure, l'évasion et la déflexion par hypothèse), puis Σ objets + plats globaux, × increased global × more global |
 | Recharge de l'ES (fiche 07) | délai = 4 s / (1 + démarrage plus rapide) ; 12,5 % du maximum par seconde × (1 + increased) |
 | Évasion et déflexion (fiche 06) | éviter = 1 − 1,25 P / (P + 0,3 É) ; déflexion = 150 % × (1 − P / (P + 0,12 D)) ; entre 0 et 95 % |
