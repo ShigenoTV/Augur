@@ -235,7 +235,7 @@ dependencies = [
 
 [[package]]
 name = "augur-desktop"
-version = "0.1.36-beta.2"
+version = "0.1.35"
 dependencies = [
  "arboard",
  "augur-contracts",
