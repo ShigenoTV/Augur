@@ -29,6 +29,7 @@ mod game_window;
 mod gap;
 pub mod item_text;
 mod ledger;
+mod ledger_banner;
 pub mod ledger_store;
 mod log_locator;
 pub mod measures;
@@ -88,6 +89,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppState::default())
         .manage(overlay::OverlayCtl::default())
+        .manage(ledger_banner::BannerCtl::default())
         .manage(updates::PendingUpdate::default())
         .manage(client_log::ClientLogState::default())
         .manage(measures::MeasureState::default())
@@ -102,6 +104,7 @@ pub fn run() {
             commands::fit_overlay,
             commands::set_overlay_display,
             commands::set_overlay_pinned,
+            commands::set_ledger_banner,
             commands::open_main_window,
             commands::check_for_update,
             commands::install_update,
@@ -117,6 +120,7 @@ pub fn run() {
             commands::list_poe1_stash_tabs,
             commands::set_poe1_stash_tabs,
             commands::take_poe1_stash_snapshot,
+            commands::set_poe1_stash_auto,
             commands::get_leagues,
             commands::set_league,
             commands::set_upgrade_budget,
@@ -207,9 +211,11 @@ pub fn run() {
                 h.state::<forge::ForgePlanner>().restaurer(&h, prix).await;
             });
             overlay::prepare(handle)?;
+            ledger_banner::prepare(handle)?;
             tray::create(handle)?;
             clipboard::spawn_watcher(handle.clone());
             client_log::spawn(handle.clone());
+            poe1_stash::spawn_auto(handle.clone());
             updates::spawn_periodic_check(handle.clone());
             Ok(())
         })

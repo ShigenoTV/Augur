@@ -385,6 +385,24 @@ export function OverlayCard({ settings, onSettings }: { settings: Settings | nul
           </span>
         </span>
       </label>
+      <label className="flex items-start gap-2 text-text-muted">
+        <input
+          type="checkbox"
+          checked={actuel.ledgerBanner ?? true}
+          disabled={!settings}
+          onChange={(e) => void enregistrer(() => commands.setLedgerBanner(e.target.checked))}
+          className="mt-1 accent-[var(--color-accent)]"
+        />
+        <span>
+          Bandeau Atlas Ledger en jeu
+          <span className="block text-xs text-text-subtle">
+            Pendant une session Atlas Ledger, une ligne fine en haut de l'écran affiche la durée, les maps, le gain et le
+            gain par heure. Les clics la traversent : elle ne gêne pas le jeu. Le gain vient des relevés de coffres faits
+            pendant la session (PoE 1, automatiques toutes les 10 minutes par défaut, réglables dans la carte des coffres) ;
+            sans relevé, le bandeau montre le rythme en maps par heure.
+          </span>
+        </span>
+      </label>
       <div className="flex flex-wrap items-center gap-3 text-text-muted">
         <label htmlFor="overlay-taille">Taille</label>
         <input

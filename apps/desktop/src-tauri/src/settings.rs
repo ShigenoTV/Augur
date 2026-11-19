@@ -57,6 +57,9 @@ pub struct OverlaySettings {
     pub pinned: bool,
     /// Dernière place de l'overlay épinglé (coin haut gauche, pixels physiques).
     pub pinned_position: Option<(i32, i32)>,
+    /// Bandeau Atlas Ledger en haut de l'écran pendant une session (activé
+    /// par défaut : il n'apparaît que si le joueur lance une session).
+    pub ledger_banner: bool,
 }
 
 impl Default for OverlaySettings {
@@ -66,6 +69,7 @@ impl Default for OverlaySettings {
             scale: 100,
             pinned: false,
             pinned_position: None,
+            ledger_banner: true,
         }
     }
 }
@@ -85,6 +89,24 @@ pub struct GameSettings {
     pub upgrade_budget: Option<u32>,
     /// Devise du budget : « chaos » (par défaut) ou « divine ».
     pub upgrade_budget_currency: Option<String>,
+    /// Relevé automatique des coffres toutes les N minutes pendant une session
+    /// Atlas Ledger (`None` : [`DEFAULT_STASH_AUTO_MINUTES`] ; 0 : coupé).
+    pub stash_auto_minutes: Option<u32>,
+}
+
+/// Intervalle par défaut du relevé de coffres pendant une session Ledger.
+pub const DEFAULT_STASH_AUTO_MINUTES: u32 = 10;
+/// Intervalle le plus court : un relevé de 20 onglets prend déjà une minute.
+pub const STASH_AUTO_MIN: u32 = 5;
+pub const STASH_AUTO_MAX: u32 = 60;
+
+/// Intervalle accepté : 0 (coupé) ou borné entre [`STASH_AUTO_MIN`] et [`STASH_AUTO_MAX`].
+pub fn clamp_stash_auto(minutes: u32) -> u32 {
+    if minutes == 0 {
+        0
+    } else {
+        minutes.clamp(STASH_AUTO_MIN, STASH_AUTO_MAX)
+    }
 }
 
 fn non_vide(s: &Option<String>) -> Option<&str> {
@@ -103,6 +125,15 @@ impl Settings {
             Game::Poe2 => self.league(),
             Game::Poe1 => non_vide(&self.poe1.league).unwrap_or(DEFAULT_LEAGUE_POE1),
         }
+    }
+
+    /// Intervalle du relevé de coffres pendant une session (0 : coupé).
+    pub fn stash_auto_minutes(&self) -> u32 {
+        clamp_stash_auto(
+            self.poe1
+                .stash_auto_minutes
+                .unwrap_or(DEFAULT_STASH_AUTO_MINUTES),
+        )
     }
 
     /// Chemin de `Client.txt` choisi par le joueur pour un jeu.
@@ -210,6 +241,28 @@ mod tests {
         assert!(s.beta_channel);
         assert_eq!(s.league(), DEFAULT_LEAGUE);
         assert_eq!(s.shortcuts, ShortcutSettings::default());
+    }
+
+    #[test]
+    fn bandeau_ledger_actif_par_defaut() {
+        // Fichier d'une version sans bandeau : activé.
+        let s: Settings = serde_json::from_str(r#"{"overlay":{"compact":true}}"#).unwrap();
+        assert!(s.overlay.ledger_banner);
+        assert!(s.overlay.compact);
+        let s: Settings = serde_json::from_str(r#"{"overlay":{"ledgerBanner":false}}"#).unwrap();
+        assert!(!s.overlay.ledger_banner);
+    }
+
+    #[test]
+    fn releve_auto_toutes_les_10_minutes_par_defaut() {
+        let mut s = Settings::default();
+        assert_eq!(s.stash_auto_minutes(), 10);
+        s.poe1.stash_auto_minutes = Some(0);
+        assert_eq!(s.stash_auto_minutes(), 0);
+        s.poe1.stash_auto_minutes = Some(1);
+        assert_eq!(s.stash_auto_minutes(), 5);
+        s.poe1.stash_auto_minutes = Some(500);
+        assert_eq!(s.stash_auto_minutes(), 60);
     }
 
     #[test]
