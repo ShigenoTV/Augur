@@ -206,7 +206,10 @@ mod tests {
     fn sans_cout_restant_compte_les_voulus() {
         let mut s = Serie::default();
         s.suivre(rep("a", None, 1));
-        assert_eq!(s.suivre(rep("b", None, 2)).unwrap().verdict, Verdict::Reussi);
+        assert_eq!(
+            s.suivre(rep("b", None, 2)).unwrap().verdict,
+            Verdict::Reussi
+        );
         assert_eq!(s.suivre(rep("c", None, 2)).unwrap().verdict, Verdict::Rate);
     }
 

@@ -88,7 +88,8 @@ fn objet_magique_en_cours() {
 fn essais_enchaines() {
     use poe2_core::forge::enchainement::{Serie, Verdict};
     let actif = plan(&["maximum Life", "Fire Resistance"]);
-    let normal = "Item Class: Gloves\nRarity: Normal\nOrnate Cuffs\n--------\nItem Level: 78\n--------\n";
+    let normal =
+        "Item Class: Gloves\nRarity: Normal\nOrnate Cuffs\n--------\nItem Level: 78\n--------\n";
     let bon = "Item Class: Gloves\nRarity: Magic\nAthlete's Ornate Cuffs\n--------\nItem Level: 78\n--------\n\
 { Prefix Modifier \"Athlete's\" (Tier: 1) — Life }\n+136(120-149) to maximum Life\n";
     let mauvais = "Item Class: Gloves\nRarity: Magic\nOrnate Cuffs of the Fox\n--------\nItem Level: 78\n--------\n\

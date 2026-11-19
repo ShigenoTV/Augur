@@ -11,8 +11,8 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use poe2_core::forge::enchainement::Serie;
 use poe2_core::forge::atelier::{self, DemandePlan, ErreurAtelier, ResultatPlan};
+use poe2_core::forge::enchainement::Serie;
 use poe2_core::forge::historique::Historique;
 use poe2_core::forge::prix::TablePrix;
 use poe2_core::forge::suivi::{self, ConseilForge, ErreurSuivi, PlanActif};
