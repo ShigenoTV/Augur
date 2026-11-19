@@ -19,12 +19,12 @@ Augur est une application **Windows** d'outils tiers pour **Path of Exile 2**. E
 - **Jamais de `POESESSID`** : l'accès au compte passe uniquement par l'OAuth officiel.
 - Les recherches de trade partent du poste du joueur et respectent les rate limits annoncés par les en-têtes de l'API.
 
-## Stack prévue
+## Stack
 
 - Cœur de calcul et parseur d'objets : **Rust** (`poe2-core`)
 - Application : **Tauri 2 + React / TypeScript**
-- Backend privé de données : Rust (axum), PostgreSQL, ClickHouse, Redis, NATS
-- Data : Python, Polars, Dagster
+- Outillage des données de jeu (RePoE, arbre PoB, Forge) : scripts Python dans `tools/`
+- Tout tourne en local sur le poste du joueur : pas de backend ni de CDN de données (voir [docs/archive.md](docs/archive.md))
 
 ## Documentation
 

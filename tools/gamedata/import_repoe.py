@@ -7,8 +7,7 @@ Entrées, à télécharger depuis https://repoe-fork.github.io/poe2/ :
     mods.min.json         tous les mods du jeu
     base_items.min.json   toutes les bases d'objets
 
-Sortie : un dossier de tables prêt pour `tools/datapack/augur_datapack.py build`
-(format : docs/devops/paquets-de-donnees.md, détail : docs/data/donnees-de-jeu.md).
+Sortie : un dossier de tables JSON canoniques (détail : docs/data/donnees-de-jeu.md).
 
     tables/mods.json      affixes d'équipement (préfixes et suffixes), avec stat_id
     tables/bases.json     bases d'équipement publiées, une entrée par vraie base
@@ -196,7 +195,7 @@ def import_bases(items: dict) -> list[dict]:
 
 
 def canonical_json(obj: object) -> bytes:
-    """Même forme que tools/datapack : clés triées, compact, UTF-8, saut de ligne final."""
+    """JSON canonique : clés triées, compact, UTF-8, saut de ligne final."""
     return (
         json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
         + "\n"

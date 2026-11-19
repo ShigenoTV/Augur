@@ -37,8 +37,9 @@ Décision de Max du 18/11/2026 : « faire comme Awakened PoE Trade / Exiled Exch
   d'appel). Les devises sont converties avec la cote du marché.
 - Sous l'overlay, « N annonces comparables en ligne : voir sur le trade » ouvre les résultats.
 
-La règle des 4 requêtes / 30 min (`docs/data/pipeline-prix.md`) reste celle de l'échantillonnage
-depuis le backend ; elle ne s'applique pas à ces cotes faites à la demande du joueur.
+La règle des 4 requêtes / 30 min visait l'échantillonnage automatique du trade par un backend,
+qui n'a jamais été branché (voir [docs/archive.md](../archive.md)) ; elle ne s'applique pas à ces
+cotes faites à la demande du joueur.
 
 ## À vérifier en jeu
 

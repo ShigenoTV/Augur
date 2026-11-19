@@ -35,7 +35,7 @@ Une dépendance vulnérable sans correctif disponible est remplacée, retirée o
 
 ## Règles de sécurité propres à l'application
 
-- **Mises à jour et paquets de données signés** par les clés du studio : l’updater Tauri refuse toute mise à jour dont la signature ne correspond pas. L’installeur n’a pas de signature Authenticode (décision de Max du 2026-10-31) ; SmartScreen avertit à l’installation.
+- **Mises à jour signées** par la clé du studio : l’updater Tauri refuse toute mise à jour dont la signature ne correspond pas. L’installeur n’a pas de signature Authenticode (décision de Max du 2026-10-31) ; SmartScreen avertit à l’installation.
 - **Capabilities Tauri minimales** : aucun plugin `shell`, aucun accès système de fichiers hors des dossiers de l'application et de `Client.txt`.
 - **Content Security Policy stricte** dans la WebView : aucun script distant, aucun `eval`.
 - Jetons OAuth stockés dans le **Gestionnaire d'identification Windows**, jamais en clair sur le disque ni dans les logs.

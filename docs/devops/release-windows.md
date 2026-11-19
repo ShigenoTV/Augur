@@ -29,10 +29,10 @@ version publiée ne se réécrit jamais** (on incrémente).
 
 | Fichier | Déclencheur | Rôle |
 |---|---|---|
-| `.github/workflows/ci.yml` | PR, push sur `main` | Rust (fmt, clippy, tests), build Windows non signé, Python, OpenTofu, outillage. Chaque job s'active dès que son dossier existe. |
-| `.github/workflows/release-windows.yml` | tag `v*.*.*` ou manuel | Build signé, artefacts de mise à jour, dépôt sur le CDN, release brouillon. |
+| `.github/workflows/ci.yml` | PR, push sur `main` | Rust (fmt, clippy, tests), build Windows non signé, outillage Python (`tools/`) et scripts de release. |
+| `.github/workflows/release-windows.yml` | tag `v*.*.*` ou manuel | Build, artefacts de mise à jour signés, release GitHub (dépôt sur un CDN seulement si les variables R2 sont définies, ce qui n'est pas le cas). |
 | `.github/workflows/promote-release.yml` | manuel | Bascule d'un canal vers une version déposée, avec garde-fous (pas de bêta en stable, pas de retour en arrière). |
-| `.github/workflows/publish-data-pack.yml` | manuel | Publication d'un paquet de données de jeu signé (voir `paquets-de-donnees.md`). |
+| `.github/workflows/mise-a-jour-donnees.yml` | manuel | Régénère les données de jeu (RePoE, arbre PoB, Forge) et rend un rapport des différences. |
 
 L'audit des dépendances (CVE) est dans `audit-securite.yml` (PR sécurité), pas ici.
 
@@ -88,7 +88,6 @@ Ce qui reste signé, gratuitement, avec nos propres clés :
 
 - **les mises à jour** (clé minisign de l'updater Tauri) : une application installée
   n'accepte qu'une mise à jour signée par le studio ;
-- **les paquets de données** (clé ed25519) ;
 - l'intégrité des installeurs est publiée dans `SHA256SUMS.txt` sur chaque release.
 
 Conséquences à connaître :
@@ -112,7 +111,6 @@ listés ci-dessous. Rien d'autre à modifier.
 
 - `release` : clé de l'updater (et secrets Authenticode si un jour utilisés). Restreindre aux tags `v*`.
 - `production` : **Required reviewers = Max**. Protège la promotion des versions.
-- `data-production` : Required reviewers = Max (ou le responsable data). Protège la publication des données.
 
 **Secrets**
 
@@ -122,9 +120,8 @@ listés ci-dessous. Rien d'autre à modifier.
 | `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | release | Son mot de passe. |
 | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` | release (optionnel) | Principal de service autorisé à signer (rôle *Trusted Signing Certificate Profile Signer*, renommé « Artifact Signing » selon la date). |
 | `AUGUR_SIGNING_THUMBPRINT` | release (optionnel) | Empreinte du certificat (mode `signtool` seulement). |
-| `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | release, production, data-production | Jeton R2 limité aux buckets. |
-| `CLOUDFLARE_PURGE_TOKEN` | production, data-production | Jeton limité à la purge de cache. |
-| `AUGUR_DATA_SIGNING_KEY` | data-production | Clé privée ed25519 des paquets de données. |
+| `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | release, production (inutilisés) | Jeton R2, seulement si l'hébergement CDN des mises à jour est un jour activé. |
+| `CLOUDFLARE_PURGE_TOKEN` | production (inutilisé) | Purge de cache, même condition. |
 
 **Variables**
 
@@ -133,25 +130,16 @@ listés ci-dessous. Rien d'autre à modifier.
 | `AUGUR_SIGNING_MODE` | `none` (défaut) ; `azure` ou `signtool` si un certificat est pris plus tard |
 | `AZURE_SIGNING_ENDPOINT` | `https://weu.codesigning.azure.net` |
 | `AZURE_SIGNING_ACCOUNT`, `AZURE_SIGNING_PROFILE` | noms choisis dans Azure |
-| `AUGUR_UPDATES_BASE_URL` | `https://updates.<domaine>` (sortie OpenTofu) |
-| `AUGUR_DATA_BASE_URL` | `https://data.<domaine>` (sortie OpenTofu) |
-| `R2_ACCOUNT_ID` | identifiant du compte Cloudflare |
-| `R2_UPDATES_BUCKET`, `R2_DATA_BUCKET` | `augur-updates`, `augur-data` |
-| `CLOUDFLARE_ZONE_ID` | zone du domaine |
-| `AUGUR_DATA_PUBLIC_KEYS` | clé(s) publique(s) ed25519 des données, séparées par des virgules |
+| `AUGUR_UPDATES_BASE_URL`, `R2_ACCOUNT_ID`, `R2_UPDATES_BUCKET`, `CLOUDFLARE_ZONE_ID` | non définies : les mises à jour passent par GitHub Releases. Ne les définir que pour basculer vers un CDN (l'infrastructure correspondante est archivée, voir [docs/archive.md](../archive.md)). |
 
 ## Générer les clés (sur le poste de Max, jamais dans un chat ni un dépôt)
 
 ```sh
 # Clé de l'updater (minisign) : la publique va dans tauri.conf.json
 pnpm --dir apps/desktop tauri signer generate -w ~/.tauri/augur-updater.key
-
-# Clé des paquets de données (ed25519) : la publique va dans l'application
-pip install cryptography
-python tools/datapack/augur_datapack.py keygen
 ```
 
-Conserver une copie hors ligne des deux clés privées (gestionnaire de mots de passe +
+Conserver une copie hors ligne de la clé privée (gestionnaire de mots de passe +
 sauvegarde chiffrée). **Perdre la clé de l'updater oblige chaque joueur à réinstaller
 l'application à la main.**
 
@@ -171,7 +159,7 @@ l'application à la main.**
 
 ## Retour arrière
 
-Les versions déposées restent sur le CDN. Pour revenir en arrière, publier une version
+Les versions publiées restent sur GitHub Releases. Pour revenir en arrière, publier une version
 corrective **supérieure** (ex. 0.3.1 qui reprend le code de 0.3.0) : l'updater refuse
 les versions inférieures, et le workflow de promotion aussi. Pour une fonctionnalité
 cassée par un patch du jeu, utiliser le kill switch distant plutôt qu'une release.
