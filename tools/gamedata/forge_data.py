@@ -6,7 +6,7 @@ Réunit dans un seul fichier compressé :
 - les mods tirables du domaine `item` (hors Essence) de `tables/mods.json` ;
 - les bases de `tables/bases.json` ;
 - le relevé de poids poe2db de `tools/theorycraft/donnees/poids-poe2db.json` (estimations de
-  Krakenbul, CC BY-NC-SA 3.0 : l'attribution suit ces données, voir `data/README.md`) ;
+  Krakenbul, CC BY-NC-SA 3.0 : l'attribution suit ces données, voir `crates/poe2-core/data/README.md`) ;
 - en complément (`--complement`), les poids Craft of Exile des mods que poe2db n'a pas mesurés
   (`tools/theorycraft/donnees/poids-coe.json`, voir `LICENCE-poids-coe.md`) ;
 - avec `--essences`, les mods possibles de chaque Essence et de chaque Alloy par classe d'objet

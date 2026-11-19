@@ -57,5 +57,6 @@ Les noms sont aussi exportés en constantes : `augur_contracts::{commands, event
 
 ## À venir
 
-- API backend `/v1/…` en OpenAPI (sprint 1, semaine 3), dont `GET /v1/prices/{league}`.
-- Format des paquets de données de jeu, aligné sur le manifeste signé du chantier DevOps.
+Rien de prévu côté backend ni paquets de données : l'appli est 100 % locale (voir
+[docs/archive.md](../archive.md)). Les variantes « backend » de `PriceSource` sont gardées pour ne
+pas casser le format, mais aucune donnée ne les produit.

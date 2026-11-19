@@ -1,5 +1,4 @@
-# Les vecteurs de test sont comparés octet pour octet : jamais de conversion CRLF.
-tools/datapack/testdata/** -text
+# Fichiers de test comparés octet pour octet : jamais de conversion CRLF.
 tests/corpus/objets/rare-fins-de-ligne-windows.txt -text
 # Paquet Path of Building (PoE 1) : archive binaire, jamais convertie.
 crates/pob-poe1/paquet/** -text
