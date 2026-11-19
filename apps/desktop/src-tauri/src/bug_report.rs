@@ -14,9 +14,12 @@ use crate::contracts::{AppError, ErrorCode, app_error};
 /// Page « nouveau ticket » du dépôt, avec le modèle de bug (étiquettes `bug` et `bêta`).
 const NEW_ISSUE_URL: &str = "https://github.com/ShigenoTV/Augur/issues/new";
 const TEMPLATE: &str = "bug-beta.yml";
-/// GitHub refuse les adresses trop longues (≈ 8 Ko) : on garde de la marge.
-const MAX_URL_LEN: usize = 7000;
-const TRONQUE: &str = "\n… (tronqué : colle la suite ici)";
+/// Windows (`url.dll`, ShellExecute) coupe les adresses au-delà de 2 048
+/// caractères : le modèle de ticket n'est alors plus appliqué et GitHub
+/// n'affiche qu'un ticket vide avec le titre. On reste nettement en dessous ;
+/// le rapport complet part dans le presse-papiers.
+const MAX_URL_LEN: usize = 1900;
+const TRONQUE: &str = "\n… (tronqué : le rapport complet est dans le presse-papiers, colle-le ici)";
 
 /// Champs saisis dans la fenêtre « Signaler un bug ».
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -39,6 +42,8 @@ pub struct BugReport {
 #[serde(rename_all = "camelCase")]
 pub struct BugReportOpened {
     pub truncated: bool,
+    /// Rapport complet copié dans le presse-papiers.
+    pub copied: bool,
 }
 
 /// Diagnostic technique joint au ticket, sans donnée personnelle.
@@ -104,7 +109,7 @@ pub fn issue_url(report: &BugReport) -> Result<(String, bool), AppError> {
             .max_by_key(|(_, v)| v.chars().count())
             .expect("champs non vides");
         let garde = plus_long.trim_end_matches(TRONQUE).chars().count() * 3 / 4;
-        if garde < 50 {
+        if garde < 20 {
             return Err(app_error(
                 ErrorCode::Internal,
                 "Texte trop long : raccourcis-le et colle le reste dans le ticket.",
@@ -113,6 +118,39 @@ pub fn issue_url(report: &BugReport) -> Result<(String, bool), AppError> {
         *plus_long = plus_long.chars().take(garde).collect::<String>() + TRONQUE;
         truncated = true;
     }
+}
+
+/// Rapport complet au format d'un ticket créé avec le modèle (mêmes intitulés
+/// de sections), à coller dans le ticket si un champ est vide ou raccourci.
+pub fn rapport_complet(report: &BugReport) -> String {
+    let mut s = format!("[Bug] {}\n", report.titre.trim());
+    let mut section = |label: &str, valeur: &str, code: bool| {
+        let v = valeur.trim();
+        if v.is_empty() {
+            return;
+        }
+        s.push_str(&format!("\n### {label}\n\n"));
+        if code {
+            s.push_str(&format!("```text\n{v}\n```\n"));
+        } else {
+            s.push_str(v);
+            s.push('\n');
+        }
+    };
+    section("Où est le problème ?", &report.module, false);
+    section("Ce que tu as fait", &report.etapes, false);
+    section(
+        "Ce que tu attendais, et ce qui s'est passé",
+        &report.attendu,
+        false,
+    );
+    section(
+        "Texte de l'objet (si un objet est en cause)",
+        &report.objet,
+        true,
+    );
+    section("Diagnostic d'Augur", &report.diagnostic, true);
+    s
 }
 
 fn build(titre: &str, module: &str, champs: &[(&str, String)]) -> Result<String, AppError> {
@@ -265,8 +303,64 @@ mod tests {
         let parsed = reqwest::Url::parse(&url).unwrap();
         let q: std::collections::HashMap<_, _> = parsed.query_pairs().into_owned().collect();
         assert!(q["objet"].ends_with(TRONQUE));
+        // Le modèle reste demandé même quand l'adresse est raccourcie.
+        assert_eq!(q["template"], "bug-beta.yml");
         // Les champs courts restent entiers.
         assert_eq!(q["etapes"], "1. Ctrl+C sur un anneau\n2. rien");
+    }
+
+    /// Cas de Max (v0.1.32) : diagnostic de 15 lignes de journal, accents
+    /// compris. L'adresse dépassait 2 048 caractères et Windows la coupait.
+    #[test]
+    fn diagnostic_complet_sous_la_limite_de_windows() {
+        let journal = (0..15)
+            .map(|i| format!("2026-11-19T08:13:{i:02}Z info suivi de d:\\steam\\steamapps\\common\\Path of Exile\\logs\\Client.txt (arbre 3.30, données ééé)"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let r = BugReport {
+            titre: "test2".into(),
+            module: "Forge".into(),
+            etapes: "test forge poe1".into(),
+            attendu: "juste un test".into(),
+            objet: "test3".into(),
+            diagnostic: format!(
+                "Augur : v0.1.32\nDonnées du jeu : 0.5.5.10\nPersonnage importé : Gemling Legionnaire niveau 95\n\nJournal (dernières lignes) :\n{journal}"
+            ),
+        };
+        let (url, truncated) = issue_url(&r).unwrap();
+        assert!(truncated);
+        assert!(url.len() < 2048, "{} caractères", url.len());
+        let q: std::collections::HashMap<_, _> = reqwest::Url::parse(&url)
+            .unwrap()
+            .query_pairs()
+            .into_owned()
+            .collect();
+        // Les champs saisis restent entiers, seul le diagnostic est raccourci.
+        assert_eq!(q["template"], "bug-beta.yml");
+        assert_eq!(q["etapes"], "test forge poe1");
+        assert_eq!(q["attendu"], "juste un test");
+        assert_eq!(q["objet"], "test3");
+        assert!(q["diagnostic"].starts_with("Augur : v0.1.32"));
+        assert!(q["diagnostic"].ends_with(TRONQUE));
+    }
+
+    #[test]
+    fn rapport_complet_avec_les_sections_du_modele() {
+        let r = BugReport {
+            objet: "Rarity: Rare".into(),
+            ..report()
+        };
+        let texte = rapport_complet(&r);
+        assert!(texte.starts_with("[Bug] Overlay vide\n"));
+        assert!(texte.contains("### Ce que tu as fait\n\n1. Ctrl+C sur un anneau\n2. rien\n"));
+        assert!(texte.contains("### Ce que tu attendais, et ce qui s'est passé\n"));
+        assert!(texte.contains(
+            "### Texte de l'objet (si un objet est en cause)\n\n```text\nRarity: Rare\n```"
+        ));
+        assert!(texte.contains("### Diagnostic d'Augur\n\n```text\nAugur : v0.1.16\n```"));
+        // Champ vide : pas de section.
+        let sans_objet = rapport_complet(&report());
+        assert!(!sans_objet.contains("Texte de l'objet"));
     }
 
     #[test]

@@ -943,7 +943,17 @@ pub fn open_bug_report(
     report: crate::bug_report::BugReport,
 ) -> Result<crate::bug_report::BugReportOpened, AppError> {
     let (url, truncated) = crate::bug_report::issue_url(&report)?;
+    // Copie d'abord le rapport complet : si le navigateur n'applique pas le
+    // modèle ou si un champ a été raccourci, le joueur n'a qu'à coller.
+    let rapport = crate::bug_report::rapport_complet(&report);
+    let copied = arboard::Clipboard::new()
+        .and_then(|mut c| c.set_text(rapport))
+        .map_err(|e| log::warn!("rapport de bug non copié : {e}"))
+        .is_ok();
     crate::bug_report::open_in_browser(&url)?;
-    log::info!("ticket de bug préparé dans le navigateur");
-    Ok(crate::bug_report::BugReportOpened { truncated })
+    log::info!(
+        "ticket de bug préparé dans le navigateur ({} caractères)",
+        url.len()
+    );
+    Ok(crate::bug_report::BugReportOpened { truncated, copied })
 }
