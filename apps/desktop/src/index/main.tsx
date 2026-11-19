@@ -6,6 +6,7 @@ import {
   Kbd,
   StatePanel,
   UpdateBanner,
+  UpdateButton,
   type OverlayState,
   type ParsedItem,
 } from "@augur/ui";
@@ -300,18 +301,12 @@ function App() {
             <Status ok={Boolean(state?.gameFocused)} label={state?.gameFocused ? "Jeu au premier plan" : "Jeu non détecté"} />
             <Status ok={logSummary.ok} label={logSummary.label} />
             <Status ok={Boolean(versionDonnees)} label={versionDonnees ? `Données du jeu : ${versionDonnees}` : "Données du jeu indisponibles"} />
-            <button
-              type="button"
-              onClick={() => void updates.check()}
-              disabled={updates.update.phase === "checking" || updates.update.phase === "installing"}
-              className="mt-2 w-full whitespace-nowrap rounded-chip border border-ink-600 px-1 py-1 text-[11px] text-text-primary hover:bg-ink-800 disabled:opacity-50"
-            >
-              {updates.update.phase === "checking"
-                ? "Vérification…"
-                : updates.update.phase === "upToDate"
-                  ? "Augur est à jour"
-                  : "Rechercher une mise à jour"}
-            </button>
+            <UpdateButton
+              update={updates.update}
+              onCheck={() => void updates.check()}
+              onInstall={() => void updates.install()}
+              className="mt-2 w-full whitespace-nowrap px-1 py-1 text-[11px]"
+            />
             <button
               type="button"
               onClick={() => allerA("signaler-bug")}
@@ -467,17 +462,14 @@ function App() {
             </Card>
             <Card title="Mises à jour">
               <div className="flex flex-wrap items-center gap-4 text-sm">
-                <button
-                  type="button"
-                  onClick={() => void updates.check()}
-                  disabled={updates.update.phase === "checking" || updates.update.phase === "installing"}
-                  className="rounded-chip border border-ink-600 px-3 py-1.5 text-text-primary hover:bg-ink-800 disabled:opacity-50"
-                >
-                  Rechercher des mises à jour
-                </button>
+                <UpdateButton
+                  update={updates.update}
+                  onCheck={() => void updates.check()}
+                  onInstall={() => void updates.install()}
+                  idleLabel="Rechercher des mises à jour"
+                  className="px-3 py-1.5"
+                />
                 <span className="text-text-subtle">
-                  {updates.update.phase === "checking" && "Vérification…"}
-                  {updates.update.phase === "upToDate" && "Augur est à jour."}
                   {updates.update.phase === "idle" && "Vérification automatique au démarrage puis toutes les 6 heures."}
                 </span>
                 {BETA_AVAILABLE && (
