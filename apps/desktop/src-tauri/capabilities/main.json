@@ -75,6 +75,7 @@
     "allow-delete-forge-history-entry",
     "allow-get-diagnostic",
     "allow-copy-diagnostic",
-    "allow-open-bug-report"
+    "allow-open-bug-report",
+    "allow-open-idea"
   ]
 }

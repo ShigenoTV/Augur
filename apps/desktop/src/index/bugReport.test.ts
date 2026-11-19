@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { champManquant, diagnosticTicket, LIGNES_JOURNAL_TICKET, messageTicket, MODULES_BUG } from "./bugReport";
+import { champManquant, diagnosticTicket, ideeManquante, LIGNES_JOURNAL_TICKET, messageTicket, MODULES_BUG, MODULES_IDEE } from "./bugReport";
 
 describe("signaler un bug", () => {
   it("joint les dernières lignes du journal", () => {
@@ -25,14 +25,27 @@ describe("signaler un bug", () => {
     for (const m of MODULES_BUG) expect(yml).toContain(`        - ${m}\n`);
   });
 
-  it("garde un modèle de ticket valide (sinon GitHub ouvre un ticket vierge)", () => {
-    const yml = readFileSync(resolve(process.cwd(), "../../.github/ISSUE_TEMPLATE/bug-beta.yml"), "utf8");
+  it.each(["bug-beta.yml", "idee.yml"])("garde le modèle %s valide (sinon GitHub ouvre un ticket vierge)", (fichier) => {
+    const yml = readFileSync(resolve(process.cwd(), `../../.github/ISSUE_TEMPLATE/${fichier}`), "utf8");
     // Une valeur YAML sans guillemets ne peut pas contenir « : » suivi d'un espace.
     const fautives = yml
       .split("\n")
       .map((l) => /^\s*(?:- )?[\w-]+: (.*)$/.exec(l)?.[1]?.trim() ?? "")
       .filter((v) => v && !/^["'|>[{]/.test(v) && /:\s/.test(v));
     expect(fautives).toEqual([]);
+  });
+
+  it("propose les mêmes options que le modèle d'idée GitHub", () => {
+    const yml = readFileSync(resolve(process.cwd(), "../../.github/ISSUE_TEMPLATE/idee.yml"), "utf8");
+    for (const m of MODULES_IDEE) expect(yml).toContain(`        - ${m}\n`);
+    expect(yml).toContain('labels: ["enhancement"]');
+    expect(yml).not.toMatch(/labels:.*bug/);
+  });
+
+  it("exige titre et idée", () => {
+    expect(ideeManquante({ titre: " ", idee: "a" })).toMatch(/titre/);
+    expect(ideeManquante({ titre: "x", idee: "" })).toMatch(/idée/);
+    expect(ideeManquante({ titre: "x", idee: "a" })).toBeNull();
   });
 
   it("signale le rapport complet copié dans le presse-papiers", () => {

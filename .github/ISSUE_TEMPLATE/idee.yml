@@ -1,0 +1,39 @@
+name: Proposer une idée
+description: "Une idée d'évolution pour Augur : nouvelle fonction, amélioration, confort. Le plus simple : bouton « Proposer une idée » dans Augur."
+title: "[Idée] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de partager ton idée ! Ce ticket est **public** : n'y colle jamais ton mot de passe, ton `POESESSID` ni d'information personnelle.
+  - type: dropdown
+    id: module
+    attributes:
+      label: Quelle partie d'Augur ?
+      options:
+        - Overlay (Ctrl+C sur un objet)
+        - Personnage (import Path of Building)
+        - Forge
+        - Atlas Ledger
+        - Prix et recherche sur le trade
+        - Réglages
+        - Nouvelle fonction
+        - Autre
+  - type: textarea
+    id: idee
+    attributes:
+      label: Ton idée
+      description: Ce que tu aimerais qu'Augur fasse, avec un exemple si possible.
+    validations:
+      required: true
+  - type: textarea
+    id: pourquoi
+    attributes:
+      label: Pourquoi ce serait utile
+      description: Le problème que ça règle, ou le moment en jeu où ça t'aiderait.
+  - type: textarea
+    id: captures
+    attributes:
+      label: Captures, croquis, exemples
+      description: Glisse une image (Win+Maj+S) ou un lien ici.

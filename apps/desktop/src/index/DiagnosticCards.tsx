@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { commands, isAppError, isTauri, type Diagnostic } from "../bridge";
-import { champManquant, diagnosticTicket, messageTicket, MODULES_BUG } from "./bugReport";
+import { champManquant, diagnosticTicket, ideeManquante, messageIdee, messageTicket, MODULES_BUG, MODULES_IDEE } from "./bugReport";
 
 const btn = "rounded-chip px-3 py-1.5 text-sm font-semibold";
 const champ =
@@ -156,6 +156,72 @@ export function BugReportCard({ actif }: { actif: boolean }) {
       <p className="text-xs text-text-subtle">
         Augur ouvre un ticket GitHub prérempli dans ton navigateur (compte GitHub gratuit nécessaire). Rien n'est envoyé tant que tu n'as pas
         cliqué sur « Create ». Le ticket est public : n'y mets aucune information personnelle.
+      </p>
+    </div>
+  );
+}
+
+/** Réglages → Proposer une idée : prépare un ticket GitHub d'idée que le joueur relit et envoie lui-même. */
+export function IdeaCard() {
+  const [titre, setTitre] = useState("");
+  const [module, setModule] = useState<string>(MODULES_IDEE[0]);
+  const [idee, setIdee] = useState("");
+  const [pourquoi, setPourquoi] = useState("");
+  const [message, setMessage] = useState<{ ok: boolean; texte: string } | null>(null);
+
+  async function envoyer() {
+    const manque = ideeManquante({ titre, idee });
+    if (manque) {
+      setMessage({ ok: false, texte: manque });
+      return;
+    }
+    if (!isTauri()) {
+      setMessage({ ok: false, texte: "La proposition d'idée fonctionne dans l'application." });
+      return;
+    }
+    try {
+      const r = await commands.openIdea({ titre, module, idee, pourquoi });
+      setMessage({ ok: true, texte: messageIdee(r) });
+    } catch (err) {
+      setMessage({ ok: false, texte: isAppError(err) ? err.message : String(err) });
+    }
+  }
+
+  return (
+    <div className="space-y-3 text-sm">
+      <div className="grid grid-cols-[2fr_1fr] gap-3">
+        <label className="space-y-1">
+          <span className="text-xs text-text-subtle">Titre court</span>
+          <input value={titre} onChange={(e) => setTitre(e.target.value)} placeholder="Afficher le prix dans l'overlay compact" className={champ} />
+        </label>
+        <label className="space-y-1">
+          <span className="text-xs text-text-subtle">Quelle partie d'Augur ?</span>
+          <select value={module} onChange={(e) => setModule(e.target.value)} className={champ}>
+            {MODULES_IDEE.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <label className="block space-y-1">
+        <span className="text-xs text-text-subtle">Ton idée</span>
+        <textarea value={idee} onChange={(e) => setIdee(e.target.value)} className={`${champ} h-20 resize-y`} />
+      </label>
+      <label className="block space-y-1">
+        <span className="text-xs text-text-subtle">Pourquoi ce serait utile (facultatif)</span>
+        <textarea value={pourquoi} onChange={(e) => setPourquoi(e.target.value)} className={`${champ} h-16 resize-y`} />
+      </label>
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="button" onClick={() => void envoyer()} className={`${btn} bg-accent text-accent-ink hover:bg-accent-strong`}>
+          Préparer le ticket
+        </button>
+        {message && <span className={message.ok ? "text-text-muted" : "text-signal-loss"}>{message.texte}</span>}
+      </div>
+      <p className="text-xs text-text-subtle">
+        Augur ouvre un ticket GitHub prérempli dans ton navigateur (compte GitHub gratuit nécessaire). Rien n'est envoyé tant que tu n'as pas
+        cliqué sur « Create ». Le ticket est public.
       </p>
     </div>
   );

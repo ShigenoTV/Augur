@@ -16,7 +16,7 @@ import { JEUX, jeuActif } from "./game";
 import { CharacterCard } from "./CharacterCard";
 import { GapCard } from "./GapCard";
 import { ClientLogCard } from "./ClientLogCard";
-import { BugReportCard, DiagnosticCard } from "./DiagnosticCards";
+import { BugReportCard, DiagnosticCard, IdeaCard } from "./DiagnosticCards";
 import { LeagueCard, OverlayCard, ShortcutsCard, UpgradeBudgetCard } from "./SettingsCards";
 import { afficherRaccourci, SHORTCUTS_PAR_DEFAUT } from "./shortcuts";
 import { summarizeClientLog } from "./clientLog";
@@ -146,10 +146,10 @@ function App() {
     }
   }
 
-  function signalerBug() {
+  function allerA(carte: string) {
     ouvrir("reglages");
     // Après l'affichage de la page Réglages.
-    setTimeout(() => document.getElementById("signaler-bug")?.scrollIntoView({ behavior: "smooth" }), 0);
+    setTimeout(() => document.getElementById(carte)?.scrollIntoView({ behavior: "smooth" }), 0);
   }
 
   // Ctrl+1 à Ctrl+5 : changer de page.
@@ -314,10 +314,17 @@ function App() {
             </button>
             <button
               type="button"
-              onClick={signalerBug}
+              onClick={() => allerA("signaler-bug")}
               className="w-full whitespace-nowrap rounded-chip border border-ink-600 px-1 py-1 text-[11px] text-text-primary hover:bg-ink-800"
             >
               Signaler un bug
+            </button>
+            <button
+              type="button"
+              onClick={() => allerA("proposer-idee")}
+              className="w-full whitespace-nowrap rounded-chip border border-ink-600 px-1 py-1 text-[11px] text-text-primary hover:bg-ink-800"
+            >
+              Proposer une idée
             </button>
           </div>
         </aside>
@@ -495,6 +502,9 @@ function App() {
             </Card>
             <Card title="Signaler un bug" id="signaler-bug">
               <BugReportCard actif={page === "reglages"} />
+            </Card>
+            <Card title="Proposer une idée" id="proposer-idee">
+              <IdeaCard />
             </Card>
           </div>
         </main>

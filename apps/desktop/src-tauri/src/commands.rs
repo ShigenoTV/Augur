@@ -957,3 +957,19 @@ pub fn open_bug_report(
     );
     Ok(crate::bug_report::BugReportOpened { truncated, copied })
 }
+
+/// Ouvre dans le navigateur le ticket GitHub d'idée prérempli (le joueur le relit et l'envoie lui-même).
+#[tauri::command]
+pub fn open_idea(
+    report: crate::bug_report::IdeaReport,
+) -> Result<crate::bug_report::BugReportOpened, AppError> {
+    let (url, truncated) = crate::bug_report::idea_url(&report)?;
+    let texte = crate::bug_report::idee_complete(&report);
+    let copied = arboard::Clipboard::new()
+        .and_then(|mut c| c.set_text(texte))
+        .map_err(|e| log::warn!("idée non copiée : {e}"))
+        .is_ok();
+    crate::bug_report::open_in_browser(&url)?;
+    log::info!("ticket d'idée préparé dans le navigateur");
+    Ok(crate::bug_report::BugReportOpened { truncated, copied })
+}

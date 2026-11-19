@@ -179,6 +179,7 @@ pub fn run() {
             commands::get_diagnostic,
             commands::copy_diagnostic,
             commands::open_bug_report,
+            commands::open_idea,
         ])
         .setup(|app| {
             let handle = app.handle();

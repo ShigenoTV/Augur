@@ -651,6 +651,9 @@ export type BugReport = {
   diagnostic: string;
 };
 
+/** Ticket d'idée prérempli (apps/desktop/src-tauri/src/bug_report.rs). */
+export type IdeaReport = { titre: string; module: string; idee: string; pourquoi: string };
+
 export const commands = {
   parseClipboardItem: (text: string) => invoke<ParsedItem>("parse_clipboard_item", { text }),
   getOverlayState: () => invoke<OverlayState>("get_overlay_state"),
@@ -690,6 +693,7 @@ export const commands = {
   getDiagnostic: () => invoke<Diagnostic>("get_diagnostic"),
   copyDiagnostic: () => invoke<void>("copy_diagnostic"),
   openBugReport: (report: BugReport) => invoke<{ truncated: boolean; copied: boolean }>("open_bug_report", { report }),
+  openIdea: (report: IdeaReport) => invoke<{ truncated: boolean; copied: boolean }>("open_idea", { report }),
   getLedgerStatus: () => invoke<LedgerStatus>("get_ledger_status"),
   startLedgerSession: () => invoke<LedgerStatus>("start_ledger_session"),
   stopLedgerSession: () => invoke<LedgerStatus>("stop_ledger_session"),

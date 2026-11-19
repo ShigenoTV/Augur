@@ -128,6 +128,14 @@ sur « Create » : rien n'est envoyé avant. Il faut un compte GitHub (gratuit).
 Sans passer par Augur : <https://github.com/ShigenoTV/Augur/issues/new/choose>,
 modèle **« Signaler un bug »**.
 
+## Proposer une idée
+
+Une idée d'évolution ? Bouton **« Proposer une idée »** en bas de la barre
+latérale (ou Réglages → Proposer une idée) : un titre, la partie d'Augur
+concernée, ton idée et pourquoi elle serait utile. Augur ouvre un ticket GitHub
+prérempli (modèle **« Proposer une idée »**), que tu relis puis crées avec
+« Create ».
+
 Réglages → **Diagnostic** affiche le journal d'Augur (démarrage, journal du jeu,
 mises à jour, erreurs) et le bouton **« Copier le diagnostic »** pour le coller
 dans un ticket ou un message. Le journal est aussi écrit dans

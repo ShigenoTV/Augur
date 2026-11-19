@@ -86,6 +86,7 @@ fn main() {
             "get_diagnostic",
             "copy_diagnostic",
             "open_bug_report",
+            "open_idea",
         ]),
     ))
     .expect("échec du build Tauri");
