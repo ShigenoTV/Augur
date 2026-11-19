@@ -9,7 +9,6 @@ import { commands, isAppError, isTauri, on } from "../bridge";
  */
 export function useUpdates() {
   const [update, setUpdate] = useState<UpdatePhase>({ phase: "idle" });
-  const [dismissed, setDismissed] = useState<string | null>(null);
 
   const check = useCallback(async () => {
     if (!isTauri()) return;
@@ -17,7 +16,6 @@ export function useUpdates() {
     try {
       const info = await commands.checkForUpdate();
       setUpdate(info ? { phase: "available", info } : { phase: "upToDate", checkedAt: new Date().toISOString() });
-      setDismissed(null);
     } catch (err) {
       setUpdate({ phase: "error", message: isAppError(err) ? err.message : String(err) });
     }
@@ -44,10 +42,5 @@ export function useUpdates() {
     return () => unlisten.forEach((p) => void p.then((f) => f()));
   }, [check]);
 
-  // « Plus tard » masque le bandeau jusqu'à la prochaine version annoncée.
-  const visible: UpdatePhase =
-    update.phase === "available" && dismissed === update.info.version ? { phase: "idle" } : update;
-  const later = () => update.phase === "available" && setDismissed(update.info.version);
-
-  return { update, visible, check, install, later };
+  return { update, check, install };
 }
