@@ -30,7 +30,7 @@ version publiée ne se réécrit jamais** (on incrémente).
 | Fichier | Déclencheur | Rôle |
 |---|---|---|
 | `.github/workflows/ci.yml` | PR, push sur `main` | Rust (fmt, clippy, tests), build Windows non signé, outillage Python (`tools/`) et scripts de release. |
-| `.github/workflows/release-windows.yml` | tag `v*.*.*` ou manuel | Build, artefacts de mise à jour signés, release GitHub (dépôt sur un CDN seulement si les variables R2 sont définies, ce qui n'est pas le cas). |
+| `.github/workflows/release-windows.yml` | tag `v*.*.*` ou manuel | Build, artefacts de mise à jour signés, release GitHub en brouillon. |
 | `.github/workflows/promote-release.yml` | manuel | Bascule d'un canal vers une version déposée, avec garde-fous (pas de bêta en stable, pas de retour en arrière). |
 | `.github/workflows/mise-a-jour-donnees.yml` | manuel | Régénère les données de jeu (RePoE, arbre PoB, Forge) et rend un rapport des différences. |
 
@@ -64,19 +64,18 @@ Le canal bêta s'obtient en remplaçant l'endpoint au runtime (option « Rejoind
 via le builder du plugin `tauri-plugin-updater`. La CI force `createUpdaterArtifacts` et
 injecte la commande de signature, l'application n'a donc rien d'autre à prévoir.
 
-## Hébergement des mises à jour sans domaine (GitHub Releases)
+## Hébergement des mises à jour (GitHub Releases)
 
-Tant que le domaine et le compte Cloudflare n'existent pas, les mises à jour sont
-servies par les releases GitHub du dépôt (public). C'est le mode par défaut quand la
-variable `R2_UPDATES_BUCKET` n'est pas définie :
+Les mises à jour sont servies par les releases GitHub du dépôt (public) :
 
 - la release attache les installeurs, leurs `.sig` et `latest.json` à la release brouillon ;
 - l'application interroge `https://github.com/ShigenoTV/Augur/releases/latest/download/latest.json` ;
 - « Promouvoir une release » (canal `stable`) publie la release brouillon, ce qui la
   rend « latest » et donc visible des applications installées.
 
-Limite : pas de canal bêta dans ce mode. Passer au CDN plus tard ne demande qu'une
-version de l'application avec le nouvel endpoint.
+Limite : pas de canal bêta. L'hébergement sur CDN (Cloudflare R2) prévu au départ a été
+retiré le 19/11/2026 (voir [docs/archive.md](../archive.md)) ; le récupérer demanderait
+de restaurer les étapes R2 des workflows et une version de l'application avec le nouvel endpoint.
 
 ## Signature Authenticode : pas de certificat (décision du 2026-10-31)
 
@@ -120,8 +119,6 @@ listés ci-dessous. Rien d'autre à modifier.
 | `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | release | Son mot de passe. |
 | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` | release (optionnel) | Principal de service autorisé à signer (rôle *Trusted Signing Certificate Profile Signer*, renommé « Artifact Signing » selon la date). |
 | `AUGUR_SIGNING_THUMBPRINT` | release (optionnel) | Empreinte du certificat (mode `signtool` seulement). |
-| `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | release, production (inutilisés) | Jeton R2, seulement si l'hébergement CDN des mises à jour est un jour activé. |
-| `CLOUDFLARE_PURGE_TOKEN` | production (inutilisé) | Purge de cache, même condition. |
 
 **Variables**
 
@@ -130,7 +127,6 @@ listés ci-dessous. Rien d'autre à modifier.
 | `AUGUR_SIGNING_MODE` | `none` (défaut) ; `azure` ou `signtool` si un certificat est pris plus tard |
 | `AZURE_SIGNING_ENDPOINT` | `https://weu.codesigning.azure.net` |
 | `AZURE_SIGNING_ACCOUNT`, `AZURE_SIGNING_PROFILE` | noms choisis dans Azure |
-| `AUGUR_UPDATES_BASE_URL`, `R2_ACCOUNT_ID`, `R2_UPDATES_BUCKET`, `CLOUDFLARE_ZONE_ID` | non définies : les mises à jour passent par GitHub Releases. Ne les définir que pour basculer vers un CDN (l'infrastructure correspondante est archivée, voir [docs/archive.md](../archive.md)). |
 
 ## Générer les clés (sur le poste de Max, jamais dans un chat ni un dépôt)
 

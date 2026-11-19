@@ -19,11 +19,12 @@ Tout reste récupérable dans l'historique git. Dernier commit qui les contient 
 | `.github/workflows/publish-data-pack.yml` | Publication d'un paquet sur Cloudflare R2 | Jamais lancé ; variables et secrets R2 jamais définis |
 | `infra/distribution/` | OpenTofu des buckets R2 et domaines `updates.` / `data.` | Pas de domaine ni de compte Cloudflare |
 | `docs/devops/paquets-de-donnees.md`, `docs/data/pipeline-prix.md` | Documentation des deux éléments ci-dessus | |
+| Étapes « CDN R2 » de `release-windows.yml` et `promote-release.yml` (dépôt sur R2, bascule de canal, purge du cache) | Hébergement des mises à jour sur Cloudflare | Variables `R2_*` jamais définies : les mises à jour passent par GitHub Releases |
 | Jobs CI « Python (ruff, pytest) » et « OpenTofu (fmt, validate) », étape « Tests des paquets de données » | Ne testaient que `data/`, `infra/` et `tools/datapack/` | |
 
 ## Gardé
 
 - `tools/gamedata/` : commande « mise à jour des données » (RePoE, arbre PoB, Forge, stats de trade, PoE 1), reconstruction du texte des mods, workflow `mise-a-jour-donnees.yml`, veille RePoE.
 - `tools/theorycraft/` (poids poe2db / Craft of Exile, calculateur de craft, cas golden) et `tools/pob/` (paquet Path of Building PoE 1).
-- `scripts/release/`, `release-windows.yml`, `promote-release.yml`, `audit-securite.yml` : inchangés. Les branches « CDN R2 » des workflows de release restent en place mais inertes tant que les variables `R2_*` ne sont pas définies ; on peut les retirer plus tard si l'on renonce définitivement au CDN.
+- `scripts/release/`, `release-windows.yml`, `promote-release.yml`, `audit-securite.yml` : seules les étapes « CDN R2 » des deux workflows de release sont retirées. Elles ne s'exécutaient que si les variables `R2_*` étaient définies, ce qui n'a jamais été le cas : le chemin suivi par chaque release (GitHub Releases) est inchangé.
 - `crates/augur-contracts` et `crates/augur-ratelimit` : utilisés par l'appli (commandes Tauri, limites du trade).

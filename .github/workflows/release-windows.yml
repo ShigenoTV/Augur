@@ -5,9 +5,9 @@
 # est alors créé sur le commit de la branche choisie s'il n'existe pas.
 # Signature Authenticode optionnelle (AUGUR_SIGNING_MODE, défaut « none » :
 # décision de Max du 2026-10-31). Les mises à jour sont toujours signées.
-# Ce workflow NE PUBLIE PAS la mise à jour auprès des joueurs : il dépose une
-# version immuable sur le CDN (releases/X.Y.Z/) et crée une release GitHub en
-# brouillon. La bascule d'un canal se fait ensuite avec « Promouvoir une release »,
+# Ce workflow NE PUBLIE PAS la mise à jour auprès des joueurs : il crée une
+# release GitHub en brouillon (installeurs, signatures, latest.json). La
+# publication se fait ensuite avec « Promouvoir une release »,
 # derrière l'approbation de l'environnement `production`.
 #
 # Configuration : voir docs/devops/release-windows.md.
@@ -33,9 +33,6 @@ env:
   APP_DIR: apps/desktop
   TAG: ${{ github.event.inputs.tag || github.ref_name }}
   AUGUR_SIGNING_MODE: ${{ vars.AUGUR_SIGNING_MODE || 'none' }}
-  UPDATES_BASE_URL: ${{ vars.AUGUR_UPDATES_BASE_URL }}
-  R2_ENDPOINT: https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-  R2_BUCKET: ${{ vars.R2_UPDATES_BUCKET }}
   CARGO_TERM_COLOR: always
 
 jobs:
@@ -231,13 +228,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Hébergement des mises à jour : CDN R2 si configuré, sinon les
-          # fichiers attachés à la release GitHub (dépôt public, sans domaine).
-          if [ -n "$UPDATES_BASE_URL" ]; then
-            base="$UPDATES_BASE_URL/releases/${{ steps.meta.outputs.version }}"
-          else
-            base="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG"
-          fi
+          # Les mises à jour sont servies par les fichiers attachés à la release GitHub.
+          base="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG"
           echo "Installeurs servis depuis : $base"
           node scripts/release/make-update-manifest.mjs \
             --bundle-dir "${{ steps.collect.outputs.bundle }}" \
@@ -252,28 +244,6 @@ jobs:
           path: dist-release/
           if-no-files-found: error
           retention-days: 90
-
-      - name: Dépôt immuable sur le CDN (releases/X.Y.Z/)
-        if: vars.R2_UPDATES_BUCKET != ''
-        shell: bash
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: auto
-          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
-          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
-        run: |
-          set -euo pipefail
-          prefix="releases/${{ steps.meta.outputs.version }}"
-          # Une version publiée ne se réécrit jamais : on refuse d'écraser.
-          if aws s3api head-object --endpoint-url "$R2_ENDPOINT" --bucket "$R2_BUCKET" \
-               --key "$prefix/latest.json" >/dev/null 2>&1; then
-            echo "::error::$prefix existe déjà sur le CDN. Incrémentez la version."; exit 1
-          fi
-          aws s3 cp dist-release/ "s3://$R2_BUCKET/$prefix/" --recursive \
-            --endpoint-url "$R2_ENDPOINT" \
-            --cache-control "public, max-age=31536000, immutable" --only-show-errors
-          echo "Déposé sous $prefix (pas encore visible des joueurs : lancer « Promouvoir une release »)."
 
       - name: Release GitHub en brouillon
         shell: bash
