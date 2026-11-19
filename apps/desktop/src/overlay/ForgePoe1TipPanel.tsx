@@ -2,6 +2,7 @@ import { Kbd, StatePanel } from "@augur/ui";
 import type { ForgePoe1Tip } from "../bridge";
 import { formatPoe1, useAffichagePoe1 } from "../index/devisePoe1";
 import { libelleCourt } from "../index/forge";
+import { cleBilan, EssaiBilan } from "./EssaiBilan";
 
 export type ForgePoe1View = { status: "tip"; tip: ForgePoe1Tip } | { status: "error"; message: string };
 
@@ -48,6 +49,7 @@ export function ForgePoe1TipPanel({
 function Conseil({ tip, cout }: { tip: ForgePoe1Tip; cout: (v: number | null) => string }) {
   return (
     <>
+      {tip.enchainement && <EssaiBilan key={cleBilan(tip.enchainement)} enchainement={tip.enchainement} cout={cout} />}
       <p className="text-sm font-semibold">{tip.baseNom}</p>
       <p className="text-2xs text-text-subtle">
         {tip.rarete} · {tip.presents.length} mod(s) voulu(s) sur {tip.presents.length + tip.manquants.length}

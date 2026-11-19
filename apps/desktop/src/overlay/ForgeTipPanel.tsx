@@ -2,6 +2,7 @@ import { Kbd, StatePanel } from "@augur/ui";
 import type { AppError } from "@augur/ui";
 import type { ForgeTip } from "../bridge";
 import { formatCout, useAffichage } from "../index/devise";
+import { cleBilan, EssaiBilan } from "./EssaiBilan";
 import { decrireEtat, formatCount, formatPercent, libelleCourt } from "../index/forge";
 
 export type ForgeView = { status: "tip"; tip: ForgeTip } | { status: "error"; error: AppError };
@@ -69,6 +70,7 @@ export function ForgeTipPanel({
   const action = conseil.action;
   return (
     <Shell onClose={onClose} fermer={fermer} pied={pied}>
+      {tip.enchainement && <EssaiBilan key={cleBilan(tip.enchainement)} enchainement={tip.enchainement} cout={cout} />}
       <p className="text-sm font-semibold">{tip.baseNom}</p>
       <p className="text-2xs text-text-subtle">{decrireEtat(conseil.state, labels)}</p>
       <ul className="mt-2 space-y-0.5 text-2xs">

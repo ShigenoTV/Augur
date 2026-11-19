@@ -7,6 +7,7 @@
 //! désacralisé ou artisanal) compte comme un mauvais mod de son côté : il prend une place sans
 //! servir l'objectif.
 
+use super::enchainement::{Enchainement, Repere};
 use super::moteur::{AffixIdx, AffixPool, ItemState, Mod, Rarity, Slot};
 use super::objectif::{Class, Goal};
 use super::solveur::{Advice, MacroState, Model, Solution, advise};
@@ -70,6 +71,27 @@ pub struct ConseilForge {
     pub ilvl_objet: Option<u32>,
     pub ilvl_plan: u8,
     pub conseil: Advice,
+    /// Bilan de l'essai depuis la copie précédente (rempli par l'appli, qui garde la série).
+    pub enchainement: Option<Enchainement>,
+}
+
+impl ConseilForge {
+    /// Repère de cette copie pour la série d'essais (`texte` : texte copié en jeu).
+    pub fn repere(&self, texte: &str) -> Repere {
+        Repere {
+            empreinte: texte.trim().to_string(),
+            reste: self.conseil.cost_to_go,
+            voulus: self.mods.iter().filter(|m| m.voulu.is_some()).count() as u8,
+            fini: self.conseil.goal_reached,
+            abandon: self.conseil.action.as_ref().is_some_and(|a| a.is_abandon),
+            cout_essai: self
+                .conseil
+                .action
+                .as_ref()
+                .filter(|a| !a.is_abandon)
+                .map(|a| a.unit_cost),
+        }
+    }
 }
 
 /// Texte d'un mod sans ses nombres ni ses fourchettes, en minuscules : « +# to maximum life ».
@@ -307,6 +329,7 @@ pub fn conseiller(actif: &PlanActif, objet: &Objet) -> Result<ConseilForge, Erre
         ilvl_objet: objet.niveau_objet,
         ilvl_plan: actif.ilvl,
         conseil,
+        enchainement: None,
     })
 }
 

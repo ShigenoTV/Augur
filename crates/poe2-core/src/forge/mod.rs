@@ -16,6 +16,7 @@
 //! - [`atelier`] : ce que l'appli appelle (données embarquées, bases, affixes, plan).
 //! - [`historique`] : plans calculés, à rouvrir ou supprimer, et plan suivi gardé au redémarrage.
 //! - [`suivi`] : objet copié en jeu (Ctrl+Alt+C) → prochaine étape du plan actif.
+//! - [`enchainement`] : essais enchaînés, « ça a marché » ou « raté » d'une copie à l'autre.
 //!
 //! Tout est indexé (`u16`) pour le chemin chaud ; aucune entrée-sortie.
 
@@ -23,6 +24,7 @@ pub mod achat;
 pub mod atelier;
 pub mod catalogue;
 pub mod donnees;
+pub mod enchainement;
 pub mod historique;
 pub mod monte_carlo;
 pub mod moteur;

@@ -11,6 +11,7 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use poe2_core::forge::enchainement::Serie;
 use poe2_core::forge::atelier::{self, DemandePlan, ErreurAtelier, ResultatPlan};
 use poe2_core::forge::historique::Historique;
 use poe2_core::forge::prix::TablePrix;
@@ -24,6 +25,8 @@ pub struct ForgePlanner {
     busy: AtomicBool,
     /// Dernier plan calculé, suivi par l'overlay (Ctrl+Alt+C sur l'objet en cours de craft).
     actif: Mutex<Option<PlanActif>>,
+    /// Essais enchaînés sur l'objet du plan suivi (remis à zéro avec le plan).
+    serie: Mutex<Serie>,
     historique: Mutex<Historique>,
 }
 
@@ -122,6 +125,7 @@ impl ForgePlanner {
             );
         });
         *self.lock() = Some(actif);
+        self.vider_serie();
         Ok(resultat)
     }
 
@@ -179,8 +183,13 @@ impl ForgePlanner {
         })
     }
 
+    fn vider_serie(&self) {
+        self.serie.lock().unwrap_or_else(|e| e.into_inner()).vider();
+    }
+
     pub fn arreter(&self, app: &AppHandle) {
         *self.lock() = None;
+        self.vider_serie();
         self.changer(app, Historique::arreter_suivi);
     }
 
@@ -189,6 +198,7 @@ impl ForgePlanner {
         let suivi = self.historique_mut().suivi == Some(id);
         if suivi {
             *self.lock() = None;
+            self.vider_serie();
         }
         self.changer(app, |h| {
             h.supprimer(id);
@@ -206,7 +216,14 @@ impl ForgePlanner {
             return Ok(None);
         };
         match suivi::conseiller(actif, &objet) {
-            Ok(c) => Ok(Some(c)),
+            Ok(mut c) => {
+                c.enchainement = self
+                    .serie
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .suivre(c.repere(texte));
+                Ok(Some(c))
+            }
             Err(ErreurSuivi::AutreBase(_) | ErreurSuivi::Rarete) => Ok(None),
             Err(e) => Err(app_error(ErrorCode::Unsupported, format!("Forge : {e}."))),
         }

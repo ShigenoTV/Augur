@@ -448,6 +448,19 @@ export type ForgePoe1Tip = {
   /** En Chaos. */
   cout: number | null;
   reste: number | null;
+  /** Bilan de l'essai depuis la copie précédente (absent à la première copie). */
+  enchainement: ForgeChain | null;
+};
+
+/** Essais enchaînés sur l'objet suivi (crates/poe2-core/src/forge/enchainement.rs). */
+export type ForgeChain = {
+  verdict: "reussi" | "rate" | "atteint" | "memeObjet";
+  /** Essais de la série. */
+  essais: number;
+  /** Dépense estimée de la série (monnaie du plan : Exalted en PoE 2, Chaos en PoE 1). */
+  depense: number;
+  reste: number | null;
+  resteAvant: number | null;
 };
 
 /** Plan PoE 1 calculé (src-tauri/src/forge_poe1.rs). */
@@ -593,6 +606,8 @@ export type ForgeTip = {
   ilvlObjet: number | null;
   ilvlPlan: number;
   conseil: ForgeAdvice;
+  /** Bilan de l'essai depuis la copie précédente (absent à la première copie). */
+  enchainement: ForgeChain | null;
 };
 /** Objet de départ collé dans le panneau, lu par Forge (atelier::analyser_objet). */
 export type ForgeStartItem = {
