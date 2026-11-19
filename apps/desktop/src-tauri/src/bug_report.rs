@@ -1,5 +1,6 @@
-//! « Signaler un bug » : ouvre dans le navigateur la page de création d'un
-//! ticket GitHub, préremplie avec le modèle `.github/ISSUE_TEMPLATE/bug-beta.yml`.
+//! « Signaler un bug » et « Proposer une idée » : ouvrent dans le navigateur la
+//! page de création d'un ticket GitHub, préremplie avec le modèle
+//! `.github/ISSUE_TEMPLATE/bug-beta.yml` ou `idee.yml`.
 //!
 //! Aucun jeton n'est embarqué et rien n'est envoyé par Augur : le joueur relit
 //! le ticket sur GitHub et le crée lui-même. L'adresse du dépôt est fixe ici,
@@ -14,6 +15,8 @@ use crate::contracts::{AppError, ErrorCode, app_error};
 /// Page « nouveau ticket » du dépôt, avec le modèle de bug (étiquettes `bug` et `bêta`).
 const NEW_ISSUE_URL: &str = "https://github.com/ShigenoTV/Augur/issues/new";
 const TEMPLATE: &str = "bug-beta.yml";
+/// Modèle des idées d'évolution (étiquette `enhancement`, jamais `bug`).
+const TEMPLATE_IDEE: &str = "idee.yml";
 /// Adresse gardée courte (Windows et certains navigateurs gèrent mal les
 /// adresses de plus de 2 048 caractères) ; le rapport complet part dans le
 /// presse-papiers.
@@ -34,6 +37,18 @@ pub struct BugReport {
     /// Diagnostic tel qu'affiché au joueur (vide s'il l'a décoché).
     #[serde(default)]
     pub diagnostic: String,
+}
+
+/// Champs saisis dans la carte « Proposer une idée ».
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IdeaReport {
+    pub titre: String,
+    /// Option du menu « Quelle partie d'Augur ? » du modèle.
+    pub module: String,
+    pub idee: String,
+    #[serde(default)]
+    pub pourquoi: String,
 }
 
 /// Adresse ouverte et indication de troncature (texte trop long pour l'adresse).
@@ -83,22 +98,55 @@ pub fn diagnostic(app: &AppHandle) -> String {
     .join("\n")
 }
 
-/// Construit l'adresse du ticket prérempli. Les champs les plus longs sont
-/// raccourcis si l'adresse dépasse la limite de GitHub.
+/// Construit l'adresse du ticket de bug prérempli. Les champs les plus longs
+/// sont raccourcis si l'adresse dépasse la limite.
 pub fn issue_url(report: &BugReport) -> Result<(String, bool), AppError> {
     let titre = report.titre.trim();
     if titre.is_empty() {
         return Err(app_error(ErrorCode::Internal, "Donne un titre au bug."));
     }
-    let mut champs: Vec<(&str, String)> = vec![
-        ("etapes", report.etapes.trim().to_string()),
-        ("attendu", report.attendu.trim().to_string()),
-        ("objet", report.objet.trim().to_string()),
-        ("diagnostic", report.diagnostic.trim().to_string()),
-    ];
+    prefill(
+        TEMPLATE,
+        "[Bug]",
+        titre,
+        report.module.trim(),
+        vec![
+            ("etapes", report.etapes.trim().to_string()),
+            ("attendu", report.attendu.trim().to_string()),
+            ("objet", report.objet.trim().to_string()),
+            ("diagnostic", report.diagnostic.trim().to_string()),
+        ],
+    )
+}
+
+/// Construit l'adresse du ticket d'idée prérempli.
+pub fn idea_url(report: &IdeaReport) -> Result<(String, bool), AppError> {
+    let titre = report.titre.trim();
+    if titre.is_empty() {
+        return Err(app_error(ErrorCode::Internal, "Donne un titre à ton idée."));
+    }
+    prefill(
+        TEMPLATE_IDEE,
+        "[Idée]",
+        titre,
+        report.module.trim(),
+        vec![
+            ("idee", report.idee.trim().to_string()),
+            ("pourquoi", report.pourquoi.trim().to_string()),
+        ],
+    )
+}
+
+fn prefill(
+    template: &str,
+    prefixe: &str,
+    titre: &str,
+    module: &str,
+    mut champs: Vec<(&str, String)>,
+) -> Result<(String, bool), AppError> {
     let mut truncated = false;
     loop {
-        let url = build(titre, report.module.trim(), &champs)?;
+        let url = build(template, prefixe, titre, module, &champs)?;
         if url.len() <= MAX_URL_LEN {
             return Ok((url, truncated));
         }
@@ -119,42 +167,60 @@ pub fn issue_url(report: &BugReport) -> Result<(String, bool), AppError> {
     }
 }
 
+/// Ajoute une section au format d'un ticket créé avec un modèle.
+fn section(s: &mut String, label: &str, valeur: &str, code: bool) {
+    let v = valeur.trim();
+    if v.is_empty() {
+        return;
+    }
+    s.push_str(&format!("\n### {label}\n\n"));
+    if code {
+        s.push_str(&format!("```text\n{v}\n```\n"));
+    } else {
+        s.push_str(v);
+        s.push('\n');
+    }
+}
+
+/// Idée complète au format d'un ticket créé avec le modèle `idee.yml`.
+pub fn idee_complete(report: &IdeaReport) -> String {
+    let mut s = format!("[Idée] {}\n", report.titre.trim());
+    section(&mut s, "Quelle partie d'Augur ?", &report.module, false);
+    section(&mut s, "Ton idée", &report.idee, false);
+    section(&mut s, "Pourquoi ce serait utile", &report.pourquoi, false);
+    s
+}
+
 /// Rapport complet au format d'un ticket créé avec le modèle (mêmes intitulés
 /// de sections), à coller dans le ticket si un champ est vide ou raccourci.
 pub fn rapport_complet(report: &BugReport) -> String {
     let mut s = format!("[Bug] {}\n", report.titre.trim());
-    let mut section = |label: &str, valeur: &str, code: bool| {
-        let v = valeur.trim();
-        if v.is_empty() {
-            return;
-        }
-        s.push_str(&format!("\n### {label}\n\n"));
-        if code {
-            s.push_str(&format!("```text\n{v}\n```\n"));
-        } else {
-            s.push_str(v);
-            s.push('\n');
-        }
-    };
-    section("Où est le problème ?", &report.module, false);
-    section("Ce que tu as fait", &report.etapes, false);
-    section(
+    let mut ajoute = |label: &str, valeur: &str, code: bool| section(&mut s, label, valeur, code);
+    ajoute("Où est le problème ?", &report.module, false);
+    ajoute("Ce que tu as fait", &report.etapes, false);
+    ajoute(
         "Ce que tu attendais, et ce qui s'est passé",
         &report.attendu,
         false,
     );
-    section(
+    ajoute(
         "Texte de l'objet (si un objet est en cause)",
         &report.objet,
         true,
     );
-    section("Diagnostic d'Augur", &report.diagnostic, true);
+    ajoute("Diagnostic d'Augur", &report.diagnostic, true);
     s
 }
 
-fn build(titre: &str, module: &str, champs: &[(&str, String)]) -> Result<String, AppError> {
-    let titre = format!("[Bug] {titre}");
-    let mut params: Vec<(&str, &str)> = vec![("template", TEMPLATE), ("title", &titre)];
+fn build(
+    template: &str,
+    prefixe: &str,
+    titre: &str,
+    module: &str,
+    champs: &[(&str, String)],
+) -> Result<String, AppError> {
+    let titre = format!("{prefixe} {titre}");
+    let mut params: Vec<(&str, &str)> = vec![("template", template), ("title", &titre)];
     if !module.is_empty() {
         params.push(("module", module));
     }
@@ -360,6 +426,33 @@ mod tests {
         // Champ vide : pas de section.
         let sans_objet = rapport_complet(&report());
         assert!(!sans_objet.contains("Texte de l'objet"));
+    }
+
+    #[test]
+    fn idee_preremplie_avec_son_modele() {
+        let r = IdeaReport {
+            titre: "Thème clair".into(),
+            module: "Overlay (Ctrl+C sur un objet)".into(),
+            idee: "Un thème clair pour l'overlay".into(),
+            pourquoi: String::new(),
+        };
+        let (url, truncated) = idea_url(&r).unwrap();
+        assert!(!truncated);
+        let q: std::collections::HashMap<_, _> = reqwest::Url::parse(&url)
+            .unwrap()
+            .query_pairs()
+            .into_owned()
+            .collect();
+        assert_eq!(q["template"], "idee.yml");
+        assert_eq!(q["title"], "[Idée] Thème clair");
+        assert_eq!(q["module"], "Overlay (Ctrl+C sur un objet)");
+        assert_eq!(q["idee"], "Un thème clair pour l'overlay");
+        assert!(!q.contains_key("pourquoi"));
+        let texte = idee_complete(&r);
+        assert!(texte.starts_with("[Idée] Thème clair\n"));
+        assert!(texte.contains("### Ton idée\n\nUn thème clair pour l'overlay\n"));
+        assert!(!texte.contains("Pourquoi"));
+        assert!(idea_url(&IdeaReport::default()).is_err());
     }
 
     #[test]
