@@ -7,6 +7,7 @@ use serde::Serialize;
 use super::depart::{base_de_texte, lire_objet_pour};
 use super::{DemandePoe1, ErreurForgePoe1, affixes, construire_pool, planifier};
 use crate::forge::Goal;
+use crate::forge::enchainement::{Enchainement, Repere};
 use crate::parser::parser;
 
 /// Ce que l'overlay affiche pour l'objet en cours de craft.
@@ -26,6 +27,23 @@ pub struct ConseilPoe1 {
     /// Coût d'une utilisation de l'action, et coût moyen restant jusqu'à l'objet fini, en Chaos.
     pub cout: Option<f64>,
     pub reste: Option<f64>,
+    /// Bilan de l'essai depuis la copie précédente (rempli par l'appli, qui garde la série).
+    pub enchainement: Option<Enchainement>,
+}
+
+impl ConseilPoe1 {
+    /// Repère de cette copie pour la série d'essais (`texte` : texte copié en jeu).
+    pub fn repere(&self, texte: &str) -> Repere {
+        Repere {
+            empreinte: texte.trim().to_string(),
+            reste: if self.fini { Some(0.0) } else { self.reste },
+            voulus: self.presents.len() as u8,
+            fini: self.fini,
+            // Le plan PoE 1 repart toujours de l'objet tel qu'il est.
+            abandon: false,
+            cout_essai: self.cout,
+        }
+    }
 }
 
 /// Libellés courts des mods voulus de la demande, dans l'ordre.
@@ -83,6 +101,7 @@ pub fn conseiller(d: &DemandePoe1, texte: &str) -> Result<Option<ConseilPoe1>, E
         action: None,
         cout: None,
         reste: None,
+        enchainement: None,
     };
     if c.fini {
         return Ok(Some(c));

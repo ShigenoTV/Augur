@@ -82,6 +82,35 @@ fn objet_magique_en_cours() {
     ));
 }
 
+/// Essais enchaînés (demande de Max du 19/11/2026) : chaque Ctrl+Alt+C sur l'objet en cours dit si
+/// l'essai précédent a fait avancer le plan.
+#[test]
+fn essais_enchaines() {
+    use poe2_core::forge::enchainement::{Serie, Verdict};
+    let actif = plan(&["maximum Life", "Fire Resistance"]);
+    let normal =
+        "Item Class: Gloves\nRarity: Normal\nOrnate Cuffs\n--------\nItem Level: 78\n--------\n";
+    let bon = "Item Class: Gloves\nRarity: Magic\nAthlete's Ornate Cuffs\n--------\nItem Level: 78\n--------\n\
+{ Prefix Modifier \"Athlete's\" (Tier: 1) — Life }\n+136(120-149) to maximum Life\n";
+    let mauvais = "Item Class: Gloves\nRarity: Magic\nOrnate Cuffs of the Fox\n--------\nItem Level: 78\n--------\n\
+{ Suffix Modifier \"of the Fox\" (Tier: 1) — Attribute }\n+(5-8) to Dexterity\n";
+    let mut serie = Serie::default();
+    let mut copier = |texte: &str| {
+        let c = conseiller(&actif, &parser(texte).unwrap()).unwrap();
+        serie.suivre(c.repere(texte))
+    };
+    assert_eq!(copier(normal), None, "première copie : rien à comparer");
+    let e = copier(bon).unwrap();
+    assert_eq!(e.verdict, Verdict::Reussi);
+    assert_eq!(e.essais, 1);
+    assert!(e.depense > 0.0);
+    assert!(e.reste < e.reste_avant);
+    assert_eq!(copier(bon).unwrap().verdict, Verdict::MemeObjet);
+    let e = copier(mauvais).unwrap();
+    assert_eq!(e.verdict, Verdict::Rate);
+    assert_eq!(e.essais, 2);
+}
+
 /// Objet de départ (demande de Max du 10/11/2026) : le plan repart d'un objet déjà en possession.
 mod objet_de_depart {
     use super::*;

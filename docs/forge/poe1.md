@@ -203,6 +203,8 @@ Comme en PoE 2 (demande de Max du 15/11/2026, « toutes les fonctionnalités du 
   sur un objet de la même base affiche les mods voulus présents et manquants, puis l'action conseillée,
   recalculée depuis l'objet tel qu'il est (`poe1::forge::suivi::conseiller`, qui s'appuie sur l'objet de
   départ). Un objet d'une autre base garde l'overlay habituel (cote et comparaison avec le build).
+  Comme en PoE 2, les essais s'enchaînent dans le même panneau : « Ça a marché » ou « Raté, reste X »,
+  nombre d'essais et dépense de la série (`forge::enchainement`, voir `cadrage.md`).
 - **Crafter ou acheter** : la recherche de l'objet visé s'ouvre sur le site de trade de PoE 1 (même base,
   influence, chaque mod voulu au tier visé ou mieux, du moins cher au plus cher). Le joueur reporte le prix
   vu ; Forge le compare au coût moyen du plan (hors prix de la base), avec la même marge « équivalent »

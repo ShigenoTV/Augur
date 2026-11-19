@@ -190,7 +190,8 @@ function Overlay() {
         setSearch(null);
         setTrade(null);
         setPoe1(null);
-        setForgePoe1(null);
+        // Les panneaux Forge restent affichés pendant le calcul : un nouvel essai met à jour le
+        // même panneau au lieu d'en rouvrir un.
         setTarget(null);
         const settings = commands.getSettings().catch(() => null);
         void settings.then((s) => {
@@ -224,8 +225,8 @@ function Overlay() {
           );
         };
         // Un plan Forge suivi passe d'abord : l'objet copié peut être le craft en cours.
-        setForge(null);
         const startPoe1Copilot = () => {
+          setForgePoe1(null);
           setView({ status: "hidden" });
           setPoe1({ status: "loading" });
           setPoe1Eval({ status: "loading" });
@@ -250,7 +251,7 @@ function Overlay() {
         };
         // Un plan Forge PoE 1 suivi passe d'abord, comme en PoE 2.
         const startPoe1 = () => {
-          setForgePoe1(null);
+          setForge(null);
           void commands
             .getForgePoe1Advice()
             .then((tip) => {
@@ -268,20 +269,27 @@ function Overlay() {
               setForgePoe1({ status: "error", message: error.message });
             });
         };
-        const startPoe2 = () => void commands
-          .getForgeAdvice()
-          .then((tip) => {
-            if (run.current !== id) return;
-            if (!tip) return startCopilot();
-            setView({ status: "hidden" });
-            setForge({ status: "tip", tip });
-          })
-          .catch((error: unknown) => {
-            if (run.current !== id) return;
-            if (!isAppError(error)) return startCopilot();
-            setView({ status: "hidden" });
-            setForge({ status: "error", error });
-          });
+        const startCopilotSansForge = () => {
+          setForge(null);
+          startCopilot();
+        };
+        const startPoe2 = () => {
+          setForgePoe1(null);
+          void commands
+            .getForgeAdvice()
+            .then((tip) => {
+              if (run.current !== id) return;
+              if (!tip) return startCopilotSansForge();
+              setView({ status: "hidden" });
+              setForge({ status: "tip", tip });
+            })
+            .catch((error: unknown) => {
+              if (run.current !== id) return;
+              if (!isAppError(error)) return startCopilotSansForge();
+              setView({ status: "hidden" });
+              setForge({ status: "error", error });
+            });
+        };
         void settings.then((s) => {
           if (run.current !== id) return;
           if (s?.game === "poe1") return startPoe1();
