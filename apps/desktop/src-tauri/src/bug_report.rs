@@ -14,10 +14,9 @@ use crate::contracts::{AppError, ErrorCode, app_error};
 /// Page « nouveau ticket » du dépôt, avec le modèle de bug (étiquettes `bug` et `bêta`).
 const NEW_ISSUE_URL: &str = "https://github.com/ShigenoTV/Augur/issues/new";
 const TEMPLATE: &str = "bug-beta.yml";
-/// Windows (`url.dll`, ShellExecute) coupe les adresses au-delà de 2 048
-/// caractères : le modèle de ticket n'est alors plus appliqué et GitHub
-/// n'affiche qu'un ticket vide avec le titre. On reste nettement en dessous ;
-/// le rapport complet part dans le presse-papiers.
+/// Adresse gardée courte (Windows et certains navigateurs gèrent mal les
+/// adresses de plus de 2 048 caractères) ; le rapport complet part dans le
+/// presse-papiers.
 const MAX_URL_LEN: usize = 1900;
 const TRONQUE: &str = "\n… (tronqué : le rapport complet est dans le presse-papiers, colle-le ici)";
 
@@ -310,7 +309,7 @@ mod tests {
     }
 
     /// Cas de Max (v0.1.32) : diagnostic de 15 lignes de journal, accents
-    /// compris. L'adresse dépassait 2 048 caractères et Windows la coupait.
+    /// compris : l'adresse dépassait 2 048 caractères.
     #[test]
     fn diagnostic_complet_sous_la_limite_de_windows() {
         let journal = (0..15)
