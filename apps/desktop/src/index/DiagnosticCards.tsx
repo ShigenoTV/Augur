@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { commands, isAppError, isTauri, type Diagnostic } from "../bridge";
-import { champManquant, diagnosticTicket, MODULES_BUG } from "./bugReport";
+import { champManquant, diagnosticTicket, messageTicket, MODULES_BUG } from "./bugReport";
 
 const btn = "rounded-chip px-3 py-1.5 text-sm font-semibold";
 const champ =
@@ -101,9 +101,7 @@ export function BugReportCard({ actif }: { actif: boolean }) {
       });
       setMessage({
         ok: true,
-        texte: r.truncated
-          ? "Ticket ouvert dans ton navigateur. Le texte était trop long et a été raccourci : colle la suite dans le ticket avant de cliquer sur « Create »."
-          : "Ticket ouvert dans ton navigateur : relis-le, ajoute une capture si besoin, puis clique sur « Create ».",
+        texte: messageTicket(r),
       });
     } catch (err) {
       setMessage({ ok: false, texte: isAppError(err) ? err.message : String(err) });

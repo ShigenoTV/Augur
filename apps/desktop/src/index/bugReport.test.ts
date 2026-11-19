@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { champManquant, diagnosticTicket, LIGNES_JOURNAL_TICKET, MODULES_BUG } from "./bugReport";
+import { champManquant, diagnosticTicket, LIGNES_JOURNAL_TICKET, messageTicket, MODULES_BUG } from "./bugReport";
 
 describe("signaler un bug", () => {
   it("joint les dernières lignes du journal", () => {
@@ -23,5 +23,11 @@ describe("signaler un bug", () => {
   it("propose les mêmes options que le modèle de ticket GitHub", () => {
     const yml = readFileSync(resolve(process.cwd(), "../../.github/ISSUE_TEMPLATE/bug-beta.yml"), "utf8");
     for (const m of MODULES_BUG) expect(yml).toContain(`        - ${m}\n`);
+  });
+
+  it("signale le rapport complet copié dans le presse-papiers", () => {
+    expect(messageTicket({ truncated: false, copied: true })).toMatch(/presse-papiers.*Ctrl\+V/);
+    expect(messageTicket({ truncated: true, copied: true })).toMatch(/raccourci.*presse-papiers/);
+    expect(messageTicket({ truncated: true, copied: false })).not.toMatch(/presse-papiers/);
   });
 });
