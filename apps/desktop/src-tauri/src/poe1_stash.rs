@@ -365,6 +365,7 @@ pub async fn relever(app: &AppHandle) -> Result<StashStatus, AppError> {
         cours,
     );
 
+    let (releve_ligue, releve_chaos) = (releve.ligue.clone(), releve.chaos);
     let f = {
         let mut g = state.releves.lock().unwrap_or_else(|e| e.into_inner());
         g.precedent = g.dernier.take();
@@ -372,6 +373,8 @@ pub async fn relever(app: &AppHandle) -> Result<StashStatus, AppError> {
         g.clone()
     };
     state.enregistrer(app, &f);
+    // Gain de la session Atlas Ledger en cours (bandeau, carte Ledger).
+    crate::ledger::on_stash_snapshot(app, &releve_ligue, releve_chaos);
     drop(_libere);
     let s = status(app);
     let _ = app.emit(EVENT_CHANGED, &s);

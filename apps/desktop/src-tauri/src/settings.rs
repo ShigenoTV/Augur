@@ -57,6 +57,9 @@ pub struct OverlaySettings {
     pub pinned: bool,
     /// Dernière place de l'overlay épinglé (coin haut gauche, pixels physiques).
     pub pinned_position: Option<(i32, i32)>,
+    /// Bandeau Atlas Ledger en haut de l'écran pendant une session (activé
+    /// par défaut : il n'apparaît que si le joueur lance une session).
+    pub ledger_banner: bool,
 }
 
 impl Default for OverlaySettings {
@@ -66,6 +69,7 @@ impl Default for OverlaySettings {
             scale: 100,
             pinned: false,
             pinned_position: None,
+            ledger_banner: true,
         }
     }
 }
@@ -210,6 +214,16 @@ mod tests {
         assert!(s.beta_channel);
         assert_eq!(s.league(), DEFAULT_LEAGUE);
         assert_eq!(s.shortcuts, ShortcutSettings::default());
+    }
+
+    #[test]
+    fn bandeau_ledger_actif_par_defaut() {
+        // Fichier d'une version sans bandeau : activé.
+        let s: Settings = serde_json::from_str(r#"{"overlay":{"compact":true}}"#).unwrap();
+        assert!(s.overlay.ledger_banner);
+        assert!(s.overlay.compact);
+        let s: Settings = serde_json::from_str(r#"{"overlay":{"ledgerBanner":false}}"#).unwrap();
+        assert!(!s.overlay.ledger_banner);
     }
 
     #[test]

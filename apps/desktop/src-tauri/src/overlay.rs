@@ -260,7 +260,7 @@ fn spawn_dismiss_guard(app: AppHandle) {
 }
 
 #[cfg(windows)]
-mod native {
+pub(crate) mod native {
     use tauri::WebviewWindow;
     use windows::Win32::Foundation::HWND;
     use windows::Win32::Foundation::{POINT, RECT};
@@ -317,6 +317,17 @@ mod native {
     /// croit toujours caché et son `hide()` ne fait rien. En plus du
     /// masquage, la fenêtre part hors écran : même si quelque chose la
     /// réaffichait sans contenu, elle ne pourrait plus capter les clics du jeu.
+    /// Masque une fenêtre affichée par [`show_without_focus`], sans le
+    /// diagnostic de l'overlay (bandeau Ledger, qui laisse passer les clics).
+    pub fn hide_quiet(win: &WebviewWindow) {
+        match hwnd(win) {
+            Some(hwnd) => hide_hwnd(hwnd),
+            None => {
+                let _ = win.hide();
+            }
+        }
+    }
+
     pub fn hide(win: &WebviewWindow) {
         match hwnd(win) {
             Some(hwnd) => {
@@ -503,7 +514,7 @@ mod native {
 }
 
 #[cfg(not(windows))]
-mod native {
+pub(crate) mod native {
     use tauri::WebviewWindow;
 
     pub fn make_non_activating(_win: &WebviewWindow) {}
@@ -516,6 +527,10 @@ mod native {
     }
 
     pub fn hide(win: &WebviewWindow) {
+        let _ = win.hide();
+    }
+
+    pub fn hide_quiet(win: &WebviewWindow) {
         let _ = win.hide();
     }
 }

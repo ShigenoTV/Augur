@@ -87,6 +87,20 @@ pub fn set_overlay_pinned(
     })
 }
 
+/// Active ou coupe le bandeau Atlas Ledger en jeu (Réglages).
+#[tauri::command]
+pub fn set_ledger_banner(
+    app: AppHandle,
+    enabled: bool,
+) -> Result<crate::settings::Settings, AppError> {
+    crate::ledger_banner::set_enabled(&app, enabled).map_err(|e| {
+        app_error(
+            crate::contracts::ErrorCode::Internal,
+            format!("Réglage non enregistré ({e})."),
+        )
+    })
+}
+
 #[tauri::command]
 pub fn open_main_window(app: AppHandle) {
     crate::show_main_window(&app);

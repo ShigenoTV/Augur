@@ -36,12 +36,63 @@ pub struct LedgerStatus {
     pub last_saved_id: Option<i64>,
     /// Historique indisponible (base illisible) : message affichable.
     pub storage_error: Option<String>,
+    /// Gain de la session d'après les relevés de coffres (PoE 1), à partir
+    /// de deux relevés faits pendant la session.
+    pub gain: Option<SessionGain>,
+}
+
+/// Gain de la session : valeur du dernier relevé de coffres moins celle du
+/// premier relevé fait pendant la session (même ligue), en Chaos.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionGain {
+    pub chaos: f64,
+    /// Gain ramené à l'heure, sur le temps écoulé entre ces deux relevés
+    /// (absent sous une minute).
+    pub chaos_per_hour: Option<f64>,
+}
+
+/// Relevés de coffres faits pendant la session.
+#[derive(Debug, Clone)]
+struct CoffresSession {
+    ligue: String,
+    base_chaos: f64,
+    base_at: Instant,
+    dernier: Option<(f64, Instant)>,
+}
+
+impl CoffresSession {
+    /// Ajoute un relevé : le premier (ou le premier d'une autre ligue) sert de base.
+    fn pousser(slot: &mut Option<Self>, ligue: &str, chaos: f64, at: Instant) {
+        match slot {
+            Some(c) if c.ligue == ligue => c.dernier = Some((chaos, at)),
+            _ => {
+                *slot = Some(Self {
+                    ligue: ligue.to_string(),
+                    base_chaos: chaos,
+                    base_at: at,
+                    dernier: None,
+                })
+            }
+        }
+    }
+
+    fn gain(&self) -> Option<SessionGain> {
+        let (chaos, at) = self.dernier?;
+        let gain = chaos - self.base_chaos;
+        let secs = at.saturating_duration_since(self.base_at).as_secs_f64();
+        Some(SessionGain {
+            chaos: gain,
+            chaos_per_hour: (secs >= 60.0).then(|| gain * 3600.0 / secs),
+        })
+    }
 }
 
 struct Active {
     started_at: String,
     suivi: SuiviSession,
     strategy: Strategy,
+    coffres: Option<CoffresSession>,
 }
 
 #[derive(Default)]
@@ -77,6 +128,11 @@ impl Inner {
             summary: self.active.as_ref().map(|a| a.suivi.bilan(now)),
             last_saved_id: self.last_saved_id,
             storage_error: self.storage_error.clone(),
+            gain: self
+                .active
+                .as_ref()
+                .and_then(|a| a.coffres.as_ref())
+                .and_then(CoffresSession::gain),
         }
     }
 
@@ -150,6 +206,11 @@ impl LedgerState {
     pub fn status(&self) -> LedgerStatus {
         self.lock().status()
     }
+
+    /// Vrai pendant une session (lu souvent par le bandeau : pas de bilan).
+    pub fn is_active(&self) -> bool {
+        self.lock().active.is_some()
+    }
 }
 
 fn emit(app: &AppHandle, status: &LedgerStatus) {
@@ -180,6 +241,24 @@ pub fn on_log_line(app: &AppHandle, line: &LigneJournal) {
     }
 }
 
+/// Relevé de coffres terminé (PoE 1) : sert au gain de la session en cours.
+pub fn on_stash_snapshot(app: &AppHandle, ligue: &str, chaos: f64) {
+    let status = {
+        let state = app.state::<LedgerState>();
+        let mut g = state.lock();
+        match g.active.as_mut() {
+            Some(active) => {
+                CoffresSession::pousser(&mut active.coffres, ligue, chaos, Instant::now());
+                Some(g.status())
+            }
+            None => None,
+        }
+    };
+    if let Some(status) = status {
+        emit(app, &status);
+    }
+}
+
 pub fn start(app: &AppHandle) -> LedgerStatus {
     let status = {
         let state = app.state::<LedgerState>();
@@ -197,6 +276,7 @@ pub fn start(app: &AppHandle) -> LedgerStatus {
                 started_at: rfc3339_now(),
                 suivi,
                 strategy: Strategy::default(),
+                coffres: None,
             });
         }
         g.status()
@@ -300,5 +380,57 @@ pub fn delete(app: &AppHandle, id: i64) -> Result<(), String> {
         Ok(())
     } else {
         Err("Session introuvable.".into())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    #[test]
+    fn gain_a_partir_du_second_releve() {
+        let t0 = Instant::now();
+        let mut c = None;
+        CoffresSession::pousser(&mut c, "Standard", 1_000.0, t0);
+        assert_eq!(
+            c.as_ref().and_then(CoffresSession::gain),
+            None,
+            "un seul relevé"
+        );
+        CoffresSession::pousser(&mut c, "Standard", 1_600.0, t0 + Duration::from_secs(1_800));
+        let g = c.as_ref().and_then(CoffresSession::gain).unwrap();
+        assert_eq!(g.chaos, 600.0);
+        assert_eq!(g.chaos_per_hour, Some(1_200.0));
+        // Le gain suit le dernier relevé, toujours depuis le premier.
+        CoffresSession::pousser(&mut c, "Standard", 900.0, t0 + Duration::from_secs(3_600));
+        let g = c.as_ref().and_then(CoffresSession::gain).unwrap();
+        assert_eq!(g.chaos, -100.0);
+        assert_eq!(g.chaos_per_hour, Some(-100.0));
+    }
+
+    #[test]
+    fn pas_de_gain_horaire_sous_une_minute() {
+        let t0 = Instant::now();
+        let mut c = None;
+        CoffresSession::pousser(&mut c, "Standard", 10.0, t0);
+        CoffresSession::pousser(&mut c, "Standard", 25.0, t0 + Duration::from_secs(30));
+        let g = c.as_ref().and_then(CoffresSession::gain).unwrap();
+        assert_eq!(g.chaos, 15.0);
+        assert_eq!(g.chaos_per_hour, None);
+    }
+
+    #[test]
+    fn changer_de_ligue_repart_de_zero() {
+        let t0 = Instant::now();
+        let mut c = None;
+        CoffresSession::pousser(&mut c, "Standard", 10_000.0, t0);
+        CoffresSession::pousser(&mut c, "Keepers", 50.0, t0 + Duration::from_secs(600));
+        assert_eq!(c.as_ref().and_then(CoffresSession::gain), None);
+        CoffresSession::pousser(&mut c, "Keepers", 80.0, t0 + Duration::from_secs(1_200));
+        assert_eq!(
+            c.as_ref().and_then(CoffresSession::gain).unwrap().chaos,
+            30.0
+        );
     }
 }

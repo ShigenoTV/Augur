@@ -9,6 +9,7 @@ fn main() {
             "fit_overlay",
             "set_overlay_display",
             "set_overlay_pinned",
+            "set_ledger_banner",
             "open_main_window",
             "check_for_update",
             "install_update",

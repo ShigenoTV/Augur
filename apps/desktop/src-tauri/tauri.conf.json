@@ -37,6 +37,21 @@
         "resizable": false,
         "focus": false,
         "visible": false
+      },
+      {
+        "label": "ledger-banner",
+        "title": "Augur Ledger",
+        "url": "ledger-banner.html",
+        "width": 640,
+        "height": 34,
+        "transparent": true,
+        "decorations": false,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "focus": false,
+        "visible": false
       }
     ],
     "security": {

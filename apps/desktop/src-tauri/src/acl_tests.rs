@@ -5,9 +5,10 @@ use std::collections::BTreeSet;
 
 const LIB: &str = include_str!("lib.rs");
 const BUILD: &str = include_str!("../build.rs");
-const CAPABILITIES: [&str; 2] = [
+const CAPABILITIES: [&str; 3] = [
     include_str!("../capabilities/main.json"),
     include_str!("../capabilities/overlay.json"),
+    include_str!("../capabilities/ledger-banner.json"),
 ];
 
 fn commandes_enregistrees() -> BTreeSet<String> {

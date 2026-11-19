@@ -17,6 +17,7 @@
     "allow-set-game",
     "allow-set-overlay-display",
     "allow-set-overlay-pinned",
+    "allow-set-ledger-banner",
     "allow-get-poe1-stash",
     "allow-connect-poe1-stash",
     "allow-forget-poe1-stash-session",

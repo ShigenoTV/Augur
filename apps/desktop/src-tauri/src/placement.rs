@@ -36,6 +36,12 @@ pub fn keep_inside(pos: (f64, f64), panel: (f64, f64), screen: Rect) -> (f64, f6
     (pos.0.clamp(screen.x, max_x), pos.1.clamp(screen.y, max_y))
 }
 
+/// Place d'un bandeau centré en haut de l'écran, à `margin` du bord.
+pub fn top_center(width: f64, screen: Rect, margin: f64) -> (f64, f64) {
+    let x = screen.x + ((screen.width - width) / 2.0).max(0.0);
+    (x, screen.y + margin)
+}
+
 /// Distance au-delà de laquelle l'overlay se ferme quand le curseur s'éloigne.
 pub const DISMISS_DISTANCE: f64 = 360.0;
 
@@ -118,6 +124,26 @@ mod tests {
         );
         // Panneau plus haut que l'écran : collé en haut.
         assert_eq!(keep_inside((0.0, 50.0), (380.0, 2000.0), SCREEN).1, 0.0);
+    }
+
+    #[test]
+    fn bandeau_centre_en_haut() {
+        assert_eq!(top_center(640.0, SCREEN, 6.0), (640.0, 6.0));
+        let second = Rect {
+            x: 1920.0,
+            y: -200.0,
+            width: 2560.0,
+            height: 1440.0,
+        };
+        assert_eq!(top_center(640.0, second, 9.0), (2880.0, -191.0));
+        // Écran plus étroit que le bandeau : collé à gauche.
+        let etroit = Rect {
+            x: 0.0,
+            y: 0.0,
+            width: 500.0,
+            height: 800.0,
+        };
+        assert_eq!(top_center(640.0, etroit, 0.0), (0.0, 0.0));
     }
 
     #[test]

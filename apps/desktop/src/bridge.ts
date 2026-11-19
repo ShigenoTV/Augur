@@ -146,11 +146,19 @@ export type OverlaySettings = {
   pinned: boolean;
   /** Dernière place de l'overlay épinglé (pixels physiques). */
   pinnedPosition?: [number, number] | null;
+  /** Bandeau Atlas Ledger en haut de l'écran pendant une session ; absent des anciens cœurs : activé. */
+  ledgerBanner?: boolean;
 };
 
 export const OVERLAY_SCALE_MIN = 80;
 export const OVERLAY_SCALE_MAX = 150;
-export const OVERLAY_PAR_DEFAUT: OverlaySettings = { compact: false, scale: 100, pinned: false, pinnedPosition: null };
+export const OVERLAY_PAR_DEFAUT: OverlaySettings = {
+  compact: false,
+  scale: 100,
+  pinned: false,
+  pinnedPosition: null,
+  ledgerBanner: true,
+};
 
 export type Settings = {
   betaChannel: boolean;
@@ -247,6 +255,8 @@ export type LedgerStatus = {
   summary: LedgerSummary | null;
   lastSavedId: number | null;
   storageError: string | null;
+  /** Gain d'après les relevés de coffres faits pendant la session (PoE 1), en Chaos ; absent des anciens cœurs. */
+  gain?: { chaos: number; chaosPerHour: number | null } | null;
 };
 export type LedgerSessionRow = {
   id: number;
@@ -661,6 +671,7 @@ export const commands = {
   fitOverlay: (width: number, height: number) => invoke<void>("fit_overlay", { width, height }),
   setOverlayDisplay: (compact: boolean, scale: number) => invoke<Settings>("set_overlay_display", { compact, scale }),
   setOverlayPinned: (pinned: boolean) => invoke<Settings>("set_overlay_pinned", { pinned }),
+  setLedgerBanner: (enabled: boolean) => invoke<Settings>("set_ledger_banner", { enabled }),
   openMainWindow: () => invoke<void>("open_main_window"),
   checkForUpdate: () => invoke<UpdateInfo | null>("check_for_update"),
   installUpdate: () => invoke<void>("install_update"),
