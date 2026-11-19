@@ -1,0 +1,28 @@
+Item Class: Rings
+Rarity: Rare
+Rift Grasp
+Pearl Ring
+--------
+Quality (Lightning Modifiers): +20% (augmented)
+--------
+Requires: Level 60
+--------
+Item Level: 80
+--------
+{ Implicit Modifier — Caster, Speed }
+7(7-10)% increased Cast Speed
+--------
+{ Fractured Prefix Modifier "Zaffre" (Tier: 1) — Mana }
++173(165-179) to maximum Mana
+{ Prefix Modifier "Annealed" (Tier: 4) — Damage, Physical, Attack }
+Adds 6(6-10) to 17(12-17) Physical Damage to Attacks
+{ Desecrated Prefix Modifier "Striking" (Tier: 2) — Damage, Elemental, Lightning — 20% Increased }
+24(23-26)% increased Lightning Damage
+{ Suffix Modifier "of Variegation" (Tier: 2) — Elemental, Fire, Cold, Lightning, Resistance — 20% Increased }
++14(12-14)% to all Elemental Resistances
+{ Suffix Modifier "of Expulsion" (Tier: 3) — Chaos, Resistance }
++17(16-19)% to Chaos Resistance
+{ Suffix Modifier "of Euphoria" (Tier: 2) — Mana }
+51(50-59)% increased Mana Regeneration Rate
+--------
+Fractured Item

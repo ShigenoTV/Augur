@@ -2,8 +2,8 @@
 
 Tables extraites de l'export communautaire **RePoE** (https://repoe-fork.github.io/poe2/),
 qui lit les fichiers du client. Elles alimentent le parseur (reconnaître un mod et ses
-`stat_id`), le pricing et, plus tard, Forge (tirages pondérés). Elles sont publiées dans
-un paquet de données signé (voir [paquets-de-donnees.md](../devops/paquets-de-donnees.md)).
+`stat_id`), le pricing et Forge (tirages pondérés). Elles sont embarquées dans l'application
+(`crates/poe2-core/data/`) et livrées avec chaque version : pas de téléchargement séparé.
 
 Outil : [`tools/gamedata/import_repoe.py`](../../tools/gamedata/import_repoe.py), repris
 et adapté de l'importeur de poe2-craft-assistant (même auteur, 31/10/2026).
@@ -17,12 +17,10 @@ et adapté de l'importeur de poe2-craft-assistant (même auteur, 31/10/2026).
 # 2. Noter la version affichée dans le titre de la page (« RePoE - PoE2 version X.Y.Z.W »).
 python tools/gamedata/import_repoe.py --mods mods.min.json --bases base_items.min.json \
     --out var/gamedata --repoe-version X.Y.Z.W
-# 3. Paquet signé :
-python tools/datapack/augur_datapack.py build --src var/gamedata --out out --patch 0.4.1
 ```
 
 La sortie est déterministe (JSON canonique, sans date) : un patch qui ne touche pas aux
-mods redonne le même blob, que l'application ne retélécharge pas.
+mods redonne exactement les mêmes fichiers, donc aucune différence dans le dépôt.
 
 ## Mise à jour après un patch (commande unique)
 

@@ -2,6 +2,8 @@
 
 **Auteur :** AI Tech Lead · **Destinataire :** Max (fondateur) · **Version :** 1.1, 31 octobre 2026
 **Statut :** proposition à valider en revue d'équipe
+> **Note du 19/11/2026 :** le backend de données (Python/Dagster/ClickHouse, API `/v1/prices`) et le CDN de paquets de données décrits ici n'ont jamais été branchés à l'appli, qui est restée 100 % locale. Ils ont été retirés du dépôt ; voir [archive.md](archive.md). Ce document est gardé tel quel comme trace du plan initial.
+
 **Périmètre :** le studio livre **uniquement un logiciel Windows**. Aucun site web public : l'overlay et le planificateur de builds vivent dans la même application desktop, et nos serveurs ne servent qu'à alimenter cette application en données.
 
 > Ce document fixe la stack, le portefeuille produit initial, la méthode de travail Theorycrafter ↔ Devs et le premier sprint d'un mois. Tout ce qui touche aux API et aux règles de Grinding Gear Games (GGG) doit être revérifié sur la documentation officielle (`pathofexile.com/developer/docs`) au moment de l'implémentation : GGG fait évoluer ses endpoints, ses scopes OAuth et ses limites sans préavis long, et la couverture PoE 2 de certains endpoints reste plus restreinte que celle de PoE 1.

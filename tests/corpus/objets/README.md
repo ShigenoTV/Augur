@@ -17,6 +17,11 @@ Textes d'objets tels que copiés en jeu (client anglais), utilisés par
 > ≥ 99 % de réussite) demande une collecte en jeu : ajoutez simplement les
 > fichiers `.txt` ici, le test calcule le taux de réussite sur tout le dossier.
 > Ne collez jamais d'information personnelle (notes privées, noms de compte).
+>
+> `reel-rare-amulette-qualite-avance.txt` et `reel-rare-anneau-qualite-avance.txt` viennent
+> des relevés de Max du 01/11/2026 (client 0.5.5e) : la copie donne les valeurs **avant** la
+> qualité de catalyseur (« — 40% Increased » dans l'en-tête) ; le jeu applique +4 niveaux
+> (texte : +3), +16 % de résistances (texte : 14) et +28 % de dégâts de foudre (texte : 24).
 
 ## PoE 1 (`poe1/`)
 

@@ -245,6 +245,59 @@ fn reels_gants_et_baton() {
     assert_eq!(o.mods_de_genre(GenreMod::Explicite).count(), 7);
 }
 
+/// Qualité de catalyseur (relevés de Max du 01/11/2026, client 0.5.5e) : la copie donne les
+/// valeurs avant qualité, le jeu applique la valeur tronquée (3 × 1,4 = 4,2 → 4 ; 14 × 1,2 =
+/// 16,8 → 16 ; 24 × 1,2 = 28,8 → 28), mesuré sur le niveau d'Arc et les résistances.
+#[test]
+fn reels_qualite_de_catalyseur_appliquee() {
+    let a = objet("reel-rare-amulette-qualite-avance.txt");
+    let niveaux = a
+        .mods
+        .iter()
+        .find(|m| m.modele == "+# to Level of all Spell Skills")
+        .unwrap();
+    assert_eq!(niveaux.entete.as_ref().unwrap().augmentation, Some(40.0));
+    assert_eq!(niveaux.entete.as_ref().unwrap().tags, vec!["Caster", "Gem"]);
+    assert_eq!(niveaux.valeurs_copiees, vec![3.0]);
+    assert_eq!(niveaux.valeurs, vec![4.0]);
+    assert_eq!(niveaux.texte, "+4 to Level of all Spell Skills");
+    let vitesse = a
+        .mods
+        .iter()
+        .find(|m| m.modele == "#% increased Cast Speed")
+        .unwrap();
+    assert_eq!(vitesse.valeurs, vec![28.0]);
+    assert_eq!(vitesse.plages, vec![Some((26.0, 29.0))]);
+    // Mods sans marque : inchangés.
+    let mana = a
+        .mods
+        .iter()
+        .find(|m| m.modele == "+# to maximum Mana")
+        .unwrap();
+    assert_eq!(mana.valeurs, vec![118.0]);
+    assert!(a.lignes_inconnues.is_empty());
+
+    let r = objet("reel-rare-anneau-qualite-avance.txt");
+    let texte = |modele: &str| {
+        r.mods
+            .iter()
+            .find(|m| m.modele == modele)
+            .unwrap()
+            .texte
+            .clone()
+    };
+    assert_eq!(
+        texte("+#% to all Elemental Resistances"),
+        "+16% to all Elemental Resistances"
+    );
+    assert_eq!(
+        texte("#% increased Lightning Damage"),
+        "28% increased Lightning Damage"
+    );
+    assert_eq!(texte("+#% to Chaos Resistance"), "+17% to Chaos Resistance");
+    assert_eq!(texte("#% increased Cast Speed"), "7% increased Cast Speed");
+}
+
 #[test]
 fn reel_bottes_corrompues_desacralisees() {
     let o = objet("reel-rare-bottes-corrompues-avance.txt");
@@ -341,5 +394,24 @@ mod poe1 {
         assert_eq!(bague.qualite, Some(20));
         assert_eq!(bague.influences, vec!["Fractured Item".to_string()]);
         assert_eq!(bague.mods_de_genre(GenreMod::Fracture).count(), 1);
+    }
+
+    /// PoE 1 : même marque « — 20% Increased » dans l'en-tête d'une copie Ctrl+Alt+C.
+    #[test]
+    fn catalyseur_applique_en_copie_avancee() {
+        let bague = objet("bague-catalyseur-avance.txt");
+        let vie = bague.mods_de_genre(GenreMod::Fracture).next().unwrap();
+        assert_eq!(vie.valeurs_copiees, vec![78.0]);
+        // 78 × 1,2 = 93,6 → 93.
+        assert_eq!(vie.valeurs, vec![93.0]);
+        assert_eq!(vie.texte, "+93 to maximum Life");
+        let implicite = bague.mods_de_genre(GenreMod::Implicite).next().unwrap();
+        assert_eq!(implicite.valeurs, vec![7.0]);
+        let res = bague
+            .mods
+            .iter()
+            .find(|m| m.modele == "+#% to Lightning Resistance")
+            .unwrap();
+        assert_eq!(res.valeurs, vec![42.0]);
     }
 }

@@ -77,13 +77,16 @@ pub enum Affixe {
 }
 
 /// En-tête d'un mod en mode avancé :
-/// `{ Prefix Modifier "Heated" (Tier: 7) — Damage, Fire }`.
+/// `{ Prefix Modifier "Heated" (Tier: 7) — Damage, Fire }`, ou avec la qualité d'un
+/// catalyseur : `{ Prefix Modifier "Glinting" (Tier: 3) — Caster  — 20% Increased }`.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct EnteteMod {
     pub affixe: Affixe,
     pub nom: Option<String>,
     pub palier: Option<u32>,
     pub tags: Vec<String>,
+    /// Augmentation des valeurs du mod par la qualité de l'objet (« — 20% Increased »), en %.
+    pub augmentation: Option<f64>,
     /// En-tête brut, pour diagnostic.
     pub brut: String,
 }
@@ -91,13 +94,18 @@ pub struct EnteteMod {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct ModObjet {
     pub genre: GenreMod,
-    /// Texte du mod sans les plages ni le suffixe de genre.
+    /// Texte du mod sans les plages ni le suffixe de genre, qualité appliquée (voir
+    /// [`EnteteMod::augmentation`]) : c'est la valeur réelle de l'objet.
     pub texte: String,
     /// Texte avec chaque nombre remplacé par `#` : clé vers les `stat_id`.
     pub modele: String,
+    /// Valeurs réelles, qualité appliquée.
     pub valeurs: Vec<f64>,
-    /// Plage de roll de chaque valeur (mode avancé uniquement).
+    /// Plage de roll de chaque valeur (mode avancé uniquement), qualité appliquée.
     pub plages: Vec<Option<(f64, f64)>>,
+    /// Valeurs telles qu'écrites dans la copie, avant la qualité (identiques à `valeurs`
+    /// quand la qualité ne touche pas le mod).
+    pub valeurs_copiees: Vec<f64>,
     pub entete: Option<EnteteMod>,
 }
 
@@ -296,16 +304,24 @@ fn lire_exigences(lignes: &[&str], ex: &mut Exigences) {
 /// Lit un en-tête avancé `{ … }`.
 fn lire_entete(ligne: &str) -> Option<EnteteMod> {
     let interieur = ligne.trim().strip_prefix('{')?.strip_suffix('}')?.trim();
-    let (gauche, tags) = match interieur.split_once('—') {
-        Some((g, t)) => (
-            g.trim(),
-            t.split(',')
-                .map(|s| s.trim().to_string())
-                .filter(|s| !s.is_empty())
-                .collect(),
-        ),
-        None => (interieur, Vec::new()),
-    };
+    // Segments séparés par « — » : nom et palier, puis tags, puis « 20% Increased » quand la
+    // qualité (catalyseur) augmente le mod.
+    let mut segments = interieur.split('—');
+    let gauche = segments.next().unwrap_or(interieur).trim();
+    let mut tags = Vec::new();
+    let mut augmentation = None;
+    for seg in segments {
+        let seg = seg.trim();
+        if let Some(p) = augmentation_de(seg) {
+            augmentation = Some(p);
+        } else {
+            tags.extend(
+                seg.split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty()),
+            );
+        }
+    }
     // Qualificatif devant le type d'affixe, vu sur un vrai objet :
     // `{ Desecrated Suffix Modifier "of Magma" (Tier: 2) — … }`.
     let qualifie = QUALIFICATIFS_ENTETE
@@ -341,8 +357,51 @@ fn lire_entete(ligne: &str) -> Option<EnteteMod> {
         nom,
         palier,
         tags,
+        augmentation,
         brut: ligne.trim().to_string(),
     })
+}
+
+/// « 20% Increased » (ou « 20% Reduced ») d'un en-tête avancé → augmentation en %.
+fn augmentation_de(segment: &str) -> Option<f64> {
+    let (p, sens) = segment.split_once("% ")?;
+    let p: f64 = p.trim().parse().ok()?;
+    match sens.trim() {
+        "Increased" => Some(p),
+        "Reduced" => Some(-p),
+        _ => None,
+    }
+}
+
+/// Valeur réelle d'une valeur copiée augmentée de `p` % par la qualité : tronquée vers zéro,
+/// à l'entier (ou au centième pour une valeur décimale), comme le fait le jeu.
+fn appliquer_augmentation(v: f64, p: f64) -> f64 {
+    let decimale = v.fract() != 0.0;
+    let echelle = if decimale { 100.0 } else { 1.0 };
+    let r = v * (100.0 + p) / 100.0 * echelle;
+    (r + 1e-9 * r.signum()).trunc() / echelle
+}
+
+/// Remet les valeurs dans le modèle (`+#% to Fire Resistance`).
+fn remplir_modele(modele: &str, valeurs: &[f64]) -> String {
+    let mut it = valeurs.iter();
+    let mut out = String::with_capacity(modele.len() + 8);
+    for c in modele.chars() {
+        match (c, if c == '#' { it.next() } else { None }) {
+            ('#', Some(v)) => out.push_str(&format_valeur(*v)),
+            _ => out.push(c),
+        }
+    }
+    out
+}
+
+fn format_valeur(v: f64) -> String {
+    if v.fract() == 0.0 {
+        format!("{}", v as i64)
+    } else {
+        let s = format!("{v:.2}");
+        s.trim_end_matches('0').trim_end_matches('.').to_string()
+    }
 }
 
 fn lire_mod(ligne: &str, entete: Option<&EnteteMod>) -> ModObjet {
@@ -355,8 +414,10 @@ fn lire_mod(ligne: &str, entete: Option<&EnteteMod>) -> ModObjet {
             break;
         }
     }
-    if let Some(t) = texte.split(" — ").next() {
+    let mut inechelonnable = false;
+    if let Some((t, annotation)) = texte.split_once(" — ") {
         // « — Unscalable Value » et autres annotations avancées.
+        inechelonnable = annotation.contains("Unscalable Value");
         texte = t.trim_end();
     }
     if genre == GenreMod::Explicite {
@@ -372,12 +433,39 @@ fn lire_mod(ligne: &str, entete: Option<&EnteteMod>) -> ModObjet {
         }
     }
     let v = extraire_valeurs(texte);
+    // La copie (Ctrl+C comme Ctrl+Alt+C) donne les valeurs AVANT la qualité de l'objet
+    // (catalyseurs) : l'en-tête dit de combien elle les augmente (mesuré en jeu le 1er novembre
+    // 2026, PoE 2). Les runes ont déjà leur augmentation dans la valeur, et une valeur
+    // « Unscalable Value » ne bouge pas.
+    let augmentation = entete
+        .and_then(|e| e.augmentation)
+        .filter(|p| *p != 0.0 && !inechelonnable && genre != GenreMod::Rune);
+    let valeurs_copiees = v.valeurs.clone();
+    let (texte, valeurs, plages) = match augmentation {
+        Some(p) => {
+            let valeurs: Vec<f64> = v
+                .valeurs
+                .iter()
+                .map(|x| appliquer_augmentation(*x, p))
+                .collect();
+            let plages = v
+                .plages
+                .iter()
+                .map(|pl| {
+                    pl.map(|(a, b)| (appliquer_augmentation(a, p), appliquer_augmentation(b, p)))
+                })
+                .collect();
+            (remplir_modele(&v.modele, &valeurs), valeurs, plages)
+        }
+        None => (v.texte, v.valeurs, v.plages),
+    };
     ModObjet {
         genre,
-        texte: v.texte,
+        texte,
         modele: v.modele,
-        valeurs: v.valeurs,
-        plages: v.plages,
+        valeurs,
+        plages,
+        valeurs_copiees,
         entete: entete.cloned(),
     }
 }
@@ -567,4 +655,48 @@ pub fn parser(texte: &str) -> Result<Objet, ErreurParse> {
         }
     }
     Ok(o)
+}
+
+#[cfg(test)]
+mod tests_qualite {
+    use super::*;
+
+    /// Amulette et anneau d'un Arc (relevés de Max, 1er novembre 2026) : la copie affiche
+    /// +14 % et +24 % avant les 20 % de qualité, le jeu applique 16 % et 28 %.
+    const ANNEAU: &str = "Item Class: Rings\nRarity: Rare\nStorm Loop\nSapphire Ring\n--------\nQuality (Lightning Modifiers): +20% (augmented)\n--------\nRequires: Level 60\n--------\nItem Level: 80\n--------\n{ Implicit Modifier — Elemental, Cold, Resistance }\n+25(20-30)% to Cold Resistance (implicit)\n--------\n{ Prefix Modifier \"Humming\" (Tier: 4) — Damage, Elemental, Lightning, Attack  — 20% Increased }\nAdds 1(1-2) to 24(20-26) Lightning damage to Attacks\n{ Suffix Modifier \"of the Squall\" (Tier: 5) — Elemental, Lightning, Resistance  — 20% Increased }\n+14(11-15)% to Lightning Resistance\n{ Suffix Modifier \"of the Lynx\" (Tier: 6) — Attribute }\n+12(9-12) to Dexterity\n";
+
+    #[test]
+    fn qualite_appliquee_aux_mods_marques() {
+        let o = parser(ANNEAU).unwrap();
+        assert_eq!(o.qualite, Some(20));
+        let res = &o.mods[2];
+        let e = res.entete.as_ref().unwrap();
+        assert_eq!(e.augmentation, Some(20.0));
+        assert_eq!(e.tags, vec!["Elemental", "Lightning", "Resistance"]);
+        assert_eq!(res.valeurs_copiees, vec![14.0]);
+        // 14 × 1,2 = 16,8 : le jeu tronque.
+        assert_eq!(res.valeurs, vec![16.0]);
+        assert_eq!(res.plages, vec![Some((13.0, 18.0))]);
+        assert_eq!(res.texte, "+16% to Lightning Resistance");
+        assert_eq!(res.modele, "+#% to Lightning Resistance");
+        let ajoutes = &o.mods[1];
+        assert_eq!(ajoutes.valeurs, vec![1.0, 28.0]);
+        assert_eq!(ajoutes.texte, "Adds 1 to 28 Lightning damage to Attacks");
+        // Sans marque, rien ne change (implicite, Dextérité).
+        assert_eq!(o.mods[0].valeurs, vec![25.0]);
+        assert_eq!(o.mods[3].texte, "+12 to Dexterity");
+        assert_eq!(o.mods[3].entete.as_ref().unwrap().augmentation, None);
+    }
+
+    #[test]
+    fn valeur_inechelonnable_et_decimales() {
+        let t = "Item Class: Amulets\nRarity: Rare\nX\nLapis Amulet\n--------\nItem Level: 80\n--------\n{ Suffix Modifier \"of Y\" (Tier: 1) — Life  — 20% Increased }\n1.5(1-2)% of Damage Leeched as Life — Unscalable Value\n{ Suffix Modifier \"of Z\" (Tier: 1) — Life  — 20% Increased }\nRegenerate 2.35(2-3) Life per second\n{ Prefix Modifier \"W\" (Tier: 1) — Life  — 20% Increased }\n-10% to Chaos Resistance\n";
+        let o = parser(t).unwrap();
+        assert_eq!(o.mods[0].valeurs, vec![1.5]);
+        // 2,35 × 1,2 = 2,82.
+        assert_eq!(o.mods[1].valeurs, vec![2.82]);
+        assert_eq!(o.mods[1].texte, "Regenerate 2.82 Life per second");
+        assert_eq!(o.mods[2].valeurs, vec![-12.0]);
+        assert_eq!(o.mods[2].texte, "-12% to Chaos Resistance");
+    }
 }
