@@ -398,7 +398,8 @@ export function OverlayCard({ settings, onSettings }: { settings: Settings | nul
           <span className="block text-xs text-text-subtle">
             Pendant une session Atlas Ledger, une ligne fine en haut de l'écran affiche la durée, les maps, le gain et le
             gain par heure. Les clics la traversent : elle ne gêne pas le jeu. Le gain vient des relevés de coffres faits
-            pendant la session (PoE 1) ; sans relevé, le bandeau montre le rythme en maps par heure.
+            pendant la session (PoE 1, automatiques toutes les 10 minutes par défaut, réglables dans la carte des coffres) ;
+            sans relevé, le bandeau montre le rythme en maps par heure.
           </span>
         </span>
       </label>

@@ -25,6 +25,7 @@ fn main() {
             "list_poe1_stash_tabs",
             "set_poe1_stash_tabs",
             "take_poe1_stash_snapshot",
+            "set_poe1_stash_auto",
             "set_update_channel",
             "get_client_log_status",
             "set_client_log_path",

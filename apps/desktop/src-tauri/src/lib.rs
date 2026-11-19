@@ -120,6 +120,7 @@ pub fn run() {
             commands::list_poe1_stash_tabs,
             commands::set_poe1_stash_tabs,
             commands::take_poe1_stash_snapshot,
+            commands::set_poe1_stash_auto,
             commands::get_leagues,
             commands::set_league,
             commands::set_upgrade_budget,
@@ -214,6 +215,7 @@ pub fn run() {
             tray::create(handle)?;
             clipboard::spawn_watcher(handle.clone());
             client_log::spawn(handle.clone());
+            poe1_stash::spawn_auto(handle.clone());
             updates::spawn_periodic_check(handle.clone());
             Ok(())
         })

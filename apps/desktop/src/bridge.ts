@@ -122,6 +122,10 @@ export type StashStatus = {
   previous: StashSnapshot | null;
   gain: number | null;
   changes: { nom: string; quantite: number; chaos: number }[];
+  /** Relevé automatique toutes les N minutes pendant une session Ledger (0 : coupé) ; absent des anciens cœurs. */
+  autoMinutes?: number;
+  /** Relevé automatique arrêté pour la session en cours (refus du site, session expirée…). */
+  autoError?: string | null;
 };
 
 /** Réglages propres à PoE 1 (ceux de PoE 2 sont à la racine de Settings). */
@@ -687,6 +691,7 @@ export const commands = {
   listPoe1StashTabs: () => invoke<StashTab[]>("list_poe1_stash_tabs"),
   setPoe1StashTabs: (tabs: number[]) => invoke<StashStatus>("set_poe1_stash_tabs", { tabs }),
   takePoe1StashSnapshot: () => invoke<StashStatus>("take_poe1_stash_snapshot"),
+  setPoe1StashAuto: (minutes: number) => invoke<StashStatus>("set_poe1_stash_auto", { minutes }),
   setUpdateChannel: (beta: boolean) => invoke<Settings>("set_update_channel", { beta }),
   getClientLogStatus: () => invoke<ClientLogStatus>("get_client_log_status"),
   setClientLogPath: (path: string | null) => invoke<Settings>("set_client_log_path", { path }),

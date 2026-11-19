@@ -266,6 +266,15 @@ pub async fn take_poe1_stash_snapshot(
     crate::poe1_stash::relever(&app).await
 }
 
+/// PoE 1 : intervalle du relevé automatique pendant une session Ledger (0 : coupé).
+#[tauri::command]
+pub fn set_poe1_stash_auto(
+    app: AppHandle,
+    minutes: u32,
+) -> Result<crate::poe1_stash::StashStatus, AppError> {
+    crate::poe1_stash::set_auto(&app, minutes)
+}
+
 /// Ligue poe.ninja du jeu actif. `None` ou vide : ligue par défaut.
 #[tauri::command]
 pub fn set_league(

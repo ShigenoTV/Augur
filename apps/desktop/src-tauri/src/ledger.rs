@@ -93,6 +93,8 @@ struct Active {
     suivi: SuiviSession,
     strategy: Strategy,
     coffres: Option<CoffresSession>,
+    /// Début de la session, pour le premier relevé automatique des coffres.
+    started: Instant,
 }
 
 #[derive(Default)]
@@ -207,6 +209,19 @@ impl LedgerState {
         self.lock().status()
     }
 
+    /// Session en cours (son début, qui l'identifie) et temps écoulé depuis
+    /// son dernier relevé de coffres, ou depuis son début sans relevé.
+    pub fn stash_age(&self) -> Option<(String, std::time::Duration)> {
+        let g = self.lock();
+        let a = g.active.as_ref()?;
+        let depuis = a
+            .coffres
+            .as_ref()
+            .map(|c| c.dernier.map_or(c.base_at, |d| d.1))
+            .unwrap_or(a.started);
+        Some((a.started_at.clone(), depuis.elapsed()))
+    }
+
     /// Vrai pendant une session (lu souvent par le bandeau : pas de bilan).
     pub fn is_active(&self) -> bool {
         self.lock().active.is_some()
@@ -277,6 +292,7 @@ pub fn start(app: &AppHandle) -> LedgerStatus {
                 suivi,
                 strategy: Strategy::default(),
                 coffres: None,
+                started: Instant::now(),
             });
         }
         g.status()

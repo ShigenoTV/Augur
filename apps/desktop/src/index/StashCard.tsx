@@ -291,6 +291,28 @@ export function StashCard({ onSettings }: { onSettings?: (s: Settings) => void }
               />
               Relevé automatique au début et à la fin d'une session Ledger
             </label>
+            <label className="flex items-center gap-2 text-xs text-text-muted">
+              Pendant la session, relever
+              <select
+                value={status.autoMinutes ?? 10}
+                onChange={(e) =>
+                  void run(() => commands.setPoe1StashAuto(Number(e.target.value))).then((s) => s && setStatus(s))
+                }
+                className="rounded-chip border border-ink-700 bg-ink-950 px-2 py-1 text-xs text-text-primary"
+              >
+                <option value={0}>jamais</option>
+                {[5, 10, 15, 30].map((m) => (
+                  <option key={m} value={m}>
+                    toutes les {m} min
+                  </option>
+                ))}
+              </select>
+            </label>
+            {status.autoError && (
+              <p className="w-full text-xs text-signal-loss">
+                Relevé automatique arrêté pour cette session : {status.autoError} Un relevé à la main le relance.
+              </p>
+            )}
           </div>
 
           {last && (
