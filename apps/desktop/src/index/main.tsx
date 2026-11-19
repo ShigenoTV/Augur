@@ -30,8 +30,8 @@ import { AffichageContext, DEVISES, useAffichage } from "./devise";
 import { AffichagePoe1Context, DEVISES_POE1, useAffichagePoe1 } from "./devisePoe1";
 import { useUpdates } from "./useUpdates";
 
-/** Pas de canal bêta tant que les mises à jour passent par GitHub Releases (voir src-tauri/src/updates.rs). */
-const BETA_AVAILABLE = false;
+/** Option « Rejoindre la bêta » (canal servi par la pré-release `canal-beta`, voir src-tauri/src/updates.rs). */
+const BETA_AVAILABLE = true;
 
 function Card({ title, id, children }: { title: string; id?: string; children: ReactNode }) {
   return (

@@ -5,8 +5,9 @@
 //!   redémarrer », donc jamais en pleine partie à son insu.
 //! - Les paquets sont signés (minisign) et vérifiés par le plugin updater
 //!   avant installation ; un paquet mal signé est refusé.
-//! - Canal stable seulement en 0.1 (mises à jour servies par GitHub
-//!   Releases) ; le réglage « Rejoindre la bêta » existe mais reste masqué.
+//! - Deux canaux servis par GitHub Releases : stable (release « latest ») et
+//!   bêta (manifeste attaché à la pré-release fixe `canal-beta`, que
+//!   « Promouvoir une release » met à jour). Réglage « Rejoindre la bêta ».
 //!
 //! Chaîne de publication : docs/devops/release-windows.md (chantier DevOps).
 
@@ -27,9 +28,16 @@ use crate::time::rfc3339_from_unix;
 pub const STABLE_ENDPOINT: &str =
     "https://github.com/ShigenoTV/Augur/releases/latest/download/latest.json";
 
-/// Le canal bêta n'existe pas tant que les mises à jour passent par GitHub
-/// Releases : l'option est masquée dans l'interface et pointe sur le stable.
-pub const BETA_AVAILABLE: bool = false;
+/// Manifeste du canal bêta : fichier `latest.json` de la pré-release fixe
+/// `canal-beta`. Une pré-release n'est jamais « latest » sur GitHub, donc le
+/// canal stable ne la voit pas. Chaque promotion (bêta ou stable) y dépose le
+/// manifeste de la version la plus récente : les testeurs reçoivent aussi les
+/// versions stables.
+pub const BETA_ENDPOINT: &str =
+    "https://github.com/ShigenoTV/Augur/releases/download/canal-beta/latest.json";
+
+/// Option « Rejoindre la bêta » proposée dans Réglages.
+pub const BETA_AVAILABLE: bool = true;
 
 pub const EVENT_AVAILABLE: &str = "augur://update-available";
 pub const EVENT_PROGRESS: &str = "augur://update-progress";
@@ -52,11 +60,13 @@ impl Channel {
     }
 }
 
-pub fn endpoint(channel: Channel) -> &'static str {
+/// Manifestes interrogés, dans l'ordre : le plugin passe au suivant si le
+/// précédent ne répond pas. En bêta, le stable sert de secours (canal bêta pas
+/// encore créé, GitHub indisponible pour ce fichier…).
+pub fn endpoints(channel: Channel) -> &'static [&'static str] {
     match channel {
-        Channel::Stable => STABLE_ENDPOINT,
-        // Pas de canal bêta servi pour l'instant : même manifeste que le stable.
-        Channel::Beta => STABLE_ENDPOINT,
+        Channel::Stable => &[STABLE_ENDPOINT],
+        Channel::Beta => &[BETA_ENDPOINT, STABLE_ENDPOINT],
     }
 }
 
@@ -92,10 +102,14 @@ fn updater_error(err: impl std::fmt::Display) -> AppError {
 pub async fn check(app: &AppHandle) -> Result<Option<UpdateInfo>, AppError> {
     let channel =
         Channel::from_beta(BETA_AVAILABLE && app.state::<SettingsStore>().get().beta_channel);
-    let url = Url::parse(endpoint(channel)).map_err(updater_error)?;
+    let urls = endpoints(channel)
+        .iter()
+        .map(|u| Url::parse(u))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(updater_error)?;
     let update = app
         .updater_builder()
-        .endpoints(vec![url])
+        .endpoints(urls)
         .map_err(updater_error)?
         .build()
         .map_err(updater_error)?
@@ -178,11 +192,19 @@ mod tests {
     #[test]
     fn construit_les_endpoints_par_canal() {
         assert_eq!(
-            endpoint(Channel::Stable),
-            "https://github.com/ShigenoTV/Augur/releases/latest/download/latest.json"
+            endpoints(Channel::Stable),
+            ["https://github.com/ShigenoTV/Augur/releases/latest/download/latest.json"]
         );
-        // Tant que le canal bêta n'est pas servi, il retombe sur le stable.
-        assert_eq!(endpoint(Channel::Beta), endpoint(Channel::Stable));
-        assert!(Url::parse(STABLE_ENDPOINT).is_ok());
+        // Bêta d'abord, stable en secours.
+        assert_eq!(
+            endpoints(Channel::Beta),
+            [
+                "https://github.com/ShigenoTV/Augur/releases/download/canal-beta/latest.json",
+                STABLE_ENDPOINT
+            ]
+        );
+        for u in endpoints(Channel::Beta) {
+            assert!(Url::parse(u).is_ok());
+        }
     }
 }

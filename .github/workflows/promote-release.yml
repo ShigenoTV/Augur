@@ -1,9 +1,16 @@
 # Promotion d'une version déjà construite vers un canal de mise à jour.
 #
 # C'est la seule étape qui rend une version visible des joueurs.
-# Hébergement GitHub Releases : les applications interrogent
-# releases/latest/download/latest.json ; promouvoir revient à publier la
-# release brouillon. Canal stable uniquement.
+# Hébergement GitHub Releases :
+# - canal stable : les applications interrogent
+#   releases/latest/download/latest.json ; promouvoir publie la release
+#   brouillon et la marque « latest » ;
+# - canal bêta : les applications qui ont coché « Rejoindre la bêta »
+#   interrogent releases/download/canal-beta/latest.json. Promouvoir publie la
+#   release brouillon en PRÉ-RELEASE (jamais « latest », donc invisible du
+#   canal stable) et copie son latest.json sur la pré-release fixe `canal-beta`.
+#   Une promotion stable met aussi à jour `canal-beta` quand elle est plus
+#   récente : les testeurs reçoivent les versions stables.
 # L'environnement `production` doit exiger l'approbation de Max
 # (Settings > Environments > production > Required reviewers).
 name: Promouvoir une release
@@ -24,7 +31,7 @@ permissions:
   contents: write   # passage de la release GitHub de brouillon à publiée
 
 concurrency:
-  group: promote-${{ github.event.inputs.channel }}
+  group: promote   # les deux canaux écrivent sur `canal-beta`
   cancel-in-progress: false
 
 env:
@@ -44,11 +51,12 @@ jobs:
           if [ "$CHANNEL" = "stable" ] && [[ "$VERSION" == *-* ]]; then
             echo "::error::Une version bêta ne peut pas aller sur le canal stable."; exit 1
           fi
-          if [ "$CHANNEL" != "stable" ]; then
-            echo "::error::Hébergement GitHub Releases : seul le canal stable est disponible."; exit 1
+          if [ "$CHANNEL" = "beta" ] && [[ "$VERSION" != *-beta.* ]]; then
+            echo "::error::Le canal bêta attend une version vX.Y.Z-beta.N (une version stable y arrive d'elle-même à sa promotion)."; exit 1
           fi
 
-      - name: Publier la release (hébergement GitHub)
+      - name: Publier la release (canal stable)
+        if: env.CHANNEL == 'stable'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -73,3 +81,83 @@ jobs:
             sleep $((i * 5))
           done
           echo "::error::$url n'annonce pas $VERSION"; exit 1
+
+      - name: Publier la pré-release (canal bêta)
+        if: env.CHANNEL == 'beta'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="v$VERSION"
+          info=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isPrerelease,assets)
+          echo "$info" | jq -e '.assets | map(.name) | index("latest.json")' >/dev/null \
+            || { echo "::error::La release $tag n'a pas de latest.json"; exit 1; }
+          echo "$info" | jq -e '.isPrerelease' >/dev/null \
+            || { echo "::error::La release $tag n'est pas une pré-release"; exit 1; }
+          # --latest=false : le canal stable (releases/latest) ne bouge pas.
+          gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease --latest=false
+
+      # Dépose le latest.json de la version promue sur la pré-release fixe
+      # `canal-beta`, si elle est plus récente que ce que ce canal annonce.
+      - name: Mettre à jour le canal bêta
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="v$VERSION"
+          beta_url="https://github.com/$GITHUB_REPOSITORY/releases/download/canal-beta/latest.json"
+          work=$(mktemp -d)
+          gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern latest.json --dir "$work"
+          [ "$(jq -r .version "$work/latest.json")" = "$VERSION" ] \
+            || { echo "::error::latest.json de $tag n'annonce pas $VERSION"; exit 1; }
+
+          if ! gh release view canal-beta --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            if [ "$CHANNEL" = "stable" ]; then
+              echo "Pas de canal bêta créé : rien à faire."; exit 0
+            fi
+            # Pré-release : n'est jamais « latest », le canal stable ne la voit pas.
+            gh release create canal-beta --repo "$GITHUB_REPOSITORY" --target main \
+              --prerelease --latest=false --title "Canal bêta (manifeste de mise à jour)" \
+              --notes "Release technique : son latest.json indique aux testeurs (« Rejoindre la bêta ») la version à installer. Ne pas supprimer."
+          fi
+
+          current=$(curl -sSfL "$beta_url" | jq -r .version 2>/dev/null || true)
+          # Comparaison semver (0.2.0-beta.1 < 0.2.0 < 0.2.1-beta.1) : sort -V ne la fait pas.
+          newer=$(node -e '
+            const p = (v) => { const [m, pre] = v.split("-"); return { n: m.split(".").map(Number), pre }; };
+            const cmp = (a, b) => {
+              const x = p(a), y = p(b);
+              for (let i = 0; i < 3; i++) if (x.n[i] !== y.n[i]) return x.n[i] - y.n[i];
+              if (!x.pre || !y.pre) return x.pre ? -1 : y.pre ? 1 : 0;
+              return Number(x.pre.split(".")[1]) - Number(y.pre.split(".")[1]);
+            };
+            const [cand, cur] = process.argv.slice(1);
+            console.log(!cur || cmp(cand, cur) > 0 ? "oui" : cmp(cand, cur) === 0 ? "egal" : "non");
+          ' "$VERSION" "$current")
+          case "$newer" in
+            egal) echo "Le canal bêta annonce déjà $VERSION."; exit 0 ;;
+            non)
+              if [ "$CHANNEL" = "beta" ]; then
+                echo "::error::Le canal bêta annonce $current : $VERSION serait un retour en arrière."; exit 1
+              fi
+              echo "Le canal bêta annonce $current, plus récent que $VERSION : inchangé."; exit 0 ;;
+          esac
+
+          gh release upload canal-beta "$work/latest.json" --repo "$GITHUB_REPOSITORY" --clobber
+          for i in 1 2 3 4 5; do
+            v=$(curl -sSfL "$beta_url" | jq -r .version || true)
+            [ "$v" = "$VERSION" ] && { echo "OK : $beta_url annonce $v (avant : ${current:-aucune})"; exit 0; }
+            sleep $((i * 5))
+          done
+          echo "::error::$beta_url n'annonce pas $VERSION"; exit 1
+
+      - name: Le canal stable n'a pas bougé
+        if: env.CHANNEL == 'beta'
+        shell: bash
+        run: |
+          set -euo pipefail
+          v=$(curl -sSfL "https://github.com/$GITHUB_REPOSITORY/releases/latest/download/latest.json" | jq -r .version)
+          [[ "$v" != *-* ]] || { echo "::error::Le canal stable annonce une bêta ($v) !"; exit 1; }
+          echo "OK : le canal stable annonce toujours $v"

@@ -15,10 +15,10 @@ tag vX.Y.Z[-beta.N] ──► Release Windows
                          │    ├─ signature Authenticode optionnelle (désactivée, voir plus bas)
                          │    └─ chaque installeur signé pour l'updater (.sig minisign)
                          ├─ latest.json, SHA256SUMS
-                         ├─ dépôt IMMUABLE sur updates.<domaine>/releases/X.Y.Z/
+                         ├─ fichiers attachés à la release GitHub (immuables : on incrémente)
                          └─ release GitHub en brouillon
 
-« Promouvoir une release » (approbation de Max) ──► channels/{beta|stable}/latest.json
+« Promouvoir une release » (approbation de Max) ──► stable : release « latest » / bêta : pré-release canal-beta
                                                      └─ les applications installées se mettent à jour
 ```
 
@@ -61,7 +61,7 @@ Dans `apps/desktop/src-tauri/tauri.conf.json` :
 ```
 
 Le canal bêta s'obtient en remplaçant l'endpoint au runtime (option « Rejoindre la bêta »)
-via le builder du plugin `tauri-plugin-updater`. La CI force `createUpdaterArtifacts` et
+via le builder du plugin `tauri-plugin-updater` (`src/updates.rs`). La CI force `createUpdaterArtifacts` et
 injecte la commande de signature, l'application n'a donc rien d'autre à prévoir.
 
 ## Hébergement des mises à jour (GitHub Releases)
@@ -69,13 +69,32 @@ injecte la commande de signature, l'application n'a donc rien d'autre à prévoi
 Les mises à jour sont servies par les releases GitHub du dépôt (public) :
 
 - la release attache les installeurs, leurs `.sig` et `latest.json` à la release brouillon ;
-- l'application interroge `https://github.com/ShigenoTV/Augur/releases/latest/download/latest.json` ;
-- « Promouvoir une release » (canal `stable`) publie la release brouillon, ce qui la
-  rend « latest » et donc visible des applications installées.
+- **canal stable** : l'application interroge
+  `https://github.com/ShigenoTV/Augur/releases/latest/download/latest.json`.
+  « Promouvoir une release » (canal `stable`) publie la release brouillon et la marque
+  « latest » ;
+- **canal bêta** (option « Rejoindre la bêta » dans Réglages) : l'application interroge
+  `https://github.com/ShigenoTV/Augur/releases/download/canal-beta/latest.json`, puis le
+  stable en secours. `canal-beta` est une **pré-release fixe** qui ne porte que ce
+  manifeste. « Promouvoir une release » (canal `beta`) publie la release `vX.Y.Z-beta.N`
+  en pré-release (jamais « latest » : le canal stable ne la voit pas) et copie son
+  `latest.json` sur `canal-beta`. Une promotion stable y copie aussi le sien quand il est
+  plus récent, pour que les testeurs reçoivent les versions stables.
+- Les bêtas ne sont construites qu'en NSIS : WiX (MSI) refuse une version `X.Y.Z-beta.N`.
 
-Limite : pas de canal bêta. L'hébergement sur CDN (Cloudflare R2) prévu au départ a été
-retiré le 19/11/2026 (voir [docs/archive.md](../archive.md)) ; le récupérer demanderait
-de restaurer les étapes R2 des workflows et une version de l'application avec le nouvel endpoint.
+## Publier une bêta (sans toucher au stable)
+
+1. Sur une branche (pas besoin de passer par `main`), monter la version à `X.Y.Z-beta.N`
+   (`apps/desktop/package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json`, `Cargo.lock`).
+   `X.Y.Z` doit être **supérieur** à la version stable en place.
+2. Actions > « Release Windows » > Run workflow **sur cette branche**, tag `vX.Y.Z-beta.N`.
+3. Actions > « Promouvoir une release », version `X.Y.Z-beta.N`, canal `beta`.
+   Le run vérifie à la fin que le canal stable annonce toujours une version stable.
+4. Les testeurs ayant coché « Rejoindre la bêta » voient la version au prochain contrôle
+   (démarrage, toutes les 6 h, ou « Rechercher des mises à jour »).
+
+Pour sortir de la bêta : décocher l'option. L'application reste sur la bêta installée
+jusqu'à la version stable suivante (`X.Y.Z` est supérieur à `X.Y.Z-beta.N`).
 
 ## Signature Authenticode : pas de certificat (décision du 2026-10-31)
 
