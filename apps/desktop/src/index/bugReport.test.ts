@@ -25,6 +25,16 @@ describe("signaler un bug", () => {
     for (const m of MODULES_BUG) expect(yml).toContain(`        - ${m}\n`);
   });
 
+  it("garde un modèle de ticket valide (sinon GitHub ouvre un ticket vierge)", () => {
+    const yml = readFileSync(resolve(process.cwd(), "../../.github/ISSUE_TEMPLATE/bug-beta.yml"), "utf8");
+    // Une valeur YAML sans guillemets ne peut pas contenir « : » suivi d'un espace.
+    const fautives = yml
+      .split("\n")
+      .map((l) => /^\s*(?:- )?[\w-]+: (.*)$/.exec(l)?.[1]?.trim() ?? "")
+      .filter((v) => v && !/^["'|>[{]/.test(v) && /:\s/.test(v));
+    expect(fautives).toEqual([]);
+  });
+
   it("signale le rapport complet copié dans le presse-papiers", () => {
     expect(messageTicket({ truncated: false, copied: true })).toMatch(/presse-papiers.*Ctrl\+V/);
     expect(messageTicket({ truncated: true, copied: true })).toMatch(/raccourci.*presse-papiers/);
