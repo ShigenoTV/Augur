@@ -1,0 +1,31 @@
+Item Class: Amulets
+Rarity: Rare
+Tempest Medallion
+Stellar Amulet
+--------
+Quality (Caster Modifiers): +40% (augmented)
+--------
+Requires: Level 60
+--------
+Item Level: 80
+--------
+{ Enhancement }
+Allocates Paragon — Unscalable Value
+--------
+{ Implicit Modifier — Attribute }
++7(5-7) to all Attributes
+--------
+{ Fractured Prefix Modifier "Countess'" (Tier: 1) }
++50(47-50) to Spirit
+{ Prefix Modifier "Chalybeous" (Tier: 5) — Mana }
++118(105-124) to maximum Mana
+{ Prefix Modifier "Ranger's" (Tier: 1) — Attack }
++391(347-450) to Accuracy Rating
+{ Suffix Modifier "of the Sorcerer" (Tier: 1) — Caster, Gem — 40% Increased }
++3 to Level of all Spell Skills
+{ Suffix Modifier "of Sortilege" (Tier: 3) — Caster, Speed — 40% Increased }
+20(19-21)% increased Cast Speed
+{ Desecrated Suffix Modifier "of Kurgal" (Tier: 1) — Mana }
+Recover 2(2-3)% of maximum Mana on Kill
+--------
+Fractured Item
