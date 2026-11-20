@@ -135,6 +135,13 @@ pub fn init() {
     if log::set_logger(&Logger).is_ok() {
         log::set_max_level(LevelFilter::Info);
     }
+    // En release, une panne arrête Augur sans console : on la garde dans
+    // `augur.log` pour la carte Diagnostic et les tickets de bug.
+    let defaut = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        log::error!("panne : {info}");
+        defaut(info);
+    }));
 }
 
 /// Active l'écriture dans `<dir>/augur.log`.

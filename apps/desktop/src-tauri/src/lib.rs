@@ -77,6 +77,14 @@ pub fn show_main_window(app: &AppHandle) {
     }
 }
 
+/// Crée les fenêtres déclarées dans tauri.conf.json (toutes en `"create": false`).
+fn creer_fenetres(app: &AppHandle) -> tauri::Result<()> {
+    for config in &app.config().app.windows {
+        tauri::WebviewWindowBuilder::from_config(app, config)?.build()?;
+    }
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     diag_log::init();
@@ -204,6 +212,11 @@ pub fn run() {
             app.manage(forge_prices::ForgePrices::load(handle));
             app.manage(forge::ForgePlanner::load(handle));
             app.manage(forge_poe1::ForgePoe1State::load(handle));
+            // Fenêtres créées ici, une fois tout l'état géré : une page qui
+            // appelle une commande dès son chargement ne doit jamais tomber sur
+            // un état absent (`state() called before manage()`, crash de la
+            // v0.1.36). D'où `"create": false` dans tauri.conf.json.
+            creer_fenetres(handle)?;
             // plan suivi avant la fermeture : recalculé en arrière-plan, aux prix du moment
             let h = handle.clone();
             tauri::async_runtime::spawn(async move {
