@@ -14,6 +14,7 @@
     "windows": [
       {
         "label": "main",
+        "create": false,
         "title": "Augur",
         "url": "index.html",
         "width": 1100,
@@ -25,6 +26,7 @@
       },
       {
         "label": "overlay",
+        "create": false,
         "title": "Augur Copilot",
         "url": "overlay.html",
         "width": 380,
@@ -40,6 +42,7 @@
       },
       {
         "label": "ledger-banner",
+        "create": false,
         "title": "Augur Ledger",
         "url": "ledger-banner.html",
         "width": 640,
