@@ -28,13 +28,17 @@
   Version attendue dans le journal (ex. 0.1.38). Facultative.
 
 .PARAMETER Seconds
-  Durée pendant laquelle Augur doit rester vivant (20 s par défaut).
+  Durée pendant laquelle Augur doit rester vivant à chaque lancement (15 s).
+
+.PARAMETER Runs
+  Nombre de lancements successifs (3 par défaut).
 #>
 param(
   [Parameter(Mandatory = $true)]
   [string] $Installer,
   [string] $Version = '',
-  [int] $Seconds = 20
+  [int] $Seconds = 15,
+  [int] $Runs = 3
 )
 
 $ErrorActionPreference = 'Stop'
@@ -95,51 +99,59 @@ $exe = Find-InstalledExe
 if (-not $exe) { Fail "exécutable d'Augur introuvable après l'installation" }
 Write-Host "Exécutable installé : $exe"
 
-# 2. Lancement
-$offset = if (Test-Path -LiteralPath $logFile) { (Get-Item -LiteralPath $logFile).Length } else { 0 }
-$app = Start-Process -FilePath $exe -PassThru
-Write-Host "Augur lancé (PID $($app.Id)), observation pendant $Seconds s"
+function Test-Launch([int] $run) {
+  # 2. Lancement
+  $offset = if (Test-Path -LiteralPath $logFile) { (Get-Item -LiteralPath $logFile).Length } else { 0 }
+  $app = Start-Process -FilePath $exe -PassThru
+  Write-Host "Lancement $run/$Runs : Augur lancé (PID $($app.Id)), observation pendant $Seconds s"
 
-# 3. Observation
-$failure = $null
-$deadline = (Get-Date).AddSeconds($Seconds)
-while ((Get-Date) -lt $deadline) {
-  Start-Sleep -Milliseconds 500
-  if ($app.HasExited) {
-    $failure = "Augur s'est arrêté au bout de quelques secondes (code $($app.ExitCode))"
-    break
+  # 3. Observation
+  $failure = $null
+  $deadline = (Get-Date).AddSeconds($Seconds)
+  while ((Get-Date) -lt $deadline) {
+    Start-Sleep -Milliseconds 250
+    if ($app.HasExited) {
+      $failure = "Augur s'est arrêté au lancement $run (code $($app.ExitCode))"
+      break
+    }
+    if (Get-NewLogLines $offset | Where-Object { $_ -match ' ERREUR ' }) {
+      $failure = "erreur écrite dans augur.log au lancement $run"
+      break
+    }
   }
-  if (Get-NewLogLines $offset | Where-Object { $_ -match ' ERREUR ' }) {
-    $failure = 'erreur écrite dans augur.log'
-    break
+
+  $lines = Get-NewLogLines $offset
+  Write-Host "--- augur.log (lancement $run) ---"
+  $lines | ForEach-Object { Write-Host $_ }
+  Write-Host "----------------------------------"
+  $lines | Where-Object { $_ -match ' ALERTE ' } | ForEach-Object { Write-Host "::warning::augur.log : $_" }
+
+  # 4. Preuve que le setup a tourné
+  if (-not $failure) {
+    $attendu = if ($Version) { "Augur v$Version" } else { 'Augur v' }
+    if (-not ($lines | Where-Object { $_ -match ' info ' -and $_.Contains($attendu) })) {
+      $failure = "ligne de démarrage « $attendu » absente de augur.log ($logFile)"
+    }
   }
+  if (-not $failure) {
+    $app.Refresh()
+    if ($app.MainWindowHandle -eq 0) {
+      Write-Host '::warning::Aucune fenêtre principale détectée (session sans bureau ?), le processus reste vivant.'
+    }
+  }
+
+  # 5. Fermeture (Augur et ses processus WebView2)
+  if (-not $app.HasExited) {
+    & taskkill.exe /PID $app.Id /T /F | Out-Null
+    $app.WaitForExit(10000) | Out-Null
+  }
+  return $failure
 }
 
-$lines = Get-NewLogLines $offset
-Write-Host "--- augur.log (lignes du test) ---"
-$lines | ForEach-Object { Write-Host $_ }
-Write-Host "----------------------------------"
-$lines | Where-Object { $_ -match ' ALERTE ' } | ForEach-Object { Write-Host "::warning::augur.log : $_" }
-
-# 4. Preuve que le setup a tourné
-if (-not $failure) {
-  $attendu = if ($Version) { "Augur v$Version" } else { 'Augur v' }
-  if (-not ($lines | Where-Object { $_ -match ' info ' -and $_.Contains($attendu) })) {
-    $failure = "ligne de démarrage « $attendu » absente de augur.log ($logFile)"
-  }
+# Plusieurs lancements : le premier crée le profil WebView2 et les données ;
+# les suivants, plus rapides, ressemblent au PC d'un joueur.
+for ($run = 1; $run -le $Runs; $run++) {
+  $failure = Test-Launch $run
+  if ($failure) { Fail $failure }
 }
-
-if (-not $failure) {
-  $app.Refresh()
-  if ($app.MainWindowHandle -eq 0) {
-    Write-Host '::warning::Aucune fenêtre principale détectée (session sans bureau ?), le processus reste vivant.'
-  }
-}
-
-# 5. Fermeture (Augur et ses processus WebView2)
-if (-not $app.HasExited) {
-  & taskkill.exe /PID $app.Id /T /F | Out-Null
-}
-
-if ($failure) { Fail $failure }
-Write-Host "Test de démarrage réussi : Augur est resté vivant $Seconds s sans erreur."
+Write-Host "Test de démarrage réussi : $Runs lancements, Augur est resté vivant $Seconds s à chaque fois, sans erreur."
