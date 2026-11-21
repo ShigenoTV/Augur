@@ -167,6 +167,7 @@ pub(crate) mod tests {
             remove_desecrated_only: false,
             remove_lowest_level: false,
             requires_rare: false,
+            double: false,
             unit_cost: 1.0,
         }
     }

@@ -134,15 +134,19 @@ impl TablePrix {
         t
     }
 
-    /// Recalcule les prix effectifs : correction, sinon poe.ninja, sinon indicatif (une Essence sans
-    /// cote ni saisie reste sans prix).
+    /// Recalcule les prix effectifs : correction, sinon poe.ninja, sinon indicatif (une Essence ou un
+    /// Omen sans valeur indicative, ni cote ni saisie, reste sans prix).
     fn recalculer(&mut self) {
         self.prix.clear();
         self.sources.clear();
-        let indicatifs = INDICATIFS
-            .iter()
-            .map(|(id, p)| (*id, Some(*p)))
-            .chain(ids_essences().map(|id| (id, None)));
+        // tous les identifiants : un Omen sans valeur indicative (comme une Essence) n'a de prix que par une
+        // cote ou une saisie
+        let indicatifs = identifiants().map(|id| {
+            (
+                id,
+                INDICATIFS.iter().find(|(k, _)| *k == id).map(|(_, p)| *p),
+            )
+        });
         for (id, indicatif) in indicatifs {
             let (p, s) = if let Some(p) = self.corrections.get(id) {
                 (*p, SourcePrix::Joueur)
@@ -249,8 +253,11 @@ mod tests {
         );
         assert!(identifiants().count() > INDICATIFS.len() + 50);
         assert!(t.sources.values().all(|s| *s == SourcePrix::Indicatif));
-        let a = actions(&t.prix, None).unwrap();
+        // Omens sans valeur indicative (ajoutés le 21/11/2026) : seulement avec une cote ou une saisie
+        let actives = crate::forge::atelier::actives(&[], &t.prix);
+        let a = actions(&t.prix, Some(&actives)).unwrap();
         assert_eq!(a.len(), 18 + 14 + 1);
+        assert!(actions(&t.prix, None).is_err());
         assert_eq!(t.base(), (2.0, 0.0));
     }
 

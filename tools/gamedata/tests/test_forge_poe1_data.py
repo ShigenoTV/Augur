@@ -96,9 +96,18 @@ def _sources(tmp_path: Path) -> Path:
         "Metadata/Items/Currency/CurrencyDelveCraftingQuality": {
             **vide, "name": "Opulent Fossil", "positive_mod_weights": [{"tag": "drop", "weight": 1000}],
         },
+        "Metadata/Items/Currency/CurrencyDelveCraftingAbyss": {
+            **vide, "name": "Hollow Fossil", "forced_mods": ["DelveAbyssJewelSocket1"],
+            "allowed_tags": ["weapon", "helmet"],
+        },
+        "Metadata/Items/Currency/CurrencyDelveCraftingLuckyModRolls": {
+            **vide, "name": "Sanctified Fossil", "rolls_lucky": True,
+        },
         "Metadata/Items/Currency/RandomFossilOutcome1": {**vide, "name": "Random"},
     }
-    for fid in list(fossiles)[:3]:
+    mods["DelveAbyssJewelSocket1"] = {**_mod(generation="suffix", domaine="delve"), "groups": ["AbyssJewelSocket"],
+                                      "type": "AbyssJewelSocket", "text": "Has 1 Abyssal Socket"}
+    for fid in list(fossiles)[:5]:
         items[fid] = {"domain": "undefined", "release_state": "released", "name": fossiles[fid]["name"]}
     classes = {c: {"influence_tags": []} for c in fd.CLASSES}
     classes["Ring"] = {"influence_tags": ["ring_shaper", "ring_basilisk", "ring_inconnu"]}
@@ -122,7 +131,10 @@ def test_construit_les_donnees(tmp_path):
     assert d["bases"][0]["implicites"] == ["+(12-16)% to Fire and Lightning Resistances"]
     assert d["classes"]["Ring"]["influences"] == {"Hunter": "ring_basilisk", "Shaper": "ring_shaper"}
     ids = [m["id"] for m in d["mods"]]
-    assert ids == ["EinharMasterIncreasedLife3", "IncreasedLife1", "LifeEssence7"]  # sans poids ni Essence ni établi : écarté
+    # sans poids ni Essence ni établi : écarté ; le mod `delve` du Hollow Fossil est gardé
+    assert ids == ["DelveAbyssJewelSocket1", "EinharMasterIncreasedLife3", "IncreasedLife1", "LifeEssence7"]
+    assert d["mods"][0]["fossile"] and not d["mods"][2]["fossile"]
+    d["mods"].pop(0)
     craft = d["mods"][0]
     assert craft["artisanal"] and craft["spawn"] == [] and craft["valeur"] == [41, 55]
     assert d["etabli"] == [{"mod": "EinharMasterIncreasedLife3", "classes": ["Ring"], "cout": {"Regal Orb": 2}}]
@@ -131,10 +143,15 @@ def test_construit_les_donnees(tmp_path):
     (e,) = d["essences"]
     assert e["rang"] == 7 and e["sur_rare"] and e["cibles"] == {"Ring": "LifeEssence7"}
     assert d["mods"][1]["tags"] == ["life", "resource"]
-    # Seuls les fossiles qui changent des poids : ni Tangled (mods ajoutés), ni Opulent, ni les issues.
+    # Fossiles à poids, Hollow (mod forcé) et Sanctified (chanceux) ; ni Tangled, ni Opulent, ni les issues.
+    vide = {"ajoutes": [], "forces": [], "permis": [], "chanceux": False}
     assert d["fossiles"] == [
-        {"id": "Metadata/Items/Currency/CurrencyDelveCraftingLife", "nom": "Pristine Fossil",
-         "poids": [["defences", 0], ["life", 1000]]}
+        {**vide, "id": "Metadata/Items/Currency/CurrencyDelveCraftingAbyss", "nom": "Hollow Fossil", "poids": [],
+         "forces": ["DelveAbyssJewelSocket1"], "permis": ["helmet", "weapon"]},
+        {**vide, "id": "Metadata/Items/Currency/CurrencyDelveCraftingLife", "nom": "Pristine Fossil",
+         "poids": [["defences", 0], ["life", 1000]]},
+        {**vide, "id": "Metadata/Items/Currency/CurrencyDelveCraftingLuckyModRolls", "nom": "Sanctified Fossil",
+         "poids": [], "chanceux": True},
     ]
 
 

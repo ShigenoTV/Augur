@@ -88,6 +88,8 @@ pub struct Model {
     pub ilvl: u8,
     pub actions: Vec<Action>,
     weights: Vec<Option<AddW>>,
+    /// Poids de l'autre côté pour un Orb of Alchemy sous Omen of Sinistral / Dextral Alchemy.
+    weights_other: Vec<Option<AddW>>,
     /// Pour les actions `Essence` : (affixe, slot, classification) de chaque affixe garanti possible (un
     /// seul, ou deux à 50/50 pour Potent Liquid Ferocity/Contempt), précalculé une fois (ne dépend pas de
     /// l'état, contrairement aux monnaies à tirage pondéré).
@@ -301,6 +303,7 @@ impl Model {
             ilvl,
             actions,
             weights: vec![],
+            weights_other: vec![],
             essence_class: vec![],
             restart: MacroState::empty(Rarity::Normal),
             abandon_extra: (base_cost - salvage).max(0.0),
@@ -412,6 +415,24 @@ impl Model {
             .map(|a| match &a.kind {
                 ActionKind::Currency(c) => Some(m.add_weights(c)),
                 ActionKind::Abandon => None,
+            })
+            .collect();
+        m.weights_other = m
+            .actions
+            .iter()
+            .map(|a| match &a.kind {
+                ActionKind::Currency(c) if c.kind == CurrencyKind::Alchemy => {
+                    c.add_slot.map(|slot| {
+                        m.add_weights(&Currency {
+                            add_slot: Some(match slot {
+                                Slot::Prefix => Slot::Suffix,
+                                Slot::Suffix => Slot::Prefix,
+                            }),
+                            ..c.clone()
+                        })
+                    })
+                }
+                _ => None,
             })
             .collect();
         m.essence_class = m
@@ -999,11 +1020,17 @@ impl Model {
             // Normal ou Magique (0.3.1) : sur un objet magique, ses mods sont perdus
             Alchemy if s.rarity != Rarity::Rare => {
                 let mut dist = vec![(MacroState::empty(Rarity::Rare), 1.0)];
-                for _ in 0..4 {
+                // Omen of Sinistral / Dextral Alchemy : le maximum d'un côté (poids `w`), puis l'autre côté
+                // (poids `weights_other`)
+                let [(_, n1), (_, n2)] = self.pool.alchemy_draws(cur.add_slot);
+                let w2 = self.weights_other[ai].as_ref().unwrap_or(w);
+                for wk in
+                    std::iter::repeat_n(w, n1 as usize).chain(std::iter::repeat_n(w2, n2 as usize))
+                {
                     let mut next = Vec::new();
                     for (st, p) in dist {
                         let mut tmp = Vec::new();
-                        if self.add_outcomes(st, w, &mut tmp) {
+                        if self.add_outcomes(st, wk, &mut tmp) {
                             next.extend(tmp.into_iter().map(|(t, q)| (t, p * q)));
                         } else {
                             next.push((st, p));
@@ -1016,6 +1043,19 @@ impl Model {
             }
             Exalt if s.rarity == Rarity::Rare && self.has_room(&s) => {
                 self.add_outcomes(s, w, &mut v);
+                if cur.double {
+                    // Omen of Greater Exaltation : un second mod s'il reste une place
+                    let mut deux = Vec::new();
+                    for (s1, p1) in v.drain(..) {
+                        let mut ad = Vec::new();
+                        if self.has_room(&s1) && self.add_outcomes(s1, w, &mut ad) {
+                            deux.extend(ad.into_iter().map(|(t, q)| (t, p1 * q)));
+                        } else {
+                            deux.push((s1, p1));
+                        }
+                    }
+                    v = deux;
+                }
             }
             Chaos if s.rarity == Rarity::Rare => {
                 let mut rm = Vec::new();
@@ -1032,6 +1072,19 @@ impl Model {
             }
             Annul if s.rarity != Rarity::Normal => {
                 self.remove_outcomes(s, cur.remove_slot, Removal::of(cur), &mut v);
+                if cur.double {
+                    // Omen of Greater Annulment : un second retrait s'il reste un mod à retirer
+                    let mut deux = Vec::new();
+                    for (s1, p1) in v.drain(..) {
+                        let mut rm = Vec::new();
+                        if self.remove_outcomes(s1, cur.remove_slot, Removal::of(cur), &mut rm) {
+                            deux.extend(rm.into_iter().map(|(t, q)| (t, p1 * q)));
+                        } else {
+                            deux.push((s1, p1));
+                        }
+                    }
+                    v = deux;
+                }
             }
             Fracture if s.rarity == Rarity::Rare && n >= 4 && s.frac == 0 => {
                 let nf = n as f64;
@@ -1174,9 +1227,10 @@ impl Model {
                                 Slot::Suffix => ns >= cap_s,
                             };
                             let mut rm = Vec::new();
+                            // Omen of Sinistral / Dextral Crystallisation : retrait de ce côté seulement
                             if self.remove_outcomes(
                                 s,
-                                plein.then_some(one.1),
+                                cur.remove_slot.or(plein.then_some(one.1)),
                                 Removal::Random,
                                 &mut rm,
                             ) {

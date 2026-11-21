@@ -57,6 +57,7 @@ fn cur(id: &str, kind: CurrencyKind, cost: f64) -> Action {
             remove_desecrated_only: false,
             remove_lowest_level: false,
             requires_rare: false,
+            double: false,
             unit_cost: cost,
         }),
     }
@@ -516,4 +517,224 @@ fn zone_d_un_mod_a_plusieurs_groupes() {
         )
         .is_err()
     );
+}
+
+/// Omens du 21/11/2026 (Greater Exaltation / Annulment, Coronation, Alchemy) : la loi d'un essai dans le
+/// modèle abstrait colle à celle du moteur exact, depuis plusieurs objets. (Whittling, déjà dans le
+/// solveur, n'est pas comparé ici : le modèle prend la loi moyenne des niveaux des mods anonymes.)
+#[test]
+fn nouveaux_omens_meme_loi_que_le_moteur() {
+    use rand::SeedableRng;
+    let avec = |id: &str, kind: CurrencyKind, f: &dyn Fn(&mut Currency)| {
+        let mut a = cur(id, kind, 1.0);
+        if let ActionKind::Currency(c) = &mut a.kind {
+            f(c);
+        }
+        a
+    };
+    let actions = vec![
+        avec("exalt_x2", CurrencyKind::Exalt, &|c| c.double = true),
+        avec("exalt_x2_suffixes", CurrencyKind::Exalt, &|c| {
+            c.double = true;
+            c.add_slot = Some(Slot::Suffix);
+        }),
+        avec("annul_x2", CurrencyKind::Annul, &|c| c.double = true),
+        avec("annul_x2_prefixes", CurrencyKind::Annul, &|c| {
+            c.double = true;
+            c.remove_slot = Some(Slot::Prefix);
+        }),
+        avec("regal_prefixe", CurrencyKind::Regal, &|c| {
+            c.add_slot = Some(Slot::Prefix)
+        }),
+        avec("alchemy_prefixes", CurrencyKind::Alchemy, &|c| {
+            c.add_slot = Some(Slot::Prefix)
+        }),
+        avec("alchemy_suffixes", CurrencyKind::Alchemy, &|c| {
+            c.add_slot = Some(Slot::Suffix)
+        }),
+    ];
+    let pool = Arc::new(pool(30));
+    let goal = Arc::new(
+        Goal::new(
+            &pool,
+            &[
+                WantedAffix {
+                    group: 1,
+                    family: 0,
+                    max_tier: 1,
+                },
+                WantedAffix {
+                    group: 2,
+                    family: 0,
+                    max_tier: 1,
+                },
+            ],
+        )
+        .unwrap(),
+    );
+    let model = Model::new(pool.clone(), goal, 80, actions, 0.5, 0.0);
+    let idx = |id: &str| pool.affixes.iter().position(|a| a.id == id).unwrap() as AffixIdx;
+    let objet = |rarete: Rarity, ids: &[&str]| {
+        let mut it = ItemState::new(rarete, 80);
+        for id in ids {
+            it.push(Mod {
+                idx: idx(id),
+                fractured: false,
+                crafted: false,
+            });
+        }
+        it
+    };
+    let departs = [
+        objet(Rarity::Normal, &[]),
+        objet(Rarity::Magic, &["P_T1"]),
+        objet(Rarity::Rare, &["P_T1", "bs3"]),
+        objet(Rarity::Rare, &["P_T1", "bp1", "bp2", "bs4"]),
+        objet(Rarity::Rare, &["S_T1", "bp5", "bs6", "bs7", "bp8"]),
+    ];
+    let mut rng = rand::rngs::SmallRng::seed_from_u64(21);
+    let mut compares = 0;
+    for depart in departs {
+        let s = model.project(&depart).unwrap();
+        for (ai, act) in model.actions.iter().enumerate() {
+            let ActionKind::Currency(c) = &act.kind else {
+                continue;
+            };
+            let mut tr = Vec::new();
+            model.outcomes(s, ai, &mut tr);
+            const N: usize = 60_000;
+            let mut emp: Vec<(MacroState, f64)> = Vec::new();
+            let mut appliquee = 0;
+            for _ in 0..N {
+                let mut it = depart;
+                // un Exalted sous Omen sans mod tirable de ce côté est « appliqué » sans rien changer par
+                // le moteur, refusé par le modèle (comportement antérieur à ces Omens) : non compté
+                if pool.apply(&mut it, c, &mut rng) == Outcome::Applied
+                    && ((it.len(), it.rarity) != (depart.len(), depart.rarity))
+                {
+                    appliquee += 1;
+                    let t = model.project(&it).unwrap();
+                    match emp.iter_mut().find(|e| e.0 == t) {
+                        Some(e) => e.1 += 1.0 / N as f64,
+                        None => emp.push((t, 1.0 / N as f64)),
+                    }
+                }
+            }
+            assert_eq!(
+                tr.is_empty(),
+                appliquee == 0,
+                "{} applicable dans un seul des deux, depuis {s:?}",
+                act.id
+            );
+            for t in &tr {
+                let e = emp.iter().find(|e| e.0 == t.to).map_or(0.0, |e| e.1);
+                assert!(
+                    (t.p - e).abs() < 0.02,
+                    "{} depuis {s:?} vers {:?} : modèle {:.4}, moteur {:.4}",
+                    act.id,
+                    t.to,
+                    t.p,
+                    e
+                );
+                compares += 1;
+            }
+            let couvert: f64 = tr.iter().map(|t| t.p).sum();
+            assert!(tr.is_empty() || (couvert - 1.0).abs() < 1e-9);
+        }
+    }
+    assert!(compares > 50, "{compares} comparaisons");
+}
+
+/// Plan complet avec les Omens du 21/11/2026 : jamais plus cher que sans eux, et la politique simulée
+/// sur le moteur exact retrouve le coût calculé.
+#[test]
+fn plan_avec_les_nouveaux_omens() {
+    let avec = |id: &str, kind: CurrencyKind, cout: f64, f: &dyn Fn(&mut Currency)| {
+        let mut a = cur(id, kind, cout);
+        if let ActionKind::Currency(c) = &mut a.kind {
+            f(c);
+        }
+        a
+    };
+    let extra = vec![
+        avec("exalt_x2", CurrencyKind::Exalt, 1.3, &|c| c.double = true),
+        avec("exalt_x2_suffixes", CurrencyKind::Exalt, 1.6, &|c| {
+            c.double = true;
+            c.add_slot = Some(Slot::Suffix);
+        }),
+        avec("annul_x2", CurrencyKind::Annul, 2.5, &|c| c.double = true),
+        avec("regal_prefixe", CurrencyKind::Regal, 0.5, &|c| {
+            c.add_slot = Some(Slot::Prefix)
+        }),
+        avec("alchemy_suffixes", CurrencyKind::Alchemy, 0.6, &|c| {
+            c.add_slot = Some(Slot::Suffix)
+        }),
+    ];
+    let (m, s) = build(40, 2, extra);
+    let root = start_id(&m, &s);
+    let (m0, s0) = build(40, 2, vec![]);
+    let v_plain = s0.value[start_id(&m0, &s0)];
+    assert!(s.value[root] <= v_plain + 1e-9);
+    let mc = verify_policy(
+        &m,
+        &s,
+        ItemState::new(Rarity::Normal, 80),
+        40_000,
+        5_000,
+        7,
+        |_, _| true,
+    )
+    .unwrap();
+    let rel = (mc.mean_cost - s.value[root]).abs() / s.value[root];
+    assert!(
+        rel < 0.07,
+        "V={:.3} MC={:.3} (écart {:.1} %)",
+        s.value[root],
+        mc.mean_cost,
+        rel * 100.0
+    );
+}
+
+/// Omen of Sinistral Alchemy : 3 préfixes et 1 suffixe ; Omen of Sinistral Crystallisation : l'Essence
+/// Perfect retire un préfixe, même quand son mod est un suffixe et que le côté des suffixes a de la place.
+#[test]
+fn alchemy_et_crystallisation_sur_le_moteur() {
+    use rand::SeedableRng;
+    let p = pool(10);
+    let mut rng = rand::rngs::SmallRng::seed_from_u64(3);
+    let ActionKind::Currency(mut alch) = cur("a", CurrencyKind::Alchemy, 1.0).kind else {
+        panic!()
+    };
+    alch.add_slot = Some(Slot::Prefix);
+    for _ in 0..200 {
+        let mut it = ItemState::new(Rarity::Normal, 80);
+        assert_eq!(p.apply(&mut it, &alch, &mut rng), Outcome::Applied);
+        assert_eq!(
+            (p.count(&it, Slot::Prefix), p.count(&it, Slot::Suffix)),
+            (3, 1)
+        );
+    }
+    let ActionKind::Currency(mut ess) = cur("e", CurrencyKind::Essence, 1.0).kind else {
+        panic!()
+    };
+    let cible = p.affixes.iter().position(|a| a.id == "S_T1").unwrap() as AffixIdx;
+    ess.target = Some(cible);
+    ess.requires_rare = true;
+    ess.remove_slot = Some(Slot::Prefix);
+    let idx = |id: &str| p.affixes.iter().position(|a| a.id == id).unwrap() as AffixIdx;
+    for _ in 0..200 {
+        let mut it = ItemState::new(Rarity::Rare, 80);
+        for id in ["bp1", "bp2", "bp3", "bs1"] {
+            it.push(Mod {
+                idx: idx(id),
+                fractured: false,
+                crafted: false,
+            });
+        }
+        assert_eq!(p.apply(&mut it, &ess, &mut rng), Outcome::Applied);
+        assert_eq!(
+            (p.count(&it, Slot::Prefix), p.count(&it, Slot::Suffix)),
+            (2, 2)
+        );
+    }
 }

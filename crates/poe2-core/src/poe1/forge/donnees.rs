@@ -54,6 +54,18 @@ pub struct FossilePoe1 {
     pub nom: String,
     /// (étiquette de mod, multiplicateur en %) : 1000 = ×10, 15 = ×0,15, 0 = mods bloqués.
     pub poids: Vec<(String, u32)>,
+    /// Mods `delve` ajoutés au tirage (Faceted Fossil : niveau des gemmes de chaque attribut).
+    #[serde(default)]
+    pub ajoutes: Vec<String>,
+    /// Mods forcés, posés avant le tirage (Hollow Fossil : Abyssal Socket).
+    #[serde(default)]
+    pub forces: Vec<String>,
+    /// Le fossile ne s'utilise que sur une base portant une de ces étiquettes (vide : toutes).
+    #[serde(default)]
+    pub permis: Vec<String>,
+    /// Tirage « chanceux » (Sanctified Fossil) : les mods de haut niveau sortent plus souvent.
+    #[serde(default)]
+    pub chanceux: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -98,6 +110,9 @@ pub struct ModPoe1 {
     /// Mod artisanal, posé seulement par l'établi.
     #[serde(default)]
     pub artisanal: bool,
+    /// Mod `delve`, tiré ou forcé seulement par un fossile (Faceted, Hollow).
+    #[serde(default)]
+    pub fossile: bool,
     /// Première stat (min, max), pour classer un mod d'Essence ou d'établi parmi les tiers.
     #[serde(default)]
     pub valeur: Option<(i64, i64)>,
@@ -168,6 +183,9 @@ pub struct PoolPoe1 {
     pub essences: Vec<EssenceBase>,
     /// Crafts d'établi de la classe (mod artisanal présent dans le pool, poids nul).
     pub etabli: Vec<EtabliBase>,
+    /// Mods `delve` possibles sur la base (poids nul dans le pool) : (affixe, vrai poids sur la base),
+    /// rendus tirables ou forcés par un fossile.
+    pub mods_fossiles: Vec<(AffixIdx, u32)>,
 }
 
 /// Un craft d'établi utilisable sur la base.
@@ -229,6 +247,9 @@ pub fn construire_pool(
         .mods
         .iter()
         .filter_map(|m| {
+            if m.fossile {
+                return (poids(&m.spawn, &tags) > 0).then_some((m, 0));
+            }
             let w = if m.essence || m.artisanal {
                 0
             } else {
@@ -337,6 +358,12 @@ pub fn construire_pool(
         })
         .collect();
     etabli.sort_by_key(|e| e.affixe);
+    let mods_fossiles = retenus
+        .iter()
+        .enumerate()
+        .filter(|(_, (m, _))| m.fossile)
+        .map(|(i, (m, _))| (i as AffixIdx, poids(&m.spawn, &tags)))
+        .collect();
 
     Ok(PoolPoe1 {
         base: b,
@@ -345,6 +372,7 @@ pub fn construire_pool(
         pool: AffixPool::new(affixes),
         essences,
         etabli,
+        mods_fossiles,
     })
 }
 

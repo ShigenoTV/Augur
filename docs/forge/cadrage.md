@@ -74,7 +74,7 @@ donc sur un prix d'achat que le joueur relève lui-même (point 8 ci-dessous).
    croisés avec `craft_proba.py` sur trois vraies bases (`tools/theorycraft/fixture_forge.py`).
 3. **Solveur** (`forge::solveur`, `forge::catalogue`) : reverse-crafting repris de `craft-solver` (MDP, policy
    iteration), coût espéré, quantiles P50 / P90, plan de décision, vérification sur le moteur exact ; catalogue des
-   18 monnaies (Greater / Perfect compris) et des 6 Omens d'Exaltation, d'Annulment et d'Erasure. **Essences**
+   18 monnaies (Greater / Perfect compris) et des Omens (voir « Omens » plus bas). **Essences**
    (08/11) : mod garanti par classe d'après Craft of Exile (`tools/theorycraft/coe_essences.py`,
    `donnees/essences-coe.json`). Depuis le 08/11 aussi les Essences à plusieurs mods possibles (Infinite,
    Enhancement, Greater Battle, Abyss) et les 13 Alloys ; une Essence ou un Alloy n'est proposé que s'il a un
@@ -169,3 +169,33 @@ abstrait du solveur ne sait pas quels mauvais affixes les bloqueraient. Un objec
 hybride et un mod de l'un de ses groupes (Transcendent + Dextérité) est refusé.
 
 `tools/theorycraft/coe_controle.py` vérifie aussi, base par base, les mods écartés par chaque niveau minimum.
+
+
+## Omens (21/11/2026)
+
+Tous les Omens qui touchent aux affixes, hors Désécration, sont au catalogue. Règles relevées dans l'émulateur
+de Craft of Exile (`exalt`, `annul`, `poe2_alchemy`, `regalParams`, `poe2_essence`), sans copier de données :
+
+| Omen | Monnaie | Effet dans Forge |
+|---|---|---|
+| Sinistral / Dextral Exaltation | Exalted (toutes) | mod ajouté du côté choisi |
+| Greater Exaltation | Exalted (toutes) | deux mods ajoutés, le second seulement s'il reste une place ; se combine avec Sinistral / Dextral Exaltation |
+| Sinistral / Dextral Annulment | Annulment | retrait du côté choisi |
+| Greater Annulment | Annulment | deux mods retirés (le second s'il en reste un) ; se combine avec Sinistral / Dextral Annulment |
+| Sinistral / Dextral Erasure | Chaos (toutes) | retrait du côté choisi |
+| Whittling | Chaos (toutes) | retrait du mod du niveau le plus bas (égalité : au hasard) |
+| Sinistral / Dextral Coronation | Regal (toutes) | mod ajouté du côté choisi |
+| Sinistral / Dextral Alchemy | Alchemy | autant de mods que possible du côté choisi (3 en général), puis le reste des 4 de l'autre côté |
+| Sinistral / Dextral Crystallisation | Essence Perfect ou Corrupted | le mod retiré avant la pose est pris du côté choisi |
+
+Un Omen sans prix (ni cote poe.ninja, ni saisie) n'est pas proposé. Le 21/11, poe.ninja ne cote ni Greater
+Annulment, ni Coronation, ni Alchemy : il faut saisir leur prix dans l'onglet Prix pour que le plan les utilise.
+
+Pas au catalogue : **Homogenising Exaltation / Coronation** (le mod ajouté doit partager une étiquette avec un mod
+déjà présent ; l'état abstrait du solveur ne connaît pas les étiquettes des mods hors objectif), **Catalysing
+Exaltation** (qualité de catalyseur, que Forge ne suit pas), les Omens de Désécration (Necromancy, Sovereign,
+Liege, Blackblooded, Light, Abyssal Echoes, Putrefaction : pas de poids des mods désacralisés) et ceux qui ne
+touchent pas aux affixes (Sanctification, Blessed, Corruption, Chance, Ancients, Omens de Waystone…).
+
+Tests : `solveur::tests::nouveaux_omens_meme_loi_que_le_moteur` (loi d'un essai, modèle contre moteur exact,
+depuis cinq objets), `plan_avec_les_nouveaux_omens` (plan complet simulé), `alchemy_et_crystallisation_sur_le_moteur`.

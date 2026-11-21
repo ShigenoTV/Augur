@@ -804,7 +804,7 @@ export function ForgePoe1Card() {
               voulus={voulus}
               onToggle={toggle}
               onTier={setTier}
-              essenceHint="Posé seulement par une Essence"
+              essenceHint="Posé seulement par une Essence ou un fossile"
             />
             <AffixColumn
               slot="suffix"
@@ -812,7 +812,7 @@ export function ForgePoe1Card() {
               voulus={voulus}
               onToggle={toggle}
               onTier={setTier}
-              essenceHint="Posé seulement par une Essence"
+              essenceHint="Posé seulement par une Essence ou un fossile"
             />
           </div>
           <div className="flex items-center gap-3">

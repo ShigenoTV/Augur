@@ -39,7 +39,7 @@ pub const CATEGORIE_ALLOYS: &str = "Verisium";
 
 /// Identifiant Forge -> (catégorie poe.ninja, identifiant poe.ninja). La base neuve et sa revente
 /// n'ont pas de cote : elles restent saisies par le joueur.
-pub const SOURCES: [(&str, &str, &str); 25] = [
+pub const SOURCES: [(&str, &str, &str); 34] = [
     ("transmute", "Currency", "transmute"),
     (
         "transmute_greater",
@@ -94,6 +94,43 @@ pub const SOURCES: [(&str, &str, &str); 25] = [
         "omen-of-sinistral-erasure",
     ),
     ("omen_dextral_erasure", "Ritual", "omen-of-dextral-erasure"),
+    (
+        "omen_greater_exaltation",
+        "Ritual",
+        "omen-of-greater-exaltation",
+    ),
+    (
+        "omen_greater_annulment",
+        "Ritual",
+        "omen-of-greater-annulment",
+    ),
+    ("omen_whittling", "Ritual", "omen-of-whittling"),
+    (
+        "omen_sinistral_coronation",
+        "Ritual",
+        "omen-of-sinistral-coronation",
+    ),
+    (
+        "omen_dextral_coronation",
+        "Ritual",
+        "omen-of-dextral-coronation",
+    ),
+    (
+        "omen_sinistral_alchemy",
+        "Ritual",
+        "omen-of-sinistral-alchemy",
+    ),
+    ("omen_dextral_alchemy", "Ritual", "omen-of-dextral-alchemy"),
+    (
+        "omen_sinistral_crystallisation",
+        "Ritual",
+        "omen-of-sinistral-crystallisation",
+    ),
+    (
+        "omen_dextral_crystallisation",
+        "Ritual",
+        "omen-of-dextral-crystallisation",
+    ),
 ];
 
 /// Relevé de prix poe.ninja, en Exalted Orbs.
@@ -294,7 +331,7 @@ mod tests {
         // Pas de ligne `exalted` chez les Omens : taux de `core.rates`
         let omens = fixture("ninja-ritual.json");
         let (prix, manquants) = extraire(&omens, "Ritual", "Forbidden Rites").unwrap();
-        assert!(manquants.is_empty());
+        assert_eq!(manquants, ABSENTS_DU_RELEVE_DU_07_11);
         assert_eq!(prix.len(), 6);
         let brut = omens["lines"]
             .as_array()
@@ -329,6 +366,19 @@ mod tests {
         assert!((prix["the-runebinders-alloy"] - 0.5813 * 666.2).abs() < 1e-9);
     }
 
+    /// Omens ajoutés au catalogue le 21/11/2026, absents du relevé enregistré le 07/11.
+    const ABSENTS_DU_RELEVE_DU_07_11: [&str; 9] = [
+        "omen_greater_exaltation",
+        "omen_greater_annulment",
+        "omen_whittling",
+        "omen_sinistral_coronation",
+        "omen_dextral_coronation",
+        "omen_sinistral_alchemy",
+        "omen_dextral_alchemy",
+        "omen_sinistral_crystallisation",
+        "omen_dextral_crystallisation",
+    ];
+
     #[test]
     fn releve_complet_et_fusion_avec_le_precedent() {
         let reponses = [
@@ -336,8 +386,13 @@ mod tests {
             ("Ritual", fixture("ninja-ritual.json")),
         ];
         let r = releve("Forbidden Rites", 1000, &reponses, None).unwrap();
-        assert_eq!(r.prix.len(), SOURCES.len());
-        assert!(r.manquants.is_empty());
+        assert_eq!(
+            r.prix.len(),
+            SOURCES.len() - ABSENTS_DU_RELEVE_DU_07_11.len()
+        );
+        let mut absents = ABSENTS_DU_RELEVE_DU_07_11.to_vec();
+        absents.sort_unstable();
+        assert_eq!(r.manquants, absents);
 
         // une heure plus tard, le Chaos n'est plus coté : il garde sa valeur et sa date
         let sans_chaos = json!({"core": {"primary": "exalted"}, "lines": [{"id": "exalted", "primaryValue": 1.0}]});

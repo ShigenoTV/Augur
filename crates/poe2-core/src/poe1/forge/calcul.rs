@@ -395,6 +395,54 @@ pub fn pool_fossiles(pool: &AffixPool, fossiles: &[&FossilePoe1]) -> AffixPool {
     p
 }
 
+/// Pool d'une base sous des fossiles, avec leurs effets spéciaux (règles de l'émulateur Craft of Exile
+/// pour PoE 1, `fossils`, `fossilsParameters`, `getFilteredModPool`), et le mod qu'ils forcent :
+///
+/// - **Faceted** : ses mods `delve` (niveau des gemmes) entrent dans le tirage avec leur vrai poids sur
+///   la base, puis les poids par étiquette s'appliquent comme aux autres mods ;
+/// - **Sanctified** : chaque poids devient `poids × (1 + (niveau du mod − 40) / 100)` avant les
+///   étiquettes (les mods de haut niveau sortent plus souvent, ceux sous le niveau 40 moins) ;
+/// - **Hollow** : l'Abyssal Socket est posé d'abord, le reste de l'objet est tiré ensuite (comme le mod
+///   garanti d'une Essence). Seulement sur une base de ses étiquettes permises (arme, casque, bottes,
+///   gants, armure).
+///
+/// `None` si un fossile ne s'utilise pas sur cette base.
+pub fn pool_fossiles_base(
+    pb: &PoolPoe1,
+    fossiles: &[&FossilePoe1],
+) -> Option<(AffixPool, Option<AffixIdx>)> {
+    let tags = &pb.base.tags;
+    if fossiles
+        .iter()
+        .any(|f| !f.permis.is_empty() && !f.permis.iter().any(|t| tags.contains(t)))
+    {
+        return None;
+    }
+    let mut pool = pb.pool.clone();
+    let mut force = None;
+    for f in fossiles {
+        for (i, w) in &pb.mods_fossiles {
+            let a = &mut pool.affixes[*i as usize];
+            if f.ajoutes.contains(&a.id) {
+                a.weight = *w;
+            }
+            if f.forces.contains(&a.id) {
+                force = Some(*i);
+            }
+        }
+        if !f.forces.is_empty() && force.is_none() {
+            return None;
+        }
+    }
+    if fossiles.iter().any(|f| f.chanceux) {
+        for a in &mut pool.affixes {
+            let m = 1.0 + (f64::from(a.req_ilvl) - 40.0) / 100.0;
+            a.weight = (f64::from(a.weight) * m).round().max(0.0) as u32;
+        }
+    }
+    Some((pool_fossiles(&pool, fossiles), force))
+}
+
 /// Méthode Alteration (+ Augmentation quand elle peut finir l'objet) : chance par essai et nombre
 /// moyen d'Augmentations par essai. `None` si l'objectif ne tient pas sur un objet Magique.
 pub fn chance_alteration(pool: &AffixPool, goal: &Goal, ilvl: u8) -> Option<(f64, f64)> {
@@ -532,8 +580,8 @@ enum Spam<'a> {
     Alteration,
     Rare,
     Essence(&'a super::donnees::EssenceBase),
-    /// Fossiles dans un Chaotic Resonator, avec le pool aux poids changés.
-    Fossiles(Vec<&'a FossilePoe1>, AffixPool),
+    /// Fossiles dans un Chaotic Resonator, avec le pool aux poids changés et le mod forcé.
+    Fossiles(Vec<&'a FossilePoe1>, AffixPool, Option<AffixIdx>),
 }
 
 /// Combinaisons de `k` éléments parmi `n` (indices croissants).
@@ -554,28 +602,28 @@ fn combinaisons(n: usize, k: usize) -> Vec<Vec<usize>> {
     out
 }
 
-/// Combinaison de fossiles retenue : fossiles, pool aux poids changés, chance d'un essai.
-type Choix<'a> = (Vec<&'a FossilePoe1>, AffixPool, f64);
+/// Combinaison de fossiles retenue : fossiles, pool aux poids changés, mod forcé, chance d'un essai.
+pub(super) type Choix<'a> = (Vec<&'a FossilePoe1>, AffixPool, Option<AffixIdx>, f64);
 
 /// Meilleure combinaison de fossiles pour chaque taille de résonateur (1 à 4 places) : coût moyen
 /// minimal quand tous les prix sont connus, sinon chance maximale. Seuls les fossiles qui, seuls,
 /// améliorent la chance du Chaos Orb sont combinés (les `FOSSILES_CANDIDATS` meilleurs).
-fn meilleurs_fossiles<'a>(
-    pool: &AffixPool,
+pub(super) fn meilleurs_fossiles<'a>(
+    pb: &PoolPoe1,
     goal: &Goal,
-    ilvl: u8,
     fossiles: &'a [FossilePoe1],
     prix: &BTreeMap<String, f64>,
 ) -> Vec<Choix<'a>> {
+    let (pool, ilvl) = (&pb.pool, pb.ilvl);
     let base = chance_rare(pool, goal, ilvl, None, None);
+    let essai = |fs: &[&FossilePoe1]| -> Option<(AffixPool, Option<AffixIdx>, f64)> {
+        let (p, force) = pool_fossiles_base(pb, fs)?;
+        let chance = chance_rare(&p, goal, ilvl, force, None);
+        Some((p, force, chance))
+    };
     let mut seuls: Vec<(&FossilePoe1, f64)> = fossiles
         .iter()
-        .map(|f| {
-            (
-                f,
-                chance_rare(&pool_fossiles(pool, &[f]), goal, ilvl, None, None),
-            )
-        })
+        .filter_map(|f| Some((f, essai(&[f])?.2)))
         .filter(|(_, p)| *p > base * 1.0001)
         .collect();
     seuls.sort_by(|a, b| b.1.total_cmp(&a.1).then(a.0.nom.cmp(&b.0.nom)));
@@ -585,8 +633,9 @@ fn meilleurs_fossiles<'a>(
         let mut meilleur: Option<((u8, f64), Choix)> = None;
         for c in combinaisons(seuls.len(), k + 1) {
             let fs: Vec<&FossilePoe1> = c.iter().map(|&i| seuls[i].0).collect();
-            let p = pool_fossiles(pool, &fs);
-            let chance = chance_rare(&p, goal, ilvl, None, None);
+            let Some((p, force, chance)) = essai(&fs) else {
+                continue;
+            };
             if chance <= 0.0 {
                 continue;
             }
@@ -604,7 +653,7 @@ fn meilleurs_fossiles<'a>(
                 .as_ref()
                 .is_none_or(|(m, _)| note.0 < m.0 || (note.0 == m.0 && note.1 < m.1))
             {
-                meilleur = Some((note, (fs, p, chance)));
+                meilleur = Some((note, (fs, p, force, chance)));
             }
         }
         if let Some((_, choix)) = meilleur {
@@ -642,7 +691,7 @@ pub fn methodes(
             },
             Spam::Rare => Some((chance_rare(pool, &goal, ilvl, None, etabli), 0.0)),
             Spam::Essence(e) => Some((chance_rare(pool, &goal, ilvl, Some(e.affixe), etabli), 0.0)),
-            Spam::Fossiles(_, p) => Some((chance_rare(p, &goal, ilvl, None, etabli), 0.0)),
+            Spam::Fossiles(_, p, force) => Some((chance_rare(p, &goal, ilvl, *force, etabli), 0.0)),
         }
     };
 
@@ -655,9 +704,9 @@ pub fn methodes(
     );
     let fossiles = &super::donnees::donnees()?.fossiles;
     spams.extend(
-        meilleurs_fossiles(pool, &goal, ilvl, fossiles, prix)
+        meilleurs_fossiles(pb, &goal, fossiles, prix)
             .into_iter()
-            .map(|(fs, p, _)| Spam::Fossiles(fs, p)),
+            .map(|(fs, p, force, _)| Spam::Fossiles(fs, p, force)),
     );
 
     for spam in &spams {
@@ -684,7 +733,7 @@ pub fn methodes(
                     "Objet Normal seulement : Orb of Scouring entre deux essais.".to_string()
                 },
             ),
-            Spam::Fossiles(fs, _) => {
+            Spam::Fossiles(fs, _, _) => {
                 let noms: Vec<&str> = fs.iter().map(|f| f.nom.as_str()).collect();
                 (
                     format!("fossiles:{}", noms.join("+")),
@@ -695,9 +744,14 @@ pub fn methodes(
                         + if fs.len() > 1 { " (fossiles)" } else { " (fossile)" },
                     "fossile",
                     format!(
-                        "{} avec {} : refait l'objet (Normal ou Rare) en Rare, 4 à 6 mods.",
+                        "{} avec {} : refait l'objet (Normal ou Rare) en Rare, 4 à 6 mods.{}",
                         RESONATEURS[fs.len() - 1],
-                        noms.join(", ")
+                        noms.join(", "),
+                        if fs.iter().any(|f| !f.forces.is_empty()) {
+                            " L'Abyssal Socket est posé d'abord."
+                        } else {
+                            ""
+                        }
                     ),
                 )
             }
@@ -708,7 +762,7 @@ pub fn methodes(
                 Spam::Rare => vec![conso(CHAOS, 1.0)],
                 Spam::Essence(e) if e.essence.sur_rare => vec![conso(&e.essence.nom, 1.0)],
                 Spam::Essence(e) => vec![conso(&e.essence.nom, 1.0), conso(SCOURING, 1.0)],
-                Spam::Fossiles(fs, _) => fs
+                Spam::Fossiles(fs, _, _) => fs
                     .iter()
                     .map(|f| conso(&f.nom, 1.0))
                     .chain([conso(RESONATEURS[fs.len() - 1], 1.0)])
