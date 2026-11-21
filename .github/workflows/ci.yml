@@ -171,7 +171,10 @@ jobs:
         run: |
           $setup = Join-Path $env:RUNNER_TEMP 'Augur_0.1.36_x64-setup.exe'
           Invoke-WebRequest 'https://github.com/ShigenoTV/Augur/releases/download/v0.1.36/Augur_0.1.36_x64-setup.exe' -OutFile $setup
-          pwsh -NoProfile -File ./scripts/release/smoke-test-windows.ps1 -Installer $setup -Version 0.1.36
-          if ($LASTEXITCODE -eq 0) { Write-Host '::error::La v0.1.36 a passé le test : il ne détecte pas le crash.'; exit 1 }
+          $out = pwsh -NoProfile -File ./scripts/release/smoke-test-windows.ps1 -Installer $setup -Version 0.1.36 2>&1 | Out-String
+          $code = $LASTEXITCODE
+          Write-Host ($out -replace '::error::', 'attendu: ')
+          if ($code -eq 0) { Write-Host '::error::La v0.1.36 a passé le test : il ne détecte pas le crash.'; exit 1 }
+          if ($out -notmatch "Test de démarrage : (Augur s'est arrêté|erreur écrite)") { Write-Host '::error::Échec pour une autre raison que le crash.'; exit 1 }
           Write-Host 'OK : le test a bien refusé la v0.1.36.'
           exit 0
