@@ -216,6 +216,7 @@ describe("arbre du plan PoE 1", () => {
     sansPrix: [],
     racine: 0,
     relances: [],
+    simulation: null,
     etapes: [
       etape({
         id: 0,

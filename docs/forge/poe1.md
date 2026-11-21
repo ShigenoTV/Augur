@@ -132,6 +132,23 @@ Fossiles à effet spécial, fossiles dans le plan conseillé (le solveur ne les 
 de 4 mods voulus, multimod, suivi dans l'overlay (Ctrl+Alt+C), mise à jour PoE 1
 dans `mise_a_jour.py`.
 
+## Dispersion du coût et budget (21/11, idée n°6 validée par Max)
+
+Le coût moyen ne dit pas combien prévoir. Avec le plan, le solveur suit sa politique craft après craft sur son
+propre graphe (`simuler_plan`, graine fixe : mêmes chiffres d'un calcul à l'autre) et renvoie `simulation` :
+médiane, 9 sur 10, 99 sur 100 et les quantiles tous les 0,5 %. Le nombre de crafts simulés s'adapte à la
+longueur moyenne d'un craft (2 000 à 20 000, environ 2·10⁷ actions au total), et un craft trop long est compté
+comme un échec. La moyenne simulée retrouve le coût moyen du solveur (test à 3 %).
+
+Le panneau en tire la même bande de chiffres qu'en PoE 2 (coût moyen, une fois sur deux, budget sûr 9 sur 10)
+et « Avec mon budget » : le joueur saisit un montant dans la monnaie d'affichage et voit sa chance de finir
+(même lecture prudente des quantiles qu'en PoE 2, `chanceQuantiles`). Montants hors prix de la base, comme le
+coût moyen.
+
+**Prix anciens** : la cote PoE 1 porte l'heure du relevé (`releveA`). Au-delà de 24 h (appli restée ouverte),
+un avertissement s'affiche au-dessus du résultat avec « Actualiser », qui relit poe.ninja et relance le même
+calcul. Aucune requête au site de trade. Même avertissement dans la Forge PoE 2 (relevé de l'onglet Prix).
+
 ## Pas à pas du plan conseillé
 
 Le solveur renvoie, avec le plan, l'action conseillée dans chaque situation où le plan passe au moins une

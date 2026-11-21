@@ -412,6 +412,19 @@ export type ForgePoe1Plan = {
   racine: number;
   /** Lois des relances (Alchemy, Chaos, Essence…) partagées par plusieurs situations. */
   relances: ForgePoe1Issues[];
+  /** Dispersion du coût : le plan suivi sur de nombreux crafts simulés (null : pas de simulation). */
+  simulation: ForgePoe1Simulation | null;
+};
+/** Crafts simulés en suivant le plan PoE 1 (coûts en Chaos, hors prix de la base). */
+export type ForgePoe1Simulation = {
+  essais: number;
+  interrompus: number;
+  moyenne: number;
+  mediane: number;
+  p90: number;
+  p99: number;
+  /** Coût aux quantiles 0 %, 0,5 %, …, 100 % des crafts aboutis. */
+  quantiles: number[];
 };
 /** Issue de l'action conseillée : situation d'arrivée (null : objet fini) et probabilité. */
 export type ForgePoe1Branche = { vers: number | null; probabilite: number };
@@ -449,7 +462,8 @@ export type ForgePoe1Result = {
 };
 /** Objet de départ PoE 1 lu par la Forge (poe1::forge::depart). */
 export type ForgePoe1StartItem = ForgeStartItem & { influence: string | null; metamod: string | null };
-export type ForgePoe1Prices = { league: string; prix: Record<string, number>; erreur: string | null };
+/** `releveA` : heure du relevé poe.ninja (secondes unix). */
+export type ForgePoe1Prices = { league: string; prix: Record<string, number>; erreur: string | null; releveA: number };
 
 /** Conseil de l'overlay pour l'objet en cours de craft, plan PoE 1 suivi (poe1::forge::suivi). */
 export type ForgePoe1Tip = {

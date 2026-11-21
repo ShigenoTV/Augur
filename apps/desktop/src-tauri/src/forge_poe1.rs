@@ -280,6 +280,8 @@ pub struct PrixPoe1 {
     pub prix: BTreeMap<String, f64>,
     /// Page poe.ninja injoignable : les prix manquants restent à saisir.
     pub erreur: Option<String>,
+    /// Heure du relevé (secondes unix), à la durée du cache poe.ninja près (30 min).
+    pub releve_a: u64,
 }
 
 pub async fn prix(app: &AppHandle) -> Result<PrixPoe1, AppError> {
@@ -306,5 +308,6 @@ pub async fn prix(app: &AppHandle) -> Result<PrixPoe1, AppError> {
         league,
         prix,
         erreur,
+        releve_a: maintenant_ms() / 1000,
     })
 }

@@ -14,11 +14,12 @@ import {
   type ForgePoe1StartItem,
   type ForgeWanted,
 } from "../bridge";
+import { BudgetChance, PrixAnciens } from "./BudgetChance";
 import { DecisionTree } from "./DecisionTree";
-import { AffichagePoe1Context, useCoutPoe1 } from "./devisePoe1";
+import { AffichagePoe1Context, deviseSaisiePoe1, useCoutPoe1, versChaos } from "./devisePoe1";
 import { AffixColumn, StartItemPicker } from "./ForgeCard";
 import { AchatPoe1, HistoriquePoe1 } from "./ForgePoe1Suivi";
-import { cleAffixe, etapes, formatCount, libelleCourt, lirePrix } from "./forge";
+import { agePrixAnciens, chanceQuantiles, cleAffixe, etapes, formatCount, libelleCourt, lirePrix } from "./forge";
 import {
   VOULUS_MAX_PLAN,
   arbrePoe1,
@@ -241,6 +242,17 @@ function PasAPas({ plan, noms }: { plan: ForgePoe1Plan; noms: string[] }) {
   );
 }
 
+/** Chiffre clé du plan (même bande que la Forge PoE 2). */
+function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div className="border-ink-700 px-3 py-2 [&:not(:last-child)]:border-r">
+      <p className="text-xs text-text-subtle">{label}</p>
+      <p className="font-display text-lg font-semibold text-accent">{value}</p>
+      {hint && <p className="text-[11px] text-text-subtle">{hint}</p>}
+    </div>
+  );
+}
+
 /** Plan au coût moyen minimal, quand le solveur en a trouvé un. */
 function PlanConseille({
   plan,
@@ -260,6 +272,7 @@ function PlanConseille({
   prixChanges: boolean;
 }) {
   const cout = useCoutPoe1();
+  const { affichage } = useContext(AffichagePoe1Context);
   const [vue, setVue] = useState<"arbre" | "etapes" | "courses">("arbre");
   const arbre = useMemo(() => (plan ? arbrePoe1(plan, noms, prix) : null), [plan, noms, prix]);
   if (!plan) {
@@ -271,6 +284,7 @@ function PlanConseille({
       </p>
     );
   }
+  const sim = plan.simulation;
   // Les méthodes de spam partent d'une base neuve : pas de comparaison depuis l'objet du joueur.
   const gain = !depuisObjet && spam != null && plan.coutMoyen < spam * 0.98 ? spam / plan.coutMoyen : null;
   return (
@@ -288,6 +302,24 @@ function PlanConseille({
         <span className="text-text-primary">{plan.depart}</span>. Ensuite, à chaque étape, la meilleure action selon
         l'objet obtenu.
       </p>
+      <div className="grid grid-cols-3 rounded-panel border border-ink-700 bg-ink-950">
+        <Stat label="Coût moyen" value={cout(plan.coutMoyen)} hint={depuisObjet ? "depuis ton objet" : "hors prix de la base"} />
+        <Stat
+          label="Une fois sur deux"
+          value={cout(sim?.mediane)}
+          hint={sim ? `médiane de ${formatCount(sim.essais)} crafts simulés` : undefined}
+        />
+        <Stat label="Budget sûr (9 sur 10)" value={cout(sim?.p90)} hint={sim ? `99 sur 100 : ${cout(sim.p99)}` : undefined} />
+      </div>
+      {sim && (
+        <BudgetChance
+          cle="augur.forgePoe1.budget"
+          devise={deviseSaisiePoe1(affichage)}
+          versBase={(v) => versChaos(v, affichage)}
+          chance={(b) => chanceQuantiles(sim.quantiles, sim.essais, sim.interrompus, b)}
+          note={`Budget ${depuisObjet ? "depuis ton objet" : "hors prix de la base"}, d'après les crafts simulés et les prix utilisés.`}
+        />
+      )}
       {arbre && plan.etapes.length > 0 && (
         <>
           <div className="flex gap-5 border-b border-ink-700 text-sm">
@@ -394,9 +426,14 @@ function Resultat({
   onSaisie,
   nomsVoulus,
   prixChanges,
+  busy,
+  onActualiser,
 }: {
   result: ForgePoe1Result;
   prix: ForgePoe1Prices | null;
+  busy: boolean;
+  /** Nouvelle cote poe.ninja, puis même calcul. */
+  onActualiser: () => void;
   saisis: Record<string, number>;
   onSaisie: (nom: string, v: number | null) => void;
   /** Noms courts des mods voulus, dans l'ordre de la demande. */
@@ -418,8 +455,12 @@ function Resultat({
     ]),
   ].sort();
   const meilleure = lignes[0];
+  const age = agePrixAnciens(prix?.releveA);
   return (
     <div className="space-y-3">
+      {age && (
+        <PrixAnciens age={age} busy={busy} onActualiser={onActualiser} apres="Actualiser relance le calcul à la cote du jour." />
+      )}
       <PlanConseille
         plan={result.plan}
         noms={nomsVoulus}
@@ -573,13 +614,13 @@ export function ForgePoe1Card() {
     setVoulus((v) => v.map((w) => (cleAffixe(w) === cleAffixe(a) ? { ...w, maxTier: tier } : w)));
   }
 
-  async function calculer() {
+  async function calculer(coteFraiche: ForgePoe1Prices | null = null) {
     setBusy(true);
     setError(null);
     setResult(null);
     try {
-      const cote = prix ?? (await commands.getForgePoe1Prices().catch(() => null));
-      if (!prix) setPrix(cote);
+      const cote = coteFraiche ?? prix ?? (await commands.getForgePoe1Prices().catch(() => null));
+      if (cote !== prix) setPrix(cote);
       const envoyes = prixPourPlan(cote?.prix ?? {}, saisis);
       const demande: ForgePoe1Request = {
         baseId,
@@ -598,6 +639,18 @@ export function ForgePoe1Card() {
     } finally {
       setBusy(false);
     }
+  }
+
+  /** Cote ancienne : nouveau relevé poe.ninja, puis même calcul (base, affixes et objet inchangés). */
+  async function actualiserEtRecalculer() {
+    let cote: ForgePoe1Prices;
+    try {
+      cote = await commands.getForgePoe1Prices();
+    } catch (err) {
+      setError(message(err));
+      return;
+    }
+    await calculer(cote);
   }
 
   /** Remet dans le panneau un plan de l'historique (base, niveau, influence, affixes voulus). */
@@ -821,6 +874,8 @@ export function ForgePoe1Card() {
           onSaisie={saisir}
           nomsVoulus={nomsVoulus}
           prixChanges={prixCalcul !== "" && prixCalcul !== JSON.stringify(prixPourPlan(prix?.prix ?? {}, saisis))}
+          busy={busy}
+          onActualiser={() => void actualiserEtRecalculer()}
         />
       )}
       {result?.plan && demandeCalcul && <AchatPoe1 demande={demandeCalcul} coutCraft={result.plan.coutMoyen} />}
