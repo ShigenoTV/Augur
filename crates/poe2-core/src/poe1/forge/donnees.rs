@@ -113,6 +113,10 @@ pub struct ModPoe1 {
     /// Mod `delve`, tiré ou forcé seulement par un fossile (Faceted, Hollow).
     #[serde(default)]
     pub fossile: bool,
+    /// Mod voilé (domaine `unveiled`) : obtenu seulement en dévoilant un mod voilé (Veiled Chaos
+    /// Orb, Veiled Exalted Orb). `spawn` donne ses poids au dévoilement.
+    #[serde(default)]
+    pub voile: bool,
     /// Première stat (min, max), pour classer un mod d'Essence ou d'établi parmi les tiers.
     #[serde(default)]
     pub valeur: Option<(i64, i64)>,
@@ -186,6 +190,11 @@ pub struct PoolPoe1 {
     /// Mods `delve` possibles sur la base (poids nul dans le pool) : (affixe, vrai poids sur la base),
     /// rendus tirables ou forcés par un fossile.
     pub mods_fossiles: Vec<(AffixIdx, u32)>,
+    /// Mods voilés possibles sur la base (poids nul dans le pool) : (affixe, poids au dévoilement).
+    pub mods_voiles: Vec<(AffixIdx, u32)>,
+    /// Côté touché par les monnaies Eldritch (dominance des implicites : Exarch → préfixes,
+    /// Eater → suffixes). `None` : pas de monnaies Eldritch (objet influencé ou non précisé).
+    pub eldritch: Option<Slot>,
 }
 
 /// Un craft d'établi utilisable sur la base.
@@ -247,7 +256,7 @@ pub fn construire_pool(
         .mods
         .iter()
         .filter_map(|m| {
-            if m.fossile {
+            if m.fossile || m.voile {
                 return (poids(&m.spawn, &tags) > 0).then_some((m, 0));
             }
             let w = if m.essence || m.artisanal {
@@ -261,6 +270,7 @@ pub fn construire_pool(
         .collect();
 
     // Groupes d'exclusion et familles : index stables (ordre alphabétique).
+    // Un mod voilé a sa propre famille : ses tiers ne se mêlent pas à ceux des mods tirés.
     let mut groupes: BTreeMap<&str, GroupId> = BTreeMap::new();
     for (m, _) in &retenus {
         for g in &m.groupes {
@@ -268,16 +278,19 @@ pub fn construire_pool(
             groupes.entry(g.as_str()).or_insert(n);
         }
     }
-    let mut familles: BTreeMap<(GroupId, &str), u16> = BTreeMap::new();
+    let mut familles: BTreeMap<(GroupId, bool, &str), u16> = BTreeMap::new();
     // Niveaux (et première valeur) des tiers tirables de chaque famille.
-    let mut par_famille: HashMap<(GroupId, &str), Vec<Palier>> = HashMap::new();
+    let mut par_famille: HashMap<(GroupId, bool, &str), Vec<Palier>> = HashMap::new();
     for (m, w) in &retenus {
         let g = groupe_de(m, &groupes);
-        let n = familles.keys().filter(|(h, _)| *h == g).count() as u16;
-        familles.entry((g, m.famille.as_str())).or_insert(n);
-        if *w > 0 {
+        let n = familles.keys().filter(|(h, _, _)| *h == g).count() as u16;
+        familles
+            .entry((g, m.voile, m.famille.as_str()))
+            .or_insert(n);
+        // Les tiers d'un mod voilé se comptent parmi les mods voilés de sa famille.
+        if *w > 0 || m.voile {
             par_famille
-                .entry((g, m.famille.as_str()))
+                .entry((g, m.voile, m.famille.as_str()))
                 .or_default()
                 .push((m.niveau, m.valeur.map(|v| v.0)));
         }
@@ -292,10 +305,10 @@ pub fn construire_pool(
         .map(|(m, w)| {
             let g = groupe_de(m, &groupes);
             let niveaux = par_famille
-                .get(&(g, m.famille.as_str()))
+                .get(&(g, m.voile, m.famille.as_str()))
                 .map(Vec::as_slice)
                 .unwrap_or(&[]);
-            let tier = if *w > 0 {
+            let tier = if *w > 0 || m.voile {
                 niveaux
                     .iter()
                     .position(|&(n, _)| n <= m.niveau)
@@ -309,7 +322,7 @@ pub fn construire_pool(
                 family: m.famille.clone(),
                 text: m.texte.clone(),
                 group: g,
-                family_id: familles[&(g, m.famille.as_str())],
+                family_id: familles[&(g, m.voile, m.famille.as_str())],
                 slot: if m.slot == "prefix" {
                     Slot::Prefix
                 } else {
@@ -364,6 +377,12 @@ pub fn construire_pool(
         .filter(|(_, (m, _))| m.fossile)
         .map(|(i, (m, _))| (i as AffixIdx, poids(&m.spawn, &tags)))
         .collect();
+    let mods_voiles = retenus
+        .iter()
+        .enumerate()
+        .filter(|(_, (m, _))| m.voile)
+        .map(|(i, (m, _))| (i as AffixIdx, poids(&m.spawn, &tags)))
+        .collect();
 
     Ok(PoolPoe1 {
         base: b,
@@ -373,6 +392,8 @@ pub fn construire_pool(
         essences,
         etabli,
         mods_fossiles,
+        mods_voiles,
+        eldritch: None,
     })
 }
 

@@ -17,7 +17,9 @@ Le fichier réunit :
   `crafted`, gardé dans les mods avec `artisanal`), classes autorisées et coût par nom de monnaie ;
 - les fossiles (`fossils.json`) : multiplicateurs en pourcentage par étiquette de mod (0 = étiquette
   bloquée), plus Faceted (mods ajoutés), Hollow (mod forcé) et Sanctified (tirage chanceux), avec les
-  mods `delve` qu'ils ajoutent ou forcent (`fossile`). Écartés : voir `fossiles()`.
+  mods `delve` qu'ils ajoutent ou forcent (`fossile`). Écartés : voir `fossiles()` ;
+- les mods voilés (domaine `unveiled`, `voile`) : ceux qu'un dévoilement peut proposer après un
+  Veiled Chaos Orb ou un Veiled Exalted Orb, avec leurs poids au dévoilement.
 
 Seuls les champs lus par `poe2_core::poe1::forge` sont gardés. La sortie est déterministe (JSON
 canonique, gzip sans date) : deux exécutions sur les mêmes entrées donnent les mêmes octets.
@@ -254,7 +256,9 @@ def mods(
         artisanal = mid in artisanaux
         # mods du domaine `delve`, tirés ou forcés seulement par un fossile (Faceted, Hollow)
         fossile = mid in de_fossiles
-        if m.get("domain") != "item" and not artisanal and not fossile:
+        # mods voilés : proposés au dévoilement (Veiled Chaos Orb, Veiled Exalted Orb)
+        voile = m.get("domain") == "unveiled"
+        if m.get("domain") != "item" and not artisanal and not fossile and not voile:
             continue
         spawn = [[s["tag"], int(s["weight"])] for s in m.get("spawn_weights") or []]
         if artisanal:
@@ -274,6 +278,7 @@ def mods(
                 "essence": bool(m.get("is_essence_only")),
                 "artisanal": artisanal,
                 "fossile": fossile,
+                "voile": voile,
                 # Étiquettes du mod : metamods « Cannot roll Attack/Caster Modifiers » et fossiles.
                 "tags": sorted(m.get("implicit_tags") or []),
                 # Première stat (min, max) : sert à classer un mod d'Essence ou d'établi parmi les tiers.

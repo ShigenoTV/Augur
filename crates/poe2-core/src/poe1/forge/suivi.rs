@@ -108,6 +108,7 @@ pub fn conseiller(d: &DemandePoe1, texte: &str) -> Result<Option<ConseilPoe1>, E
     }
     let r = planifier(&DemandePoe1 {
         objet_depart: Some(texte.to_string()),
+        eldritch: None,
         ..d.clone()
     })?;
     if let Some(plan) = r.plan

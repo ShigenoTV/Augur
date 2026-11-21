@@ -31,6 +31,7 @@
 //! système linéaire entre les nœuds. Les boucles locales (Exalted puis Annulment) sont traitées par
 //! Gauss-Seidel.
 
+use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use rand::rngs::SmallRng;
@@ -53,6 +54,13 @@ pub const TRANSMUTATION: &str = "Orb of Transmutation";
 pub const REGAL: &str = "Regal Orb";
 pub const EXALTED: &str = "Exalted Orb";
 pub const ANNULMENT: &str = "Orb of Annulment";
+pub const ELDRITCH_CHAOS: &str = "Eldritch Chaos Orb";
+pub const ELDRITCH_EXALTED: &str = "Eldritch Exalted Orb";
+pub const ELDRITCH_ANNULMENT: &str = "Eldritch Orb of Annulment";
+pub const VEILED_CHAOS: &str = "Veiled Chaos Orb";
+pub const VEILED_EXALTED: &str = "Veiled Exalted Orb";
+/// Mods proposés au dévoilement (Jun).
+const CHOIX_DEVOILEMENT: usize = 3;
 
 /// Metamods de l'établi, par id de mod RePoE.
 const METAMODS: [(&str, Meta); 4] = [
@@ -241,6 +249,9 @@ struct Etat {
     /// Autres mods, par côté.
     autres: [u8; 2],
     meta: Meta,
+    /// Mod voilé pas encore dévoilé : 0 aucun, 1 préfixe, 2 suffixe. Seulement le temps d'un tirage :
+    /// le dévoilement suit aussitôt.
+    voile: u8,
 }
 
 impl Etat {
@@ -251,6 +262,7 @@ impl Etat {
             bloques: 0,
             autres: [0, 0],
             meta: Meta::Aucun,
+            voile: 0,
         }
     }
 }
@@ -400,6 +412,13 @@ enum Genre {
     Essence(usize),
     /// Fossiles dans un Chaotic Resonator (index dans `Modele::fossiles`).
     Fossiles(usize),
+    /// Monnaies Eldritch : elles ne touchent que le côté dominant (`Modele::eldritch`).
+    EldritchChaos,
+    EldritchExalted,
+    EldritchAnnulment,
+    /// Monnaies voilées : un mod voilé, dévoilé aussitôt (le meilleur des trois choix).
+    VeiledChaos,
+    VeiledExalted,
     Meta(Meta),
     RetirerMeta,
     Finition,
@@ -425,7 +444,24 @@ enum Cle {
     Fossiles(usize),
     /// Chaos avec un côté verrouillé : (côté gardé, voulus gardés, mauvais tiers gardés, autres gardés).
     Verrou(usize, u8, u8, u8),
+    /// Eldritch Chaos : (côté relancé, metamod gardé, voulus, mauvais tiers et autres gardés de
+    /// l'autre côté).
+    Eldritch(usize, Meta, u8, u8, u8),
+    /// Veiled Chaos : objet refait avec un mod voilé.
+    Voile,
 }
+
+/// Mods voilés d'un groupe d'exclusion, d'un côté, pour le dévoilement.
+struct GroupeVoile {
+    poids: f64,
+    /// Voulus de ce côté obtenus en le choisissant : (voulu, poids des bons tiers).
+    voulus: Vec<(usize, f64)>,
+    /// Voulus dont la présence sur l'objet écarte ce groupe (même groupe).
+    exclu: u8,
+}
+
+/// Issues d'un dévoilement : (probabilité, voulu choisi ; `None` : un autre mod).
+type Devoilement = Vec<(f64, Option<usize>)>;
 
 /// Une combinaison de fossiles pour le solveur.
 struct FossileSolveur {
@@ -462,6 +498,14 @@ struct Modele<'a> {
     finitions: Vec<Option<(String, CoutEtabli)>>,
     /// Mods fracturés de l'objet de départ : jamais retirés ni relancés (rareté sans objet).
     fixe: Etat,
+    /// Côté touché par les monnaies Eldritch (0 préfixes : Exarch dominant ; 1 suffixes : Eater).
+    eldritch: Option<usize>,
+    /// Mods voilés par côté, groupés comme au dévoilement.
+    voiles: [Vec<GroupeVoile>; 2],
+    /// Voulus qu'un dévoilement peut donner : sans eux, pas de monnaies voilées.
+    voulus_voiles: u8,
+    /// Dévoilements déjà calculés : (côté, voulus présents).
+    cache_voiles: RefCell<HashMap<(usize, u8), Devoilement>>,
 
     etats: Vec<Etat>,
     index: HashMap<Etat, usize>,
@@ -479,7 +523,10 @@ impl<'a> Modele<'a> {
         let voulus = (0..self.goal.len())
             .filter(|&k| self.cotes[k] == c && (e.bons | e.bloques) & (1 << k) != 0)
             .count() as u8;
-        voulus + e.autres[c] + u8::from(e.meta.cote() == Some(c))
+        voulus
+            + e.autres[c]
+            + u8::from(e.meta.cote() == Some(c))
+            + u8::from(usize::from(e.voile) == c + 1)
     }
 
     fn cap(&self, r: Rarete) -> [u8; 2] {
@@ -514,9 +561,18 @@ impl<'a> Modele<'a> {
 
     /// Issues d'un mod ajouté : (poids, état). Vide si rien ne peut être ajouté.
     fn un_mod(&self, e: &Etat, variante: usize) -> Vec<(f64, Etat)> {
+        self.un_mod_cote(e, variante, None)
+    }
+
+    /// Même chose, limité à un côté (`seul`, monnaies Eldritch).
+    fn un_mod_cote(&self, e: &Etat, variante: usize, seul: Option<usize>) -> Vec<(f64, Etat)> {
         let t = &self.tirages[variante];
         let cap = self.cap(e.rarete);
-        let ouvert = [self.n(e, 0) < cap[0], self.n(e, 1) < cap[1]];
+        let permis = |c: usize| seul.is_none_or(|s| s == c);
+        let ouvert = [
+            self.n(e, 0) < cap[0] && permis(0),
+            self.n(e, 1) < cap[1] && permis(1),
+        ];
         let mut issues = Vec::new();
         for k in 0..self.goal.len() {
             if (e.bons | e.bloques) & (1 << k) != 0 || !ouvert[self.cotes[k]] {
@@ -549,20 +605,112 @@ impl<'a> Modele<'a> {
     }
 
     /// Loi des objets après `n` mods ajoutés l'un après l'autre (arrêt si plus rien ne peut entrer).
-    fn tirer(&self, e: Etat, n: u8, variante: usize, p: f64, sortie: &mut HashMap<Etat, f64>) {
+    /// `seul` : tirage limité à un côté (Eldritch Chaos).
+    fn tirer(
+        &self,
+        e: Etat,
+        n: u8,
+        variante: usize,
+        seul: Option<usize>,
+        p: f64,
+        sortie: &mut HashMap<Etat, f64>,
+    ) {
         if n == 0 {
             *sortie.entry(e).or_default() += p;
             return;
         }
-        let issues = self.un_mod(&e, variante);
+        let issues = self.un_mod_cote(&e, variante, seul);
         let total: f64 = issues.iter().map(|x| x.0).sum();
         if total <= 0.0 {
             *sortie.entry(e).or_default() += p;
             return;
         }
         for (w, s) in issues {
-            self.tirer(s, n - 1, variante, p * w / total, sortie);
+            self.tirer(s, n - 1, variante, seul, p * w / total, sortie);
         }
+    }
+
+    /// Dévoilement du mod voilé de `e` : trois mods voilés proposés de son côté (tirés au poids, sans
+    /// remise, un par groupe, hors groupes déjà sur l'objet) ; on prend un voulu s'il y en a un (le
+    /// premier de la liste demandée), sinon un autre mod.
+    fn devoiler(&self, e: Etat) -> Vec<(f64, Etat)> {
+        if e.voile == 0 {
+            return vec![(1.0, e)];
+        }
+        let c = usize::from(e.voile) - 1;
+        let mut s = e;
+        s.voile = 0;
+        let presents = e.bons | e.bloques;
+        let issues = self
+            .cache_voiles
+            .borrow_mut()
+            .entry((c, presents))
+            .or_insert_with(|| self.choix_devoilement(c, presents))
+            .clone();
+        issues
+            .into_iter()
+            .map(|(p, k)| {
+                let mut t = s;
+                match k {
+                    Some(k) => t.bons |= 1 << k,
+                    None => t.autres[c] += 1,
+                }
+                (p, t)
+            })
+            .collect()
+    }
+
+    fn choix_devoilement(&self, c: usize, presents: u8) -> Devoilement {
+        let groupes: Vec<&GroupeVoile> = self.voiles[c]
+            .iter()
+            .filter(|g| g.exclu & presents == 0 && g.poids > 0.0)
+            .collect();
+        let mut sortie: BTreeMap<Option<usize>, f64> = BTreeMap::new();
+        if groupes.is_empty() {
+            return vec![(1.0, None)];
+        }
+        let total: f64 = groupes.iter().map(|g| g.poids).sum();
+        fn dfs(
+            groupes: &[&GroupeVoile],
+            pris: &mut Vec<usize>,
+            reste: f64,
+            p: f64,
+            sortie: &mut BTreeMap<Option<usize>, f64>,
+        ) {
+            if pris.len() == CHOIX_DEVOILEMENT || reste <= 1e-9 {
+                // Choix du joueur : le premier voulu proposé à un bon tier.
+                let mut offerts: Vec<(usize, f64)> = pris
+                    .iter()
+                    .flat_map(|&j| {
+                        let g = groupes[j];
+                        g.voulus.iter().map(move |&(k, w)| (k, w / g.poids))
+                    })
+                    .collect();
+                offerts.sort_by_key(|x| x.0);
+                let mut sans = p;
+                for (k, q) in offerts {
+                    *sortie.entry(Some(k)).or_default() += sans * q;
+                    sans *= 1.0 - q;
+                }
+                *sortie.entry(None).or_default() += sans;
+                return;
+            }
+            for j in 0..groupes.len() {
+                if pris.contains(&j) {
+                    continue;
+                }
+                let w = groupes[j].poids;
+                pris.push(j);
+                dfs(groupes, pris, reste - w, p * w / reste, sortie);
+                pris.pop();
+            }
+        }
+        dfs(&groupes, &mut Vec::new(), total, 1.0, &mut sortie);
+        sortie
+            .into_iter()
+            .filter(|x| x.1 > 0.0)
+            .map(|(k, p)| (p, k))
+            .collect()
     }
 
     fn loi(&self, cle: &Cle) -> HashMap<Etat, f64> {
@@ -576,6 +724,7 @@ impl<'a> Modele<'a> {
                     vide,
                     1u8.saturating_sub(f),
                     0,
+                    None,
                     1.0 - DEUX_MODS_MAGIQUE,
                     &mut sortie,
                 );
@@ -583,6 +732,7 @@ impl<'a> Modele<'a> {
                     vide,
                     2u8.saturating_sub(f),
                     0,
+                    None,
                     DEUX_MODS_MAGIQUE,
                     &mut sortie,
                 );
@@ -594,6 +744,7 @@ impl<'a> Modele<'a> {
                         self.base(Rarete::Rare),
                         n.saturating_sub(f),
                         0,
+                        None,
                         p,
                         &mut sortie,
                     );
@@ -605,7 +756,7 @@ impl<'a> Modele<'a> {
                 e.bons |= 1 << k;
                 let f = self.nb_fixes();
                 for (n, p) in MODS_RARE {
-                    self.tirer(e, n.saturating_sub(1 + f), 0, p, &mut sortie);
+                    self.tirer(e, n.saturating_sub(1 + f), 0, None, p, &mut sortie);
                 }
             }
             Cle::Fossiles(j) => {
@@ -613,7 +764,14 @@ impl<'a> Modele<'a> {
                 let e = f.depart;
                 let gardes = self.n(&e, 0) + self.n(&e, 1);
                 for (n, p) in MODS_RARE {
-                    self.tirer(e, n.saturating_sub(gardes), f.variante, p, &mut sortie);
+                    self.tirer(
+                        e,
+                        n.saturating_sub(gardes),
+                        f.variante,
+                        None,
+                        p,
+                        &mut sortie,
+                    );
                 }
             }
             Cle::Verrou(c, bons, bloques, autres) => {
@@ -623,7 +781,53 @@ impl<'a> Modele<'a> {
                 e.autres[c] = e.autres[c].max(autres);
                 let gardes = self.n(&e, 0) + self.n(&e, 1);
                 for (n, p) in MODS_RARE {
-                    self.tirer(e, n.saturating_sub(gardes), 0, p, &mut sortie);
+                    self.tirer(e, n.saturating_sub(gardes), 0, None, p, &mut sortie);
+                }
+            }
+            // Seul le côté `c` est refait ; l'autre côté, le metamod et les mods fracturés restent.
+            Cle::Eldritch(c, meta, bons, bloques, autres) => {
+                let o = 1 - c;
+                let mut e = self.base(Rarete::Rare);
+                e.meta = meta;
+                e.bons |= bons;
+                e.bloques |= bloques;
+                e.autres[o] = e.autres[o].max(autres);
+                let gardes = self.n(&e, 0) + self.n(&e, 1);
+                for (n, p) in MODS_RARE {
+                    self.tirer(
+                        e,
+                        n.saturating_sub(gardes),
+                        meta.variante(),
+                        Some(c),
+                        p,
+                        &mut sortie,
+                    );
+                }
+            }
+            // Objet refait : le mod voilé d'un côté ouvert (au hasard), puis les autres mods.
+            Cle::Voile => {
+                let e0 = self.base(Rarete::Rare);
+                let ouverts: Vec<usize> = (0..2)
+                    .filter(|&c| self.n(&e0, c) < self.cap_rare[c])
+                    .collect();
+                if ouverts.is_empty() {
+                    sortie.insert(e0, 1.0);
+                    return sortie;
+                }
+                let gardes = self.nb_fixes() + 1;
+                let pc = 1.0 / ouverts.len() as f64;
+                let mut avant = HashMap::new();
+                for &c in &ouverts {
+                    let mut e = e0;
+                    e.voile = c as u8 + 1;
+                    for (n, p) in MODS_RARE {
+                        self.tirer(e, n.saturating_sub(gardes), 0, None, p * pc, &mut avant);
+                    }
+                }
+                for (s, p) in avant {
+                    for (q, t) in self.devoiler(s) {
+                        *sortie.entry(t).or_default() += p * q;
+                    }
                 }
             }
         }
@@ -844,6 +1048,81 @@ impl<'a> Modele<'a> {
                     let issue = vers(self, un, a_visiter);
                     ajouter(self, Genre::Exalted, EXALTED, &[(EXALTED, 1.0)], issue);
                 }
+                // Monnaies Eldritch : seulement le côté dominant.
+                if let Some(c) = self.eldritch {
+                    let un = self.un_mod_cote(&e, e.meta.variante(), Some(c));
+                    if !un.is_empty() {
+                        let issue = vers(self, un, a_visiter);
+                        ajouter(
+                            self,
+                            Genre::EldritchExalted,
+                            ELDRITCH_EXALTED,
+                            &[(ELDRITCH_EXALTED, 1.0)],
+                            issue,
+                        );
+                    }
+                    // Pas de relance si un verrou d'établi est posé, ou si le metamod est du côté refait.
+                    if e.meta.verrou().is_none() && e.meta.cote() != Some(c) {
+                        let o = 1 - c;
+                        let masque = self.masque(o);
+                        let cle = Cle::Eldritch(
+                            c,
+                            e.meta,
+                            e.bons & masque,
+                            e.bloques & masque,
+                            e.autres[o],
+                        );
+                        let h = self.noeud(cle, a_visiter);
+                        ajouter(
+                            self,
+                            Genre::EldritchChaos,
+                            ELDRITCH_CHAOS,
+                            &[(ELDRITCH_CHAOS, 1.0)],
+                            Issue::Noeud(h),
+                        );
+                    }
+                    let rs = self.retraits(&e, Some(c));
+                    if !rs.is_empty() {
+                        let loi = rs.into_iter().map(|s| (1.0, s)).collect();
+                        let issue = vers(self, loi, a_visiter);
+                        ajouter(
+                            self,
+                            Genre::EldritchAnnulment,
+                            ELDRITCH_ANNULMENT,
+                            &[(ELDRITCH_ANNULMENT, 1.0)],
+                            issue,
+                        );
+                    }
+                }
+                // Veiled Exalted Orb : retire un mod (comme Annulment), puis pose un mod voilé d'un côté
+                // ouvert, dévoilé aussitôt.
+                if self.voulus_voiles & !e.bons != 0 {
+                    let rs = self.retraits(&e, None);
+                    let pr = 1.0 / rs.len().max(1) as f64;
+                    let mut loi = Vec::new();
+                    for s in rs {
+                        let ouverts: Vec<usize> = (0..2)
+                            .filter(|&c| self.n(&s, c) < self.cap_rare[c])
+                            .collect();
+                        for &c in &ouverts {
+                            let mut t = s;
+                            t.voile = c as u8 + 1;
+                            for (q, u) in self.devoiler(t) {
+                                loi.push((pr / ouverts.len() as f64 * q, u));
+                            }
+                        }
+                    }
+                    if !loi.is_empty() {
+                        let issue = vers(self, loi, a_visiter);
+                        ajouter(
+                            self,
+                            Genre::VeiledExalted,
+                            VEILED_EXALTED,
+                            &[(VEILED_EXALTED, 1.0)],
+                            issue,
+                        );
+                    }
+                }
                 // Relance.
                 match e.meta.verrou() {
                     Some(c) => {
@@ -877,6 +1156,16 @@ impl<'a> Modele<'a> {
                     None => {
                         let h = self.noeud(Cle::Rare, a_visiter);
                         ajouter(self, Genre::Chaos, CHAOS, &[(CHAOS, 1.0)], Issue::Noeud(h));
+                        if self.voulus_voiles != 0 {
+                            let h = self.noeud(Cle::Voile, a_visiter);
+                            ajouter(
+                                self,
+                                Genre::VeiledChaos,
+                                VEILED_CHAOS,
+                                &[(VEILED_CHAOS, 1.0)],
+                                Issue::Noeud(h),
+                            );
+                        }
                         let s = self.decape(self.base(Rarete::Normal));
                         let i0 = self.etat(s, a_visiter);
                         ajouter(
@@ -1010,8 +1299,25 @@ impl<'a> Modele<'a> {
     /// Annulment : un mod au hasard (chances égales) hors du côté verrouillé et des mods fracturés,
     /// metamod compris.
     fn annuler(&mut self, e: &Etat, a_visiter: &mut Vec<usize>) -> Issue {
+        let issues = self.retraits(e, None);
+        let n = issues.len() as f64;
+        let mut fusion: BTreeMap<Etat, f64> = BTreeMap::new();
+        for s in issues {
+            *fusion.entry(s).or_default() += 1.0 / n;
+        }
+        Issue::Etats(
+            fusion
+                .into_iter()
+                .map(|(s, p)| (self.etat(s, a_visiter), p))
+                .collect(),
+        )
+    }
+
+    /// Objets après le retrait d'un mod (chances égales), limité au côté `seul` s'il est donné
+    /// (Eldritch Orb of Annulment). Vide si aucun mod ne peut partir.
+    fn retraits(&self, e: &Etat, seul: Option<usize>) -> Vec<Etat> {
         let verrou = e.meta.verrou();
-        let libre = |c: usize| verrou != Some(c);
+        let libre = |c: usize| verrou != Some(c) && seul.is_none_or(|s| s == c);
         let fixe = self.fixe;
         let mut issues: Vec<Etat> = Vec::new();
         for (k, &cote) in self.cotes.iter().enumerate().take(self.goal.len()) {
@@ -1045,17 +1351,7 @@ impl<'a> Modele<'a> {
             s.meta = Meta::Aucun;
             issues.push(s);
         }
-        let n = issues.len() as f64;
-        let mut fusion: BTreeMap<Etat, f64> = BTreeMap::new();
-        for s in issues {
-            *fusion.entry(s).or_default() += 1.0 / n;
-        }
-        Issue::Etats(
-            fusion
-                .into_iter()
-                .map(|(s, p)| (self.etat(s, a_visiter), p))
-                .collect(),
-        )
+        issues
     }
 }
 
@@ -1796,6 +2092,42 @@ fn resoudre_depuis<'a>(
         });
     }
 
+    // Mods voilés, par côté et par groupe, pour le dévoilement.
+    let mut groupes_voiles: [BTreeMap<GroupId, GroupeVoile>; 2] =
+        [BTreeMap::new(), BTreeMap::new()];
+    for &(i, w) in &pb.mods_voiles {
+        let a = &pool.affixes[i as usize];
+        if w == 0 || a.req_ilvl > ilvl {
+            continue;
+        }
+        let c = cote(a.slot);
+        let g = groupes_voiles[c].entry(a.group).or_insert(GroupeVoile {
+            poids: 0.0,
+            voulus: Vec::new(),
+            exclu: 0,
+        });
+        let w = f64::from(w);
+        g.poids += w;
+        match goal.classify(pool, i) {
+            Class::Wanted(k) if c == cotes[k] => {
+                g.exclu |= 1 << k;
+                match g.voulus.iter_mut().find(|x| x.0 == k) {
+                    Some(x) => x.1 += w,
+                    None => g.voulus.push((k, w)),
+                }
+            }
+            Class::Wanted(k) | Class::Blocked(k) => g.exclu |= 1 << k,
+            Class::Other => {}
+        }
+    }
+    let voulus_voiles = groupes_voiles
+        .iter()
+        .flat_map(|m| m.values())
+        .flat_map(|g| g.voulus.iter())
+        .fold(0u8, |m, &(k, _)| m | (1 << k))
+        & !fixe.bons;
+    let voiles = groupes_voiles.map(|m| m.into_values().collect());
+
     let mut m = Modele {
         goal,
         complet: ((1u16 << n) - 1) as u8,
@@ -1812,6 +2144,10 @@ fn resoudre_depuis<'a>(
             .map(|f| f.map(|(t, c, _)| (t, c)))
             .collect(),
         fixe,
+        eldritch: pb.eldritch.filter(|_| pb.influence.is_none()).map(cote),
+        voiles,
+        voulus_voiles,
+        cache_voiles: RefCell::new(HashMap::new()),
         etats: Vec::new(),
         index: HashMap::new(),
         noeuds: Vec::new(),
@@ -1975,6 +2311,30 @@ mod tests {
         interdit: u64,
         rng: &mut SmallRng,
     ) {
+        ajouter_cote(pool, ilvl, o, cap, interdit, None, rng);
+    }
+
+    fn interdit(meta: Meta) -> u64 {
+        match meta {
+            Meta::SansAttaque => TAG_ATTAQUE,
+            Meta::SansSort => TAG_SORT,
+            _ => 0,
+        }
+    }
+
+    /// Même chose, limité à un côté (`seul`).
+    fn ajouter_cote(
+        pool: &AffixPool,
+        ilvl: u8,
+        o: &mut Objet,
+        mut cap: [u8; 2],
+        interdit: u64,
+        seul: Option<usize>,
+        rng: &mut SmallRng,
+    ) {
+        if let Some(s) = seul {
+            cap[1 - s] = 0;
+        }
         let mut n = [0u8; 2];
         for &i in &o.mods {
             n[cote(pool.affixes[i as usize].slot)] += 1;
@@ -2008,6 +2368,79 @@ mod tests {
                 return;
             }
             x -= w;
+        }
+    }
+
+    /// Nombre de mods de chaque côté (metamod compris).
+    fn compte(pool: &AffixPool, o: &Objet) -> [u8; 2] {
+        let mut n = [0u8; 2];
+        for &i in &o.mods {
+            n[cote(pool.affixes[i as usize].slot)] += 1;
+        }
+        if let Some(c) = o.meta.cote() {
+            n[c] += 1;
+        }
+        n
+    }
+
+    /// Côté du mod voilé : au hasard parmi les côtés ouverts (`None` : objet plein).
+    fn cote_voile(pool: &AffixPool, o: &Objet, cap: [u8; 2], rng: &mut SmallRng) -> Option<usize> {
+        let n = compte(pool, o);
+        let ouverts: Vec<usize> = (0..2).filter(|&c| n[c] < cap[c]).collect();
+        match ouverts.len() {
+            0 => None,
+            k => Some(ouverts[rng.random_range(0..k)]),
+        }
+    }
+
+    /// Dévoilement exact : trois mods voilés proposés du côté `c` (un par groupe, hors groupes de
+    /// l'objet), on prend le premier voulu à un bon tier, sinon un autre mod, sinon le premier proposé.
+    fn devoiler_exact(m: &Modele, pb: &PoolPoe1, o: &mut Objet, c: usize, rng: &mut SmallRng) {
+        let pool = &pb.pool;
+        let mut candidats: Vec<(u16, u32)> = pb
+            .mods_voiles
+            .iter()
+            .copied()
+            .filter(|&(i, w)| {
+                let a = &pool.affixes[i as usize];
+                w > 0
+                    && a.req_ilvl <= pb.ilvl
+                    && cote(a.slot) == c
+                    && !o
+                        .mods
+                        .iter()
+                        .any(|&j| pool.affixes[j as usize].conflicts(a))
+            })
+            .collect();
+        let mut choix: Vec<u16> = Vec::new();
+        while choix.len() < CHOIX_DEVOILEMENT && !candidats.is_empty() {
+            let total: u64 = candidats.iter().map(|x| u64::from(x.1)).sum();
+            let mut x = rng.random_range(0..total);
+            let mut pris = candidats[0].0;
+            for &(i, w) in &candidats {
+                if x < u64::from(w) {
+                    pris = i;
+                    break;
+                }
+                x -= u64::from(w);
+            }
+            choix.push(pris);
+            let g = &pool.affixes[pris as usize];
+            candidats.retain(|&(i, _)| pool.affixes[i as usize].group != g.group);
+        }
+        let classe = |i: u16| m.goal.classify(pool, i);
+        let voulu = (0..m.goal.len()).find_map(|k| {
+            choix
+                .iter()
+                .copied()
+                .find(|&i| matches!(classe(i), Class::Wanted(j) if j == k && m.cotes[k] == c))
+        });
+        let autre = choix
+            .iter()
+            .copied()
+            .find(|&i| matches!(classe(i), Class::Other));
+        if let Some(i) = voulu.or(autre).or(choix.first().copied()) {
+            o.mods.push(i);
         }
     }
 
@@ -2169,6 +2602,76 @@ mod tests {
                         });
                         o.meta = Meta::Aucun;
                         o.rarete = rarete_decape(o.mods.len());
+                    }
+                    Genre::EldritchExalted => {
+                        let (c, x) = (m.eldritch.unwrap(), interdit(o.meta));
+                        ajouter_cote(pool, ilvl, &mut o, rare, x, Some(c), &mut rng);
+                    }
+                    Genre::EldritchChaos => {
+                        let c = m.eldritch.unwrap();
+                        o.mods.retain(|&i| {
+                            fixes.contains(&i) || cote(pool.affixes[i as usize].slot) != c
+                        });
+                        let n = compte(pool, &o);
+                        let nb = nombre_rare(&mut rng).saturating_sub(n[0] + n[1]);
+                        let x = interdit(o.meta);
+                        for _ in 0..nb {
+                            ajouter_cote(pool, ilvl, &mut o, rare, x, Some(c), &mut rng);
+                        }
+                    }
+                    Genre::EldritchAnnulment => {
+                        let c = m.eldritch.unwrap();
+                        let libres: Vec<usize> = (0..o.mods.len())
+                            .filter(|&i| {
+                                cote(pool.affixes[o.mods[i] as usize].slot) == c
+                                    && !fixes.contains(&o.mods[i])
+                            })
+                            .collect();
+                        let meta_libre = o.meta.cote() == Some(c);
+                        let x = rng.random_range(0..libres.len() + usize::from(meta_libre));
+                        if x < libres.len() {
+                            o.mods.remove(libres[x]);
+                        } else {
+                            o.meta = Meta::Aucun;
+                        }
+                    }
+                    Genre::VeiledChaos => {
+                        o = Objet {
+                            rarete: Rarete::Rare,
+                            mods: fixes.to_vec(),
+                            meta: Meta::Aucun,
+                        };
+                        if let Some(c) = cote_voile(pool, &o, rare, &mut rng) {
+                            let nb = nombre_rare(&mut rng).saturating_sub(nf + 1);
+                            let mut reserve = rare;
+                            reserve[c] -= 1;
+                            for _ in 0..nb {
+                                ajouter(pool, ilvl, &mut o, reserve, 0, &mut rng);
+                            }
+                            devoiler_exact(m, pb, &mut o, c, &mut rng);
+                        }
+                    }
+                    Genre::VeiledExalted => {
+                        let verrou = o.meta.verrou();
+                        let libres: Vec<usize> = (0..o.mods.len())
+                            .filter(|&i| {
+                                Some(cote(pool.affixes[o.mods[i] as usize].slot)) != verrou
+                                    && !fixes.contains(&o.mods[i])
+                            })
+                            .collect();
+                        let meta_libre = o.meta.cote().is_some_and(|c| Some(c) != verrou);
+                        let nb = libres.len() + usize::from(meta_libre);
+                        if nb > 0 {
+                            let x = rng.random_range(0..nb);
+                            if x < libres.len() {
+                                o.mods.remove(libres[x]);
+                            } else {
+                                o.meta = Meta::Aucun;
+                            }
+                        }
+                        if let Some(c) = cote_voile(pool, &o, rare, &mut rng) {
+                            devoiler_exact(m, pb, &mut o, c, &mut rng);
+                        }
                     }
                     Genre::Meta(mt) => o.meta = mt,
                     Genre::RetirerMeta => o.meta = Meta::Aucun,
@@ -2386,6 +2889,141 @@ mod tests {
             "solveur {} contre simulation {sim}",
             sol.cout_moyen
         );
+    }
+
+    #[test]
+    fn eldritch_dans_le_plan() {
+        // Eater dominant : les monnaies Eldritch ne touchent que les suffixes. On garde la vie (préfixe)
+        // et on relance les résistances.
+        let mut pb = construire_pool(ARMURE, 84, None).unwrap();
+        let voulus = [
+            voulu(&pb.pool, "IncreasedLife9"),
+            voulu(&pb.pool, "FireResist6"),
+            voulu(&pb.pool, "ColdResist6"),
+        ];
+        let goal = Goal::new(&pb.pool, &voulus).unwrap();
+        let prix = prix(&[
+            (CHAOS, 1.0),
+            (ALCHEMY, 0.5),
+            (ELDRITCH_CHAOS, 2.0),
+            (ELDRITCH_EXALTED, 1.5),
+            (ELDRITCH_ANNULMENT, 4.0),
+        ]);
+        let sans = resoudre(&pb, &goal, &prix).unwrap().cout_moyen;
+        pb.eldritch = Some(Slot::Suffix);
+        let sol = resoudre(&pb, &goal, &prix).unwrap();
+        let plan = plan_depuis(&sol);
+        eprintln!("sans {sans} avec {} {:?}", sol.cout_moyen, plan.actions);
+        assert!(sol.cout_moyen < sans * 0.8);
+        assert!(plan.actions.iter().any(|u| u.action == ELDRITCH_CHAOS));
+        let sim = simuler(&sol, &pb, 6_000);
+        assert!(
+            (sol.cout_moyen - sim).abs() / sim < 0.05,
+            "solveur {} contre simulation {sim}",
+            sol.cout_moyen
+        );
+        // Objet influencé : pas d'implicites Eldritch, donc pas de monnaies Eldritch.
+        pb.influence = Some("Shaper".into());
+        let sol = resoudre(&pb, &goal, &prix).unwrap();
+        assert!((sol.cout_moyen - sans).abs() < 1e-6);
+    }
+
+    #[test]
+    fn eldritch_exarch_prefixes_et_annulment() {
+        // Exarch dominant : deux préfixes voulus, relancés sans toucher aux suffixes ; l'Exalted et
+        // l'Annulment Eldritch sont aussi proposés.
+        let mut pb = construire_pool(ARMURE, 84, None).unwrap();
+        pb.eldritch = Some(Slot::Prefix);
+        let voulus = [
+            voulu(&pb.pool, "IncreasedLife9"),
+            voulu(
+                &pb.pool,
+                "LocalIncreasedPhysicalDamageReductionRatingPercent7",
+            ),
+        ];
+        let goal = Goal::new(&pb.pool, &voulus).unwrap();
+        let prix = prix(&[
+            (CHAOS, 1.0),
+            (ALCHEMY, 0.5),
+            (ELDRITCH_CHAOS, 2.0),
+            (ELDRITCH_EXALTED, 0.5),
+            (ELDRITCH_ANNULMENT, 0.5),
+        ]);
+        let sol = resoudre(&pb, &goal, &prix).unwrap();
+        let plan = plan_depuis(&sol);
+        eprintln!("{} {:?}", sol.cout_moyen, plan.actions);
+        assert!(
+            plan.actions
+                .iter()
+                .any(|u| u.action.starts_with("Eldritch"))
+        );
+        let sim = simuler(&sol, &pb, 6_000);
+        assert!(
+            (sol.cout_moyen - sim).abs() / sim < 0.05,
+            "solveur {} contre simulation {sim}",
+            sol.cout_moyen
+        );
+    }
+
+    #[test]
+    fn mod_voile_dans_le_plan() {
+        // « % increased maximum Life and Mana » n'existe que voilé : sans monnaie voilée, pas de plan.
+        let pb = construire_pool(ARMURE, 84, None).unwrap();
+        assert!(!pb.mods_voiles.is_empty());
+        let voulus = [
+            voulu(&pb.pool, "IncreasedLife9"),
+            voulu(&pb.pool, "JunMasterVeiledPercentageLifeAndMana"),
+        ];
+        let goal = Goal::new(&pb.pool, &voulus).unwrap();
+        let mut prix = prix(&[
+            (CHAOS, 1.0),
+            (ALCHEMY, 0.5),
+            (EXALTED, 0.5),
+            (ANNULMENT, 3.0),
+        ]);
+        assert!(resoudre(&pb, &goal, &prix).is_none());
+        prix.insert(VEILED_CHAOS.into(), 4.0);
+        prix.insert(VEILED_EXALTED.into(), 6.0);
+        let sol = resoudre(&pb, &goal, &prix).unwrap();
+        let plan = plan_depuis(&sol);
+        eprintln!("{} {:?}", sol.cout_moyen, plan.actions);
+        assert!(plan.actions.iter().any(|u| u.action.starts_with("Veiled")));
+        let sim = simuler(&sol, &pb, 6_000);
+        assert!(
+            (sol.cout_moyen - sim).abs() / sim < 0.05,
+            "solveur {} contre simulation {sim}",
+            sol.cout_moyen
+        );
+    }
+
+    #[test]
+    fn devoilement_somme_a_un() {
+        let pb = construire_pool(ARMURE, 84, None).unwrap();
+        let voulus = [
+            voulu(&pb.pool, "JunMasterVeiledPercentageLifeAndMana"),
+            voulu(&pb.pool, "JunMasterVeiledBlockPercent"),
+        ];
+        let goal = Goal::new(&pb.pool, &voulus).unwrap();
+        let mut prix = cote_marche();
+        prix.insert(VEILED_CHAOS.into(), 4.0);
+        prix.insert(VEILED_EXALTED.into(), 6.0);
+        let sol = resoudre(&pb, &goal, &prix).unwrap();
+        let m = &sol.m;
+        assert_eq!(m.voulus_voiles, 0b11);
+        for presents in [0u8, 1, 2] {
+            let d = m.choix_devoilement(0, presents);
+            let total: f64 = d.iter().map(|x| x.0).sum();
+            assert!((total - 1.0).abs() < 1e-9, "{total}");
+            // Trois choix parmi les préfixes voilés : un voulu absent sort assez souvent.
+            for k in 0..2 {
+                let p: f64 = d.iter().filter(|x| x.1 == Some(k)).map(|x| x.0).sum();
+                if presents & (1 << k) != 0 {
+                    assert_eq!(p, 0.0);
+                } else {
+                    assert!(p > 0.2, "voulu {k} : {p}");
+                }
+            }
+        }
     }
 
     #[test]

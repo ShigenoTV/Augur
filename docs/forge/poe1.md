@@ -43,7 +43,12 @@ PoE 2. `tools/gamedata/forge_poe1_data.py` produit `crates/poe2-core/data/forge-
   les données (`fossile`), avec un poids nul hors fossile. Écartés : Tangled (effets au hasard, Essence
   corrompue une fois sur dix), Glyphic (Essence corrompue et objet corrompu), Fractured (copie fracturée,
   absente de l'émulateur de référence), Bloodstained (implicite corrompu), Gilded (prix de revente), Opulent
-  (étiquette `drop`).
+  (étiquette `drop`) ;
+- depuis le 21/11 (lot 2), les **mods voilés** (domaine `unveiled`, champ `voile`, 260 mods) : ceux qu'un
+  dévoilement peut proposer, avec leurs poids au dévoilement. Poids nul dans le pool (jamais tirés par Chaos ou
+  Exalted) ; leurs tiers se comptent entre mods voilés de même famille. Pris dans RePoE 3.30.0.4 (le reste des
+  données reste en 3.29.3.6). Le panneau les propose comme objectif, comme les mods `delve` des fossiles, avec
+  la mention « jamais tiré au hasard ».
 
 Tier d'un mod jamais tiré (Essence, établi) : celui du meilleur tier tirable de sa famille dont la première valeur
 minimale ne dépasse pas la sienne (« vaut au moins ce tier »).
@@ -70,6 +75,17 @@ Relevées dans le code de Craft of Exile pour PoE 1 (`packages/package.js`, 14/1
   `1 + (niveau du mod − 40) / 100` avant les étiquettes ; Faceted rend tirables ses mods ajoutés, puis les
   étiquettes s'appliquent (gemmes ×10) ; Hollow pose l'Abyssal Socket, puis le reste de l'objet est tiré
   comme après le mod garanti d'une Essence.
+
+- **monnaies Eldritch** (`eldritchChaos`, `eldritchExalt`, `eldritchAnnul` de l'émulateur) : elles ne
+  touchent que le côté dominant des implicites Eldritch (Exarch → préfixes, Eater → suffixes). Eldritch Chaos
+  retire les mods de ce côté et tire 4, 5 ou 6 mods au total moins les mods restants, de ce côté seulement ;
+  Eldritch Exalted ajoute un mod de ce côté ; Eldritch Annulment en retire un au hasard de ce côté. Le joueur
+  choisit la dominance dans le panneau (« Implicites Eldritch ») : le prix des Embers et Ichors pour poser les
+  implicites n'est pas compté. Pas d'implicites Eldritch sur un objet influencé ;
+- **monnaies voilées** (`veiledChaos`, `veiledExalt`, `getRevealPicks`) : Veiled Chaos refait l'objet avec un
+  mod voilé (côté au hasard parmi les côtés ouverts) puis les autres mods ; Veiled Exalted retire un mod au
+  hasard puis pose un mod voilé. Au dévoilement, trois mods voilés de ce côté sont proposés (tirés au poids, sans
+  remise, un par groupe, hors groupes déjà sur l'objet) ; le plan prend un mod voulu s'il y en a un.
 
 ## Calcul
 
@@ -102,7 +118,9 @@ la meilleure décision dans chaque situation et donne le coût moyen minimal pou
   Normal ou Rare sans metamod ; mods fracturés gardés), Exalted, Annulment,
   Scouring, metamods d'établi (« Prefixes / Suffixes Cannot Be Changed », « Cannot roll Attack / Caster
   Modifiers »), retrait du craft (1 Orb of Scouring), craft d'établi final. Un seul mod d'établi à la fois (pas de
-  multimod).
+  multimod). Depuis le 21/11 (lot 2) : Eldritch Chaos, Exalted et Annulment quand le joueur indique la dominance
+  (Eldritch Chaos seulement sans verrou d'établi et sans metamod du côté refait ; les filtres « Cannot roll … »
+  restent appliqués), Veiled Chaos et Veiled Exalted quand un mod voulu est un mod voilé (dévoilement aussitôt).
 - **Règles des metamods**, relevées dans l'émulateur Craft of Exile PoE 1 : Chaos et Scouring gardent le côté
   verrouillé, le metamod part ; le Chaos tire 4, 5 ou 6 mods au total, moins les mods gardés ; Annulment retire un
   mod au hasard hors du côté verrouillé, metamod compris ; « Cannot roll Attack / Caster » retire des ajouts les
@@ -117,7 +135,11 @@ la meilleure décision dans chaque situation et donne le coût moyen minimal pou
   écartée et listée.
 - **Limite** : jusqu'à 4 mods voulus (moins d'une seconde). À 5 ou 6 mods, la recherche d'une première politique
   qui aboutit échoue encore : le panneau le dit.
-- **Validation** (tests `solveur::tests`) : Chaos seul retrouve la formule du spam ; sur une Glorious Plate, la
+- **Approximations du dévoilement** : quand deux mods voulus sont proposés au même dévoilement, le plan prend
+  le premier de la liste demandée ; les autres mods de l'objet n'écartent pas les groupes voilés qu'ils
+  occupent (seuls les voulus le font) ; un mod voilé à deux groupes n'est rangé que dans le premier.
+- **Validation** (tests `solveur::tests`) : Chaos seul retrouve la formule du spam ; Eldritch (Exarch et
+  Eater) et mods voilés : la politique simulée sur le moteur exact retrouve le coût du solveur à moins de 5 % ; sur une Glorious Plate, la
   politique optimale simulée sur le moteur exact donne 7,58 c contre 7,57 c calculés, et 190,4 c contre 191,2 c
   dans un cas à verrous (Exalted cher, metamods bon marché ; test long, lancé en release avec `--ignored`).
 
@@ -135,10 +157,11 @@ monnaies qui refont tout l'objet.
 | P1-02 | Un objet Magique refait a 2 mods une fois sur deux | 100 Alterations, compter |
 | P1-03 | Les fossiles suivent la loi 4/5/6 mods du Chaos ; bonus additifs entre fossiles (mode par défaut de Craft of Exile) | recouper un cas avec l'émulateur en mode multiplicatif ; compter les mods sur des objets refaits aux fossiles |
 | P1-04 | Sur un objet fracturé, Alteration, Chaos, Alchemy et Essence tirent le nombre de mods habituel moins les mods fracturés ; un Scouring laisse l'objet Magique (1 mod fracturé) ou Rare | 50 Chaos sur un objet fracturé, compter les mods ; un Scouring, noter la rareté |
-
+| P1-05 | Eldritch Chaos garde les metamods « Cannot roll … » de l'autre côté et les applique ; Veiled Exalted respecte un verrou d'établi | essai sur l'émulateur, puis en jeu |
+| P1-06 | Au dévoilement, les trois choix excluent les groupes de tous les mods de l'objet | 20 dévoilements sur un objet qui porte déjà un mod du groupe |
 ## Suite possible (sur décision de Max)
 
-Multimod, Harvest, Eldritch, Veiled, double influence, mise à jour PoE 1 dans `mise_a_jour.py`.
+Multimod, Harvest, double influence, mise à jour PoE 1 dans `mise_a_jour.py`.
 
 ## Dispersion du coût et budget (21/11, idée n°6 validée par Max)
 

@@ -92,6 +92,7 @@ mod tests {
             voulus,
             prix: Default::default(),
             objet_depart: None,
+            eldritch: None,
         }
     }
 
