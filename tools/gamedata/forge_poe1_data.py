@@ -15,9 +15,9 @@ Le fichier réunit :
   refont un objet Rare (Screaming et au-dessus) ou seulement un objet Normal ;
 - les crafts d'établi qui ajoutent un mod (`crafting_bench_options.json`) : mod artisanal (domaine
   `crafted`, gardé dans les mods avec `artisanal`), classes autorisées et coût par nom de monnaie ;
-- les fossiles qui ne font que changer les poids par étiquette de mod (`fossils.json`) : multiplicateurs
-  en pourcentage (0 = étiquette bloquée). Les fossiles à effet spécial (mods ajoutés ou forcés, tirage
-  chanceux, copie, corruption, Opulent) n'y sont pas.
+- les fossiles (`fossils.json`) : multiplicateurs en pourcentage par étiquette de mod (0 = étiquette
+  bloquée), plus Faceted (mods ajoutés), Hollow (mod forcé) et Sanctified (tirage chanceux), avec les
+  mods `delve` qu'ils ajoutent ou forcent (`fossile`). Écartés : voir `fossiles()`.
 
 Seuls les champs lus par `poe2_core::poe1::forge` sont gardés. La sortie est déterministe (JSON
 canonique, gzip sans date) : deux exécutions sur les mêmes entrées donnent les mêmes octets.
@@ -193,37 +193,68 @@ def etabli(options: list, items: dict) -> list[dict]:
 
 
 def fossiles(table: dict, items: dict) -> list[dict]:
+    """Fossiles gardés : ceux qui changent les poids par étiquette, plus trois fossiles à effet spécial
+    que la Forge sait calculer (règles de l'émulateur Craft of Exile) :
+
+    - Faceted : mods ajoutés au tirage (`ajoutes`, domaine `delve`), en plus de ses poids ;
+    - Hollow : mod forcé (`forces`, Abyssal Socket), seulement sur les bases portant une étiquette
+      de `permis` ;
+    - Sanctified : tirage « chanceux » (`chanceux`) : poids de chaque mod × (1 + (niveau − 40) / 100).
+
+    Écartés : Tangled (effets au hasard, Essence corrompue 1 fois sur 10), Glyphic (Essence corrompue,
+    objet corrompu), Fractured (copie fracturée), Bloodstained (implicite corrompu), Gilded (prix de
+    revente), Opulent (étiquette `drop`, qui annule aussi les mods sans étiquette).
+    """
     sortie = []
     for fid, f in table.items():
         if (
             "DelveCrafting" not in fid
             or (items.get(fid) or {}).get("release_state") != "released"
-            or f.get("added_mods")
-            or f.get("forced_mods")
-            or f.get("allowed_tags")
             or f.get("forbidden_tags")
-            or f.get("rolls_lucky")
             or f.get("mirrors")
             or f.get("corrupted_essence_chance")
+            or f.get("sell_price_mods")
         ):
             continue
         poids = [[x["tag"], int(x["weight"])] for x in f.get("positive_mod_weights") or []]
         poids += [[x["tag"], int(x["weight"])] for x in f.get("negative_mod_weights") or []]
-        # Opulent (étiquette `drop`) annule aussi les mods sans étiquette : effet à part, laissé de côté.
-        if not poids or any(t == "drop" for t, _ in poids):
+        ajoutes = sorted(f.get("added_mods") or [])
+        forces = sorted(f.get("forced_mods") or [])
+        chanceux = bool(f.get("rolls_lucky"))
+        if not (poids or forces or chanceux):
             continue
-        sortie.append({"id": fid, "nom": f["name"], "poids": sorted(poids)})
+        # Opulent (étiquette `drop`) annule aussi les mods sans étiquette : effet à part, laissé de côté.
+        if any(t == "drop" for t, _ in poids):
+            continue
+        sortie.append(
+            {
+                "id": fid,
+                "nom": f["name"],
+                "poids": sorted(poids),
+                "ajoutes": ajoutes,
+                "forces": forces,
+                "permis": sorted(f.get("allowed_tags") or []),
+                "chanceux": chanceux,
+            }
+        )
     sortie.sort(key=lambda f: f["nom"])
     return sortie
 
 
-def mods(table: dict, garantis: set[str], artisanaux: set[str] = frozenset()) -> list[dict]:
+def mods(
+    table: dict,
+    garantis: set[str],
+    artisanaux: set[str] = frozenset(),
+    de_fossiles: set[str] = frozenset(),
+) -> list[dict]:
     sortie = []
     for mid, m in table.items():
         if m.get("generation_type") not in ("prefix", "suffix"):
             continue
         artisanal = mid in artisanaux
-        if m.get("domain") != "item" and not artisanal:
+        # mods du domaine `delve`, tirés ou forcés seulement par un fossile (Faceted, Hollow)
+        fossile = mid in de_fossiles
+        if m.get("domain") != "item" and not artisanal and not fossile:
             continue
         spawn = [[s["tag"], int(s["weight"])] for s in m.get("spawn_weights") or []]
         if artisanal:
@@ -242,6 +273,7 @@ def mods(table: dict, garantis: set[str], artisanaux: set[str] = frozenset()) ->
                 "spawn": spawn,
                 "essence": bool(m.get("is_essence_only")),
                 "artisanal": artisanal,
+                "fossile": fossile,
                 # Étiquettes du mod : metamods « Cannot roll Attack/Caster Modifiers » et fossiles.
                 "tags": sorted(m.get("implicit_tags") or []),
                 # Première stat (min, max) : sert à classer un mod d'Essence ou d'établi parmi les tiers.
@@ -263,16 +295,20 @@ def construire(dossier: Path) -> dict:
     artisanaux = {c["mod"] for c in crafts}
     if absents := sorted(artisanaux - set(table_mods)):
         raise ValueError(f"mods d'établi absents de mods.json : {', '.join(absents)}")
+    fos = fossiles(lire_json(dossier, "fossils.json"), items)
+    de_fossiles = {m for f in fos for m in f["ajoutes"] + f["forces"]}
+    if absents := sorted(de_fossiles - set(table_mods)):
+        raise ValueError(f"mods de fossiles absents de mods.json : {', '.join(absents)}")
     version = (dossier / "version.txt").read_text(encoding="utf-8").strip()
     return {
         "schema": SCHEMA,
         "repoe_version": version,
         "classes": classes(lire_json(dossier, "item_classes.json")),
         "bases": bases(items, table_mods),
-        "mods": mods(table_mods, garantis, artisanaux),
+        "mods": mods(table_mods, garantis, artisanaux, de_fossiles),
         "essences": ess,
         "etabli": crafts,
-        "fossiles": fossiles(lire_json(dossier, "fossils.json"), items),
+        "fossiles": fos,
     }
 
 

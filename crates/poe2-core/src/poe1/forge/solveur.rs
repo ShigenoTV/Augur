@@ -38,7 +38,8 @@ use serde::Serialize;
 use crate::forge::{AffixIdx, AffixPool, Class, Goal, GroupId, Rarity, Slot};
 
 use super::calcul::{
-    ALCHEMY, ALTERATION, AUGMENTATION, CHAOS, Conso, DEUX_MODS_MAGIQUE, MODS_RARE, SCOURING,
+    ALCHEMY, ALTERATION, AUGMENTATION, CHAOS, Conso, DEUX_MODS_MAGIQUE, MODS_RARE, RESONATEURS,
+    SCOURING, meilleurs_fossiles,
 };
 use super::donnees::{PoolPoe1, TAG_ATTAQUE, TAG_SORT};
 
@@ -367,6 +368,8 @@ enum Genre {
     Annulment,
     Scouring,
     Essence(usize),
+    /// Fossiles dans un Chaotic Resonator (index dans `Modele::fossiles`).
+    Fossiles(usize),
     Meta(Meta),
     RetirerMeta,
     Finition,
@@ -389,8 +392,24 @@ enum Cle {
     Magique,
     Rare,
     Essence(usize),
+    Fossiles(usize),
     /// Chaos avec un côté verrouillé : (côté gardé, voulus gardés, mauvais tiers gardés, autres gardés).
     Verrou(usize, u8, u8, u8),
+}
+
+/// Une combinaison de fossiles pour le solveur.
+struct FossileSolveur {
+    libelle: String,
+    /// Fossiles puis résonateur.
+    monnaies: Vec<String>,
+    /// Index de ses poids dans `Modele::tirages`.
+    variante: usize,
+    /// Objet Rare avant le tirage : mods fracturés et mod forcé (Hollow Fossil).
+    depart: Etat,
+    #[cfg_attr(not(test), allow(dead_code))]
+    force: Option<AffixIdx>,
+    #[cfg_attr(not(test), allow(dead_code))]
+    pool: AffixPool,
 }
 
 struct Modele<'a> {
@@ -399,7 +418,10 @@ struct Modele<'a> {
     cotes: Vec<usize>,
     cap_magique: [u8; 2],
     cap_rare: [u8; 2],
-    tirages: [Tirage; 3],
+    /// Poids tirables : sans filtre, sans attaque, sans sort, puis un par combinaison de fossiles.
+    tirages: Vec<Tirage>,
+    /// Combinaisons de fossiles proposées (la meilleure par taille de résonateur).
+    fossiles: Vec<FossileSolveur>,
     prix: &'a BTreeMap<String, f64>,
     /// Essences utiles : (nom, voulu garanti, sur un Rare, mod garanti).
     #[cfg_attr(not(test), allow(dead_code))]
@@ -556,6 +578,14 @@ impl<'a> Modele<'a> {
                     self.tirer(e, n.saturating_sub(1 + f), 0, p, &mut sortie);
                 }
             }
+            Cle::Fossiles(j) => {
+                let f = &self.fossiles[j];
+                let e = f.depart;
+                let gardes = self.n(&e, 0) + self.n(&e, 1);
+                for (n, p) in MODS_RARE {
+                    self.tirer(e, n.saturating_sub(gardes), f.variante, p, &mut sortie);
+                }
+            }
             Cle::Verrou(c, bons, bloques, autres) => {
                 let mut e = self.base(Rarete::Rare);
                 e.bons |= bons;
@@ -666,6 +696,8 @@ impl<'a> Modele<'a> {
         if self.reussi(&e) {
             return out;
         }
+        // actions de fossiles, ajoutées à la fin (`ajouter` tient `out`)
+        let mut en_plus: Vec<Action> = Vec::new();
         let mut ajouter =
             |m: &mut Self, genre: Genre, libelle: &str, monnaies: &[(&str, f64)], issue: Issue| {
                 if let Some((cout, conso)) = m.payer(monnaies) {
@@ -722,6 +754,7 @@ impl<'a> Modele<'a> {
                         Issue::Noeud(h),
                     );
                 }
+                self.ajouter_fossiles(&mut en_plus, a_visiter);
             }
             Rarete::Magique => {
                 let h = self.noeud(Cle::Magique, a_visiter);
@@ -837,6 +870,7 @@ impl<'a> Modele<'a> {
                                 Issue::Noeud(h),
                             );
                         }
+                        self.ajouter_fossiles(&mut en_plus, a_visiter);
                     }
                 }
                 // Retrait d'un mod.
@@ -912,7 +946,29 @@ impl<'a> Modele<'a> {
                 }
             }
         }
+        out.extend(en_plus);
         out
+    }
+
+    /// Fossiles (objet Normal, ou Rare sans metamod) : l'objet est refait en Rare, mods fracturés gardés.
+    fn ajouter_fossiles(&mut self, out: &mut Vec<Action>, a_visiter: &mut Vec<usize>) {
+        for j in 0..self.fossiles.len() {
+            let monnaies: Vec<String> = self.fossiles[j].monnaies.clone();
+            let m: Vec<(&str, f64)> = monnaies.iter().map(|n| (n.as_str(), 1.0)).collect();
+            let Some((cout, conso)) = self.payer(&m) else {
+                continue;
+            };
+            let h = self.noeud(Cle::Fossiles(j), a_visiter);
+            let libelle = self.fossiles[j].libelle.clone();
+            let libelle = self.libelle(&libelle);
+            out.push(Action {
+                genre: Genre::Fossiles(j),
+                libelle,
+                cout,
+                conso,
+                issue: Issue::Noeud(h),
+            });
+        }
     }
 
     fn masque(&self, c: usize) -> u8 {
@@ -1585,17 +1641,48 @@ fn resoudre_depuis<'a>(
     }
     metamods.sort_by_key(|a| a.0);
 
+    let mut tirages = vec![
+        tirage(pool, goal, ilvl, 0),
+        tirage(pool, goal, ilvl, TAG_ATTAQUE),
+        tirage(pool, goal, ilvl, TAG_SORT),
+    ];
+    // Fossiles : la meilleure combinaison par taille de Chaotic Resonator (celle des méthodes de spam).
+    let mut fossiles = Vec::new();
+    let tous = &super::donnees::donnees().ok()?.fossiles;
+    for (fs, p, force, _) in meilleurs_fossiles(pb, goal, tous, prix) {
+        let mut depart = fixe;
+        depart.rarete = Rarete::Rare;
+        if let Some(i) = force {
+            classer(goal, &cotes, &p, i, &mut depart)?;
+            if depart.bloques != 0 {
+                continue;
+            }
+        }
+        let noms: Vec<&str> = fs.iter().map(|f| f.nom.as_str()).collect();
+        let reso = RESONATEURS[fs.len() - 1];
+        tirages.push(tirage(&p, goal, ilvl, 0));
+        fossiles.push(FossileSolveur {
+            libelle: format!("{} ({reso})", noms.join(" + ")),
+            monnaies: noms
+                .iter()
+                .map(|n| n.to_string())
+                .chain([reso.to_string()])
+                .collect(),
+            variante: tirages.len() - 1,
+            depart,
+            force,
+            pool: p,
+        });
+    }
+
     let mut m = Modele {
         goal,
         complet: ((1u16 << n) - 1) as u8,
         cotes,
         cap_magique: [mp, ms],
         cap_rare: [rp, rs],
-        tirages: [
-            tirage(pool, goal, ilvl, 0),
-            tirage(pool, goal, ilvl, TAG_ATTAQUE),
-            tirage(pool, goal, ilvl, TAG_SORT),
-        ],
+        tirages,
+        fossiles,
         prix,
         essences,
         metamods,
@@ -1909,6 +1996,20 @@ mod tests {
                             ajouter(pool, ilvl, &mut o, rare, 0, &mut rng);
                         }
                     }
+                    Genre::Fossiles(j) => {
+                        let f = &m.fossiles[j];
+                        let mut mods = fixes.to_vec();
+                        mods.extend(f.force);
+                        let nb = nombre_rare(&mut rng).saturating_sub(mods.len() as u8);
+                        o = Objet {
+                            rarete: Rarete::Rare,
+                            mods,
+                            meta: Meta::Aucun,
+                        };
+                        for _ in 0..nb {
+                            ajouter(&f.pool, ilvl, &mut o, rare, 0, &mut rng);
+                        }
+                    }
                     Genre::Exalted => {
                         let interdit = match o.meta {
                             Meta::SansAttaque => TAG_ATTAQUE,
@@ -2118,6 +2219,47 @@ mod tests {
             .map(|u| (u.action, u.nombre))
             .collect();
         eprintln!("solveur {} simulation {sim} {actions:?}", sol.cout_moyen);
+        assert!(
+            (sol.cout_moyen - sim).abs() / sim < 0.05,
+            "solveur {} contre simulation {sim}",
+            sol.cout_moyen
+        );
+    }
+
+    /// Fossiles dans le plan : avec des fossiles bon marché qui servent l'objectif (Pristine : vie,
+    /// Frigid et Prismatic : résistances), le plan est moins cher que sans, les utilise, et la simulation
+    /// exacte de la politique retrouve son coût.
+    #[test]
+    fn fossiles_dans_le_plan() {
+        let pb = construire_pool(ARMURE, 84, None).unwrap();
+        // Tiers hors de portée de l'établi : le plan ne peut pas finir l'objet au craft.
+        let voulus = [
+            voulu(&pb.pool, "IncreasedLife9"),
+            voulu(&pb.pool, "FireResist6"),
+        ];
+        let goal = Goal::new(&pb.pool, &voulus).unwrap();
+        // Seules monnaies cotées : Alchemy et Chaos, plus les fossiles et les résonateurs.
+        let mut prix = prix(&[(CHAOS, 1.0), (ALCHEMY, 0.5)]);
+        let sans = resoudre(&pb, &goal, &prix).unwrap().cout_moyen;
+        for (n, p) in [
+            ("Pristine Fossil", 1.0),
+            ("Frigid Fossil", 1.0),
+            ("Scorched Fossil", 1.0),
+            ("Prismatic Fossil", 1.0),
+            ("Primitive Chaotic Resonator", 0.5),
+            ("Potent Chaotic Resonator", 1.0),
+            ("Powerful Chaotic Resonator", 3.0),
+            ("Prime Chaotic Resonator", 10.0),
+        ] {
+            prix.insert(n.into(), p);
+        }
+        let sol = resoudre(&pb, &goal, &prix).unwrap();
+        assert!(!sol.m.fossiles.is_empty());
+        let plan = plan_depuis(&sol);
+        eprintln!("sans {sans} avec {} {:?}", sol.cout_moyen, plan.actions);
+        assert!(sol.cout_moyen < sans);
+        assert!(plan.actions.iter().any(|u| u.action.contains("Fossil")));
+        let sim = simuler(&sol, &pb, 6_000);
         assert!(
             (sol.cout_moyen - sim).abs() / sim < 0.05,
             "solveur {} contre simulation {sim}",

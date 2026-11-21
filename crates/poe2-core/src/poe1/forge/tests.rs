@@ -817,3 +817,70 @@ fn suivi_de_l_objet_en_cours() {
     assert!(suivi::conseiller(&autre, PLAQUE_COPIEE).unwrap().is_none());
     assert!(suivi::conseiller(&d, "pas un objet").unwrap().is_none());
 }
+
+/// Bâton (Long Staff).
+const BATON: &str = "Metadata/Items/Weapons/TwoHandWeapons/Staves/Staff3";
+
+/// Faceted Fossil : les mods `delve` de niveau des gemmes ne sortent qu'avec lui, au poids du jeu ×10
+/// (étiquette `gem`) ; le calcul colle à la simulation.
+#[test]
+fn faceted_ajoute_les_mods_de_gemmes() {
+    let pb = construire_pool(BATON, 84, None).unwrap();
+    let id = "DelveStrengthGemLevel1";
+    let (i, w) = *pb
+        .mods_fossiles
+        .iter()
+        .find(|(i, _)| pb.pool.affixes[*i as usize].id == id)
+        .unwrap();
+    assert_eq!(pb.pool.affixes[i as usize].weight, 0);
+    assert_eq!(w, 1000);
+    let voulus = vec![voulu(&pb.pool, id)];
+    let goal = Goal::new(&pb.pool, &voulus).unwrap();
+    assert_eq!(chance_rare(&pb.pool, &goal, 84, None, None), 0.0);
+    let (p, force) = pool_fossiles_base(&pb, &[fossile("Faceted Fossil")]).unwrap();
+    assert!(force.is_none());
+    assert_eq!(poids_de(&p, id), 1000 * 1000);
+    let c = chance_rare(&p, &goal, 84, None, None);
+    proche(c, simuler_rare(&p, &goal, 84, None, None, 100_000), 0.03);
+    let r = methodes(&pb, &voulus, &std::collections::BTreeMap::new()).unwrap();
+    assert!(
+        r.methodes
+            .iter()
+            .any(|m| m.genre == "fossile" && m.id.contains("Faceted")),
+        "{:?}",
+        r.methodes.iter().map(|m| &m.id).collect::<Vec<_>>()
+    );
+}
+
+/// Hollow Fossil : l'Abyssal Socket est posé d'abord (une place de suffixe en moins), seulement sur une
+/// base permise ; Sanctified : poids × (1 + (niveau − 40) / 100).
+#[test]
+fn hollow_et_sanctified() {
+    let pb = construire_pool(BATON, 84, None).unwrap();
+    let (p, force) = pool_fossiles_base(&pb, &[fossile("Hollow Fossil")]).unwrap();
+    let socket = force.expect("Abyssal Socket forcé");
+    assert_eq!(p.affixes[socket as usize].id, "DelveAbyssJewelSocket1");
+    let voulus = vec![
+        voulu(&pb.pool, "SpellAddedFireDamageTwoHand4"),
+        voulu(&pb.pool, "IncreasedCastSpeedTwoHand5"),
+    ];
+    let goal = Goal::new(&pb.pool, &voulus).unwrap();
+    let c = chance_rare(&p, &goal, 84, force, None);
+    proche(c, simuler_rare(&p, &goal, 84, force, None, 1_000_000), 0.05);
+    // un anneau n'accepte pas le Hollow Fossil
+    let anneau = construire_pool(ANNEAU, 84, None).unwrap();
+    assert!(pool_fossiles_base(&anneau, &[fossile("Hollow Fossil")]).is_none());
+
+    let (p, _) = pool_fossiles_base(&pb, &[fossile("Sanctified Fossil")]).unwrap();
+    for (a, b) in pb
+        .pool
+        .affixes
+        .iter()
+        .zip(&p.affixes)
+        .filter(|(a, _)| a.weight > 0)
+    {
+        let attendu =
+            (f64::from(a.weight) * (1.0 + (f64::from(a.req_ilvl) - 40.0) / 100.0)).round();
+        assert_eq!(f64::from(b.weight), attendu * 100.0, "{}", a.id);
+    }
+}

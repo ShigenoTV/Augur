@@ -20,8 +20,7 @@ Le mode POE 2 ne change pas.
 
 Choix de l'objet : classe, base (les homonymes comme Two-Stone Ring sont départagés par leur implicite), niveau
 d'objet, influence (Shaper, Elder, Crusader, Redeemer, Hunter, Warlord), puis les affixes voulus au tier choisi ou
-mieux. Hors de ce jalon : fossiles à effet spécial (voir plus bas), Harvest,
-Eldritch, Veiled, double influence, joyaux et flacons, suivi dans l'overlay.
+mieux. Hors de ce jalon : Harvest, Eldritch, Veiled, double influence, joyaux et flacons.
 
 ## Données
 
@@ -37,9 +36,14 @@ PoE 2. `tools/gamedata/forge_poe1_data.py` produit `crates/poe2-core/data/forge-
 - les crafts d'établi qui ajoutent un mod (`crafting_bench_options.json`, 727 crafts) : mod artisanal, classes et
   coût par monnaie. On suppose tous les crafts débloqués. Un seul mod artisanal par objet (sans metamod) ;
 - les étiquettes de chaque mod (`implicit_tags`), lues par les metamods et les fossiles ;
-- les 16 fossiles qui ne font que changer des poids (`fossils.json`) : multiplicateur en % par étiquette de mod
-  (1000 = ×10, 15 = ×0,15, 0 = bloqué). Écartés : Faceted et Tangled (mods ajoutés), Hollow (mod forcé), Glyphic
-  (corruption), Sanctified (tirage chanceux), Fractured (copie), Bloodstained, Gilded, Opulent (effets à part).
+- les fossiles (`fossils.json`) : les 16 qui changent des poids (multiplicateur en % par étiquette de mod,
+  1000 = ×10, 15 = ×0,15, 0 = bloqué), et depuis le 21/11 trois fossiles à effet spécial : **Faceted** (ses
+  mods `delve` de niveau des gemmes entrent dans le tirage, au poids du jeu), **Hollow** (Abyssal Socket forcé,
+  sur arme, casque, bottes, gants et armure) et **Sanctified** (tirage chanceux). Les mods `delve` sont dans
+  les données (`fossile`), avec un poids nul hors fossile. Écartés : Tangled (effets au hasard, Essence
+  corrompue une fois sur dix), Glyphic (Essence corrompue et objet corrompu), Fractured (copie fracturée,
+  absente de l'émulateur de référence), Bloodstained (implicite corrompu), Gilded (prix de revente), Opulent
+  (étiquette `drop`).
 
 Tier d'un mod jamais tiré (Essence, établi) : celui du meilleur tier tirable de sa famille dont la première valeur
 minimale ne dépasse pas la sienne (« vaut au moins ce tier »).
@@ -62,6 +66,10 @@ Relevées dans le code de Craft of Exile pour PoE 1 (`packages/package.js`, 14/1
   bloquée annule son poids, sinon le poids est multiplié par la somme des bonus de ses étiquettes et le produit de
   leurs malus. Exemple : Frigid (froid ×10) + Prismatic (élémentaire ×6) donne ×16 sur une résistance au froid.
   L'objet refait suit la loi 4/5/6 du Chaos (hypothèse P1-03).
+- **fossiles à effet spécial** (`pool_fossiles_base`, même émulateur) : Sanctified multiplie chaque poids par
+  `1 + (niveau du mod − 40) / 100` avant les étiquettes ; Faceted rend tirables ses mods ajoutés, puis les
+  étiquettes s'appliquent (gemmes ×10) ; Hollow pose l'Abyssal Socket, puis le reste de l'objet est tiré
+  comme après le mod garanti d'une Essence.
 
 ## Calcul
 
@@ -89,7 +97,9 @@ Relevées dans le code de Craft of Exile pour PoE 1 (`packages/package.js`, 14/1
 Choisi par Max le 14/11 (option « Spams + établi et metamods »). Au lieu de comparer des spams, le solveur cherche
 la meilleure décision dans chaque situation et donne le coût moyen minimal pour finir l'objet.
 
-- **Actions** : Transmutation, Alteration, Augmentation, Regal, Alchemy, Chaos, Essences, Exalted, Annulment,
+- **Actions** : Transmutation, Alteration, Augmentation, Regal, Alchemy, Chaos, Essences, fossiles (depuis le
+  21/11 : la meilleure combinaison par taille de Chaotic Resonator, celle des méthodes de spam, sur un objet
+  Normal ou Rare sans metamod ; mods fracturés gardés), Exalted, Annulment,
   Scouring, metamods d'établi (« Prefixes / Suffixes Cannot Be Changed », « Cannot roll Attack / Caster
   Modifiers »), retrait du craft (1 Orb of Scouring), craft d'établi final. Un seul mod d'établi à la fois (pas de
   multimod).
@@ -128,9 +138,7 @@ monnaies qui refont tout l'objet.
 
 ## Suite possible (sur décision de Max)
 
-Fossiles à effet spécial, fossiles dans le plan conseillé (le solveur ne les connaît pas encore), solveur au-delà
-de 4 mods voulus, multimod, suivi dans l'overlay (Ctrl+Alt+C), mise à jour PoE 1
-dans `mise_a_jour.py`.
+Multimod, Harvest, Eldritch, Veiled, double influence, mise à jour PoE 1 dans `mise_a_jour.py`.
 
 ## Pas à pas du plan conseillé
 
