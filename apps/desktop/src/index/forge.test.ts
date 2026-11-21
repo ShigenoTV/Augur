@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { ForgeAffix, ForgePlan, ForgeVerify } from "../bridge";
 import {
+  agePrixAnciens,
   arbre,
+  chanceQuantiles,
   chanceSousBudget,
+  formatChanceBudget,
   comparerAchat,
   deviseSaisie,
   versExalts,
@@ -212,5 +215,35 @@ describe("crafter ou acheter", () => {
     const sansTaux = { devise: "chaos" as const, taux: { exalt: 1, chaos: 0, divine: 0 } };
     expect(versExalts(2, sansTaux)).toBe(2);
     expect(deviseSaisie(sansTaux)).toBe("ex");
+  });
+});
+
+describe("coût moyen : budget et prix anciens", () => {
+  const q = Array.from({ length: 201 }, (_, i) => i * 2);
+
+  it("lit des quantiles PoE 1 comme ceux de PoE 2", () => {
+    expect(chanceQuantiles(q, 1000, 0, 200)).toBe(0.5);
+    expect(chanceQuantiles(q, 1000, 0, 1)).toBe(0);
+    expect(chanceQuantiles(q, 1000, 1000, 400)).toBe(0.5);
+    expect(chanceQuantiles([], 0, 0, 400)).toBe(0);
+    expect(chanceQuantiles(q, 0, 10, 400)).toBe(0);
+  });
+
+  it("écrit la chance de finir", () => {
+    expect(formatChanceBudget(0)).toBe("0 %");
+    expect(formatChanceBudget(0.004)).toBe("moins de 1 %");
+    expect(formatChanceBudget(0.374)).toBe("37 %");
+    expect(formatChanceBudget(0.995)).toBe("plus de 99 %");
+    expect(formatChanceBudget(1)).toBe("100 %");
+  });
+
+  it("signale un relevé de plus de 24 h", () => {
+    const maintenant = 1_800_000_000;
+    expect(agePrixAnciens(null, maintenant)).toBeNull();
+    expect(agePrixAnciens(0, maintenant)).toBeNull();
+    expect(agePrixAnciens(maintenant - 3600, maintenant)).toBeNull();
+    expect(agePrixAnciens(maintenant - 24 * 3600, maintenant)).toBeNull();
+    expect(agePrixAnciens(maintenant - 30 * 3600, maintenant)).toBe("30 h");
+    expect(agePrixAnciens(maintenant - 3 * 24 * 3600, maintenant)).toBe("3 jours");
   });
 });

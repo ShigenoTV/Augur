@@ -175,13 +175,44 @@ export function arbre(plan: ForgePlan, maxBranches = 4, maxNoeuds = 28): Arbre {
  * prudente des quantiles que le cœur Rust (`VerifyResult::success_probability`).
  */
 export function chanceSousBudget(mc: ForgeVerify, budget: number): number {
-  const q = mc.costQuantiles ?? [];
+  return chanceQuantiles(mc.costQuantiles ?? [], mc.trials, mc.censored, budget);
+}
+
+/**
+ * Même lecture pour des quantiles quelconques (PoE 2 ou PoE 1) : `quantiles` croissants des crafts
+ * aboutis, `aboutis` et `interrompus` (comptés comme des échecs).
+ */
+export function chanceQuantiles(q: number[], aboutis: number, interrompus: number, budget: number): number {
   const b = budget + Math.abs(budget) * 1e-6;
-  if (q.length < 2 || !(b >= q[0]!)) return 0;
+  if (q.length < 2 || !(b >= q[0]!) || !(aboutis > 0)) return 0;
   let i = 0;
   while (i + 1 < q.length && q[i + 1]! <= b) i++;
-  const fini = mc.trials / (mc.trials + mc.censored);
+  const fini = aboutis / (aboutis + interrompus);
   return (i / (q.length - 1)) * fini;
+}
+
+/** Au-delà de cet âge (secondes), le relevé des prix est signalé comme ancien. */
+export const PRIX_ANCIENS_APRES = 24 * 3600;
+
+/**
+ * Âge d'un relevé de prix (secondes unix) s'il dépasse [`PRIX_ANCIENS_APRES`], en texte court
+ * (« 2 jours », « 30 h ») ; `null` si le relevé est récent ou inconnu.
+ */
+export function agePrixAnciens(releveA: number | null | undefined, maintenant = Date.now() / 1000): string | null {
+  if (!releveA || !(releveA > 0)) return null;
+  const age = maintenant - releveA;
+  if (!(age > PRIX_ANCIENS_APRES)) return null;
+  const h = Math.floor(age / 3600);
+  if (h < 48) return `${h} h`;
+  return `${Math.floor(h / 24)} jours`;
+}
+
+/** Chance de finir, lisible : « 37 % », « moins de 1 % », « plus de 99 % ». */
+export function formatChanceBudget(p: number): string {
+  if (!(p > 0)) return "0 %";
+  if (p < 0.01) return "moins de 1 %";
+  if (p > 0.99 && p < 1) return "plus de 99 %";
+  return `${Math.round(p * 100)} %`;
 }
 
 /** En dessous de cet écart relatif, crafter ou acheter revient au même. */
