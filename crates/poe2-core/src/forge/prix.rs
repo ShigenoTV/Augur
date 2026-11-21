@@ -13,7 +13,7 @@
 //! poe.ninja ou saisie par le joueur.
 
 use super::atelier::ids_essences;
-use super::catalogue::{MONNAIES, OMENS};
+use super::catalogue::{MONNAIES, OMENS, OS};
 use super::ninja::ReleveMarche;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -111,6 +111,7 @@ pub fn identifiants() -> impl Iterator<Item = &'static str> {
         .into_iter()
         .chain(MONNAIES.iter().map(|m| m.id))
         .chain(OMENS.iter().map(|o| o.id))
+        .chain(OS.iter().map(|o| o.id))
         .chain(ids_essences())
 }
 

@@ -4,6 +4,8 @@
 Réunit dans un seul fichier compressé :
 
 - les mods tirables du domaine `item` (hors Essence) de `tables/mods.json` ;
+- les mods de Désécration des liches (domaine `desecrated`, identifiants `AbyssMod…` étiquetés
+  `ulaman_mod`, `amanamu_mod` ou `kurgal_mod`), avec leurs étiquettes ;
 - les bases de `tables/bases.json` ;
 - le relevé de poids poe2db de `tools/theorycraft/donnees/poids-poe2db.json` (estimations de
   Krakenbul, CC BY-NC-SA 3.0 : l'attribution suit ces données, voir `crates/poe2-core/data/README.md`) ;
@@ -47,7 +49,21 @@ CHAMPS_MOD = (
     "texte",
     "spawn",
     "essence_seulement",
+    "tags",
 )
+# Étiquettes des trois liches : un mod de Désécration en porte une (Omens of the Sovereign, Liege et
+# Blackblooded).
+LICHES = ("ulaman_mod", "amanamu_mod", "kurgal_mod")
+
+
+def desecration(m: dict) -> bool:
+    """Mod de Désécration d'une liche, posable sur un objet par un os abyssal."""
+    return (
+        m["domaine"] == "desecrated"
+        and m["id"].startswith("AbyssMod")
+        and any(t in LICHES for t in m.get("tags", []))
+        and any(s["weight"] > 0 for s in m["spawn"])
+    )
 CHAMPS_BASE = ("id", "nom", "classe", "tags", "niveau_drop")
 
 
@@ -65,9 +81,10 @@ def construire(
     if absents := sorted(cibles - connus):
         raise ValueError(f"mods garantis absents des tables : {', '.join(absents)}")
     garde = [
-        {k: m[k] for k in CHAMPS_MOD if k in m}
+        {k: m[k] for k in CHAMPS_MOD if k in m and (k != "tags" or desecration(m))}
         for m in mods["mods"]
         if m["id"] in cibles
+        or desecration(m)
         or (
             m["domaine"] == "item"
             and not m.get("essence_seulement")

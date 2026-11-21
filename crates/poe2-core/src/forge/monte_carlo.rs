@@ -54,7 +54,9 @@ fn run_trial(pool: &AffixPool, spec: &SimSpec, rng: &mut SmallRng) -> (bool, u32
         return (true, 0);
     }
     for n in 1..=spec.max_orbs {
-        if pool.apply(&mut item, &spec.currency, rng) == Outcome::NotApplicable {
+        if pool.apply_pour(&mut item, &spec.currency, rng, Some(&spec.goal))
+            == Outcome::NotApplicable
+        {
             return (false, n - 1);
         }
         if spec.goal.is_met(&item) {
@@ -166,6 +168,7 @@ pub(crate) mod tests {
             require_tag: None,
             remove_desecrated_only: false,
             remove_lowest_level: false,
+            reveal_twice: false,
             requires_rare: false,
             double: false,
             unit_cost: 1.0,
@@ -309,6 +312,7 @@ pub(crate) mod tests {
                     idx,
                     fractured: false,
                     crafted: false,
+                    desecrated: false,
                 });
             }
             it
@@ -368,6 +372,7 @@ pub(crate) mod tests {
                     idx,
                     fractured: false,
                     crafted: false,
+                    desecrated: false,
                 });
             }
             it
@@ -458,12 +463,14 @@ pub(crate) mod tests {
                 idx: 0,
                 fractured: true,
                 crafted: false,
+                desecrated: false,
             });
             for idx in [1, 6, 7] {
                 it.push(Mod {
                     idx,
                     fractured: false,
                     crafted: false,
+                    desecrated: false,
                 });
             }
             assert_eq!(jewel.apply(&mut it, &contempt, &mut rng), Outcome::Applied);
@@ -490,6 +497,7 @@ pub(crate) mod tests {
             idx: plus_suffix,
             fractured: false,
             crafted: false,
+            desecrated: false,
         });
         let dextral = Currency {
             add_slot: Some(Slot::Suffix),
@@ -659,6 +667,7 @@ pub(crate) mod tests {
                     idx: i,
                     fractured: false,
                     crafted: false,
+                    desecrated: false,
                 });
             }
             it.set_fractured(0);
@@ -688,6 +697,7 @@ pub(crate) mod tests {
                     idx: i,
                     fractured: false,
                     crafted: false,
+                    desecrated: false,
                 });
             }
             // isolé du réajout de Chaos : on teste directement la sélection du retrait
@@ -715,11 +725,13 @@ pub(crate) mod tests {
                 idx: 0,
                 fractured: false,
                 crafted: false,
+                desecrated: false,
             }); // normal, jamais ciblé
             it.push(Mod {
                 idx: 1,
                 fractured: false,
                 crafted: false,
+                desecrated: false,
             }); // desecrated, seul retirable
             let light = Currency {
                 remove_desecrated_only: true,
@@ -781,8 +793,10 @@ pub(crate) mod tests {
         affixes[2].desecrated = true;
         affixes[2].req_ilvl = 60;
         let pool = AffixPool::new(affixes);
+        // Omen of Dextral Necromancy : côté suffixe (le seul préfixe est déjà sur l'objet)
         let ancient = Currency {
             min_mod_level: 40,
+            add_slot: Some(Slot::Suffix),
             ..cur(CurrencyKind::Desecrate)
         };
         let mut rng = rand::rngs::SmallRng::seed_from_u64(5);
@@ -792,12 +806,97 @@ pub(crate) mod tests {
                 idx: 0,
                 fractured: false,
                 crafted: false,
+                desecrated: false,
             });
             assert_eq!(pool.apply(&mut it, &ancient, &mut rng), Outcome::Applied);
             assert!(
-                it.mods().iter().any(|m| m.idx == 2),
+                it.mods().iter().any(|m| m.idx == 2 && m.desecrated),
                 "seul le mod de niveau 60 est tirable"
             );
         }
+    }
+
+    /// Révélation (émulateur de Craft of Exile, `getRevealPicks`) : 1, 2 ou 3 mods de liche à 80 / 15 / 5 %,
+    /// le reste du pool normal du côté, sans doublon de groupe ; l'Omen de liche garantit une option.
+    #[test]
+    fn revelation_trois_options_et_omen_de_liche() {
+        let mut affixes = vec![
+            aff("N1", 0, Slot::Prefix, 1000),
+            aff("N2", 1, Slot::Prefix, 1000),
+            aff("N3", 2, Slot::Prefix, 1000),
+            aff("N4", 3, Slot::Prefix, 1000),
+            aff("A1", 10, Slot::Prefix, 1),
+            aff("A2", 11, Slot::Prefix, 1),
+            aff("K", 12, Slot::Prefix, 1),
+            aff("S", 20, Slot::Suffix, 1000),
+        ];
+        for a in &mut affixes[4..7] {
+            a.desecrated = true;
+        }
+        affixes[6].tags = crate::forge::donnees::TAG_KURGAL;
+        let pool = AffixPool::new(affixes);
+        let necro = Currency {
+            add_slot: Some(Slot::Prefix),
+            ..cur(CurrencyKind::Desecrate)
+        };
+        let it = ItemState::new(Rarity::Rare, 80);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(9);
+        let mut liches = [0u32; 4];
+        let n = 20_000;
+        for _ in 0..n {
+            let o = pool.reveal_options(&it, &necro, Slot::Prefix, &mut rng);
+            assert_eq!(o.len(), 3);
+            let mut g: Vec<u16> = o.iter().map(|&i| pool.affixes[i as usize].group).collect();
+            g.dedup();
+            assert_eq!(g.len(), 3, "pas deux options du même groupe");
+            liches[o
+                .iter()
+                .filter(|&&i| pool.affixes[i as usize].desecrated)
+                .count()] += 1;
+        }
+        let f = |k: usize| liches[k] as f64 / n as f64;
+        assert!(
+            (f(1) - 0.80).abs() < 0.015
+                && (f(2) - 0.15).abs() < 0.015
+                && (f(3) - 0.05).abs() < 0.01
+        );
+        let kurgal = Currency {
+            require_tag: Some(crate::forge::donnees::TAG_KURGAL),
+            ..necro.clone()
+        };
+        for _ in 0..500 {
+            let o = pool.reveal_options(&it, &kurgal, Slot::Prefix, &mut rng);
+            assert!(
+                o.contains(&6),
+                "l'Omen of the Blackblooded garantit une option Kurgal"
+            );
+        }
+        // le joueur prend le mod voulu s'il est proposé, et l'objet devient Désécré
+        let goal = Goal::new(
+            &pool,
+            &[WantedAffix {
+                group: 3,
+                family: 0,
+                max_tier: 1,
+            }],
+        )
+        .unwrap();
+        let mut voulu = 0;
+        for _ in 0..2000 {
+            let mut it = it;
+            assert_eq!(
+                pool.apply_pour(&mut it, &necro, &mut rng, Some(&goal)),
+                Outcome::Applied
+            );
+            assert!(pool.has_desecrated(&it));
+            voulu += goal.is_met(&it) as u32;
+            assert_eq!(
+                pool.apply_pour(&mut it, &necro, &mut rng, Some(&goal)),
+                Outcome::NotApplicable
+            );
+        }
+        // P(N4 parmi les options normales) : 1 option (15 %), 2 options (80 %) sur 4 groupes normaux
+        let attendu = 0.8 * 0.5 + 0.15 * 0.25;
+        assert!((voulu as f64 / 2000.0 - attendu).abs() < 0.04, "{voulu}");
     }
 }

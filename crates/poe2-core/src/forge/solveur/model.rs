@@ -38,6 +38,20 @@ struct AddW {
     other_s: [f64; 7],
 }
 
+/// Poids des tirages d'options d'une révélation, par côté ([préfixe, suffixe]) : mods de liche, mods de la
+/// liche de l'Omen (s'il y en a un), pool normal.
+#[derive(Clone, Debug, Default)]
+struct RevealW {
+    abyss: [AddW; 2],
+    tag: Option<[AddW; 2]>,
+    normal: [AddW; 2],
+}
+
+/// Loi du nombre d'options de liche à la révélation (1, 2 ou 3 sur 3 options : émulateur de Craft of
+/// Exile, `DESECRATION_MOD_SPAWN_RATE`).
+const REVEAL_LICHES: [(usize, f64); 3] = [(1, 0.8), (2, 0.15), (3, 0.05)];
+const REVEAL_OPTIONS: usize = 3;
+
 /// P(groupe j absent des k premiers tirages pondérés sans remise), pour k = 0..=kmax (plafond du slot).
 fn survival(w: &[f64], kmax: usize) -> Vec<Vec<f64>> {
     let mut inset = vec![vec![0.0f64; w.len()]; kmax + 1];
@@ -90,6 +104,8 @@ pub struct Model {
     weights: Vec<Option<AddW>>,
     /// Poids de l'autre côté pour un Orb of Alchemy sous Omen of Sinistral / Dextral Alchemy.
     weights_other: Vec<Option<AddW>>,
+    /// Pour une Désécration : poids des options de la révélation, par côté.
+    weights_reveal: Vec<Option<RevealW>>,
     /// Pour les actions `Essence` : (affixe, slot, classification) de chaque affixe garanti possible (un
     /// seul, ou deux à 50/50 pour Potent Liquid Ferocity/Contempt), précalculé une fois (ne dépend pas de
     /// l'état, contrairement aux monnaies à tirage pondéré).
@@ -304,6 +320,7 @@ impl Model {
             actions,
             weights: vec![],
             weights_other: vec![],
+            weights_reveal: vec![],
             essence_class: vec![],
             restart: MacroState::empty(Rarity::Normal),
             abandon_extra: (base_cost - salvage).max(0.0),
@@ -430,6 +447,24 @@ impl Model {
                             }),
                             ..c.clone()
                         })
+                    })
+                }
+                _ => None,
+            })
+            .collect();
+        m.weights_reveal = m
+            .actions
+            .iter()
+            .map(|a| match &a.kind {
+                ActionKind::Currency(c) if c.kind == CurrencyKind::Desecrate => {
+                    let cote = |desecrate: bool, tag: Option<u64>| {
+                        [Slot::Prefix, Slot::Suffix]
+                            .map(|slot| m.add_weights_with(c, desecrate, Some(slot), tag))
+                    };
+                    Some(RevealW {
+                        abyss: cote(true, None),
+                        tag: c.require_tag.map(|t| cote(true, Some(t))),
+                        normal: cote(false, None),
                     })
                 }
                 _ => None,
@@ -571,7 +606,23 @@ impl Model {
     }
 
     fn add_weights(&self, c: &Currency) -> AddW {
-        let desecrate = c.kind == CurrencyKind::Desecrate;
+        self.add_weights_with(
+            c,
+            c.kind == CurrencyKind::Desecrate,
+            c.add_slot,
+            c.require_tag,
+        )
+    }
+
+    /// Poids d'un tirage dans le pool de Désécration (`desecrate`) ou le pool normal, restreint à un côté
+    /// et à une étiquette, au niveau de mod minimum de `c`.
+    fn add_weights_with(
+        &self,
+        c: &Currency,
+        desecrate: bool,
+        add_slot: Option<Slot>,
+        require_tag: Option<u64>,
+    ) -> AddW {
         let (other_pos, surv_p, surv_s) = if desecrate {
             (
                 &self.desec_other_pos,
@@ -589,9 +640,9 @@ impl Model {
             if a.weight == 0
                 || a.req_ilvl > self.ilvl
                 || sous_min[i]
-                || c.add_slot.is_some_and(|s| s != a.slot)
+                || add_slot.is_some_and(|s| s != a.slot)
                 || a.desecrated != desecrate
-                || c.require_tag.is_some_and(|t| a.tags & t == 0)
+                || require_tag.is_some_and(|t| a.tags & t == 0)
             {
                 continue;
             }
@@ -958,6 +1009,123 @@ impl Model {
     }
 
     /// Catégorie du mod qu'un ajout a posé entre `s` et `t` (pour savoir où est le mod Désécré).
+    /// Mod choisi à la révélation d'un mod Désécré du côté `cote` de `s` : le joueur prend un mod voulu
+    /// s'il y en a un parmi les options, sinon un mod inutile, un palier trop bas d'un voulu en dernier.
+    /// Options tirées indépendamment (approximation du tirage sans remise de l'émulateur). Renvoie la
+    /// probabilité qu'aucune option ne soit possible (l'objet reste tel quel).
+    fn reveal_outcomes(
+        &self,
+        s: MacroState,
+        cur: &Currency,
+        rw: &RevealW,
+        cote: Slot,
+        out: &mut Vec<(MacroState, f64)>,
+    ) -> f64 {
+        let i = match cote {
+            Slot::Prefix => 0,
+            Slot::Suffix => 1,
+        };
+        // loi d'une option : (états voulus, états trop bas, état inutile), probabilités sommant à 1, ou
+        // `None` si le pool est vide
+        type Loi = (
+            Vec<(MacroState, f64)>,
+            Vec<(MacroState, f64)>,
+            Option<(MacroState, f64)>,
+        );
+        let loi = |w: &AddW| -> Option<Loi> {
+            let mut ad = Vec::new();
+            if !self.add_outcomes(s, w, &mut ad) {
+                return None;
+            }
+            let (mut voulus, mut bas, mut autre) = (Vec::new(), Vec::new(), None);
+            for (t, q) in ad {
+                if t.held != s.held {
+                    voulus.push((t, q));
+                } else if t.blocked != s.blocked {
+                    bas.push((t, q));
+                } else {
+                    autre = Some(match autre {
+                        Some((u, r)) => (u, r + q),
+                        None => (t, q),
+                    });
+                }
+            }
+            Some((voulus, bas, autre))
+        };
+        let (abyss, normal) = (loi(&rw.abyss[i]), loi(&rw.normal[i]));
+        let tag = rw.tag.as_ref().and_then(|t| loi(&t[i]));
+        // jeux d'options : nombre de mods de liche, puis, avec l'Omen of Abyssal Echoes, un second jeu
+        let mut jeux: Vec<(Vec<&Loi>, f64)> = Vec::new();
+        let un_jeu = |liches: usize| -> Vec<&Loi> {
+            let mut v: Vec<&Loi> = Vec::new();
+            let mut n = 0;
+            if let Some(t) = &tag {
+                v.push(t);
+                n += 1;
+            }
+            if let Some(a) = &abyss {
+                while n < liches {
+                    v.push(a);
+                    n += 1;
+                }
+            }
+            // l'émulateur complète avec le pool normal jusqu'à trois options
+            if let Some(nl) = &normal {
+                for _ in v.len()..REVEAL_OPTIONS {
+                    v.push(nl);
+                }
+            }
+            v
+        };
+        for &(l1, p1) in &REVEAL_LICHES {
+            if cur.reveal_twice {
+                for &(l2, p2) in &REVEAL_LICHES {
+                    let mut v = un_jeu(l1);
+                    v.extend(un_jeu(l2));
+                    jeux.push((v, p1 * p2));
+                }
+            } else {
+                jeux.push((un_jeu(l1), p1));
+            }
+        }
+        let mut rien = 0.0;
+        for (options, pj) in jeux {
+            if options.is_empty() {
+                rien += pj;
+                continue;
+            }
+            let g = |l: &Loi| l.0.iter().map(|x| x.1).sum::<f64>();
+            let b = |l: &Loi| l.1.iter().map(|x| x.1).sum::<f64>();
+            let sans_voulu: f64 = options.iter().map(|l| 1.0 - g(l)).product();
+            let tous_bas: f64 = options.iter().map(|l| b(l)).product();
+            let poids_voulus: f64 = options.iter().map(|l| g(l)).sum();
+            if poids_voulus > 0.0 {
+                for l in &options {
+                    for &(t, q) in &l.0 {
+                        out.push((t, pj * (1.0 - sans_voulu) * q / poids_voulus));
+                    }
+                }
+            }
+            let poids_bas: f64 = options.iter().map(|l| b(l)).sum();
+            if poids_bas > 0.0 && tous_bas > 0.0 {
+                for l in &options {
+                    for &(t, q) in &l.1 {
+                        out.push((t, pj * tous_bas * q / poids_bas));
+                    }
+                }
+            }
+            let p_autre = (sans_voulu - tous_bas).max(0.0);
+            if p_autre > 0.0 {
+                // l'état « un mod inutile de plus de ce côté » est le même pour toutes les options
+                if let Some((t, _)) = options.iter().find_map(|l| l.2) {
+                    out.push((t, pj * p_autre));
+                }
+            }
+        }
+        merge(out);
+        rien
+    }
+
     fn added_desec(s: &MacroState, t: &MacroState) -> u8 {
         let diff = |a: u8, b: u8| (b & !a).trailing_zeros() as u8;
         if t.held != s.held {
@@ -1251,37 +1419,76 @@ impl Model {
                 }
             }
             Desecrate if s.rarity == Rarity::Rare && !s.desecrated => {
-                // ajoute un mod « Désécré » non révélé, tiré dans le pool restreint (Ulaman/Amanamu/
-                // Kurgal, éventuellement un seul via l'Omen the Sovereign/Liege/Blackblooded) ; retire
-                // un mod au hasard d'abord SEULEMENT si l'objet est déjà plein à 6.
+                // Os abyssal puis révélation (voir `CurrencyKind::Desecrate`). Côté forcé par l'Omen of
+                // Sinistral / Dextral Necromancy (vidé d'un mod s'il est plein), sinon un mod retiré au
+                // hasard si l'objet est plein ; puis le côté au hasard parmi les côtés ouverts.
+                let rw = self.weights_reveal[ai].as_ref().unwrap();
+                let ouvert = |t: &MacroState, slot: Slot| {
+                    let (cap_p, cap_s) = self.caps(t, t.rarity);
+                    let (np, ns) = self.counts(t);
+                    match slot {
+                        Slot::Prefix => np < cap_p,
+                        Slot::Suffix => ns < cap_s,
+                    }
+                };
                 let mut base: Vec<(MacroState, f64)> = vec![(s, 1.0)];
-                if !self.has_room(&s) {
-                    let mut rm = Vec::new();
-                    base = if self.remove_outcomes(s, None, Removal::Random, &mut rm) {
-                        rm
-                    } else {
-                        Vec::new()
-                    };
+                let vider = |slot: Option<Slot>, base: Vec<(MacroState, f64)>| {
+                    let mut out = Vec::new();
+                    for (t, p) in base {
+                        let plein = match slot {
+                            Some(c) => !ouvert(&t, c),
+                            None => !self.has_room(&t),
+                        };
+                        if !plein {
+                            out.push((t, p));
+                            continue;
+                        }
+                        let mut rm = Vec::new();
+                        if self.remove_outcomes(t, slot, Removal::Random, &mut rm) {
+                            out.extend(rm.into_iter().map(|(u, q)| (u, p * q)));
+                        }
+                    }
+                    out
+                };
+                if cur.add_slot.is_some() {
+                    base = vider(cur.add_slot, base);
                 }
+                base = vider(None, base);
                 for (s1, p1) in base {
-                    let mut ad = Vec::new();
-                    if self.add_outcomes(s1, w, &mut ad) {
-                        v.extend(ad.into_iter().map(|(t, q)| {
+                    let cotes: Vec<(Slot, f64)> = match (
+                        cur.add_slot.filter(|c| ouvert(&s1, *c)),
+                        ouvert(&s1, Slot::Prefix),
+                        ouvert(&s1, Slot::Suffix),
+                    ) {
+                        (Some(c), _, _) => vec![(c, 1.0)],
+                        (None, true, true) => vec![(Slot::Prefix, 0.5), (Slot::Suffix, 0.5)],
+                        (None, true, false) => vec![(Slot::Prefix, 1.0)],
+                        (None, false, true) => vec![(Slot::Suffix, 1.0)],
+                        (None, false, false) => Vec::new(),
+                    };
+                    let mut rien = if cotes.is_empty() { p1 } else { 0.0 };
+                    for (cote, pc) in cotes {
+                        let mut r = Vec::new();
+                        rien += p1 * pc * self.reveal_outcomes(s1, cur, rw, cote, &mut r);
+                        v.extend(r.into_iter().map(|(t, q)| {
                             (
                                 MacroState {
                                     desecrated: true,
                                     desec: Self::added_desec(&s1, &t),
                                     ..t
                                 },
-                                p1 * q,
+                                p1 * pc * q,
                             )
                         }));
-                    } else if s1 != s {
-                        // mod retiré mais aucun mod Désécré possible dans la place libérée : l'objet reste tel
-                        // quel (même règle que le moteur exact). Perdre cette probabilité la ferait passer pour
-                        // un succès gratuit.
-                        v.push((s, p1));
                     }
+                    if rien > 0.0 {
+                        // aucune option possible : l'objet reste tel quel (même règle que le moteur exact),
+                        // jamais amputé du mod retiré
+                        v.push((s, rien));
+                    }
+                }
+                if v.iter().all(|(t, _)| *t == s) {
+                    v.clear();
                 }
             }
             _ => {}

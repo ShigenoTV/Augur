@@ -43,8 +43,8 @@ clippy en édition 2024.
 - Page poe2db d'une base : classe au pluriel (`Rings`, `Quarterstaves` pour les bâtons de guerre…), suivie des
   attributs pour les armures (`Body_Armours_int`, `Shields_str_dex`). Pas de page pour les armures force /
   dextérité / intelligence hors armures de corps, ni pour les quelques bases d'armure sans attribut.
-- Limites du pool actuel : pas de mods désacralisés (aucun poids chez poe2db ni chez Craft of Exile, qui met 1
-  partout : la Désécration n'est donc pas calculable, contrôle du 08/11) ; plafond de la base fixé à 3 préfixes / 3 suffixes (les implicites « +1 Prefix Modifier allowed »
+- Limites du pool actuel : mods de liche (Désécration) à poids 1 pour tous, faute de mesure (poe2db n'en a
+  pas, Craft of Exile met 1 partout ; voir « Désécration » plus bas) ; plafond de la base fixé à 3 préfixes / 3 suffixes (les implicites « +1 Prefix Modifier allowed »
   ne sont pas encore extraits des tables) ; joyaux non traités (pas de bases de joyaux dans les tables).
 - L'attribution des poids suit les données dans le dépôt (`LICENCE-poids-poe2db.md`, `LICENCE-poids-coe.md`). L'appli
   n'affiche pas les sources (choix de Max, 08/11). Le dépôt reste sans licence.
@@ -80,8 +80,8 @@ donc sur un prix d'achat que le joueur relève lui-même (point 8 ci-dessous).
    Enhancement, Greater Battle, Abyss) et les 13 Alloys ; une Essence ou un Alloy n'est proposé que s'il a un
    prix (poe.ninja, catégories `Essences` et `Verisium`, ou saisie). Les mods à plusieurs groupes d'exclusion
    (Swift Alloy sur anneau et gants, Transcendent Alloy sur arme d'attaque) sont gérés depuis le 09/11 (voir
-   « Alloys hybrides » plus bas). Désécration et Liquid Emotions restent hors catalogue (pas de poids des mods
-   désacralisés).
+   « Alloys hybrides » plus bas). Os abyssaux (Désécration) au catalogue depuis le 21/11 (voir « Désécration »
+   plus bas). Liquid Emotions hors catalogue : elles ne posent un mod que sur les joyaux, que Forge ne traite pas.
 4. **Prix** (`forge::prix`, `forge::ninja`, commandes `get_forge_prices` / `set_forge_prices` /
    `reset_forge_prices` / `refresh_forge_prices`) : table de prix enregistrée dans `forge-prix.json` (dossier de
    configuration d'Augur) ; corrections du joueur, relevé poe.ninja, valeurs indicatives. Une saisie invalide est
@@ -193,9 +193,58 @@ Annulment, ni Coronation, ni Alchemy : il faut saisir leur prix dans l'onglet Pr
 
 Pas au catalogue : **Homogenising Exaltation / Coronation** (le mod ajouté doit partager une étiquette avec un mod
 déjà présent ; l'état abstrait du solveur ne connaît pas les étiquettes des mods hors objectif), **Catalysing
-Exaltation** (qualité de catalyseur, que Forge ne suit pas), les Omens de Désécration (Necromancy, Sovereign,
-Liege, Blackblooded, Light, Abyssal Echoes, Putrefaction : pas de poids des mods désacralisés) et ceux qui ne
-touchent pas aux affixes (Sanctification, Blessed, Corruption, Chance, Ancients, Omens de Waystone…).
+Exaltation** (qualité de catalyseur, que Forge ne suit pas), **Putrefaction** (voile tous les mods et corrompt)
+et ceux qui ne touchent pas aux affixes (Sanctification, Blessed, Corruption, Chance, Ancients, Omens de Waystone…).
 
 Tests : `solveur::tests::nouveaux_omens_meme_loi_que_le_moteur` (loi d'un essai, modèle contre moteur exact,
 depuis cinq objets), `plan_avec_les_nouveaux_omens` (plan complet simulé), `alchemy_et_crystallisation_sur_le_moteur`.
+
+
+## Désécration (21/11/2026, approximatif)
+
+Règles relevées dans l'émulateur de Craft of Exile 0.5.5.5 (`poe2_desecrate`, `getRevealPicks`), sans copier
+de données. Forge traite l'os et la révélation au Well of Souls comme une seule action :
+
+1. **Os** selon la classe : Jawbone (armes, carquois), Rib (armures, boucliers, focus), Collarbone (bijoux),
+   Cranium (joyaux, Preserved seulement). Gnawed : objet de niveau 64 au plus ; Preserved : sans condition ;
+   Ancient : niveau de mod 40 minimum (options de liche et du pool normal). Prix poe.ninja, catégorie `Abyss`.
+2. **Côté** : forcé par l'Omen of Sinistral / Dextral Necromancy (un mod de ce côté retiré s'il est plein) ;
+   sinon un mod retiré au hasard si l'objet est plein, puis un côté ouvert au hasard (50/50 si les deux le sont).
+3. **Révélation** : trois options, dont 1, 2 ou 3 mods de liche (80 / 15 / 5 %), le reste tiré dans le pool
+   normal de ce côté ; tirages pondérés sans remise, un groupe tiré écarte ses autres paliers. Omen of the
+   Sovereign / Liege / Blackblooded : une des options est un mod d'Ulaman / Amanamu / Kurgal. Omen of Abyssal
+   Echoes : un second jeu d'options. Le joueur prend un mod voulu s'il y en a un, sinon un mod inutile plutôt
+   qu'un palier trop bas d'un voulu.
+4. Le mod révélé est **Désécré** : un seul par objet (pas de seconde Désécration tant qu'il est là), et l'Omen
+   of Light (avec l'Orb of Annulment) ne retire que lui.
+
+Données : les 197 mods `AbyssMod…` étiquetés `ulaman_mod`, `amanamu_mod` ou `kurgal_mod` du domaine
+`desecrated` de RePoE (`forge_data.py`), poids 1 pour tous (aucune mesure publique ; Craft of Exile fait de
+même). Ils partagent le groupe d'exclusion des mods normaux du même effet, mais forment leur propre famille
+(paliers à part). Le coût d'un plan qui passe par un os est donc **approximatif**, et le panneau marque ces mods
+« Os ».
+
+Modèle du solveur : options tirées indépendamment (approximation du tirage sans remise), mêmes règles sinon.
+Omens combinés : Necromancy avec une liche (6 paires). Pas encore : Omen of Putrefaction, os Breach (Altered
+Collarbone) et Vertebrae (Waystones).
+
+Recoupement avec l'émulateur (21/11, `tools/theorycraft/coe_emulateur_poe2.js`, cas exportés par
+`atelier::recoupement::exporter_cas_desecration`, 20 000 essais) : chance que la famille visée soit proposée.
+
+| Cas | Moteur Augur | Modèle du solveur | Émulateur |
+|---|---|---|---|
+| Anneau, Preserved Collarbone + Dextral Necromancy, résistance feu | 15,7 % | 14,6 % | 15,2 ± 0,3 % |
+| Anneau, Preserved Collarbone + Dextral Necromancy + Liege, vol de vie (Amanamu) | 21,5 % | 21,3 % | 18,6 ± 0,3 % |
+| Anneau, Preserved Collarbone sans Omen, vol de vie (Amanamu) | 4,3 % | 4,1 % | 4,0 ± 0,1 % |
+| Robe à 3 préfixes, Ancient Rib, résistance feu | 20,3 % | 18,8 % | 19,6 ± 0,3 % |
+| Robe, Preserved Rib + Abyssal Echoes, vie | 43,5 % | 40,4 % | 42,3 ± 0,4 % |
+| Anneau ilvl 60, Gnawed Collarbone + Dextral Necromancy, résistance froid | 24,8 % | 22,7 % | 14,9 ± 0,3 % |
+
+Écarts connus : le modèle du solveur est un peu pessimiste (options indépendantes) ; l'Omen de liche donne un
+peu plus chez Augur (l'émulateur a sans doute plus de mods de cette liche) ; sur un objet de niveau 64 ou moins,
+l'émulateur propose des mods de liche alors que RePoE leur donne le niveau 65 (Augur suit RePoE : à vérifier en
+jeu, I-D1).
+
+Tests : `monte_carlo::tests::revelation_trois_options_et_omen_de_liche` (loi 80/15/5, Omen de liche, choix du
+joueur), `solveur::tests::desecration_meme_loi_que_le_moteur` (modèle contre moteur exact, cinq actions depuis
+quatre objets), `plan_avec_desecration` (plan complet simulé sur le moteur exact).

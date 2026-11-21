@@ -6,7 +6,9 @@
 //! relevé de poids poe2db, estimations de Krakenbul sous CC BY-NC-SA 3.0 : l'attribution
 //! accompagne chaque réponse, voir [`Attribution`]).
 
-use super::catalogue::{MONNAIES, OMENS, actions, avec_omens, combinaisons, id_combinee};
+use super::catalogue::{
+    MONNAIES, OMENS, OS, actions, avec_omens, combinaisons, desecration, id_combinee, os_pour,
+};
 use super::donnees::{
     BaseTable, ErreurPool, PoolBase, RelevePoids, SansPoids, TableBases, TableMods,
     construire_pool, construire_pool_avec,
@@ -255,6 +257,8 @@ pub struct GroupeAffixe {
     pub part: f64,
     /// Aucun palier tirable à ce niveau d'objet : seule une Essence le pose.
     pub essence: bool,
+    /// Mod de liche, posé seulement par un os abyssal (Désécration).
+    pub desecre: bool,
     /// Paliers accessibles, du meilleur (T1) au plus bas.
     pub paliers: Vec<PalierAffixe>,
 }
@@ -288,7 +292,10 @@ pub fn affixes(base_id: &str, ilvl: u32) -> Result<AffixesBase, ErreurAtelier> {
     let mut par_cle: BTreeMap<(u8, GroupId, u16), GroupeAffixe> = BTreeMap::new();
     let mut total: BTreeMap<u8, f64> = BTreeMap::new();
     for a in &pb.pool.affixes {
-        *total.entry(rang(a.slot)).or_default() += f64::from(a.weight);
+        // part d'un mod de liche : parmi les mods de liche de ce côté (pool de Désécration à part)
+        *total
+            .entry(rang(a.slot) + 2 * a.desecrated as u8)
+            .or_default() += f64::from(a.weight);
         let g = par_cle
             .entry((rang(a.slot), a.group, a.family_id))
             .or_insert_with(|| GroupeAffixe {
@@ -298,6 +305,7 @@ pub fn affixes(base_id: &str, ilvl: u32) -> Result<AffixesBase, ErreurAtelier> {
                 libelle: String::new(),
                 part: 0.0,
                 essence: false,
+                desecre: a.desecrated,
                 paliers: Vec::new(),
             });
         g.part += f64::from(a.weight);
@@ -317,7 +325,10 @@ pub fn affixes(base_id: &str, ilvl: u32) -> Result<AffixesBase, ErreurAtelier> {
                 .first()
                 .map(|p| p.texte.clone())
                 .unwrap_or_default();
-            let t = total.get(&rang(g.slot)).copied().unwrap_or(0.0);
+            let t = total
+                .get(&(rang(g.slot) + 2 * g.desecre as u8))
+                .copied()
+                .unwrap_or(0.0);
             g.part = if t > 0.0 { g.part / t } else { 0.0 };
             g.essence = g.paliers.iter().all(|p| p.poids == 0);
             g
@@ -345,7 +356,7 @@ pub fn affixes(base_id: &str, ilvl: u32) -> Result<AffixesBase, ErreurAtelier> {
 pub struct EntreeCatalogue {
     pub id: String,
     pub nom: String,
-    /// `base`, `monnaie`, `omen` ou `essence`.
+    /// `base`, `monnaie`, `omen`, `os` (Désécration) ou `essence`.
     pub genre: String,
 }
 
@@ -363,6 +374,7 @@ pub fn catalogue() -> Vec<EntreeCatalogue> {
     .into_iter()
     .chain(MONNAIES.iter().map(|m| e(m.id, m.nom, "monnaie")))
     .chain(OMENS.iter().map(|o| e(o.id, o.nom, "omen")))
+    .chain(OS.iter().map(|o| e(o.id, o.nom, "os")))
     .chain(
         donnees()
             .ok()
@@ -508,6 +520,7 @@ fn actions_essences(
                 require_tag: None,
                 remove_desecrated_only: false,
                 remove_lowest_level: false,
+                reveal_twice: false,
                 requires_rare: e.sur_rare(),
                 double: false,
                 unit_cost: prix,
@@ -560,6 +573,45 @@ fn actions_essences(
         })
         .map(|(a, _)| a)
         .collect()
+}
+
+/// Os abyssaux (Désécration) utilisables sur la classe à ce niveau d'objet, seuls et avec leurs Omens, s'ils
+/// ont un prix (relevé poe.ninja ou saisie ; jamais de prix inventé) et ne sont pas exclus.
+fn actions_os(classe: &str, ilvl: u32, table: &TablePrix, exclues: &[String]) -> Vec<Action> {
+    let prix = |id: &str| {
+        table
+            .prix
+            .get(id)
+            .copied()
+            .filter(|p| p.is_finite() && *p >= 0.0 && !exclues.iter().any(|e| e == id))
+    };
+    let vers_action = |c: Currency| Action {
+        id: c.id.clone(),
+        label: c.label.clone(),
+        cost: c.unit_cost,
+        kind: ActionKind::Currency(c),
+    };
+    let mut out = Vec::new();
+    for o in os_pour(classe, ilvl) {
+        let Some(p) = prix(o.id) else {
+            continue;
+        };
+        let c = desecration(o);
+        out.push(vers_action(Currency {
+            unit_cost: p,
+            ..c.clone()
+        }));
+        for omens in combinaisons(CurrencyKind::Desecrate) {
+            let po: Option<f64> = omens.iter().map(|x| prix(x.id)).sum();
+            if let Some(po) = po {
+                out.push(vers_action(Currency {
+                    unit_cost: p + po,
+                    ..avec_omens(&c, &omens)
+                }));
+            }
+        }
+    }
+    out
 }
 
 /// Résumé des sources de prix, affiché avec le plan.
@@ -705,6 +757,7 @@ fn remplacer_inconnus(model: &Model, lu: &suivi::ObjetLu, etat: &MacroState) -> 
                 idx: u16::try_from(i).ok()?,
                 fractured: false,
                 crafted: false,
+                desecrated: false,
             });
         }
     }
@@ -737,6 +790,7 @@ pub fn planifier(
         table,
         &demande.exclues,
     ));
+    acts.extend(actions_os(classe, demande.ilvl, table, &demande.exclues));
     acts.extend(abandon);
     let (prix_base, revente) = table.base();
     let goal_items: Vec<GoalItem> = demande
@@ -868,7 +922,8 @@ mod tests {
         assert!(b.iter().any(|b| b.classe == "Dagger"));
         assert!(!b.iter().any(|b| ecartee(&b.nom)));
         assert!(!b.iter().any(|b| b.nom.contains("Fists of Stone")));
-        assert_eq!(catalogue().len(), 35 + d.essences.len());
+        // 35 + 7 Omens de Désécration et Omen of Light + 10 os
+        assert_eq!(catalogue().len(), 35 + 7 + 10 + d.essences.len());
         assert!(d.essences.len() > 90);
         assert_eq!(d.essences.iter().filter(|e| e.genre == "alloy").count(), 13);
         // chaque mod garanti est dans les tables embarquées
@@ -1157,6 +1212,7 @@ mod tests {
                 require_tag: None,
                 remove_desecrated_only: false,
                 remove_lowest_level: false,
+                reveal_twice: false,
                 requires_rare: e.sur_rare(),
                 double: false,
                 unit_cost: 1.0,
@@ -1170,6 +1226,7 @@ mod tests {
                         idx: idx(m),
                         fractured: false,
                         crafted: false,
+                        desecrated: false,
                     });
                 }
                 assert_eq!(p.apply(&mut it, &c, &mut rng), Outcome::Applied);
@@ -1305,6 +1362,7 @@ mod tests {
                     idx: idx(p, m),
                     fractured: false,
                     crafted: c,
+                    desecrated: false,
                 });
             }
             it
@@ -1328,6 +1386,7 @@ mod tests {
                 require_tag: None,
                 remove_desecrated_only: false,
                 remove_lowest_level: false,
+                reveal_twice: false,
                 requires_rare: e.sur_rare(),
                 double: false,
                 unit_cost: 1.0,
@@ -1591,5 +1650,206 @@ mod tests {
         assert!(r.prix.len() < 26, "seuls les prix des achats : {ids:?}");
         assert!(r.prix.iter().all(|p| p.source == SourcePrix::Indicatif));
         assert!(r.plan.prices_source.contains("indicatifs"));
+    }
+}
+
+/// Export des cas de Désécration pour le recoupement avec l'émulateur de Craft of Exile
+/// (`tools/theorycraft/coe_emulateur_poe2.js`) : pour chaque cas, chance qu'un mod de la famille visée
+/// soit parmi les options de la révélation, sur le moteur exact et dans le modèle du solveur.
+///
+///     CAS=cas.json cargo test -p poe2-core --release --lib exporter_cas_desecration -- --ignored
+#[cfg(test)]
+mod recoupement {
+    use super::*;
+    use crate::forge::catalogue::{OS, avec_omens, desecration, omen_par_id};
+    use crate::forge::moteur::{Mod, Outcome};
+    use crate::forge::solveur::{ActionKind, Model};
+    use rand::SeedableRng;
+
+    struct Cas {
+        nom: &'static str,
+        base: &'static str,
+        ilvl: u32,
+        depart: &'static [&'static str],
+        os: &'static str,
+        omens: &'static [&'static str],
+        vise: &'static str,
+    }
+
+    const CAS: [Cas; 6] = [
+        Cas {
+            nom: "Anneau, Preserved Collarbone, Dextral Necromancy, résistance feu",
+            base: "Metadata/Items/Rings/FourRing3",
+            ilvl: 82,
+            depart: &[],
+            os: "preserved_collarbone",
+            omens: &["omen_dextral_necromancy"],
+            vise: "FireResist1",
+        },
+        Cas {
+            nom: "Anneau, Preserved Collarbone, Dextral Necromancy + Liege, vol de vie (Amanamu)",
+            base: "Metadata/Items/Rings/FourRing3",
+            ilvl: 82,
+            depart: &[],
+            os: "preserved_collarbone",
+            omens: &["omen_dextral_necromancy", "omen_liege"],
+            vise: "AbyssModRingAmanamuSuffixLifeLeechAmount",
+        },
+        Cas {
+            nom: "Anneau, Preserved Collarbone, sans Omen, vol de vie (Amanamu)",
+            base: "Metadata/Items/Rings/FourRing3",
+            ilvl: 82,
+            depart: &[],
+            os: "preserved_collarbone",
+            omens: &[],
+            vise: "AbyssModRingAmanamuSuffixLifeLeechAmount",
+        },
+        Cas {
+            nom: "Robe, 3 préfixes, Ancient Rib, résistance feu",
+            base: "Metadata/Items/Armours/BodyArmours/FourBodyInt8Endgame",
+            ilvl: 82,
+            depart: &[
+                "IncreasedLife8",
+                "LocalIncreasedEnergyShield6",
+                "LocalIncreasedEnergyShieldPercent6",
+            ],
+            os: "ancient_rib",
+            omens: &[],
+            vise: "FireResist1",
+        },
+        Cas {
+            nom: "Robe, Preserved Rib, Abyssal Echoes, vie",
+            base: "Metadata/Items/Armours/BodyArmours/FourBodyInt8Endgame",
+            ilvl: 82,
+            depart: &["FireResist5"],
+            os: "preserved_rib",
+            omens: &["omen_abyssal_echoes"],
+            vise: "IncreasedLife1",
+        },
+        Cas {
+            nom: "Anneau ilvl 60, Gnawed Collarbone, Dextral Necromancy, résistance froid (pas de mod de liche sous 65)",
+            base: "Metadata/Items/Rings/FourRing3",
+            ilvl: 60,
+            depart: &["FireResist3"],
+            os: "gnawed_collarbone",
+            omens: &["omen_dextral_necromancy"],
+            vise: "ColdResist1",
+        },
+    ];
+
+    #[test]
+    #[ignore]
+    fn exporter_cas_desecration() {
+        let sortie = std::env::var("CAS").unwrap_or_else(|_| "cas-desecration.json".into());
+        let mut out = Vec::new();
+        for c in &CAS {
+            let (_, pb) = pool(c.base, c.ilvl).unwrap();
+            let p = Arc::new(pb.pool);
+            let idx = |id: &str| {
+                p.affixes
+                    .iter()
+                    .position(|a| a.id == id)
+                    .unwrap_or_else(|| panic!("{id} absent"))
+            };
+            let v = &p.affixes[idx(c.vise)];
+            let pire = p
+                .affixes
+                .iter()
+                .filter(|a| a.group == v.group && a.family_id == v.family_id)
+                .map(|a| a.tier)
+                .max()
+                .unwrap();
+            let famille: Vec<String> = p
+                .affixes
+                .iter()
+                .filter(|a| {
+                    a.group == v.group && a.family_id == v.family_id && a.req_ilvl as u32 <= c.ilvl
+                })
+                .map(|a| a.id.clone())
+                .collect();
+            let goal = Arc::new(
+                Goal::new(
+                    &p,
+                    &[WantedAffix {
+                        group: v.group,
+                        family: v.family_id,
+                        max_tier: pire,
+                    }],
+                )
+                .unwrap(),
+            );
+            let os = OS.iter().find(|o| o.id == c.os).unwrap();
+            let omens: Vec<_> = c.omens.iter().map(|o| omen_par_id(o).unwrap()).collect();
+            let cur = Currency {
+                unit_cost: 1.0,
+                ..avec_omens(&desecration(os), &omens)
+            };
+            let mut it = ItemState::new(Rarity::Rare, c.ilvl as u8);
+            for id in c.depart {
+                it.push(Mod {
+                    idx: idx(id) as u16,
+                    fractured: false,
+                    crafted: false,
+                    desecrated: false,
+                });
+            }
+            let mut rng = rand::rngs::SmallRng::seed_from_u64(3);
+            const N: usize = 200_000;
+            let mut ok = 0;
+            for _ in 0..N {
+                let mut t = it;
+                if p.apply_pour(&mut t, &cur, &mut rng, Some(&goal)) == Outcome::Applied {
+                    ok += goal.is_met(&t) as usize;
+                }
+            }
+            let action = Action {
+                id: cur.id.clone(),
+                label: cur.label.clone(),
+                cost: 1.0,
+                kind: ActionKind::Currency(cur.clone()),
+            };
+            let model = Model::new(
+                p.clone(),
+                goal.clone(),
+                c.ilvl as u8,
+                vec![action],
+                1.0,
+                0.0,
+            );
+            let s = model.project(&it).unwrap();
+            let mut tr = Vec::new();
+            model.outcomes(s, 0, &mut tr);
+            let modele: f64 = tr
+                .iter()
+                .filter(|t| model.is_goal(&t.to))
+                .map(|t| t.p)
+                .sum();
+            let coe_omens: Vec<&str> = c
+                .omens
+                .iter()
+                .map(|o| match *o {
+                    "omen_sinistral_necromancy" => "OmenOnAbyssAddPrefixes",
+                    "omen_dextral_necromancy" => "OmenOnAbyssAddSuffixes",
+                    "omen_sovereign" => "OmenOnAbyssGuarenteeLichTypeMod1",
+                    "omen_liege" => "OmenOnAbyssGuarenteeLichTypeMod2",
+                    "omen_blackblooded" => "OmenOnAbyssGuarenteeLichTypeMod3",
+                    "omen_abyssal_echoes" => "OmenOnAbyssRerollOptions",
+                    autre => panic!("{autre}"),
+                })
+                .collect();
+            out.push(serde_json::json!({
+                "nom": c.nom,
+                "base": c.base,
+                "ilvl": c.ilvl,
+                "depart": c.depart,
+                "os": c.os,
+                "niveau_min": os.niveau_min,
+                "omens": coe_omens,
+                "famille": famille,
+                "augur_moteur": ok as f64 / N as f64,
+                "augur_modele": modele,
+            }));
+        }
+        std::fs::write(&sortie, serde_json::to_string_pretty(&out).unwrap()).unwrap();
     }
 }

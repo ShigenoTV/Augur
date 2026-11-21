@@ -6,10 +6,11 @@
 //! (`prix`, identifiant -> prix). Un prix manquant est une erreur : jamais de prix inventé.
 //!
 //! Les Essences dépendent de la classe d'objet : elles sont ajoutées par `atelier::planifier`, d'après
-//! les données embarquées, avec les Omens of Crystallisation. Pas encore au catalogue : Désécration (os
-//! abyssaux) et ses Omens, Liquid Emotions. Le moteur sait les appliquer ; il leur manque les poids des
-//! mods désacralisés.
+//! les données embarquées, avec les Omens of Crystallisation. Les os abyssaux (Désécration) dépendent
+//! aussi de la classe : [`OS`] et [`type_os`], ajoutés de même avec leurs Omens. Les mods de liche n'ont
+//! pas de poids mesuré (poids 1 pour tous, comme l'émulateur de Craft of Exile) : coût approximatif.
 
+use super::donnees::{TAG_AMANAMU, TAG_KURGAL, TAG_ULAMAN};
 use super::moteur::{Currency, CurrencyKind, Slot};
 use super::solveur::{Action, ActionKind};
 use std::collections::{BTreeMap, BTreeSet};
@@ -40,6 +41,13 @@ pub struct Omen {
     pub plus_bas: bool,
     /// Omen of Greater Exaltation / Annulment : deux mods ajoutés ou retirés.
     pub double: bool,
+    /// Omen of Light : l'Annulment ne retire que le mod Désécré.
+    pub desecre: bool,
+    /// Omens of the Sovereign / Liege / Blackblooded : une option de la révélation est un mod de cette
+    /// liche (bits `donnees::TAG_*`).
+    pub liche: Option<u64>,
+    /// Omen of Abyssal Echoes : second jeu d'options à la révélation.
+    pub echos: bool,
 }
 
 const fn monnaie(
@@ -115,6 +123,9 @@ const fn omen(
         retrait,
         plus_bas: false,
         double: false,
+        desecre: false,
+        liche: None,
+        echos: false,
     }
 }
 
@@ -123,7 +134,7 @@ const fn omen(
 /// connaît pas les étiquettes des mods hors objectif), Catalysing Exaltation (qualité de catalyseur, que
 /// Forge ne suit pas), et ceux qui ne touchent pas aux affixes (Sanctification, Blessed, Corruption,
 /// Chance, Ancients…).
-pub const OMENS: [Omen; 15] = {
+pub const OMENS: [Omen; 22] = {
     use CurrencyKind::*;
     use Slot::*;
     [
@@ -235,16 +246,177 @@ pub const OMENS: [Omen; 15] = {
             None,
             Some(Suffix),
         ),
+        Omen {
+            desecre: true,
+            ..omen("omen_light", "Omen of Light", Annul, None, None)
+        },
+        omen(
+            "omen_sinistral_necromancy",
+            "Omen of Sinistral Necromancy",
+            Desecrate,
+            Some(Prefix),
+            None,
+        ),
+        omen(
+            "omen_dextral_necromancy",
+            "Omen of Dextral Necromancy",
+            Desecrate,
+            Some(Suffix),
+            None,
+        ),
+        Omen {
+            liche: Some(TAG_ULAMAN),
+            ..omen(
+                "omen_sovereign",
+                "Omen of the Sovereign",
+                Desecrate,
+                None,
+                None,
+            )
+        },
+        Omen {
+            liche: Some(TAG_AMANAMU),
+            ..omen("omen_liege", "Omen of the Liege", Desecrate, None, None)
+        },
+        Omen {
+            liche: Some(TAG_KURGAL),
+            ..omen(
+                "omen_blackblooded",
+                "Omen of the Blackblooded",
+                Desecrate,
+                None,
+                None,
+            )
+        },
+        Omen {
+            echos: true,
+            ..omen(
+                "omen_abyssal_echoes",
+                "Omen of Abyssal Echoes",
+                Desecrate,
+                None,
+                None,
+            )
+        },
     ]
 };
 
+/// Os abyssal : à quelles classes il s'applique.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TypeOs {
+    /// armes et carquois
+    Jawbone,
+    /// armures (corps, casque, gants, bottes, boucliers, focus)
+    Rib,
+    /// bijoux (amulette, anneau, ceinture)
+    Collarbone,
+    /// joyaux
+    Cranium,
+}
+
+/// Un os abyssal (Désécration), règles de l'émulateur de Craft of Exile 0.5.5.5.
+#[derive(Clone, Copy, Debug)]
+pub struct Os {
+    pub id: &'static str,
+    pub nom: &'static str,
+    pub os: TypeOs,
+    /// Ancient : niveau de mod minimum 40 (options de liche et du pool normal).
+    pub niveau_min: u8,
+    /// Gnawed : objet de niveau 64 au plus.
+    pub ilvl_max: Option<u32>,
+}
+
+const fn os(id: &'static str, nom: &'static str, os: TypeOs, qualite: u8) -> Os {
+    Os {
+        id,
+        nom,
+        os,
+        niveau_min: if qualite == 2 { 40 } else { 0 },
+        ilvl_max: if qualite == 0 { Some(64) } else { None },
+    }
+}
+
+pub const OS: [Os; 10] = {
+    use TypeOs::*;
+    [
+        os("gnawed_jawbone", "Gnawed Jawbone", Jawbone, 0),
+        os("preserved_jawbone", "Preserved Jawbone", Jawbone, 1),
+        os("ancient_jawbone", "Ancient Jawbone", Jawbone, 2),
+        os("gnawed_rib", "Gnawed Rib", Rib, 0),
+        os("preserved_rib", "Preserved Rib", Rib, 1),
+        os("ancient_rib", "Ancient Rib", Rib, 2),
+        os("gnawed_collarbone", "Gnawed Collarbone", Collarbone, 0),
+        os(
+            "preserved_collarbone",
+            "Preserved Collarbone",
+            Collarbone,
+            1,
+        ),
+        os("ancient_collarbone", "Ancient Collarbone", Collarbone, 2),
+        os("preserved_cranium", "Preserved Cranium", Cranium, 1),
+    ]
+};
+
+/// Type d'os qui s'applique à une classe d'objet (classes de `tables/bases.json`).
+pub fn type_os(classe: &str) -> Option<TypeOs> {
+    match classe {
+        "Amulet" | "Ring" | "Belt" => Some(TypeOs::Collarbone),
+        "Body Armour" | "Helmet" | "Gloves" | "Boots" | "Shield" | "Buckler" | "Focus" => {
+            Some(TypeOs::Rib)
+        }
+        "Jewel" => Some(TypeOs::Cranium),
+        "One Hand Mace" | "Two Hand Mace" | "Warstaff" | "Spear" | "Bow" | "Crossbow"
+        | "One Hand Sword" | "Two Hand Sword" | "Dagger" | "Flail" | "One Hand Axe"
+        | "Two Hand Axe" | "Staff" | "Wand" | "Sceptre" | "Claw" | "Quiver" | "Talisman" => {
+            Some(TypeOs::Jawbone)
+        }
+        _ => None,
+    }
+}
+
+/// Os utilisables sur cette classe à ce niveau d'objet.
+pub fn os_pour(classe: &str, ilvl: u32) -> impl Iterator<Item = &'static Os> {
+    let t = type_os(classe);
+    OS.iter()
+        .filter(move |o| Some(o.os) == t && o.ilvl_max.is_none_or(|m| ilvl <= m))
+}
+
+/// Monnaie « os abyssal » (sans prix ni Omen).
+pub fn desecration(o: &Os) -> Currency {
+    Currency {
+        id: o.id.to_string(),
+        label: o.nom.to_string(),
+        kind: CurrencyKind::Desecrate,
+        min_mod_level: o.niveau_min,
+        add_slot: None,
+        remove_slot: None,
+        target: None,
+        alt_target: None,
+        more_targets: Vec::new(),
+        require_tag: None,
+        remove_desecrated_only: false,
+        remove_lowest_level: false,
+        reveal_twice: false,
+        requires_rare: false,
+        double: false,
+        unit_cost: 0.0,
+    }
+}
+
 /// Paires d'Omens utilisées ensemble (compatibles dans l'émulateur de Craft of Exile : seuls les
 /// Omens opposés, Sinistral et Dextral, s'excluent).
-pub const PAIRES: [(&str, &str); 4] = [
+pub const PAIRES: [(&str, &str); 10] = [
     ("omen_greater_exaltation", "omen_sinistral_exaltation"),
     ("omen_greater_exaltation", "omen_dextral_exaltation"),
     ("omen_greater_annulment", "omen_sinistral_annulment"),
     ("omen_greater_annulment", "omen_dextral_annulment"),
+    // Désécration : côté forcé et liche garantie
+    ("omen_sinistral_necromancy", "omen_sovereign"),
+    ("omen_sinistral_necromancy", "omen_liege"),
+    ("omen_sinistral_necromancy", "omen_blackblooded"),
+    ("omen_dextral_necromancy", "omen_sovereign"),
+    ("omen_dextral_necromancy", "omen_liege"),
+    ("omen_dextral_necromancy", "omen_blackblooded"),
 ];
 
 /// Omen du catalogue par identifiant.
@@ -273,6 +445,9 @@ pub fn avec_omens(c: &Currency, omens: &[&Omen]) -> Currency {
         c.remove_slot = o.retrait.or(c.remove_slot);
         c.remove_lowest_level |= o.plus_bas;
         c.double |= o.double;
+        c.remove_desecrated_only |= o.desecre;
+        c.require_tag = o.liche.or(c.require_tag);
+        c.reveal_twice |= o.echos;
         c.id = format!("{}+{}", c.id, o.id);
         c.label = format!("{} + {}", c.label, o.nom);
     }
@@ -328,6 +503,7 @@ pub fn actions(
             require_tag: None,
             remove_desecrated_only: false,
             remove_lowest_level: false,
+            reveal_twice: false,
             requires_rare: false,
             double: false,
             unit_cost: 0.0,
@@ -389,9 +565,9 @@ mod tests {
     #[test]
     fn catalogue_complet() {
         let a = actions(&tous_les_prix(1.0), None).unwrap();
-        // 18 monnaies + Exalt×3 (3 Omens, 2 paires) + Chaos×3 (3 Omens) + Annul (3 Omens, 2 paires)
-        // + Regal×3 (2 Omens) + Alchemy (2 Omens) + abandon
-        assert_eq!(a.len(), 18 + 3 * 5 + 3 * 3 + 5 + 3 * 2 + 2 + 1);
+        // 18 monnaies + Exalt×3 (3 Omens, 2 paires) + Chaos×3 (3 Omens) + Annul (4 Omens, 2 paires)
+        // + Regal×3 (2 Omens) + Alchemy (2 Omens) + abandon ; les os (Désécration) dépendent de la classe
+        assert_eq!(a.len(), 18 + 3 * 5 + 3 * 3 + 6 + 3 * 2 + 2 + 1);
         let deux = a
             .iter()
             .find(|x| x.id == "exalt+omen_greater_exaltation+omen_dextral_exaltation")

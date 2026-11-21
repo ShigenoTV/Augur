@@ -49,6 +49,7 @@ fn verifier(nom: &str, sans_poids_attendus: usize) {
                 idx: index(id),
                 fractured: false,
                 crafted: false,
+                desecrated: false,
             });
         }
         let obtenu: BTreeMap<String, f64> = pb

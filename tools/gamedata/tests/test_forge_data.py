@@ -99,3 +99,16 @@ def test_essences_et_leurs_mods_garantis():
         assert "Absent" in str(err)
     else:
         raise AssertionError("mod garanti absent accepté")
+
+
+def test_mods_de_desecration_des_liches():
+    liche = {**_mod("AbyssModRingUlamanFoo", domaine="desecrated"), "tags": ["ulaman_mod", "unveiled_mod"]}
+    sans_liche = {**_mod("AbyssModRingBar", domaine="desecrated"), "tags": ["unveiled_mod"]}
+    carte = {**_mod("MapAbyss", domaine="desecrated"), "tags": ["kurgal_mod"]}
+    normal = {**_mod("A"), "tags": ["life"]}
+    mods = {"schema": 1, "mods": [liche, sans_liche, carte, normal]}
+    d = fd.construire(mods, {"schema": 1, "bases": []}, {"pages": {}}, {"version_repoe": "x"})
+    gardes = {m["id"]: m for m in d["mods"]["mods"]}
+    assert sorted(gardes) == ["A", "AbyssModRingUlamanFoo"]
+    assert gardes["AbyssModRingUlamanFoo"]["tags"] == ["ulaman_mod", "unveiled_mod"]
+    assert "tags" not in gardes["A"]

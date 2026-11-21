@@ -86,6 +86,7 @@ pub fn affixes(
                 libelle: String::new(),
                 part: 0.0,
                 essence: false,
+                desecre: false,
                 paliers: Vec::new(),
             });
         g.part += f64::from(w);

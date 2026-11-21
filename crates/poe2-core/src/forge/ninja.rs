@@ -27,8 +27,18 @@ pub const DELAI_MIN_SECS: u64 = 300;
 /// Après un échec réseau, nouvel essai au plus tôt 10 minutes plus tard.
 pub const DELAI_APRES_ERREUR_SECS: u64 = 600;
 
-/// Catégories poe.ninja interrogées : monnaies, Omens (`Ritual`), Essences et Alloys (`Verisium`).
-pub const CATEGORIES: [&str; 4] = ["Currency", "Ritual", CATEGORIE_ESSENCES, CATEGORIE_ALLOYS];
+/// Catégories poe.ninja interrogées : monnaies, Omens (`Ritual`), Essences, Alloys (`Verisium`) et os
+/// abyssaux (`Abyss`).
+pub const CATEGORIES: [&str; 5] = [
+    "Currency",
+    "Ritual",
+    CATEGORIE_ESSENCES,
+    CATEGORIE_ALLOYS,
+    CATEGORIE_OS,
+];
+
+/// Catégorie des os abyssaux (Désécration).
+pub const CATEGORIE_OS: &str = "Abyss";
 
 /// Catégorie des Essences : toutes ses lignes sont reprises, sous l'identifiant poe.ninja (qui est
 /// aussi celui de Forge) ; la table de prix écarte celles que Forge ne connaît pas.
@@ -39,7 +49,7 @@ pub const CATEGORIE_ALLOYS: &str = "Verisium";
 
 /// Identifiant Forge -> (catégorie poe.ninja, identifiant poe.ninja). La base neuve et sa revente
 /// n'ont pas de cote : elles restent saisies par le joueur.
-pub const SOURCES: [(&str, &str, &str); 34] = [
+pub const SOURCES: [(&str, &str, &str); 51] = [
     ("transmute", "Currency", "transmute"),
     (
         "transmute_greater",
@@ -131,6 +141,31 @@ pub const SOURCES: [(&str, &str, &str); 34] = [
         "Ritual",
         "omen-of-dextral-crystallisation",
     ),
+    ("omen_light", "Ritual", "omen-of-light"),
+    (
+        "omen_sinistral_necromancy",
+        "Ritual",
+        "omen-of-sinistral-necromancy",
+    ),
+    (
+        "omen_dextral_necromancy",
+        "Ritual",
+        "omen-of-dextral-necromancy",
+    ),
+    ("omen_sovereign", "Ritual", "omen-of-the-sovereign"),
+    ("omen_liege", "Ritual", "omen-of-the-liege"),
+    ("omen_blackblooded", "Ritual", "omen-of-the-blackblooded"),
+    ("omen_abyssal_echoes", "Ritual", "omen-of-abyssal-echoes"),
+    ("gnawed_jawbone", CATEGORIE_OS, "gnawed-jawbone"),
+    ("preserved_jawbone", CATEGORIE_OS, "preserved-jawbone"),
+    ("ancient_jawbone", CATEGORIE_OS, "ancient-jawbone"),
+    ("gnawed_rib", CATEGORIE_OS, "gnawed-rib"),
+    ("preserved_rib", CATEGORIE_OS, "preserved-rib"),
+    ("ancient_rib", CATEGORIE_OS, "ancient-rib"),
+    ("gnawed_collarbone", CATEGORIE_OS, "gnawed-collarbone"),
+    ("preserved_collarbone", CATEGORIE_OS, "preserved-collarbone"),
+    ("ancient_collarbone", CATEGORIE_OS, "ancient-collarbone"),
+    ("preserved_cranium", CATEGORIE_OS, "preserved-cranium"),
 ];
 
 /// Relevé de prix poe.ninja, en Exalted Orbs.
@@ -366,8 +401,9 @@ mod tests {
         assert!((prix["the-runebinders-alloy"] - 0.5813 * 666.2).abs() < 1e-9);
     }
 
-    /// Omens ajoutés au catalogue le 21/11/2026, absents du relevé enregistré le 07/11.
-    const ABSENTS_DU_RELEVE_DU_07_11: [&str; 9] = [
+    /// Omens ajoutés au catalogue le 21/11/2026, absents du relevé enregistré le 07/11 (le relevé
+    /// enregistré ne garde que les Omens cotés alors par Forge).
+    const ABSENTS_DU_RELEVE_DU_07_11: [&str; 16] = [
         "omen_greater_exaltation",
         "omen_greater_annulment",
         "omen_whittling",
@@ -377,6 +413,13 @@ mod tests {
         "omen_dextral_alchemy",
         "omen_sinistral_crystallisation",
         "omen_dextral_crystallisation",
+        "omen_light",
+        "omen_sinistral_necromancy",
+        "omen_dextral_necromancy",
+        "omen_sovereign",
+        "omen_liege",
+        "omen_blackblooded",
+        "omen_abyssal_echoes",
     ];
 
     #[test]
@@ -386,10 +429,9 @@ mod tests {
             ("Ritual", fixture("ninja-ritual.json")),
         ];
         let r = releve("Forbidden Rites", 1000, &reponses, None).unwrap();
-        assert_eq!(
-            r.prix.len(),
-            SOURCES.len() - ABSENTS_DU_RELEVE_DU_07_11.len()
-        );
+        // les os (catégorie Abyss) ne sont pas dans ces réponses
+        let hors_os = SOURCES.iter().filter(|s| s.1 != CATEGORIE_OS).count();
+        assert_eq!(r.prix.len(), hors_os - ABSENTS_DU_RELEVE_DU_07_11.len());
         let mut absents = ABSENTS_DU_RELEVE_DU_07_11.to_vec();
         absents.sort_unstable();
         assert_eq!(r.manquants, absents);
@@ -461,11 +503,12 @@ mod tests {
 
     #[test]
     fn chaque_monnaie_et_omen_du_catalogue_a_une_source() {
-        use crate::forge::catalogue::{MONNAIES, OMENS};
+        use crate::forge::catalogue::{MONNAIES, OMENS, OS};
         for id in MONNAIES
             .iter()
             .map(|m| m.id)
             .chain(OMENS.iter().map(|o| o.id))
+            .chain(OS.iter().map(|o| o.id))
         {
             assert!(
                 SOURCES.iter().any(|(s, _, _)| *s == id),
