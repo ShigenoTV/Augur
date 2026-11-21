@@ -248,3 +248,28 @@ jeu, I-D1).
 Tests : `monte_carlo::tests::revelation_trois_options_et_omen_de_liche` (loi 80/15/5, Omen de liche, choix du
 joueur), `solveur::tests::desecration_meme_loi_que_le_moteur` (modèle contre moteur exact, cinq actions depuis
 quatre objets), `plan_avec_desecration` (plan complet simulé sur le moteur exact).
+
+## Test complet contre l'émulateur (21/11/2026)
+
+Une base par classe (la plus haute), plusieurs crafts par classe, comparés à l'émulateur de Craft of
+Exile : PoE 2, 27 classes × 6 crafts (`exporter_test_complet_poe2`, `tools/theorycraft/coe_test_complet_poe2.js`) ;
+PoE 1, 24 classes × 4 crafts plus six bases expérimentales de Heist (`exporter_test_complet_poe1`, `tools/theorycraft/coe_emulateur.js`).
+
+- Alchemy, Transmute, Exalt, Greater Exalt, Chaos (PoE 2), Alteration, Chaos, fossile, Harvest Reforge
+  (PoE 1) : écart moyen ≤ 0,3 point, maximum ≈ 1 point.
+- Corrigé grâce au test (PoE 1) : multiplicateurs de génération (`generation_weights`, mods d'attaque à
+  50 % sur dagues runiques, bâtons, sceptres, baguettes de sort) et mods de PoE Royale écartés.
+- Corrigé grâce au test (Désécration PoE 2) : à la révélation, un mod de liche n'écarte plus les mods
+  normaux de son groupe (le pool normal est tiré à part, seuls les paliers d'un même mod s'excluent) ;
+  le modèle du solveur tire les options d'un même pool sans remise (poids inutile décalé option après
+  option). Écart moyen : moteur +0,1 point, modèle −0,3 point (−1,3 avant).
+- Corrigé grâce au test (planificateur PoE 1) : quand une famille non visée pèse l'essentiel de son côté
+  (Pristine Fossil sur bouclier : Life à 80 % des préfixes), le modèle suit cette famille à part au lieu
+  de la fondre dans le « champ moyen » des autres mods (28,7 % → 31,7 %, émulateur 31,9 %).
+- Corrigé grâce au test (bases expérimentales de Heist, PoE 1) : les implicites « ±N Prefix/Suffix
+  Modifier(s) allowed » décalent le plafond d'affixes (Simplex Amulet : aucun mod Magique, 1 préfixe et
+  2 suffixes en Rare ; Composite Ring : préfixes seulement) et l'Astrolabe Amulet porte les six
+  influences. Six bases ajoutées au test (Simplex, Focused, Astrolabe, Composite, Cogwork, Ratcheting) :
+  18 cas dans le bruit de l'émulateur.
+- L'émulateur donne un poids double à la première entrée de son pool de liche (biais de son tirage, pas
+  une règle du jeu) : non repris.

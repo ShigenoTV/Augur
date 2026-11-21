@@ -1052,7 +1052,26 @@ impl Model {
             }
             Some((voulus, bas, autre))
         };
-        let (abyss, normal) = (loi(&rw.abyss[i]), loi(&rw.normal[i]));
+        // Les options d'un même pool sont tirées sans remise : la j-ième option d'un pool voit le poids
+        // « inutile » de ce côté diminué de j options déjà tirées (même champ moyen que l'exclusion de
+        // groupe d'un tirage ordinaire, `other_p` / `other_s` décalés de j).
+        // Au-delà du plafond du slot, le poids restant n'est pas calculé : on s'arrête au plafond.
+        let (cap_p, cap_s) = self.caps(&s, s.rarity);
+        let (cap_p, cap_s) = (cap_p as usize, cap_s as usize);
+        let decale = |w: &AddW, j: usize| -> AddW {
+            let mut d = w.clone();
+            for k in 0..w.other_p.len() {
+                d.other_p[k] = w.other_p[(k + j).min(cap_p)];
+                d.other_s[k] = w.other_s[(k + j).min(cap_s)];
+            }
+            d
+        };
+        let abyss: Vec<Option<Loi>> = (0..REVEAL_OPTIONS)
+            .map(|j| loi(&decale(&rw.abyss[i], j)))
+            .collect();
+        let normal: Vec<Option<Loi>> = (0..REVEAL_OPTIONS)
+            .map(|j| loi(&decale(&rw.normal[i], j)))
+            .collect();
         let tag = rw.tag.as_ref().and_then(|t| loi(&t[i]));
         // jeux d'options : nombre de mods de liche, puis, avec l'Omen of Abyssal Echoes, un second jeu
         let mut jeux: Vec<(Vec<&Loi>, f64)> = Vec::new();
@@ -1063,15 +1082,19 @@ impl Model {
                 v.push(t);
                 n += 1;
             }
-            if let Some(a) = &abyss {
-                while n < liches {
-                    v.push(a);
-                    n += 1;
-                }
+            // le mod de l'Omen est retiré du pool de liche (l'option suivante en tient compte)
+            let mut j = n;
+            while n < liches {
+                let Some(a) = abyss.get(j).and_then(|a| a.as_ref()) else {
+                    break;
+                };
+                v.push(a);
+                n += 1;
+                j += 1;
             }
             // l'émulateur complète avec le pool normal jusqu'à trois options
-            if let Some(nl) = &normal {
-                for _ in v.len()..REVEAL_OPTIONS {
+            for j in 0..REVEAL_OPTIONS.saturating_sub(v.len()) {
+                if let Some(nl) = &normal[j] {
                     v.push(nl);
                 }
             }

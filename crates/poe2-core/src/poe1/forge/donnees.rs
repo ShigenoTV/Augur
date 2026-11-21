@@ -2,7 +2,8 @@
 //! d'affixes d'une base.
 //!
 //! Les poids viennent des tables du jeu (RePoE PoE 1) : pour une base, le poids d'un mod est celui de
-//! la **première** étiquette de sa liste `spawn` que l'objet porte (règle du jeu), les étiquettes de
+//! la **première** étiquette de sa liste `spawn` que l'objet porte (règle du jeu), multiplié par
+//! celui de la première étiquette reconnue de sa liste `generation` (en %), les étiquettes de
 //! l'objet étant celles de la base plus celle de son influence (`ring_shaper`…).
 
 use std::collections::{BTreeMap, HashMap};
@@ -105,6 +106,10 @@ pub struct ModPoe1 {
     pub niveau: u32,
     pub texte: String,
     pub spawn: Vec<(String, u32)>,
+    /// Multiplicateurs de génération en % (`generation_weights` du jeu) : première étiquette
+    /// reconnue, 100 % sans étiquette reconnue (mods d'attaque à 50 % sur un bâton, un sceptre…).
+    #[serde(default)]
+    pub generation: Vec<(String, u32)>,
     /// Mod posé seulement par une Essence (jamais tiré au hasard).
     pub essence: bool,
     /// Mod artisanal, posé seulement par l'établi.
@@ -169,6 +174,19 @@ pub fn poids(spawn: &[(String, u32)], tags: &[&str]) -> u32 {
         .map_or(0, |(_, w)| *w)
 }
 
+/// Poids d'un mod tiré au hasard : poids d'apparition multiplié par son multiplicateur de génération.
+pub fn poids_mod(m: &ModPoe1, tags: &[&str]) -> u32 {
+    let w = poids(&m.spawn, tags);
+    match m
+        .generation
+        .iter()
+        .find(|(t, _)| tags.contains(&t.as_str()))
+    {
+        Some((_, g)) => w * g / 100,
+        None => w,
+    }
+}
+
 /// Une Essence utilisable sur la base, avec l'affixe qu'elle garantit.
 #[derive(Debug, Clone)]
 pub struct EssenceBase {
@@ -228,11 +246,26 @@ pub fn construire_pool(
     let d = donnees()?;
     let b = base(base_id)?;
     let mut tags: Vec<&str> = b.tags.iter().map(String::as_str).collect();
-    let influences = influences(influence);
-    if influences.len() > 2 || (influences.len() == 2 && influences[0] == influences[1]) {
+    let mut influences = influences(influence);
+    // Base expérimentale de Heist (Astrolabe Amulet) : porte d'office les six influences.
+    let toutes = b
+        .implicites
+        .iter()
+        .any(|i| i.contains("all Conqueror Influences"));
+    if !toutes
+        && (influences.len() > 2 || (influences.len() == 2 && influences[0] == influences[1]))
+    {
         return Err(ErreurForgePoe1::Influence(
             influence.unwrap_or_default().to_string(),
         ));
+    }
+    if toutes {
+        influences = d
+            .classes
+            .get(&b.classe)
+            .map(|c| c.influences.keys().map(String::as_str).collect())
+            .unwrap_or_default();
+        influences.sort_unstable();
     }
     for inf in &influences {
         let t = d
@@ -263,12 +296,12 @@ pub fn construire_pool(
         .iter()
         .filter_map(|m| {
             if m.fossile || m.voile {
-                return (poids(&m.spawn, &tags) > 0).then_some((m, 0));
+                return (poids_mod(m, &tags) > 0).then_some((m, 0));
             }
             let w = if m.essence || m.artisanal {
                 0
             } else {
-                poids(&m.spawn, &tags)
+                poids_mod(m, &tags)
             };
             (w > 0 || garantis.contains_key(m.id.as_str()) || crafts.contains_key(m.id.as_str()))
                 .then_some((m, w))
@@ -381,26 +414,54 @@ pub fn construire_pool(
         .iter()
         .enumerate()
         .filter(|(_, (m, _))| m.fossile)
-        .map(|(i, (m, _))| (i as AffixIdx, poids(&m.spawn, &tags)))
+        .map(|(i, (m, _))| (i as AffixIdx, poids_mod(m, &tags)))
         .collect();
     let mods_voiles = retenus
         .iter()
         .enumerate()
         .filter(|(_, (m, _))| m.voile)
-        .map(|(i, (m, _))| (i as AffixIdx, poids(&m.spawn, &tags)))
+        .map(|(i, (m, _))| (i as AffixIdx, poids_mod(m, &tags)))
         .collect();
 
     Ok(PoolPoe1 {
         base: b,
         ilvl: ilvl as u8,
         influence: (!influences.is_empty()).then(|| influences.join("+")),
-        pool: AffixPool::new(affixes),
+        pool: AffixPool {
+            cap_delta: decalage_plafond(&b.implicites),
+            ..AffixPool::new(affixes)
+        },
         essences,
         etabli,
         mods_fossiles,
         mods_voiles,
         eldritch: None,
     })
+}
+
+/// Décalage du nombre de préfixes / suffixes autorisés que donnent les implicites d'une base
+/// expérimentale de Heist (« -2 Prefix Modifiers allowed », « +1 Suffix Modifier allowed »).
+pub fn decalage_plafond(implicites: &[String]) -> (i8, i8) {
+    let mut d = (0i8, 0i8);
+    for ligne in implicites.iter().flat_map(|i| i.lines()) {
+        let mut mots = ligne.split_whitespace();
+        let (Some(n), Some(cote), Some(_), Some("allowed"), None) = (
+            mots.next(),
+            mots.next(),
+            mots.next(),
+            mots.next(),
+            mots.next(),
+        ) else {
+            continue;
+        };
+        let Ok(n) = n.parse::<i8>() else { continue };
+        match cote {
+            "Prefix" => d.0 += n,
+            "Suffix" => d.1 += n,
+            _ => {}
+        }
+    }
+    d
 }
 
 /// Influences d'une demande : une seule (« Shaper ») ou deux jointes par `+` (« Hunter+Shaper »,

@@ -1662,7 +1662,7 @@ mod tests {
 mod recoupement {
     use super::*;
     use crate::forge::catalogue::{OS, avec_omens, desecration, omen_par_id};
-    use crate::forge::moteur::{Mod, Outcome};
+    use crate::forge::moteur::{AffixIdx, Mod, Outcome};
     use crate::forge::solveur::{ActionKind, Model};
     use rand::SeedableRng;
 
@@ -1849,6 +1849,193 @@ mod recoupement {
                 "augur_moteur": ok as f64 / N as f64,
                 "augur_modele": modele,
             }));
+        }
+        std::fs::write(&sortie, serde_json::to_string_pretty(&out).unwrap()).unwrap();
+    }
+
+    /// Test complet (21/11/2026) : pour chaque classe d'objet, une base, plusieurs crafts depuis un objet
+    /// fixé ; chance que la famille visée soit sur l'objet après une application, sur le moteur exact et dans
+    /// le modèle du solveur. Comparé à l'émulateur par `tools/theorycraft/coe_test_complet_poe2.js`.
+    ///
+    ///     CAS=cas.json cargo test -p poe2-core --release --lib exporter_test_complet_poe2 -- --ignored
+    #[test]
+    #[ignore]
+    fn exporter_test_complet_poe2() {
+        use crate::forge::catalogue::{MONNAIES, type_os};
+        let sortie = std::env::var("CAS").unwrap_or_else(|_| "test-complet-poe2.json".into());
+        const ILVL: u32 = 82;
+        let mut classes: BTreeMap<String, BaseForge> = BTreeMap::new();
+        for b in bases().unwrap() {
+            let e = classes.entry(b.classe.clone()).or_insert_with(|| b.clone());
+            if b.niveau_drop > e.niveau_drop || (b.niveau_drop == e.niveau_drop && b.id < e.id) {
+                *e = b;
+            }
+        }
+        let mut out = Vec::new();
+        for (classe, b) in &classes {
+            let (_, pb) = pool(&b.id, ILVL).unwrap();
+            let p = Arc::new(pb.pool);
+            // familles tirables, de la plus fréquente à la plus rare, par côté
+            let familles = |slot: Slot| {
+                let mut f: BTreeMap<(GroupId, u16), u64> = BTreeMap::new();
+                for a in p.affixes.iter().filter(|a| {
+                    a.slot == slot && !a.desecrated && a.weight > 0 && a.req_ilvl as u32 <= ILVL
+                }) {
+                    *f.entry((a.group, a.family_id)).or_default() += a.weight as u64;
+                }
+                let mut v: Vec<((GroupId, u16), u64)> = f.into_iter().collect();
+                v.sort_by(|x, y| y.1.cmp(&x.1).then(x.0.cmp(&y.0)));
+                v.into_iter().map(|x| x.0).collect::<Vec<_>>()
+            };
+            let (fp, fs) = (familles(Slot::Prefix), familles(Slot::Suffix));
+            if fp.len() < 4 || fs.len() < 4 {
+                continue;
+            }
+            // un palier tirable d'une famille (le plus bas) et tous ses paliers accessibles
+            let palier = |f: (GroupId, u16)| {
+                p.affixes
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, a)| (a.group, a.family_id) == f && !a.desecrated && a.weight > 0)
+                    .min_by_key(|(_, a)| a.req_ilvl)
+                    .map(|(i, _)| i as AffixIdx)
+                    .unwrap()
+            };
+            let ids = |f: (GroupId, u16)| -> Vec<String> {
+                p.affixes
+                    .iter()
+                    .filter(|a| (a.group, a.family_id) == f && a.req_ilvl as u32 <= ILVL)
+                    .map(|a| a.id.clone())
+                    .collect()
+            };
+            let monnaie = |id: &str| {
+                let m = MONNAIES.iter().find(|m| m.id == id).unwrap();
+                Currency {
+                    id: m.id.into(),
+                    label: m.nom.into(),
+                    kind: m.genre,
+                    min_mod_level: m.niveau_min,
+                    unit_cost: 1.0,
+                    ..desecration(&OS[1])
+                }
+            };
+            type Craft<'a> = (&'a str, Currency, Rarity, Vec<AffixIdx>, (GroupId, u16));
+            let mut crafts: Vec<Craft> = vec![
+                ("alchemy", monnaie("alchemy"), Rarity::Normal, vec![], fp[0]),
+                (
+                    "transmute",
+                    monnaie("transmute"),
+                    Rarity::Normal,
+                    vec![],
+                    fs[1],
+                ),
+                (
+                    "exalt",
+                    monnaie("exalt"),
+                    Rarity::Rare,
+                    vec![palier(fp[3]), palier(fs[3])],
+                    fp[1],
+                ),
+                (
+                    "exalt_greater",
+                    monnaie("exalt_greater"),
+                    Rarity::Rare,
+                    vec![palier(fp[3]), palier(fs[3])],
+                    fs[0],
+                ),
+                (
+                    "chaos",
+                    monnaie("chaos"),
+                    Rarity::Rare,
+                    vec![palier(fp[2]), palier(fp[3]), palier(fs[2]), palier(fs[3])],
+                    fs[0],
+                ),
+            ];
+            if let Some(t) = type_os(classe) {
+                let os = OS
+                    .iter()
+                    .find(|o| o.os == t && o.id.starts_with("preserved"))
+                    .unwrap();
+                let omen = omen_par_id("omen_dextral_necromancy").unwrap();
+                crafts.push((
+                    "desecrate",
+                    Currency {
+                        unit_cost: 1.0,
+                        ..avec_omens(&desecration(os), &[omen])
+                    },
+                    Rarity::Rare,
+                    vec![palier(fp[2]), palier(fs[2])],
+                    fs[0],
+                ));
+            }
+            for (nom, cur, rarete, depart, vise) in crafts {
+                let pire = p
+                    .affixes
+                    .iter()
+                    .filter(|a| (a.group, a.family_id) == vise)
+                    .map(|a| a.tier)
+                    .max()
+                    .unwrap();
+                let goal = Arc::new(
+                    Goal::new(
+                        &p,
+                        &[WantedAffix {
+                            group: vise.0,
+                            family: vise.1,
+                            max_tier: pire,
+                        }],
+                    )
+                    .unwrap(),
+                );
+                let mut it = ItemState::new(rarete, ILVL as u8);
+                for &i in &depart {
+                    it.push(Mod {
+                        idx: i,
+                        fractured: false,
+                        crafted: false,
+                        desecrated: false,
+                    });
+                }
+                let mut rng = rand::rngs::SmallRng::seed_from_u64(11);
+                const N: usize = 100_000;
+                let mut ok = 0;
+                for _ in 0..N {
+                    let mut t = it;
+                    if p.apply_pour(&mut t, &cur, &mut rng, Some(&goal)) == Outcome::Applied {
+                        ok += goal.is_met(&t) as usize;
+                    }
+                }
+                let action = Action {
+                    id: cur.id.clone(),
+                    label: cur.label.clone(),
+                    cost: 1.0,
+                    kind: ActionKind::Currency(cur.clone()),
+                };
+                let model = Model::new(p.clone(), goal.clone(), ILVL as u8, vec![action], 1.0, 0.0);
+                let s = model.project(&it).unwrap();
+                let mut tr = Vec::new();
+                model.outcomes(s, 0, &mut tr);
+                let modele: f64 = tr
+                    .iter()
+                    .filter(|t| model.is_goal(&t.to))
+                    .map(|t| t.p)
+                    .sum();
+                out.push(serde_json::json!({
+                    "classe": classe,
+                    "base": b.id,
+                    "base_nom": b.nom,
+                    "ilvl": ILVL,
+                    "craft": nom,
+                    "os": if nom == "desecrate" { cur.id.split('+').next() } else { None },
+                    "niveau_min": cur.min_mod_level,
+                    "rarete": format!("{rarete:?}"),
+                    "depart": depart.iter().map(|&i| p.affixes[i as usize].id.clone()).collect::<Vec<_>>(),
+                    "vise": p.affixes[palier(vise) as usize].text.clone(),
+                    "famille": ids(vise),
+                    "augur_moteur": ok as f64 / N as f64,
+                    "augur_modele": modele,
+                }));
+            }
         }
         std::fs::write(&sortie, serde_json::to_string_pretty(&out).unwrap()).unwrap();
     }

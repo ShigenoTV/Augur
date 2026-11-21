@@ -25,7 +25,8 @@
 //! Modifiers » puis les deux voulus qui manquent (multimod).
 //!
 //! Comme pour les spams Rare, chaque mod voulu est suivi exactement, et les autres mods sont résumés
-//! par leur nombre de chaque côté (poids restant moyen). Le problème est un plus court chemin
+//! par leur nombre de chaque côté (poids restant moyen ; dans un tirage depuis un côté vide, le groupe
+//! non voulu le plus lourd est suivi à part). Le problème est un plus court chemin
 //! stochastique, où l'on minimise le coût moyen. Les relances (Chaos, Alteration, Essence…) mènent
 //! toujours à la même loi d'objets, quel que soit l'objet de départ. Chaque loi est donc un « nœud »
 //! dont la valeur est résolue exactement par itération de politique : une évaluation affine, puis un
@@ -341,6 +342,12 @@ struct Tirage {
     mauvais: Vec<f64>,
     /// Poids « autres » restant en moyenne de chaque côté, selon le nombre d'autres déjà tirés.
     autres: [Vec<f64>; 2],
+    /// Groupe « autre » le plus lourd de chaque côté, suivi à part dans un tirage depuis un côté vide
+    /// (`Modele::tirer`) : le champ moyen se trompe quand un seul groupe pèse l'essentiel du côté
+    /// (Pristine Fossil sur un bouclier : la Vie ×10, 80 % des préfixes).
+    dominant: [f64; 2],
+    /// Poids « autres » restant en moyenne sans ce groupe, selon le nombre d'autres déjà tirés.
+    sans_dominant: [Vec<f64>; 2],
 }
 
 fn tirage(pool: &AffixPool, goal: &Goal, ilvl: u8, interdit: u64) -> Tirage {
@@ -368,17 +375,30 @@ fn tirage_requis(pool: &AffixPool, goal: &Goal, ilvl: u8, interdit: u64, requis:
             Class::Other => *autres[cote(a.slot)].entry(a.group).or_default() += w,
         }
     }
-    let reste = |m: &HashMap<GroupId, f64>| -> Vec<f64> {
-        let w: Vec<f64> = m.values().copied().collect();
-        survie(&w, 3)
+    let reste = |w: &[f64]| -> Vec<f64> {
+        survie(w, 3)
             .iter()
-            .map(|row| row.iter().zip(&w).map(|(a, b)| a * b).sum())
+            .map(|row| row.iter().zip(w).map(|(a, b)| a * b).sum())
             .collect()
     };
+    // poids par groupe, du plus lourd au plus léger (ordre stable)
+    let poids = |m: &HashMap<GroupId, f64>| -> Vec<f64> {
+        let mut v: Vec<(GroupId, f64)> = m.iter().map(|(g, w)| (*g, *w)).collect();
+        v.sort_by(|a, b| b.1.total_cmp(&a.1).then(a.0.cmp(&b.0)));
+        v.into_iter().map(|x| x.1).collect()
+    };
+    let (wp, ws) = (poids(&autres[0]), poids(&autres[1]));
+    let dominant = [
+        wp.first().copied().unwrap_or(0.0),
+        ws.first().copied().unwrap_or(0.0),
+    ];
+    let sans = |w: &[f64]| reste(w.get(1..).unwrap_or(&[]));
     Tirage {
         bon,
         mauvais,
-        autres: [reste(&autres[0]), reste(&autres[1])],
+        autres: [reste(&wp), reste(&ws)],
+        dominant,
+        sans_dominant: [sans(&wp), sans(&ws)],
     }
 }
 
@@ -689,18 +709,63 @@ impl<'a> Modele<'a> {
         p: f64,
         sortie: &mut HashMap<Etat, f64>,
     ) {
+        // Un côté sans autre mod au départ suit à part son groupe « autre » le plus lourd.
+        let suivi = (e.autres[0] == 0) as u8 | ((e.autres[1] == 0) as u8) << 1;
+        self.tirer_suivi(e, n, variante, seul, p, suivi, 0, sortie);
+    }
+
+    /// `suivi` : côtés (bit par côté) dont le groupe « autre » dominant est suivi à part ; `pris` :
+    /// côtés où il est déjà sur l'objet (compté dans `autres`).
+    #[allow(clippy::too_many_arguments)]
+    fn tirer_suivi(
+        &self,
+        e: Etat,
+        n: u8,
+        variante: usize,
+        seul: Option<usize>,
+        p: f64,
+        suivi: u8,
+        pris: u8,
+        sortie: &mut HashMap<Etat, f64>,
+    ) {
         if n == 0 {
             *sortie.entry(e).or_default() += p;
             return;
         }
-        let issues = self.un_mod_cote(&e, variante, seul);
+        let mut issues: Vec<(f64, Etat, u8)> = Vec::new();
+        for (w, s) in self.un_mod_cote(&e, variante, seul) {
+            // un mod « autre » d'un côté suivi : remplacé ci-dessous par le dominant et le reste
+            let c = (0..2).find(|&c| s.autres[c] > e.autres[c]);
+            match c {
+                Some(c) if suivi >> c & 1 == 1 => {}
+                _ => issues.push((w, s, pris)),
+            }
+        }
+        let t = &self.tirages[variante];
+        let cap = self.cap(e.rarete);
+        for (c, &cap_c) in cap.iter().enumerate() {
+            if suivi >> c & 1 == 0 || self.n(&e, c) >= cap_c || seul.is_some_and(|x| x != c) {
+                continue;
+            }
+            let mut s = e;
+            s.autres[c] += 1;
+            let deja = pris >> c & 1;
+            if deja == 0 && t.dominant[c] > 0.0 {
+                issues.push((t.dominant[c], s, pris | 1 << c));
+            }
+            let k = (e.autres[c] - deja) as usize;
+            let w = t.sans_dominant[c].get(k).copied().unwrap_or(0.0).max(0.0);
+            if w > 0.0 {
+                issues.push((w, s, pris));
+            }
+        }
         let total: f64 = issues.iter().map(|x| x.0).sum();
         if total <= 0.0 {
             *sortie.entry(e).or_default() += p;
             return;
         }
-        for (w, s) in issues {
-            self.tirer(s, n - 1, variante, seul, p * w / total, sortie);
+        for (w, s, pr) in issues {
+            self.tirer_suivi(s, n - 1, variante, seul, p * w / total, suivi, pr, sortie);
         }
     }
 
@@ -3639,6 +3704,180 @@ mod tests {
                 "eldritch": c.eldritch.map(|s| if s == Slot::Prefix { "exarch" } else { "eater" }),
                 "depart": c.depart, "action": c.action, "acceptes": acceptes, "augur": p,
             }));
+        }
+        std::fs::write(chemin, serde_json::to_string_pretty(&sortie).unwrap()).unwrap();
+    }
+
+    #[test]
+    #[ignore = "export pour le test complet : CAS=fichier.json cargo test --release -p poe2-core -- --ignored exporter_test_complet_poe1"]
+    fn exporter_test_complet_poe1() {
+        // Une base par classe (la plus haute hors bases expérimentales), plus les bases
+        // expérimentales de Heist qui changent le plafond d'affixes ou les influences ; ilvl 84, sans
+        // influence. Crafts : Alteration (une famille), puis Chaos, fossile seul et Harvest Reforge
+        // sur deux familles (le préfixe et le suffixe les plus fréquents). Chance d'un essai selon le
+        // modèle du solveur.
+        use super::super::donnees::bases;
+        let chemin = std::env::var("CAS").unwrap_or_else(|_| "test-complet-poe1.json".into());
+        const ILVL: u32 = 84;
+        let experimentales: std::collections::HashSet<String> = super::super::donnees::donnees()
+            .unwrap()
+            .bases
+            .iter()
+            .filter(|b| b.tags.iter().any(|t| t == "experimental_base"))
+            .map(|b| b.id.clone())
+            .collect();
+        let toutes = bases().unwrap();
+        let mut classes: BTreeMap<String, super::super::donnees::BaseVue> = BTreeMap::new();
+        for b in toutes.iter().filter(|b| !experimentales.contains(&b.id)) {
+            let e = classes.entry(b.classe.clone()).or_insert_with(|| b.clone());
+            if b.niveau_drop > e.niveau_drop || (b.niveau_drop == e.niveau_drop && b.id < e.id) {
+                *e = b.clone();
+            }
+        }
+        for n in [
+            "Simplex Amulet",
+            "Focused Amulet",
+            "Astrolabe Amulet",
+            "Composite Ring",
+            "Cogwork Ring",
+            "Ratcheting Ring",
+        ] {
+            let b = toutes.iter().find(|b| b.nom == n).unwrap();
+            classes.insert(n.to_string(), b.clone());
+        }
+        let mut prix = cote_marche();
+        for n in [WILD, VIVID, PRIMAL] {
+            prix.insert(n.into(), 0.01);
+        }
+        let mut sortie = Vec::new();
+        for (classe, b) in &classes {
+            let Ok(pb) = construire_pool(&b.id, ILVL, None) else {
+                eprintln!("{classe} : pool impossible");
+                continue;
+            };
+            let pool = pb.pool.clone();
+            let familles = |slot: Slot| {
+                let mut f: BTreeMap<(GroupId, u16), u64> = BTreeMap::new();
+                for a in pool
+                    .affixes
+                    .iter()
+                    .filter(|a| a.slot == slot && a.weight > 0 && a.req_ilvl as u32 <= ILVL)
+                {
+                    *f.entry((a.group, a.family_id)).or_default() += a.weight as u64;
+                }
+                let mut v: Vec<((GroupId, u16), u64)> = f.into_iter().collect();
+                v.sort_by(|x, y| y.1.cmp(&x.1).then(x.0.cmp(&y.0)));
+                v.into_iter().map(|x| x.0).collect::<Vec<_>>()
+            };
+            let (fp, fs) = (familles(Slot::Prefix), familles(Slot::Suffix));
+            if fp.len() < 2 || fs.len() < 2 {
+                eprintln!("{classe} : trop peu de familles");
+                continue;
+            }
+            // Base à plafond décalé : l'Alteration vise le côté ouvert sur un Magique, la paire n'est
+            // gardée que si un Rare a les deux côtés ouverts.
+            let (mp, _) = pool.cap(Rarity::Magic);
+            let (rp, rs) = pool.cap(Rarity::Rare);
+            let voulu_famille = |f: (GroupId, u16)| WantedAffix {
+                group: f.0,
+                family: f.1,
+                max_tier: pool
+                    .affixes
+                    .iter()
+                    .filter(|a| (a.group, a.family_id) == f)
+                    .map(|a| a.tier)
+                    .max()
+                    .unwrap(),
+            };
+            let objectifs: [(&str, Vec<WantedAffix>); 2] = [
+                (
+                    "un",
+                    vec![voulu_famille(if mp > 0 { fp[0] } else { fs[0] })],
+                ),
+                ("deux", vec![voulu_famille(fp[0]), voulu_famille(fs[0])]),
+            ];
+            for (genre, voulus) in objectifs {
+                if genre == "deux" && (rp == 0 || rs == 0) {
+                    continue;
+                }
+                let goal = Goal::new(&pool, &voulus).unwrap();
+                let Some(mut sol) = resoudre(&pb, &goal, &prix) else {
+                    eprintln!("{classe} {genre} : pas de solution");
+                    continue;
+                };
+                let m = &mut sol.m;
+                let reussite = |m: &Modele, l: HashMap<Etat, f64>| -> f64 {
+                    let t: f64 = l.values().sum();
+                    l.iter().filter(|x| m.reussi(x.0)).map(|x| x.1).sum::<f64>() / t
+                };
+                let acceptes: Vec<Vec<String>> = (0..goal.len())
+                    .map(|k| {
+                        pool.affixes
+                            .iter()
+                            .enumerate()
+                            .filter(|(i, a)| {
+                                matches!(goal.classify(&pool, *i as u16), Class::Wanted(j) if j == k && cote(a.slot) == m.cotes[k])
+                            })
+                            .map(|(_, a)| a.id.clone())
+                            .collect()
+                    })
+                    .collect();
+                let familles: Vec<String> = voulus
+                    .iter()
+                    .map(|v| {
+                        pool.affixes
+                            .iter()
+                            .find(|a| a.group == v.group && a.family_id == v.family)
+                            .map(|a| a.family.clone())
+                            .unwrap_or_default()
+                    })
+                    .collect();
+                let mut crafts: Vec<(String, Vec<String>, f64)> = Vec::new();
+                if genre == "un" {
+                    crafts.push((
+                        "alteration".into(),
+                        vec![],
+                        reussite(m, m.loi(&Cle::Magique)),
+                    ));
+                } else {
+                    crafts.push(("chaos".into(), vec![], reussite(m, m.loi(&Cle::Rare))));
+                    let j = m
+                        .fossiles
+                        .iter()
+                        .position(|f| f.force.is_none() && f.monnaies.len() == 2)
+                        .or_else(|| m.fossiles.iter().position(|f| f.force.is_none()));
+                    if let Some(j) = j {
+                        let fossiles =
+                            m.fossiles[j].monnaies[..m.fossiles[j].monnaies.len() - 1].to_vec();
+                        crafts.push((
+                            "fossil".into(),
+                            fossiles,
+                            reussite(m, m.loi(&Cle::Fossiles(j))),
+                        ));
+                    }
+                    if let Some(j) = m.recoltes.iter().position(|r| !r.augment) {
+                        let tag = m.recoltes[j]
+                            .libelle
+                            .rsplit(' ')
+                            .next()
+                            .unwrap()
+                            .to_string();
+                        crafts.push((
+                            format!("harvest_reforge:{tag}"),
+                            vec![],
+                            reussite(m, m.loi(&Cle::Recolte(j))),
+                        ));
+                    }
+                }
+                for (action, fossiles, p) in crafts {
+                    sortie.push(serde_json::json!({
+                        "nom": format!("{classe} {}", action.split(':').next().unwrap()),
+                        "classe": classe, "base": b.id, "base_nom": b.nom, "ilvl": ILVL,
+                        "influence": null, "eldritch": null, "depart": [], "action": action,
+                        "fossiles": fossiles, "familles": familles, "acceptes": acceptes, "augur": p,
+                    }));
+                }
+            }
         }
         std::fs::write(chemin, serde_json::to_string_pretty(&sortie).unwrap()).unwrap();
     }

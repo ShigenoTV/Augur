@@ -541,11 +541,16 @@ impl AffixPool {
             require_tag: tag,
         };
         let mut pris: Vec<AffixIdx> = Vec::new();
+        // Chaque tirage (Omen, liche, pool normal) part de son propre pool : une option tirée n'écarte
+        // que les autres paliers de son mod dans le même tirage (`filterRollablePoolForModTiers` de
+        // l'émulateur), pas les mods d'un autre tirage qui partagent son groupe (un mod de liche
+        // Strength and Dexterity n'écarte pas la Dexterity du pool normal).
         let tirer = |f: DrawFilter, n: usize, pris: &mut Vec<AffixIdx>, rng: &mut _| {
             // l'objet est rendu « ouvert » de ce côté : la révélation ignore les plafonds
             let mut ouvert = *item;
             ouvert.rarity = Rarity::Rare;
             let eligible = self.eligibility_sans_plafond(&ouvert, &f);
+            let debut = pris.len();
             while pris.len() < n {
                 let cand: Vec<(usize, u64)> = self
                     .affixes
@@ -553,7 +558,12 @@ impl AffixPool {
                     .enumerate()
                     .filter(|&(i, a)| {
                         eligible(i, a)
-                            && !pris.iter().any(|&p| self.affixes[p as usize].conflicts(a))
+                            && !pris.contains(&(i as AffixIdx))
+                            && !pris[debut..].iter().any(|&p| {
+                                let b = &self.affixes[p as usize];
+                                (b.group, b.family_id, b.desecrated)
+                                    == (a.group, a.family_id, a.desecrated)
+                            })
                     })
                     .map(|(i, a)| (i, a.weight as u64))
                     .collect();

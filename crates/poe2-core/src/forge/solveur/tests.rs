@@ -769,7 +769,8 @@ fn os(id: &str, f: &dyn Fn(&mut Currency)) -> Action {
     a
 }
 
-/// La loi de la révélation du modèle (options indépendantes) colle au moteur exact (tirage sans remise,
+/// La loi de la révélation du modèle (options indépendantes, poids inutile décalé option après option)
+/// colle au moteur exact (tirage sans remise,
 /// choix du joueur guidé par l'objectif), Omens compris.
 #[test]
 fn desecration_meme_loi_que_le_moteur() {
@@ -939,4 +940,35 @@ fn plan_avec_desecration() {
         mc.mean_cost,
         rel * 100.0
     );
+}
+
+/// Révélation : un mod de liche du même groupe qu'un mod normal (Strength and Dexterity et Dexterity)
+/// n'écarte pas ce mod du pool normal, tiré à part (émulateur de Craft of Exile, `getRevealPicks`).
+#[test]
+fn revelation_liche_n_ecarte_pas_le_pool_normal() {
+    use rand::SeedableRng;
+    let mut p = pool(4);
+    let mut liche = aff("D_S2".into(), 2, Slot::Suffix, 1, 1);
+    liche.desecrated = true;
+    liche.family_id = 1;
+    p.affixes.push(liche);
+    let pool = AffixPool::new(p.affixes);
+    let c = match os("os", &|_| {}).kind {
+        ActionKind::Currency(c) => c,
+        _ => unreachable!(),
+    };
+    let it = ItemState::new(Rarity::Rare, 80);
+    let mut rng = rand::rngs::SmallRng::seed_from_u64(5);
+    let (mut avec, n) = (0, 4000);
+    for _ in 0..n {
+        let o = pool.reveal_options(&it, &c, Slot::Suffix, &mut rng);
+        assert_eq!(pool.affixes[o[0] as usize].id, "D_S2");
+        avec += o
+            .iter()
+            .any(|&i| pool.affixes[i as usize].group == 2 && !pool.affixes[i as usize].desecrated)
+            as usize;
+    }
+    // S_T1 + S_T2 pèsent 200 sur 600 : présents dans environ 1 − (4/6 × 3/5) = 60 % des révélations
+    let part = avec as f64 / n as f64;
+    assert!((0.5..0.7).contains(&part), "part {part}");
 }

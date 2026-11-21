@@ -970,3 +970,102 @@ fn objet_a_double_influence_lu() {
     let o = analyser_objet(&texte).unwrap();
     assert_eq!(o.influence.as_deref(), Some("Hunter+Shaper"));
 }
+
+#[test]
+fn multiplicateurs_de_generation() {
+    // Les mods d'attaque n'ont que 50 % de leur poids sur une dague runique (Demon Dagger), mais
+    // tout leur poids sur une dague d'attaque (Stiletto) ; un mod sans multiplicateur ne change pas.
+    let poids = |base: &str, id: &str| {
+        let pb = donnees::construire_pool(base, 84, None).unwrap();
+        pb.pool.affixes.iter().find(|a| a.id == id).unwrap().weight
+    };
+    const RUNIQUE: &str = "Metadata/Items/Weapons/OneHandWeapons/Daggers/Dagger22";
+    const ATTAQUE: &str = "Metadata/Items/Weapons/OneHandWeapons/Daggers/Dagger4";
+    assert_eq!(poids(RUNIQUE, "LocalIncreasedAttackSpeed1"), 500);
+    assert_eq!(poids(ATTAQUE, "LocalIncreasedAttackSpeed1"), 1000);
+    assert_eq!(poids(RUNIQUE, "IncreasedManaWeapon1"), 1000);
+}
+
+#[test]
+fn groupe_dominant_non_voulu_suivi_a_part() {
+    // Pristine Fossil sur un bouclier : la Vie (non voulue) pèse 80 % des préfixes. Le résumé des
+    // autres mods par un poids moyen donnait 28,7 % au lieu de 31,8 % ; le groupe dominant est
+    // désormais suivi à part.
+    let pb = construire_pool("Metadata/Items/Armours/Shields/ShieldDexInt13", 84, None).unwrap();
+    // tous les paliers acceptés
+    let tous = |id: &str| {
+        let mut v = voulu(&pb.pool, id);
+        v.max_tier = u8::MAX;
+        v
+    };
+    let voulus = vec![tous("IncreasedMana1"), tous("LifeRegeneration1")];
+    let goal = Goal::new(&pb.pool, &voulus).unwrap();
+    let p = pool_fossiles(&pb.pool, &[fossile("Pristine Fossil")]);
+    let c = chance_rare(&p, &goal, 84, None, None);
+    let s = simuler_rare(&p, &goal, 84, None, None, 200_000);
+    proche(c, s, 0.02);
+}
+
+#[test]
+fn bases_experimentales_de_heist() {
+    // Plafond d'affixes décalé par l'implicite : Simplex Amulet (-2 préfixes, -1 suffixe) n'a aucun
+    // mod Magique et 1/2 en Rare ; Composite Ring (+3 / -3) n'a que des préfixes.
+    let simplex = construire_pool("Metadata/Items/Amulets/AmuletE2", 84, None).unwrap();
+    assert_eq!(simplex.pool.cap(Rarity::Magic), (0, 0));
+    assert_eq!(simplex.pool.cap(Rarity::Rare), (1, 2));
+    let composite = construire_pool("Metadata/Items/Rings/RingE3", 84, None).unwrap();
+    assert_eq!(composite.pool.cap(Rarity::Magic), (4, 0));
+    assert_eq!(composite.pool.cap(Rarity::Rare), (6, 0));
+    assert_eq!(
+        donnees::decalage_plafond(&[
+            "+1 Prefix Modifier allowed\n-2 Suffix Modifiers allowed".into()
+        ]),
+        (1, -2)
+    );
+
+    let dex = |pb: &donnees::PoolPoe1| {
+        pb.pool
+            .affixes
+            .iter()
+            .find(|a| a.slot == Slot::Suffix && a.family == "Dexterity")
+            .map(|a| WantedAffix {
+                group: a.group,
+                family: a.family_id,
+                max_tier: u8::MAX,
+            })
+            .unwrap()
+    };
+    let goal = Goal::new(&simplex.pool, &[dex(&simplex)]).unwrap();
+    assert_eq!(
+        chance_alteration(&simplex.pool, &goal, 84),
+        Some((0.0, 0.0))
+    );
+
+    // Astrolabe Amulet : les six influences d'office, donc leurs mods tirables.
+    let astrolabe = construire_pool("Metadata/Items/Amulets/AmuletE1", 84, None).unwrap();
+    let neutre = construire_pool("Metadata/Items/Amulets/AmuletE3", 84, None).unwrap();
+    assert!(astrolabe.pool.affixes.len() > neutre.pool.affixes.len() + 50);
+    assert_eq!(
+        astrolabe.influence.as_deref().map(|i| i.split('+').count()),
+        Some(6)
+    );
+}
+
+#[test]
+fn alteration_par_enumeration_retrouve_la_formule() {
+    // Sur une base ordinaire, l'énumération des bases à plafond décalé donne la formule fermée.
+    let pb = construire_pool(ANNEAU, 86, None).unwrap();
+    for voulus in [
+        vec![voulu(&pb.pool, "IncreasedLife6")],
+        vec![
+            voulu(&pb.pool, "IncreasedLife5"),
+            voulu(&pb.pool, "ColdResist4"),
+        ],
+    ] {
+        let goal = Goal::new(&pb.pool, &voulus).unwrap();
+        let (c, aug) = chance_alteration(&pb.pool, &goal, 86).unwrap();
+        let (ce, auge) = chance_alteration_plafond(&pb.pool, &goal, 86).unwrap();
+        proche(c, ce, 1e-9);
+        proche(aug, auge, 1e-9);
+    }
+}

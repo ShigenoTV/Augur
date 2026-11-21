@@ -23,6 +23,7 @@ def _mod(generation: str = "prefix", poids: int = 1000, essence: bool = False, d
         "required_level": 1,
         "text": "+(3-9) to maximum Life\r",
         "spawn_weights": [{"tag": "ring", "weight": poids}, {"tag": "default", "weight": 0}],
+        "generation_weights": [{"tag": "twostonering", "weight": 50}],
         "is_essence_only": essence,
         "implicit_tags": ["resource", "life"],
     }
@@ -31,6 +32,7 @@ def _mod(generation: str = "prefix", poids: int = 1000, essence: bool = False, d
 def _sources(tmp_path: Path) -> Path:
     mods = {
         "IncreasedLife1": _mod(),
+        "IncreasedLife2Royale__": _mod(),
         "Jamais": _mod(poids=0),
         "LifeEssence7": _mod(poids=0, essence=True),
         "Monstre": _mod(domaine="monster"),
@@ -147,6 +149,7 @@ def test_construit_les_donnees(tmp_path):
     assert d["etabli"] == [{"mod": "EinharMasterIncreasedLife3", "classes": ["Ring"], "cout": {"Regal Orb": 2}}]
     assert d["mods"][1]["texte"] == "+(3-9) to maximum Life"
     assert d["mods"][1]["spawn"] == [["ring", 1000], ["default", 0]]
+    assert d["mods"][1]["generation"] == [["twostonering", 50]]
     (e,) = d["essences"]
     assert e["rang"] == 7 and e["sur_rare"] and e["cibles"] == {"Ring": "LifeEssence7"}
     assert d["mods"][1]["tags"] == ["life", "resource"]
