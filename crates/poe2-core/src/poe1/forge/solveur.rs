@@ -3644,6 +3644,161 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "export pour le test complet : CAS=fichier.json cargo test --release -p poe2-core -- --ignored exporter_test_complet_poe1"]
+    fn exporter_test_complet_poe1() {
+        // Une base par classe (la plus haute hors bases expérimentales), ilvl 84, sans influence. Crafts : Alteration (une
+        // famille de préfixe), puis Chaos, fossile seul et Harvest Reforge sur deux familles (le
+        // préfixe et le suffixe les plus fréquents). Chance d'un essai selon le modèle du solveur.
+        use super::super::donnees::bases;
+        let chemin = std::env::var("CAS").unwrap_or_else(|_| "test-complet-poe1.json".into());
+        const ILVL: u32 = 84;
+        // Bases expérimentales de Heist exclues : l'émulateur n'y tire aucun mod.
+        let experimentales: std::collections::HashSet<String> = super::super::donnees::donnees()
+            .unwrap()
+            .bases
+            .iter()
+            .filter(|b| b.tags.iter().any(|t| t == "experimental_base"))
+            .map(|b| b.id.clone())
+            .collect();
+        let mut classes: BTreeMap<String, super::super::donnees::BaseVue> = BTreeMap::new();
+        for b in bases()
+            .unwrap()
+            .into_iter()
+            .filter(|b| !experimentales.contains(&b.id))
+        {
+            let e = classes.entry(b.classe.clone()).or_insert_with(|| b.clone());
+            if b.niveau_drop > e.niveau_drop || (b.niveau_drop == e.niveau_drop && b.id < e.id) {
+                *e = b;
+            }
+        }
+        let mut prix = cote_marche();
+        for n in [WILD, VIVID, PRIMAL] {
+            prix.insert(n.into(), 0.01);
+        }
+        let mut sortie = Vec::new();
+        for (classe, b) in &classes {
+            let Ok(pb) = construire_pool(&b.id, ILVL, None) else {
+                eprintln!("{classe} : pool impossible");
+                continue;
+            };
+            let pool = pb.pool.clone();
+            let familles = |slot: Slot| {
+                let mut f: BTreeMap<(GroupId, u16), u64> = BTreeMap::new();
+                for a in pool
+                    .affixes
+                    .iter()
+                    .filter(|a| a.slot == slot && a.weight > 0 && a.req_ilvl as u32 <= ILVL)
+                {
+                    *f.entry((a.group, a.family_id)).or_default() += a.weight as u64;
+                }
+                let mut v: Vec<((GroupId, u16), u64)> = f.into_iter().collect();
+                v.sort_by(|x, y| y.1.cmp(&x.1).then(x.0.cmp(&y.0)));
+                v.into_iter().map(|x| x.0).collect::<Vec<_>>()
+            };
+            let (fp, fs) = (familles(Slot::Prefix), familles(Slot::Suffix));
+            if fp.len() < 2 || fs.len() < 2 {
+                eprintln!("{classe} : trop peu de familles");
+                continue;
+            }
+            let voulu_famille = |f: (GroupId, u16)| WantedAffix {
+                group: f.0,
+                family: f.1,
+                max_tier: pool
+                    .affixes
+                    .iter()
+                    .filter(|a| (a.group, a.family_id) == f)
+                    .map(|a| a.tier)
+                    .max()
+                    .unwrap(),
+            };
+            let objectifs: [(&str, Vec<WantedAffix>); 2] = [
+                ("un", vec![voulu_famille(fp[0])]),
+                ("deux", vec![voulu_famille(fp[0]), voulu_famille(fs[0])]),
+            ];
+            for (genre, voulus) in objectifs {
+                let goal = Goal::new(&pool, &voulus).unwrap();
+                let Some(mut sol) = resoudre(&pb, &goal, &prix) else {
+                    eprintln!("{classe} {genre} : pas de solution");
+                    continue;
+                };
+                let m = &mut sol.m;
+                let reussite = |m: &Modele, l: HashMap<Etat, f64>| -> f64 {
+                    let t: f64 = l.values().sum();
+                    l.iter().filter(|x| m.reussi(x.0)).map(|x| x.1).sum::<f64>() / t
+                };
+                let acceptes: Vec<Vec<String>> = (0..goal.len())
+                    .map(|k| {
+                        pool.affixes
+                            .iter()
+                            .enumerate()
+                            .filter(|(i, a)| {
+                                matches!(goal.classify(&pool, *i as u16), Class::Wanted(j) if j == k && cote(a.slot) == m.cotes[k])
+                            })
+                            .map(|(_, a)| a.id.clone())
+                            .collect()
+                    })
+                    .collect();
+                let familles: Vec<String> = voulus
+                    .iter()
+                    .map(|v| {
+                        pool.affixes
+                            .iter()
+                            .find(|a| a.group == v.group && a.family_id == v.family)
+                            .map(|a| a.family.clone())
+                            .unwrap_or_default()
+                    })
+                    .collect();
+                let mut crafts: Vec<(String, Vec<String>, f64)> = Vec::new();
+                if genre == "un" {
+                    crafts.push((
+                        "alteration".into(),
+                        vec![],
+                        reussite(m, m.loi(&Cle::Magique)),
+                    ));
+                } else {
+                    crafts.push(("chaos".into(), vec![], reussite(m, m.loi(&Cle::Rare))));
+                    let j = m
+                        .fossiles
+                        .iter()
+                        .position(|f| f.force.is_none() && f.monnaies.len() == 2)
+                        .or_else(|| m.fossiles.iter().position(|f| f.force.is_none()));
+                    if let Some(j) = j {
+                        let fossiles =
+                            m.fossiles[j].monnaies[..m.fossiles[j].monnaies.len() - 1].to_vec();
+                        crafts.push((
+                            "fossil".into(),
+                            fossiles,
+                            reussite(m, m.loi(&Cle::Fossiles(j))),
+                        ));
+                    }
+                    if let Some(j) = m.recoltes.iter().position(|r| !r.augment) {
+                        let tag = m.recoltes[j]
+                            .libelle
+                            .rsplit(' ')
+                            .next()
+                            .unwrap()
+                            .to_string();
+                        crafts.push((
+                            format!("harvest_reforge:{tag}"),
+                            vec![],
+                            reussite(m, m.loi(&Cle::Recolte(j))),
+                        ));
+                    }
+                }
+                for (action, fossiles, p) in crafts {
+                    sortie.push(serde_json::json!({
+                        "nom": format!("{classe} {}", action.split(':').next().unwrap()),
+                        "classe": classe, "base": b.id, "base_nom": b.nom, "ilvl": ILVL,
+                        "influence": null, "eldritch": null, "depart": [], "action": action,
+                        "fossiles": fossiles, "familles": familles, "acceptes": acceptes, "augur": p,
+                    }));
+                }
+            }
+        }
+        std::fs::write(chemin, serde_json::to_string_pretty(&sortie).unwrap()).unwrap();
+    }
+
+    #[test]
     fn dispersion_du_cout_coherente() {
         // La simulation du plan sur le graphe du solveur retrouve son coût moyen, et ses quantiles
         // sont croissants : médiane ≤ 9 sur 10 ≤ 99 sur 100.

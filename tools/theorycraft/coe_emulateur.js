@@ -8,6 +8,10 @@
 //     CAS=cas.json cargo test -p poe2-core --release --lib exporter_cas_emulateur -- --ignored
 //     node tools/theorycraft/coe_emulateur.js cas.json [essais]
 //
+// Test complet (une base par classe ; Alteration, Chaos, fossile, Harvest Reforge) :
+//
+//     CAS=complet.json cargo test -p poe2-core --release --lib exporter_test_complet_poe1 -- --ignored
+//
 // Utilise le Chromium et le Playwright préinstallés. Aucune donnée de l'émulateur n'est copiée.
 const { chromium } = require('playwright');
 const fs = require('fs');
@@ -33,14 +37,25 @@ async function main() {
       const [action, tag] = c.action.split(':');
       const harvest = (genre, nom) =>
         coedata.methods.harvest[genre].findIndex((x) => x.name.toLowerCase() === nom);
+      // Fossiles : index dans coedata.methods.fossils (nom sans « Fossil »), joints par « | ».
+      const fossiles = ['fossils', (c.fossiles || []).map((f) => {
+        const i = coedata.methods.fossils.findIndex((x) => x.name === f.replace(/ Fossil$/, ''));
+        if (i < 0) throw new Error(`fossile inconnu : ${f}`);
+        return i;
+      }).join('|')];
       let reussites = 0;
       let echecs = 0;
       for (let n = 0; n < essais; n++) {
         const item = new GameItem(base.id, c.ilvl, null, influences);
         Emulator.setItem(item);
-        if (c.depart.length > 0 || action !== 'chaos') {
+        if (action === 'alteration') {
+          item.rarity = ItemRarity.MAGIC;
+          for (const k of c.depart) item.addModifier(idMod(k));
+          if (item.updateItemState) item.updateItemState(false);
+        } else if (c.depart.length > 0 || action !== 'chaos') {
           item.rarity = ItemRarity.RARE;
           for (const k of c.depart) item.addModifier(idMod(k));
+          if (item.updateItemState) item.updateItemState(false);
         } else {
           Emulator.alchemy(new rollAffixParameters());
         }
@@ -50,6 +65,8 @@ async function main() {
         const p = new rollAffixParameters();
         switch (action) {
           case 'chaos': ok = Emulator.chaos(p); break;
+          case 'alteration': ok = Emulator.alteration(p); break;
+          case 'fossil': ok = Emulator.fossils(Emulator.fossilsParameters(fossiles), fossiles); break;
           case 'eldritch_chaos': ok = Emulator.eldritchChaos(p); break;
           case 'eldritch_exalt': ok = Emulator.eldritchExalt(p); break;
           case 'veiled_chaos': ok = Emulator.veiledChaos(p); break;
