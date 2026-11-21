@@ -205,6 +205,11 @@ pub struct Currency {
     /// de l'affixe garanti si ce côté est plein, sinon au hasard) PUIS ajoute l'affixe garanti — jamais les deux comportements sur la même entrée, comme dans le vrai jeu.
     #[serde(default)]
     pub requires_rare: bool,
+    /// Omen of Greater Exaltation / Greater Annulment : l'Exalted ajoute deux mods (le second seulement
+    /// s'il reste une place), l'Annulment en retire deux (le second seulement s'il en reste un à retirer).
+    /// Règle de l'émulateur de Craft of Exile (`rollAffixes(2)`, `annul` à deux retraits).
+    #[serde(default)]
+    pub double: bool,
     pub unit_cost: f64,
 }
 
@@ -306,6 +311,28 @@ impl AffixPool {
             (p as i16 + dp).clamp(0, 6) as u8,
             (s as i16 + ds).clamp(0, 6) as u8,
         )
+    }
+
+    /// Tirages d'un Orb of Alchemy : 4 mods au hasard ; avec l'Omen of Sinistral / Dextral Alchemy
+    /// (`add_slot`), le nombre maximal de mods de ce côté, puis le reste des 4 de l'autre côté (émulateur
+    /// de Craft of Exile, `poe2_alchemy`).
+    pub fn alchemy_draws(&self, slot: Option<Slot>) -> [(Option<Slot>, u8); 2] {
+        match slot {
+            None => [(None, 4), (None, 0)],
+            Some(s) => {
+                let (p, q) = self.cap(Rarity::Rare);
+                let max = match s {
+                    Slot::Prefix => p,
+                    Slot::Suffix => q,
+                }
+                .min(4);
+                let autre = match s {
+                    Slot::Prefix => Slot::Suffix,
+                    Slot::Suffix => Slot::Prefix,
+                };
+                [(Some(s), max), (Some(autre), 4 - max)]
+            }
+        }
     }
 
     /// Reste-t-il une place de préfixe ou de suffixe sur cet objet (6 affixes au plus) ?
@@ -496,12 +523,21 @@ impl AffixPool {
             // Normal ou Magique (patch 0.3.1 : « When used on Magic items the original modifiers are not retained »)
             Alchemy if item.rarity != Rarity::Rare => {
                 *item = ItemState::new(Rarity::Rare, item.ilvl);
-                for _ in 0..4 {
-                    self.add_random(item, &f, rng);
+                for (slot, n) in self.alchemy_draws(c.add_slot) {
+                    let f = DrawFilter {
+                        force_slot: slot,
+                        ..f
+                    };
+                    for _ in 0..n {
+                        self.add_random(item, &f, rng);
+                    }
                 }
             }
             Exalt if item.rarity == Rarity::Rare && self.has_room(item) => {
-                self.add_random(item, &f, rng)
+                self.add_random(item, &f, rng);
+                if c.double && self.has_room(item) {
+                    self.add_random(item, &f, rng);
+                }
             }
             Chaos if item.rarity == Rarity::Rare => {
                 // retrait PUIS ajout : le pool du tirage est calculé après le retrait
@@ -525,6 +561,15 @@ impl AffixPool {
                     rng,
                 ) {
                     return Outcome::NotApplicable;
+                }
+                if c.double {
+                    self.remove_random(
+                        item,
+                        c.remove_slot,
+                        c.remove_desecrated_only,
+                        c.remove_lowest_level,
+                        rng,
+                    );
                 }
             }
             Fracture if item.rarity == Rarity::Rare && n >= 4 && !item.has_fractured() => {
@@ -593,7 +638,9 @@ impl AffixPool {
                             Slot::Prefix => self.count(item, Slot::Prefix) >= cap_p,
                             Slot::Suffix => self.count(item, Slot::Suffix) >= cap_s,
                         };
-                        if !self.remove_random(item, plein.then_some(a.slot), false, false, rng) {
+                        // Omen of Sinistral / Dextral Crystallisation : retrait de ce côté seulement
+                        let cote = c.remove_slot.or(plein.then_some(a.slot));
+                        if !self.remove_random(item, cote, false, false, rng) {
                             return Outcome::NotApplicable;
                         }
                     }

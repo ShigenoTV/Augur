@@ -6,7 +6,7 @@
 //! relevé de poids poe2db, estimations de Krakenbul sous CC BY-NC-SA 3.0 : l'attribution
 //! accompagne chaque réponse, voir [`Attribution`]).
 
-use super::catalogue::{MONNAIES, OMENS, actions, id_combinee};
+use super::catalogue::{MONNAIES, OMENS, actions, avec_omens, combinaisons, id_combinee};
 use super::donnees::{
     BaseTable, ErreurPool, PoolBase, RelevePoids, SansPoids, TableBases, TableMods,
     construire_pool, construire_pool_avec,
@@ -425,16 +425,20 @@ pub struct ResultatPlan {
     pub depart: Option<Vec<ModLu>>,
 }
 
-fn actives(exclues: &[String]) -> BTreeSet<String> {
+/// Actions permises : les monnaies et leurs Omens que le joueur n'a pas exclus. Une combinaison dont un
+/// Omen n'a pas de prix (ni cote, ni saisie : Omens rares, absents de poe.ninja) n'est pas proposée ;
+/// une monnaie sans prix reste une erreur.
+pub(crate) fn actives(exclues: &[String], prix: &BTreeMap<String, f64>) -> BTreeSet<String> {
     let ok = |id: &str| !exclues.iter().any(|e| e == id);
+    let a_un_prix = |id: &str| prix.get(id).is_some_and(|p| p.is_finite() && *p >= 0.0);
     let mut a = BTreeSet::new();
     for m in MONNAIES.iter().filter(|m| ok(m.id)) {
         a.insert(m.id.to_string());
-        for o in OMENS
-            .iter()
-            .filter(|o| o.s_applique_a == m.genre && ok(o.id))
-        {
-            a.insert(id_combinee(m.id, o.id));
+        for omens in combinaisons(m.genre) {
+            if omens.iter().all(|o| ok(o.id) && a_un_prix(o.id)) {
+                let ids: Vec<&str> = omens.iter().map(|o| o.id).collect();
+                a.insert(id_combinee(m.id, &ids.join("+")));
+            }
         }
     }
     a
@@ -505,18 +509,43 @@ fn actions_essences(
                 remove_desecrated_only: false,
                 remove_lowest_level: false,
                 requires_rare: e.sur_rare(),
+                double: false,
                 unit_cost: prix,
             };
-            Some((
-                Action {
-                    id: c.id.clone(),
-                    label: c.label.clone(),
-                    cost: prix,
-                    kind: ActionKind::Currency(c),
-                },
-                inutile,
-            ))
+            let vers_action = |c: Currency| Action {
+                id: c.id.clone(),
+                label: c.label.clone(),
+                cost: c.unit_cost,
+                kind: ActionKind::Currency(c),
+            };
+            // Essence Perfect ou Corrupted dont un mod sert l'objectif : aussi avec l'Omen of Sinistral /
+            // Dextral Crystallisation (retrait d'un côté choisi), s'il a un prix
+            let mut out = Vec::new();
+            if inutile.is_none() && matches!(e.genre.as_str(), "perfect" | "corrupted") {
+                for omens in combinaisons(CurrencyKind::Essence) {
+                    let prix_omens: Option<f64> = omens
+                        .iter()
+                        .map(|o| {
+                            table.prix.get(o.id).copied().filter(|p| {
+                                p.is_finite() && *p >= 0.0 && !exclues.iter().any(|x| x == o.id)
+                            })
+                        })
+                        .sum();
+                    if let Some(po) = prix_omens {
+                        out.push((
+                            vers_action(Currency {
+                                unit_cost: prix + po,
+                                ..avec_omens(&c, &omens)
+                            }),
+                            None,
+                        ));
+                    }
+                }
+            }
+            out.insert(0, (vers_action(c), inutile));
+            Some(out)
         })
+        .flatten()
         .collect();
     v.sort_by(|a, b| a.0.cost.total_cmp(&b.0.cost).then(a.0.id.cmp(&b.0.id)));
     let mut gardees: BTreeMap<(u8, bool), usize> = BTreeMap::new();
@@ -695,7 +724,7 @@ pub fn planifier(
     let pool = Arc::new(pb.pool.clone());
     let goal = Arc::new(Goal::new(&pool, &demande.voulus).map_err(ErreurAtelier::Objectif)?);
 
-    let actives = actives(&demande.exclues);
+    let actives = actives(&demande.exclues, &table.prix);
     let mut acts =
         actions(&table.prix, Some(&actives)).map_err(|e| ErreurAtelier::Prix(e.to_string()))?;
     let classe = &base(d, &demande.base_id)?.classe;
@@ -839,7 +868,7 @@ mod tests {
         assert!(b.iter().any(|b| b.classe == "Dagger"));
         assert!(!b.iter().any(|b| ecartee(&b.nom)));
         assert!(!b.iter().any(|b| b.nom.contains("Fists of Stone")));
-        assert_eq!(catalogue().len(), 26 + d.essences.len());
+        assert_eq!(catalogue().len(), 35 + d.essences.len());
         assert!(d.essences.len() > 90);
         assert_eq!(d.essences.iter().filter(|e| e.genre == "alloy").count(), 13);
         // chaque mod garanti est dans les tables embarquées
@@ -961,6 +990,68 @@ mod tests {
         assert!(planifier(&exclues, &table, &annuler).is_err());
     }
 
+    /// Tous les Omens du catalogue cotés (saisie) : le plan les considère, et le moteur exact confirme son
+    /// coût ; la Perfect Essence est aussi proposée avec l'Omen of Crystallisation.
+    #[test]
+    fn plan_avec_tous_les_omens() {
+        let b = bases()
+            .unwrap()
+            .into_iter()
+            .find(|b| b.classe == "Body Armour" && b.page == "Body_Armours_int")
+            .unwrap();
+        let a = affixes(&b.id, 80).unwrap();
+        let vie = a
+            .affixes
+            .iter()
+            .find(|g| g.essence && g.libelle.contains("increased maximum Life"))
+            .unwrap();
+        let feu = a
+            .affixes
+            .iter()
+            .find(|g| !g.essence && g.libelle.contains("Fire Resistance"))
+            .unwrap();
+        let demande = DemandePlan {
+            base_id: b.id.clone(),
+            ilvl: 80,
+            voulus: vec![
+                WantedAffix {
+                    group: vie.group,
+                    family: vie.family,
+                    max_tier: u8::MAX,
+                },
+                WantedAffix {
+                    group: feu.group,
+                    family: feu.family,
+                    max_tier: 2,
+                },
+            ],
+            exclues: vec![],
+            objet_depart: None,
+        };
+        let mut table = TablePrix::indicative();
+        let mut saisie: BTreeMap<String, f64> =
+            OMENS.iter().map(|o| (o.id.to_string(), 3.0)).collect();
+        saisie.insert("perfect-essence-of-the-body".into(), 50.0);
+        table.saisir(&saisie).unwrap();
+        let (d, pb) = pool(&b.id, 80).unwrap();
+        let goal = Goal::new(&pb.pool, &demande.voulus).unwrap();
+        let ess = actions_essences(&d.essences, &b.classe, &pb.pool, &goal, &table, &[]);
+        assert!(
+            ess.iter()
+                .any(|e| e.id == "perfect-essence-of-the-body+omen_sinistral_crystallisation"),
+            "{:?}",
+            ess.iter().map(|e| &e.id).collect::<Vec<_>>()
+        );
+        let (r, _) = planifier(&demande, &table, &AtomicBool::new(false)).unwrap();
+        let mc = r.plan.mc.as_ref().unwrap();
+        assert!(
+            (mc.mean_cost - r.plan.expected_cost).abs() < 0.05 * r.plan.expected_cost,
+            "solveur {} / moteur {}",
+            r.plan.expected_cost,
+            mc.mean_cost
+        );
+    }
+
     /// Plan sur une Essence ou un Alloy à prix saisi, dont l'objectif est un mod que seule elle pose ;
     /// le moteur exact confirme le coût du solveur.
     fn plan_par(classe: &str, ilvl: u32, texte: &str, id: &str, prix: f64) -> ResultatPlan {
@@ -1067,6 +1158,7 @@ mod tests {
                 remove_desecrated_only: false,
                 remove_lowest_level: false,
                 requires_rare: e.sur_rare(),
+                double: false,
                 unit_cost: 1.0,
             };
             let mut rng = rand::rngs::SmallRng::seed_from_u64(8);
@@ -1237,6 +1329,7 @@ mod tests {
                 remove_desecrated_only: false,
                 remove_lowest_level: false,
                 requires_rare: e.sur_rare(),
+                double: false,
                 unit_cost: 1.0,
             };
             let mut rng = rand::rngs::SmallRng::seed_from_u64(9);
