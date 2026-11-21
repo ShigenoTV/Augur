@@ -28,17 +28,17 @@
   Version attendue dans le journal (ex. 0.1.38). Facultative.
 
 .PARAMETER Seconds
-  Durée pendant laquelle Augur doit rester vivant à chaque lancement (15 s).
+  Durée pendant laquelle Augur doit rester vivant à chaque lancement (20 s).
 
 .PARAMETER Runs
-  Nombre de lancements successifs (3 par défaut).
+  Nombre de lancements successifs (1 par défaut).
 #>
 param(
   [Parameter(Mandatory = $true)]
   [string] $Installer,
   [string] $Version = '',
-  [int] $Seconds = 15,
-  [int] $Runs = 3
+  [int] $Seconds = 20,
+  [int] $Runs = 1
 )
 
 $ErrorActionPreference = 'Stop'
@@ -148,8 +148,9 @@ function Test-Launch([int] $run) {
   return $failure
 }
 
-# Plusieurs lancements : le premier crée le profil WebView2 et les données ;
-# les suivants, plus rapides, ressemblent au PC d'un joueur.
+# Limite connue : une course de vitesse comme celle de la v0.1.36 (une page
+# plus rapide que le setup) dépend de la machine et ne se reproduit pas sur
+# le runner ; ce cas est couvert par le test fenetres_creees_apres_l_etat.
 for ($run = 1; $run -le $Runs; $run++) {
   $failure = Test-Launch $run
   if ($failure) { Fail $failure }
