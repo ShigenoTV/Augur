@@ -252,6 +252,7 @@ mod tests {
                 voulus: vec![],
                 prix: Default::default(),
                 objet_depart: None,
+                eldritch: None,
             },
         }
     }

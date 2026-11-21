@@ -385,6 +385,8 @@ export type ForgePoe1Request = {
   prix?: Record<string, number>;
   /** Texte d'un objet en possession (Ctrl+Alt+C) d'où le plan conseillé repart ; null : objet neuf. */
   objetDepart?: string | null;
+  /** Dominance des implicites Eldritch : « exarch » (préfixes) ou « eater » (suffixes) ; null : aucune. */
+  eldritch?: "exarch" | "eater" | null;
 };
 export type ForgePoe1Conso = { nom: string; quantite: number };
 export type ForgePoe1Method = {

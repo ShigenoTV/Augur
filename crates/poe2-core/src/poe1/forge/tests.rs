@@ -316,6 +316,7 @@ fn essence_garantit_son_mod() {
         influence: None,
         voulus,
         objet_depart: None,
+        eldritch: None,
     })
     .unwrap();
     assert_eq!(r.methodes[0].genre, "essence");
@@ -459,6 +460,7 @@ fn etabli_finit_un_magique() {
         influence: None,
         voulus,
         objet_depart: None,
+        eldritch: None,
     })
     .unwrap();
     let premiere = &r.methodes[0];
@@ -652,6 +654,7 @@ fn plan_depuis_l_objet_de_depart() {
         voulus: voulus.clone(),
         prix: prix.clone(),
         objet_depart: objet.map(str::to_string),
+        eldritch: None,
     };
     let neuf = planifier(&demande(None)).unwrap();
     let depuis = planifier(&demande(Some(PLAQUE_COPIEE))).unwrap();
@@ -744,6 +747,7 @@ fn objet_fracture_lu_et_planifie() {
         .map(|(n, p)| (n.to_string(), p))
         .collect(),
         objet_depart: Some(PLAQUE_FRACTUREE.into()),
+        eldritch: None,
     };
     let r = planifier(&demande).unwrap();
     let plan = r.plan.expect("plan depuis l'objet fracturé");
@@ -789,6 +793,7 @@ fn suivi_de_l_objet_en_cours() {
         voulus,
         prix,
         objet_depart: None,
+        eldritch: None,
     };
     let noms = suivi::libelles(&d).unwrap();
     assert_eq!(noms.len(), 3);
@@ -883,4 +888,62 @@ fn hollow_et_sanctified() {
             (f64::from(a.weight) * (1.0 + (f64::from(a.req_ilvl) - 40.0) / 100.0)).round();
         assert_eq!(f64::from(b.weight), attendu * 100.0, "{}", a.id);
     }
+}
+
+#[test]
+fn mods_voiles_proposes_et_eldritch_dans_la_demande() {
+    const ARMURE: &str = "Metadata/Items/Armours/BodyArmours/BodyStr17";
+    let pb = construire_pool(ARMURE, 84, None).unwrap();
+    let voile = pb
+        .pool
+        .affixes
+        .iter()
+        .position(|a| a.id == "JunMasterVeiledPercentageLifeAndMana")
+        .unwrap();
+    // Poids nul dans le pool : jamais tiré par Chaos ou Exalted, seulement dévoilé.
+    assert_eq!(pb.pool.affixes[voile].weight, 0);
+    assert!(
+        pb.mods_voiles
+            .iter()
+            .any(|&(i, w)| i as usize == voile && w > 0)
+    );
+    // Proposé comme objectif, marqué « jamais tiré au hasard ».
+    let a = affixes(ARMURE, 84, None).unwrap();
+    let g = a
+        .affixes
+        .iter()
+        .find(|g| {
+            g.paliers
+                .iter()
+                .any(|p| p.texte.contains("increased maximum Mana"))
+        })
+        .unwrap();
+    assert!(g.essence);
+
+    let voulus = vec![
+        voulu(&pb.pool, "IncreasedLife9"),
+        voulu(&pb.pool, "FireResist6"),
+    ];
+    let prix: BTreeMap<String, f64> = [
+        ("Chaos Orb", 1.0),
+        ("Orb of Alchemy", 0.5),
+        ("Eldritch Chaos Orb", 2.0),
+    ]
+    .into_iter()
+    .map(|(n, p)| (n.to_string(), p))
+    .collect();
+    let demande = |eldritch: Option<&str>, influence: Option<&str>| DemandePoe1 {
+        prix: prix.clone(),
+        base_id: ARMURE.into(),
+        ilvl: 84,
+        influence: influence.map(str::to_string),
+        voulus: voulus.clone(),
+        objet_depart: None,
+        eldritch: eldritch.map(str::to_string),
+    };
+    let cout = |d: DemandePoe1| planifier(&d).unwrap().plan.unwrap().cout_moyen;
+    let sans = cout(demande(None, None));
+    assert!(cout(demande(Some("eater"), None)) < sans);
+    // Exarch : préfixes seulement ; la vie se relance alors sans toucher à la résistance.
+    assert!(cout(demande(Some("exarch"), None)) < sans);
 }

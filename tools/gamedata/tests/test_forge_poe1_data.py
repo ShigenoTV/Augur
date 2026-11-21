@@ -34,6 +34,7 @@ def _sources(tmp_path: Path) -> Path:
         "Jamais": _mod(poids=0),
         "LifeEssence7": _mod(poids=0, essence=True),
         "Monstre": _mod(domaine="monster"),
+        "JunMasterVeiledLife": _mod(domaine="unveiled"),
         "Implicite": {**_mod(generation="unique"), "text": "+(12-16)% to Fire and Lightning Resistances"},
         "EinharMasterIncreasedLife3": {
             **_mod(),
@@ -132,8 +133,14 @@ def test_construit_les_donnees(tmp_path):
     assert d["classes"]["Ring"]["influences"] == {"Hunter": "ring_basilisk", "Shaper": "ring_shaper"}
     ids = [m["id"] for m in d["mods"]]
     # sans poids ni Essence ni établi : écarté ; le mod `delve` du Hollow Fossil est gardé
-    assert ids == ["DelveAbyssJewelSocket1", "EinharMasterIncreasedLife3", "IncreasedLife1", "LifeEssence7"]
+    # le mod voilé est gardé, avec ses poids au dévoilement
+    assert ids == [
+        "DelveAbyssJewelSocket1", "EinharMasterIncreasedLife3", "IncreasedLife1", "JunMasterVeiledLife", "LifeEssence7",
+    ]
     assert d["mods"][0]["fossile"] and not d["mods"][2]["fossile"]
+    voile = d["mods"].pop(3)
+    assert voile["voile"] and voile["spawn"] == [["ring", 1000], ["default", 0]]
+    assert not any(m["voile"] for m in d["mods"])
     d["mods"].pop(0)
     craft = d["mods"][0]
     assert craft["artisanal"] and craft["spawn"] == [] and craft["valeur"] == [41, 55]

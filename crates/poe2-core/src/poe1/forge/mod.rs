@@ -48,14 +48,26 @@ fn rang(s: Slot) -> u8 {
 }
 
 /// Affixes que le panneau propose comme objectif : tiers tirables à ce niveau d'objet, plus les mods
-/// garantis par une Essence utilisable (marqués `essence` s'ils ne sont jamais tirés au hasard).
+/// garantis par une Essence utilisable, les mods `delve` d'un fossile et les mods voilés (marqués
+/// `essence` s'ils ne sont jamais tirés au hasard).
 pub fn affixes(
     base_id: &str,
     ilvl: u32,
     influence: Option<&str>,
 ) -> Result<AffixesPoe1, ErreurForgePoe1> {
     let pb = construire_pool(base_id, ilvl, influence)?;
-    let garantis: Vec<u16> = pb.essences.iter().map(|e| e.affixe).collect();
+    let garantis: Vec<u16> = pb
+        .essences
+        .iter()
+        .map(|e| e.affixe)
+        .chain(
+            pb.mods_fossiles
+                .iter()
+                .chain(&pb.mods_voiles)
+                .filter(|(i, w)| *w > 0 && u32::from(pb.pool.affixes[*i as usize].req_ilvl) <= ilvl)
+                .map(|(i, _)| *i),
+        )
+        .collect();
     let mut par_cle: BTreeMap<(u8, GroupId, u16), GroupeAffixe> = BTreeMap::new();
     let mut total: BTreeMap<u8, f64> = BTreeMap::new();
     for (i, a) in pb.pool.affixes.iter().enumerate() {
@@ -129,11 +141,20 @@ pub struct DemandePoe1 {
     /// Absent ou vide : objet Normal neuf. Les méthodes de spam partent toujours d'une base neuve.
     #[serde(default)]
     pub objet_depart: Option<String>,
+    /// Dominance des implicites Eldritch : « exarch » (les monnaies Eldritch touchent les préfixes) ou
+    /// « eater » (les suffixes). Absent : pas de monnaies Eldritch. Ignoré sur un objet influencé.
+    #[serde(default)]
+    pub eldritch: Option<String>,
 }
 
 /// Méthodes de spam pour la demande, de la plus probable à la moins probable.
 pub fn planifier(d: &DemandePoe1) -> Result<ResultatPoe1, ErreurForgePoe1> {
-    let pb = construire_pool(&d.base_id, d.ilvl, d.influence.as_deref())?;
+    let mut pb = construire_pool(&d.base_id, d.ilvl, d.influence.as_deref())?;
+    pb.eldritch = match d.eldritch.as_deref() {
+        Some("exarch") => Some(Slot::Prefix),
+        Some("eater") => Some(Slot::Suffix),
+        _ => None,
+    };
     let mut r = calcul::methodes(&pb, &d.voulus, &d.prix)?;
     let texte = d
         .objet_depart

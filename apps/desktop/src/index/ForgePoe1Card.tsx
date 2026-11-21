@@ -546,6 +546,7 @@ export function ForgePoe1Card() {
   const [baseId, setBaseId] = useState("");
   const [ilvl, setIlvl] = useState(84);
   const [influence, setInfluence] = useState<string | null>(null);
+  const [eldritch, setEldritch] = useState<"exarch" | "eater" | null>(null);
   const [affixes, setAffixes] = useState<ForgePoe1Affixes | null>(null);
   const [voulus, setVoulus] = useState<ForgeWanted[]>([]);
   const [result, setResult] = useState<ForgePoe1Result | null>(null);
@@ -629,6 +630,7 @@ export function ForgePoe1Card() {
         voulus,
         prix: envoyes,
         objetDepart: depart?.texte ?? null,
+        eldritch: influence ? null : eldritch,
       };
       setResult(await commands.planForgePoe1(demande));
       setDemandeCalcul(demande);
@@ -661,6 +663,7 @@ export function ForgePoe1Card() {
     setBaseId(d.baseId);
     setIlvl(d.ilvl);
     setInfluence(d.influence);
+    setEldritch(d.eldritch ?? null);
     setVoulus(d.voulus);
     setDepart(null);
     setCleDepart((k) => k + 1);
@@ -764,6 +767,25 @@ export function ForgePoe1Card() {
             ))}
           </select>
         </label>
+        <label
+          className="flex flex-col gap-1 text-xs text-text-subtle"
+          title="Implicites Eldritch déjà posés sur l'objet : les monnaies Eldritch ne touchent que les préfixes (Exarch dominant) ou les suffixes (Eater dominant). Pas d'implicites Eldritch sur un objet influencé."
+        >
+          Implicites Eldritch
+          <select
+            value={influence ? "" : (eldritch ?? "")}
+            disabled={!base || influence != null}
+            onChange={(e) => {
+              setEldritch((e.target.value || null) as "exarch" | "eater" | null);
+              setResult(null);
+            }}
+            className={input}
+          >
+            <option value="">Aucun</option>
+            <option value="exarch">Exarch dominant (préfixes)</option>
+            <option value="eater">Eater dominant (suffixes)</option>
+          </select>
+        </label>
       </div>
 
       {base && base.implicites.length > 0 && (
@@ -804,7 +826,7 @@ export function ForgePoe1Card() {
               voulus={voulus}
               onToggle={toggle}
               onTier={setTier}
-              essenceHint="Posé seulement par une Essence ou un fossile"
+              essenceHint="Posé seulement par une Essence, un fossile ou un dévoilement (monnaie voilée)"
             />
             <AffixColumn
               slot="suffix"
@@ -812,7 +834,7 @@ export function ForgePoe1Card() {
               voulus={voulus}
               onToggle={toggle}
               onTier={setTier}
-              essenceHint="Posé seulement par une Essence ou un fossile"
+              essenceHint="Posé seulement par une Essence, un fossile ou un dévoilement (monnaie voilée)"
             />
           </div>
           <div className="flex items-center gap-3">
