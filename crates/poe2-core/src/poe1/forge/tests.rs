@@ -1005,3 +1005,67 @@ fn groupe_dominant_non_voulu_suivi_a_part() {
     let s = simuler_rare(&p, &goal, 84, None, None, 200_000);
     proche(c, s, 0.02);
 }
+
+#[test]
+fn bases_experimentales_de_heist() {
+    // Plafond d'affixes décalé par l'implicite : Simplex Amulet (-2 préfixes, -1 suffixe) n'a aucun
+    // mod Magique et 1/2 en Rare ; Composite Ring (+3 / -3) n'a que des préfixes.
+    let simplex = construire_pool("Metadata/Items/Amulets/AmuletE2", 84, None).unwrap();
+    assert_eq!(simplex.pool.cap(Rarity::Magic), (0, 0));
+    assert_eq!(simplex.pool.cap(Rarity::Rare), (1, 2));
+    let composite = construire_pool("Metadata/Items/Rings/RingE3", 84, None).unwrap();
+    assert_eq!(composite.pool.cap(Rarity::Magic), (4, 0));
+    assert_eq!(composite.pool.cap(Rarity::Rare), (6, 0));
+    assert_eq!(
+        donnees::decalage_plafond(&[
+            "+1 Prefix Modifier allowed\n-2 Suffix Modifiers allowed".into()
+        ]),
+        (1, -2)
+    );
+
+    let dex = |pb: &donnees::PoolPoe1| {
+        pb.pool
+            .affixes
+            .iter()
+            .find(|a| a.slot == Slot::Suffix && a.family == "Dexterity")
+            .map(|a| WantedAffix {
+                group: a.group,
+                family: a.family_id,
+                max_tier: u8::MAX,
+            })
+            .unwrap()
+    };
+    let goal = Goal::new(&simplex.pool, &[dex(&simplex)]).unwrap();
+    assert_eq!(
+        chance_alteration(&simplex.pool, &goal, 84),
+        Some((0.0, 0.0))
+    );
+
+    // Astrolabe Amulet : les six influences d'office, donc leurs mods tirables.
+    let astrolabe = construire_pool("Metadata/Items/Amulets/AmuletE1", 84, None).unwrap();
+    let neutre = construire_pool("Metadata/Items/Amulets/AmuletE3", 84, None).unwrap();
+    assert!(astrolabe.pool.affixes.len() > neutre.pool.affixes.len() + 50);
+    assert_eq!(
+        astrolabe.influence.as_deref().map(|i| i.split('+').count()),
+        Some(6)
+    );
+}
+
+#[test]
+fn alteration_par_enumeration_retrouve_la_formule() {
+    // Sur une base ordinaire, l'énumération des bases à plafond décalé donne la formule fermée.
+    let pb = construire_pool(ANNEAU, 86, None).unwrap();
+    for voulus in [
+        vec![voulu(&pb.pool, "IncreasedLife6")],
+        vec![
+            voulu(&pb.pool, "IncreasedLife5"),
+            voulu(&pb.pool, "ColdResist4"),
+        ],
+    ] {
+        let goal = Goal::new(&pb.pool, &voulus).unwrap();
+        let (c, aug) = chance_alteration(&pb.pool, &goal, 86).unwrap();
+        let (ce, auge) = chance_alteration_plafond(&pb.pool, &goal, 86).unwrap();
+        proche(c, ce, 1e-9);
+        proche(aug, auge, 1e-9);
+    }
+}

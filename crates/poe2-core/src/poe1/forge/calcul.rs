@@ -472,6 +472,9 @@ pub fn pool_fossiles_base(
 /// Méthode Alteration (+ Augmentation quand elle peut finir l'objet) : chance par essai et nombre
 /// moyen d'Augmentations par essai. `None` si l'objectif ne tient pas sur un objet Magique.
 pub fn chance_alteration(pool: &AffixPool, goal: &Goal, ilvl: u8) -> Option<(f64, f64)> {
+    if pool.cap_delta != (0, 0) {
+        return chance_alteration_plafond(pool, goal, ilvl);
+    }
     let p = poids(pool, goal, ilvl);
     let mut voulu: [Option<f64>; 2] = [None, None];
     for k in 0..goal.len() {
@@ -519,6 +522,54 @@ pub fn chance_alteration(pool: &AffixPool, goal: &Goal, ilvl: u8) -> Option<(f64
     Some((direct + aug_ok + deux, aug_q))
 }
 
+/// Alteration + Augmentation sur une base à plafond décalé (bases expérimentales de Heist : Simplex
+/// Amulet sans aucun mod Magique, Composite Ring à deux préfixes…), par énumération exacte des
+/// tirages (`AffixPool::distribution`, qui suit le plafond de la base).
+pub(super) fn chance_alteration_plafond(
+    pool: &AffixPool,
+    goal: &Goal,
+    ilvl: u8,
+) -> Option<(f64, f64)> {
+    if goal.len() > 2 {
+        return None;
+    }
+    let f = DrawFilter::default();
+    let vide = ItemState::new(Rarity::Magic, ilvl);
+    let avec = |item: &ItemState, j: AffixIdx| {
+        let mut x = *item;
+        x.push(Mod {
+            idx: j,
+            ..Mod::default()
+        });
+        x
+    };
+    // Chance que le second mod finisse l'objet ; sans place pour un second mod, l'objet reste à un.
+    let suivants = |item: &ItemState| -> f64 {
+        let d = pool.distribution(item, &f);
+        if d.is_empty() {
+            return if goal.is_met(item) { 1.0 } else { 0.0 };
+        }
+        d.into_iter()
+            .filter(|&(j, _)| goal.is_met(&avec(item, j)))
+            .map(|(_, p)| p)
+            .sum()
+    };
+    let un = 1.0 - DEUX_MODS_MAGIQUE;
+    let (mut ok, mut augs) = (0.0, 0.0);
+    for (i, p1) in pool.distribution(&vide, &f) {
+        let item = avec(&vide, i);
+        let s = suivants(&item);
+        if goal.is_met(&item) {
+            ok += un * p1;
+        } else if s > 0.0 {
+            augs += un * p1;
+            ok += un * p1 * s;
+        }
+        ok += DEUX_MODS_MAGIQUE * p1 * s;
+    }
+    Some((ok, augs))
+}
+
 /// Alteration + Augmentation avec finition à l'établi, par énumération exacte des tirages
 /// (`AffixPool::distribution`) : chance par essai et Augmentations par essai. L'Augmentation est
 /// utilisée quand l'objet n'a qu'un mod et qu'un second mod peut le finir (établi compris).
@@ -551,8 +602,11 @@ pub fn chance_alteration_etabli(
         let manque_seulement_kb = (0..goal.len())
             .all(|k| k == kb || tenus.contains(&Class::Wanted(k)))
             && !tenus.contains(&Class::Blocked(kb));
-        // Objet Magique : un préfixe et un suffixe au plus.
-        let place = pool.count(item, cote_etabli) == 0;
+        // Objet Magique : un préfixe et un suffixe au plus (plafond décalé sur une base
+        // expérimentale de Heist).
+        let (cp, cs) = pool.cap(Rarity::Magic);
+        let cap = if cote_etabli == Slot::Prefix { cp } else { cs };
+        let place = pool.count(item, cote_etabli) < cap;
         manque_seulement_kb && place
     };
     let f = DrawFilter::default();

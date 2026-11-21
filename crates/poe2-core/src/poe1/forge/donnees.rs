@@ -246,11 +246,26 @@ pub fn construire_pool(
     let d = donnees()?;
     let b = base(base_id)?;
     let mut tags: Vec<&str> = b.tags.iter().map(String::as_str).collect();
-    let influences = influences(influence);
-    if influences.len() > 2 || (influences.len() == 2 && influences[0] == influences[1]) {
+    let mut influences = influences(influence);
+    // Base expérimentale de Heist (Astrolabe Amulet) : porte d'office les six influences.
+    let toutes = b
+        .implicites
+        .iter()
+        .any(|i| i.contains("all Conqueror Influences"));
+    if !toutes
+        && (influences.len() > 2 || (influences.len() == 2 && influences[0] == influences[1]))
+    {
         return Err(ErreurForgePoe1::Influence(
             influence.unwrap_or_default().to_string(),
         ));
+    }
+    if toutes {
+        influences = d
+            .classes
+            .get(&b.classe)
+            .map(|c| c.influences.keys().map(String::as_str).collect())
+            .unwrap_or_default();
+        influences.sort_unstable();
     }
     for inf in &influences {
         let t = d
@@ -412,13 +427,41 @@ pub fn construire_pool(
         base: b,
         ilvl: ilvl as u8,
         influence: (!influences.is_empty()).then(|| influences.join("+")),
-        pool: AffixPool::new(affixes),
+        pool: AffixPool {
+            cap_delta: decalage_plafond(&b.implicites),
+            ..AffixPool::new(affixes)
+        },
         essences,
         etabli,
         mods_fossiles,
         mods_voiles,
         eldritch: None,
     })
+}
+
+/// Décalage du nombre de préfixes / suffixes autorisés que donnent les implicites d'une base
+/// expérimentale de Heist (« -2 Prefix Modifiers allowed », « +1 Suffix Modifier allowed »).
+pub fn decalage_plafond(implicites: &[String]) -> (i8, i8) {
+    let mut d = (0i8, 0i8);
+    for ligne in implicites.iter().flat_map(|i| i.lines()) {
+        let mut mots = ligne.split_whitespace();
+        let (Some(n), Some(cote), Some(_), Some("allowed"), None) = (
+            mots.next(),
+            mots.next(),
+            mots.next(),
+            mots.next(),
+            mots.next(),
+        ) else {
+            continue;
+        };
+        let Ok(n) = n.parse::<i8>() else { continue };
+        match cote {
+            "Prefix" => d.0 += n,
+            "Suffix" => d.1 += n,
+            _ => {}
+        }
+    }
+    d
 }
 
 /// Influences d'une demande : une seule (« Shaper ») ou deux jointes par `+` (« Hunter+Shaper »,

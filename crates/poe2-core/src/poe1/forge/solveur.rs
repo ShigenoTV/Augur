@@ -3711,13 +3711,14 @@ mod tests {
     #[test]
     #[ignore = "export pour le test complet : CAS=fichier.json cargo test --release -p poe2-core -- --ignored exporter_test_complet_poe1"]
     fn exporter_test_complet_poe1() {
-        // Une base par classe (la plus haute hors bases expérimentales), ilvl 84, sans influence. Crafts : Alteration (une
-        // famille de préfixe), puis Chaos, fossile seul et Harvest Reforge sur deux familles (le
-        // préfixe et le suffixe les plus fréquents). Chance d'un essai selon le modèle du solveur.
+        // Une base par classe (la plus haute hors bases expérimentales), plus les bases
+        // expérimentales de Heist qui changent le plafond d'affixes ou les influences ; ilvl 84, sans
+        // influence. Crafts : Alteration (une famille), puis Chaos, fossile seul et Harvest Reforge
+        // sur deux familles (le préfixe et le suffixe les plus fréquents). Chance d'un essai selon le
+        // modèle du solveur.
         use super::super::donnees::bases;
         let chemin = std::env::var("CAS").unwrap_or_else(|_| "test-complet-poe1.json".into());
         const ILVL: u32 = 84;
-        // Bases expérimentales de Heist exclues : l'émulateur n'y tire aucun mod.
         let experimentales: std::collections::HashSet<String> = super::super::donnees::donnees()
             .unwrap()
             .bases
@@ -3725,16 +3726,24 @@ mod tests {
             .filter(|b| b.tags.iter().any(|t| t == "experimental_base"))
             .map(|b| b.id.clone())
             .collect();
+        let toutes = bases().unwrap();
         let mut classes: BTreeMap<String, super::super::donnees::BaseVue> = BTreeMap::new();
-        for b in bases()
-            .unwrap()
-            .into_iter()
-            .filter(|b| !experimentales.contains(&b.id))
-        {
+        for b in toutes.iter().filter(|b| !experimentales.contains(&b.id)) {
             let e = classes.entry(b.classe.clone()).or_insert_with(|| b.clone());
             if b.niveau_drop > e.niveau_drop || (b.niveau_drop == e.niveau_drop && b.id < e.id) {
-                *e = b;
+                *e = b.clone();
             }
+        }
+        for n in [
+            "Simplex Amulet",
+            "Focused Amulet",
+            "Astrolabe Amulet",
+            "Composite Ring",
+            "Cogwork Ring",
+            "Ratcheting Ring",
+        ] {
+            let b = toutes.iter().find(|b| b.nom == n).unwrap();
+            classes.insert(n.to_string(), b.clone());
         }
         let mut prix = cote_marche();
         for n in [WILD, VIVID, PRIMAL] {
@@ -3765,6 +3774,10 @@ mod tests {
                 eprintln!("{classe} : trop peu de familles");
                 continue;
             }
+            // Base à plafond décalé : l'Alteration vise le côté ouvert sur un Magique, la paire n'est
+            // gardée que si un Rare a les deux côtés ouverts.
+            let (mp, _) = pool.cap(Rarity::Magic);
+            let (rp, rs) = pool.cap(Rarity::Rare);
             let voulu_famille = |f: (GroupId, u16)| WantedAffix {
                 group: f.0,
                 family: f.1,
@@ -3777,10 +3790,16 @@ mod tests {
                     .unwrap(),
             };
             let objectifs: [(&str, Vec<WantedAffix>); 2] = [
-                ("un", vec![voulu_famille(fp[0])]),
+                (
+                    "un",
+                    vec![voulu_famille(if mp > 0 { fp[0] } else { fs[0] })],
+                ),
                 ("deux", vec![voulu_famille(fp[0]), voulu_famille(fs[0])]),
             ];
             for (genre, voulus) in objectifs {
+                if genre == "deux" && (rp == 0 || rs == 0) {
+                    continue;
+                }
                 let goal = Goal::new(&pool, &voulus).unwrap();
                 let Some(mut sol) = resoudre(&pb, &goal, &prix) else {
                     eprintln!("{classe} {genre} : pas de solution");
