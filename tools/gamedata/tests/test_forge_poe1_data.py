@@ -32,6 +32,7 @@ def _mod(generation: str = "prefix", poids: int = 1000, essence: bool = False, d
 def _sources(tmp_path: Path) -> Path:
     mods = {
         "IncreasedLife1": _mod(),
+        "IncreasedLife2Royale__": _mod(),
         "Jamais": _mod(poids=0),
         "LifeEssence7": _mod(poids=0, essence=True),
         "Monstre": _mod(domaine="monster"),

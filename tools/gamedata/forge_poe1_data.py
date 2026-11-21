@@ -253,6 +253,9 @@ def mods(
     for mid, m in table.items():
         if m.get("generation_type") not in ("prefix", "suffix"):
             continue
+        # mods de PoE Royale (mode à part, retiré) : listés dans le domaine `item` mais jamais tirés en jeu
+        if mid.rstrip("_").endswith("Royale"):
+            continue
         artisanal = mid in artisanaux
         # mods du domaine `delve`, tirés ou forcés seulement par un fossile (Faceted, Hollow)
         fossile = mid in de_fossiles
