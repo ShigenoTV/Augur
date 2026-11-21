@@ -3444,6 +3444,205 @@ mod tests {
         assert!(ecart < 0.02, "écart {ecart} : {attendu:?} contre {vu:?}");
     }
 
+    /// Cas recoupés avec l'émulateur Craft of Exile (`tools/theorycraft/coe_emulateur.js`) : chance de
+    /// réussir en une action, selon le modèle du solveur.
+    ///
+    ///     CAS=cas.json cargo test -p poe2-core --release --lib exporter_cas_emulateur -- --ignored
+    #[test]
+    #[ignore = "export manuel, voir la doc"]
+    fn exporter_cas_emulateur() {
+        let chemin = std::env::var("CAS").expect("variable CAS");
+        const ANNEAU: &str = "Metadata/Items/Rings/Ring12";
+        struct Cas {
+            nom: &'static str,
+            base: &'static str,
+            ilvl: u32,
+            influence: Option<&'static str>,
+            eldritch: Option<Slot>,
+            voulus: &'static [&'static str],
+            depart: &'static [&'static str],
+            action: &'static str,
+        }
+        let cas = [
+            Cas {
+                nom: "Chaos (référence)",
+                base: ARMURE,
+                ilvl: 84,
+                influence: None,
+                eldritch: None,
+                voulus: &["IncreasedLife9", "FireResist6"],
+                depart: &[],
+                action: "chaos",
+            },
+            Cas {
+                nom: "Eldritch Chaos, Eater dominant",
+                base: ARMURE,
+                ilvl: 84,
+                influence: None,
+                eldritch: Some(Slot::Suffix),
+                voulus: &["IncreasedLife9", "FireResist6", "ColdResist6"],
+                depart: &["IncreasedLife9"],
+                action: "eldritch_chaos",
+            },
+            Cas {
+                nom: "Eldritch Exalted, Exarch dominant",
+                base: ARMURE,
+                ilvl: 84,
+                influence: None,
+                eldritch: Some(Slot::Prefix),
+                voulus: &[
+                    "IncreasedLife9",
+                    "LocalIncreasedPhysicalDamageReductionRatingPercent7",
+                ],
+                depart: &["IncreasedLife9", "FireResist4"],
+                action: "eldritch_exalt",
+            },
+            Cas {
+                nom: "Veiled Chaos",
+                base: ARMURE,
+                ilvl: 84,
+                influence: None,
+                eldritch: None,
+                voulus: &["JunMasterVeiledPercentageLifeAndMana"],
+                depart: &[],
+                action: "veiled_chaos",
+            },
+            Cas {
+                nom: "Harvest Reforge Life",
+                base: ARMURE,
+                ilvl: 84,
+                influence: None,
+                eldritch: None,
+                voulus: &["IncreasedLife9", "FireResist6"],
+                depart: &[],
+                action: "harvest_reforge:life",
+            },
+            Cas {
+                nom: "Harvest Augment Fire",
+                base: ARMURE,
+                ilvl: 84,
+                influence: None,
+                eldritch: None,
+                voulus: &["IncreasedLife9", "FireResist6"],
+                depart: &["IncreasedLife9", "Strength3", "ColdResist3"],
+                action: "harvest_augment:fire",
+            },
+            Cas {
+                nom: "Chaos, double influence Hunter + Shaper",
+                base: ANNEAU,
+                ilvl: 86,
+                influence: Some("Hunter+Shaper"),
+                eldritch: None,
+                voulus: &[
+                    "CriticalStrikeChanceUber3_",
+                    "PoisonDamageAndDurationInfluence3__",
+                ],
+                depart: &[],
+                action: "chaos",
+            },
+        ];
+        let prix = cote_marche();
+        let mut sortie = Vec::new();
+        for c in &cas {
+            let mut pb = construire_pool(c.base, c.ilvl, c.influence).unwrap();
+            pb.eldritch = c.eldritch;
+            let pool = pb.pool.clone();
+            let voulus: Vec<WantedAffix> = c.voulus.iter().map(|id| voulu(&pool, id)).collect();
+            let goal = Goal::new(&pool, &voulus).unwrap();
+            let mut tous = prix.clone();
+            for n in [
+                ELDRITCH_CHAOS,
+                ELDRITCH_EXALTED,
+                ELDRITCH_ANNULMENT,
+                VEILED_CHAOS,
+                VEILED_EXALTED,
+            ] {
+                tous.insert(n.into(), 1.0);
+            }
+            for n in [WILD, VIVID, PRIMAL] {
+                tous.insert(n.into(), 0.01);
+            }
+            let mut sol = resoudre(&pb, &goal, &tous).unwrap();
+            let m = &mut sol.m;
+            let idx = |id: &str| pool.affixes.iter().position(|a| a.id == id).unwrap() as u16;
+            let o = Objet {
+                rarete: Rarete::Rare,
+                mods: c.depart.iter().map(|id| idx(id)).collect(),
+                meta: Meta::Aucun,
+            };
+            let e = abstrait(m, &pool, &o);
+            let reussite = |m: &Modele, loi: &[(f64, Etat)]| -> f64 {
+                let t: f64 = loi.iter().map(|x| x.0).sum();
+                loi.iter()
+                    .filter(|x| m.reussi(&x.1))
+                    .map(|x| x.0)
+                    .sum::<f64>()
+                    / t
+            };
+            let depuis_loi = |l: HashMap<Etat, f64>| -> Vec<(f64, Etat)> {
+                l.into_iter().map(|(e, p)| (p, e)).collect()
+            };
+            let (action, tag) = c.action.split_once(':').unwrap_or((c.action, ""));
+            let p = match action {
+                "chaos" => reussite(m, &depuis_loi(m.loi(&Cle::Rare))),
+                "eldritch_chaos" => {
+                    let k = m.eldritch.unwrap();
+                    let o2 = 1 - k;
+                    let mq = m.masque(o2);
+                    let cle = Cle::Eldritch(k, e.meta, e.bons & mq, e.bloques & mq, e.autres[o2]);
+                    reussite(m, &depuis_loi(m.loi(&cle)))
+                }
+                "eldritch_exalt" => {
+                    let k = m.eldritch.unwrap();
+                    reussite(m, &m.un_mod_cote(&e, 0, Some(k)))
+                }
+                "veiled_chaos" => reussite(m, &depuis_loi(m.loi(&Cle::Voile))),
+                "harvest_reforge" | "harvest_augment" => {
+                    let augment = action == "harvest_augment";
+                    let j = m
+                        .recoltes
+                        .iter()
+                        .position(|r| {
+                            r.augment == augment && r.libelle.ends_with(&format!(" {tag}"))
+                        })
+                        .unwrap();
+                    if augment {
+                        let mut v = Vec::new();
+                        let i = m.etat(e, &mut v);
+                        let acts = m.actions(i, &mut v);
+                        let a = acts.iter().find(|a| a.genre == Genre::Augment(j)).unwrap();
+                        let Issue::Etats(l) = &a.issue else { panic!() };
+                        l.iter()
+                            .filter(|(k, _)| m.reussi(&m.etats[*k]))
+                            .map(|x| x.1)
+                            .sum()
+                    } else {
+                        reussite(m, &depuis_loi(m.loi(&Cle::Recolte(j))))
+                    }
+                }
+                _ => unreachable!(),
+            };
+            let acceptes: Vec<Vec<String>> = (0..goal.len())
+                .map(|k| {
+                    pool.affixes
+                        .iter()
+                        .enumerate()
+                        .filter(|(i, a)| {
+                            matches!(goal.classify(&pool, *i as u16), Class::Wanted(j) if j == k && cote(a.slot) == m.cotes[k])
+                        })
+                        .map(|(_, a)| a.id.clone())
+                        .collect()
+                })
+                .collect();
+            sortie.push(serde_json::json!({
+                "nom": c.nom, "base": c.base, "ilvl": c.ilvl, "influence": c.influence,
+                "eldritch": c.eldritch.map(|s| if s == Slot::Prefix { "exarch" } else { "eater" }),
+                "depart": c.depart, "action": c.action, "acceptes": acceptes, "augur": p,
+            }));
+        }
+        std::fs::write(chemin, serde_json::to_string_pretty(&sortie).unwrap()).unwrap();
+    }
+
     #[test]
     fn dispersion_du_cout_coherente() {
         // La simulation du plan sur le graphe du solveur retrouve son coût moyen, et ses quantiles
