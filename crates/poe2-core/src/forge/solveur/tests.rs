@@ -56,6 +56,7 @@ fn cur(id: &str, kind: CurrencyKind, cost: f64) -> Action {
             require_tag: None,
             remove_desecrated_only: false,
             remove_lowest_level: false,
+            reveal_twice: false,
             requires_rare: false,
             double: false,
             unit_cost: cost,
@@ -493,6 +494,7 @@ fn zone_d_un_mod_a_plusieurs_groupes() {
             idx,
             fractured: false,
             crafted: false,
+            desecrated: false,
         });
     }
     let s = state::project(&goal, &pool, &it).unwrap();
@@ -581,6 +583,7 @@ fn nouveaux_omens_meme_loi_que_le_moteur() {
                 idx: idx(id),
                 fractured: false,
                 crafted: false,
+                desecrated: false,
             });
         }
         it
@@ -729,6 +732,7 @@ fn alchemy_et_crystallisation_sur_le_moteur() {
                 idx: idx(id),
                 fractured: false,
                 crafted: false,
+                desecrated: false,
             });
         }
         assert_eq!(p.apply(&mut it, &ess, &mut rng), Outcome::Applied);
@@ -737,4 +741,202 @@ fn alchemy_et_crystallisation_sur_le_moteur() {
             (2, 2)
         );
     }
+}
+
+/// Pool de `pool(30)` plus des mods de liche (Désécration) : 12 préfixes et 12 suffixes inutiles, et un
+/// suffixe de liche voulu (groupe 900).
+fn pool_desecration() -> AffixPool {
+    let mut p = pool(30);
+    for i in 0..12 {
+        for (slot, g) in [(Slot::Prefix, 700), (Slot::Suffix, 800)] {
+            let mut a = aff(format!("d{g}_{i}"), g + i, slot, 1, 1);
+            a.desecrated = true;
+            p.affixes.push(a);
+        }
+    }
+    let mut a = aff("D_VOULU".into(), 900, Slot::Suffix, 1, 1);
+    a.desecrated = true;
+    a.tags = crate::forge::donnees::TAG_KURGAL;
+    p.affixes.push(a);
+    p
+}
+
+fn os(id: &str, f: &dyn Fn(&mut Currency)) -> Action {
+    let mut a = cur(id, CurrencyKind::Desecrate, 3.0);
+    if let ActionKind::Currency(c) = &mut a.kind {
+        f(c);
+    }
+    a
+}
+
+/// La loi de la révélation du modèle (options indépendantes) colle au moteur exact (tirage sans remise,
+/// choix du joueur guidé par l'objectif), Omens compris.
+#[test]
+fn desecration_meme_loi_que_le_moteur() {
+    use rand::SeedableRng;
+    let pool = Arc::new(pool_desecration());
+    let goal = Arc::new(
+        Goal::new(
+            &pool,
+            &[
+                WantedAffix {
+                    group: 1,
+                    family: 0,
+                    max_tier: 1,
+                },
+                WantedAffix {
+                    group: 900,
+                    family: 0,
+                    max_tier: 1,
+                },
+            ],
+        )
+        .unwrap(),
+    );
+    let actions = vec![
+        os("os", &|_| {}),
+        os("os_dextral", &|c| c.add_slot = Some(Slot::Suffix)),
+        os("os_kurgal", &|c| {
+            c.require_tag = Some(crate::forge::donnees::TAG_KURGAL)
+        }),
+        os("os_echos", &|c| c.reveal_twice = true),
+        os("os_sinistral", &|c| c.add_slot = Some(Slot::Prefix)),
+    ];
+    let model = Model::new(pool.clone(), goal.clone(), 80, actions, 0.5, 0.0);
+    let idx = |id: &str| pool.affixes.iter().position(|a| a.id == id).unwrap() as AffixIdx;
+    let objet = |ids: &[&str]| {
+        let mut it = ItemState::new(Rarity::Rare, 80);
+        for id in ids {
+            it.push(Mod {
+                idx: idx(id),
+                fractured: false,
+                crafted: false,
+                desecrated: false,
+            });
+        }
+        it
+    };
+    let departs = [
+        objet(&["bs3"]),
+        objet(&["bp1", "bp2", "bs4"]),
+        objet(&["S_T1", "bs6", "bs7"]),
+        objet(&["bp1", "bp2", "bp3", "bs4", "bs5", "bs6"]),
+    ];
+    let mut rng = rand::rngs::SmallRng::seed_from_u64(77);
+    let mut compares = 0;
+    for depart in departs {
+        let s = model.project(&depart).unwrap();
+        for (ai, act) in model.actions.iter().enumerate() {
+            let ActionKind::Currency(c) = &act.kind else {
+                continue;
+            };
+            let mut tr = Vec::new();
+            model.outcomes(s, ai, &mut tr);
+            const N: usize = 40_000;
+            let mut emp: Vec<(MacroState, f64)> = Vec::new();
+            for _ in 0..N {
+                let mut it = depart;
+                if pool.apply_pour(&mut it, c, &mut rng, Some(&goal)) == Outcome::Applied {
+                    let t = model.project(&it).unwrap();
+                    match emp.iter_mut().find(|e| e.0 == t) {
+                        Some(e) => e.1 += 1.0 / N as f64,
+                        None => emp.push((t, 1.0 / N as f64)),
+                    }
+                }
+            }
+            for t in &tr {
+                let e = emp.iter().find(|e| e.0 == t.to).map_or(0.0, |e| e.1);
+                assert!(
+                    (t.p - e).abs() < 0.02,
+                    "{} depuis {s:?} vers {:?} : modèle {:.4}, moteur {:.4}",
+                    act.id,
+                    t.to,
+                    t.p,
+                    e
+                );
+                compares += 1;
+            }
+            let couvert: f64 = tr.iter().map(|t| t.p).sum();
+            assert!(!tr.is_empty() && (couvert - 1.0).abs() < 1e-9, "{}", act.id);
+            // le mod révélé est marqué Désécré : pas de seconde Désécration
+            assert!(tr.iter().all(|t| t.to.desecrated));
+        }
+    }
+    assert!(compares > 40, "{compares} comparaisons");
+}
+
+/// Plan avec les os : le mod de liche voulu n'est accessible que par eux ; la politique simulée sur le
+/// moteur exact retrouve le coût calculé.
+#[test]
+fn plan_avec_desecration() {
+    let pool = Arc::new(pool_desecration());
+    let goal = Arc::new(
+        Goal::new(
+            &pool,
+            &[
+                WantedAffix {
+                    group: 1,
+                    family: 0,
+                    max_tier: 2,
+                },
+                WantedAffix {
+                    group: 900,
+                    family: 0,
+                    max_tier: 1,
+                },
+            ],
+        )
+        .unwrap(),
+    );
+    let mut actions = vec![
+        cur("transmute", CurrencyKind::Transmute, 0.1),
+        cur("augment", CurrencyKind::Augment, 0.1),
+        cur("regal", CurrencyKind::Regal, 0.3),
+        cur("exalt", CurrencyKind::Exalt, 1.0),
+        cur("chaos", CurrencyKind::Chaos, 0.8),
+        os("os", &|_| {}),
+        os("os_kurgal", &|c| {
+            c.require_tag = Some(crate::forge::donnees::TAG_KURGAL);
+            c.add_slot = Some(Slot::Suffix);
+        }),
+    ];
+    let mut light = cur("annul_light", CurrencyKind::Annul, 2.0);
+    if let ActionKind::Currency(c) = &mut light.kind {
+        c.remove_desecrated_only = true;
+    }
+    actions.push(light);
+    actions.push(Action {
+        id: "abandon".into(),
+        label: "Abandon".into(),
+        cost: 0.0,
+        kind: ActionKind::Abandon,
+    });
+    let model = Model::new(pool, goal, 80, actions, 0.5, 0.0);
+    let sol = solve(
+        &model,
+        &[MacroState::empty(Rarity::Normal)],
+        &SolveConfig::default(),
+        &AtomicBool::new(false),
+    )
+    .unwrap();
+    let v = sol.value[start_id(&model, &sol)];
+    assert!(v.is_finite(), "objectif atteignable par les os");
+    let mc = verify_policy(
+        &model,
+        &sol,
+        ItemState::new(Rarity::Normal, 80),
+        30_000,
+        5_000,
+        99,
+        |_, _| true,
+    )
+    .unwrap();
+    let rel = (mc.mean_cost - v).abs() / v;
+    assert!(mc.censored == 0);
+    assert!(
+        rel < 0.06,
+        "V analytique={v:.3} MC={:.3} (écart {:.1} %)",
+        mc.mean_cost,
+        rel * 100.0
+    );
 }

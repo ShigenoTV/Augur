@@ -150,7 +150,9 @@ pub(crate) fn one_trial(
                 // en jeu, une monnaie qui ne s'applique pas n'est pas consommée : rien à payer. Si le plan
                 // la redemande sans fin (plan et moteur exact en désaccord sur cet état), l'essai est
                 // interrompu au lieu de tourner jusqu'à `max_steps`.
-                if model.pool.apply(&mut item, c, rng) == Outcome::NotApplicable {
+                if model.pool.apply_pour(&mut item, c, rng, Some(&model.goal))
+                    == Outcome::NotApplicable
+                {
                     refused += 1;
                     if refused >= MAX_REFUSED {
                         return (cost as f32, step + 1, abandons, true);

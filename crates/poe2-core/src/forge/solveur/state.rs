@@ -105,7 +105,7 @@ pub fn project(goal: &Goal, pool: &AffixPool, item: &ItemState) -> Option<MacroS
                 Class::Other => DESEC_BAD_S,
             };
         }
-        let desecrated = pool.affixes[m.idx as usize].desecrated;
+        let desecrated = m.desecrated || pool.affixes[m.idx as usize].desecrated;
         if desecrated {
             s.desecrated = true;
             s.desec = match goal.classify(pool, m.idx) {

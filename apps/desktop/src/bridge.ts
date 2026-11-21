@@ -356,6 +356,8 @@ export type ForgeAffix = {
   part: number;
   /** Posé seulement par une Essence ou un Alloy à ce niveau d'objet. */
   essence: boolean;
+  /** Mod de liche : posé seulement par un os abyssal (Désécration). */
+  desecre?: boolean;
   paliers: ForgeTier[];
 };
 export type ForgeAffixes = {
@@ -506,7 +508,7 @@ export type ForgePoe1HistoryEntry = {
   demande: ForgePoe1Request;
 };
 export type ForgePoe1History = { entrees: ForgePoe1HistoryEntry[]; suivi: number | null };
-export type ForgeCatalogueEntry = { id: string; nom: string; genre: "base" | "monnaie" | "omen" | "essence" };
+export type ForgeCatalogueEntry = { id: string; nom: string; genre: "base" | "monnaie" | "omen" | "os" | "essence" };
 export type ForgePriceSource = "joueur" | "poeNinja" | "indicatif";
 export type ForgeMarket = {
   ligue: string;

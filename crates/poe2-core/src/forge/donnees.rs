@@ -46,6 +46,33 @@ pub struct ModTable {
     pub spawn: Vec<PoidsEtiquette>,
     #[serde(default)]
     pub essence_seulement: bool,
+    /// Étiquettes du mod (gardées seulement pour les mods de Désécration : liche Ulaman, Amanamu ou
+    /// Kurgal).
+    #[serde(default)]
+    pub tags: Vec<String>,
+}
+
+/// Bit d'étiquette d'un mod de Désécration par liche (`Affix::tags`, `Currency::require_tag`) : Omens of
+/// the Sovereign (Ulaman), the Liege (Amanamu) et the Blackblooded (Kurgal).
+pub const TAG_ULAMAN: u64 = 1;
+pub const TAG_AMANAMU: u64 = 1 << 1;
+pub const TAG_KURGAL: u64 = 1 << 2;
+
+/// Bits d'étiquette de liche d'un mod.
+fn bits_liche(m: &ModTable) -> u64 {
+    m.tags.iter().fold(0, |b, t| {
+        b | match t.as_str() {
+            "ulaman_mod" => TAG_ULAMAN,
+            "amanamu_mod" => TAG_AMANAMU,
+            "kurgal_mod" => TAG_KURGAL,
+            _ => 0,
+        }
+    })
+}
+
+/// Mod de Désécration (posé seulement par un os abyssal, révélé au Well of Souls).
+pub fn est_desecre(m: &ModTable) -> bool {
+    m.domaine == "desecrated"
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -242,8 +269,9 @@ fn eligible(m: &ModTable, tags: &[String]) -> bool {
 
 /// Construit le pool d'une base pour un objet de niveau `ilvl`.
 ///
-/// Seul le pool **normal** (domaine `item`) est construit : les mods désacralisés n'ont pas de
-/// poids chez poe2db, la Désécration n'est donc pas encore calculable.
+/// Le pool normal (domaine `item`, poids poe2db) et les mods de Désécration des liches (domaine
+/// `desecrated`) : ceux-ci n'ont pas de poids mesuré, ils prennent le poids RePoE de la base (1 pour
+/// tous, comme l'émulateur de Craft of Exile), et ne sont tirés que par un os abyssal.
 pub fn construire_pool(
     mods: &TableMods,
     base: &BaseTable,
@@ -289,16 +317,22 @@ pub fn construire_pool_avec(
     let candidats: Vec<&ModTable> = mods
         .mods
         .iter()
-        .filter(|m| m.domaine == "item" && !m.essence_seulement && eligible(m, &base.tags))
+        .filter(|m| {
+            (m.domaine == "item" || est_desecre(m))
+                && !m.essence_seulement
+                && eligible(m, &base.tags)
+        })
         .collect();
 
     // groupe -> famille -> paliers, ordre déterministe (BTreeMap).
-    let mut par_groupe: BTreeMap<&str, BTreeMap<&str, Vec<&ModTable>>> = BTreeMap::new();
+    // famille : (type, Désécration) — un mod de Désécration et un mod normal du même type ne sont pas des
+    // paliers l'un de l'autre (pools de tirage disjoints), mais partagent le groupe d'exclusion.
+    let mut par_groupe: BTreeMap<&str, BTreeMap<(&str, bool), Vec<&ModTable>>> = BTreeMap::new();
     for m in &candidats {
         par_groupe
             .entry(m.groupe.as_str())
             .or_default()
-            .entry(m.famille.as_str())
+            .entry((m.famille.as_str(), est_desecre(m)))
             .or_default()
             .push(m);
     }
@@ -320,8 +354,8 @@ pub fn construire_pool_avec(
             tier: u8::try_from(ti + 1).unwrap_or(u8::MAX),
             req_ilvl: u8::try_from(m.niveau).unwrap_or(u8::MAX),
             weight,
-            tags: 0,
-            desecrated: false,
+            tags: bits_liche(m),
+            desecrated: est_desecre(m),
             cap_shift: (0, 0),
             // renseignés une fois tous les groupes numérotés (voir plus bas)
             extra_groups: Vec::new(),
@@ -345,6 +379,16 @@ pub fn construire_pool_avec(
                     continue;
                 }
                 let slot = slot_de(m);
+                if est_desecre(m) {
+                    // pas de poids mesuré : poids RePoE de la base (1)
+                    let w = m
+                        .spawn
+                        .iter()
+                        .find(|s| s.tag == "default" || base.tags.contains(&s.tag))
+                        .map_or(0, |s| u32::try_from(s.weight).unwrap_or(0));
+                    affixes.push(affixe(m, group, family_id, ti, w)?);
+                    continue;
+                }
                 let weight = match (
                     page.poids.get(&m.id),
                     complement.and_then(|c| c.poids.get(&m.id)),
@@ -488,6 +532,7 @@ mod tests {
                 })
                 .collect(),
             essence_seulement: false,
+            tags: Vec::new(),
         }
     }
 
@@ -654,6 +699,7 @@ mod tests {
             idx: 1,
             fractured: false,
             crafted: false,
+            desecrated: false,
         });
         let d = pb.pool.distribution(&item, &DrawFilter::default());
         assert_eq!(d, [(0, 1.0)]);

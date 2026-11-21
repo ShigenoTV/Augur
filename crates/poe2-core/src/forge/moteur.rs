@@ -1,5 +1,28 @@
+use super::objectif::{Class, Goal};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+
+/// Option choisie par le joueur à la révélation : un mod voulu d'abord, puis un mod inutile, un palier
+/// trop bas d'un voulu en dernier ; au hasard sans objectif. `None` sans option.
+fn choisir(
+    pool: &AffixPool,
+    goal: Option<&Goal>,
+    options: &[AffixIdx],
+    rng: &mut impl Rng,
+) -> Option<AffixIdx> {
+    if options.is_empty() {
+        return None;
+    }
+    let Some(goal) = goal else {
+        return Some(options[rng.random_range(0..options.len())]);
+    };
+    let rang = |&i: &AffixIdx| match goal.classify(pool, i) {
+        Class::Wanted(_) => 0,
+        Class::Other => 1,
+        Class::Blocked(_) => 2,
+    };
+    options.iter().min_by_key(|i| rang(i)).copied()
+}
 
 pub type AffixIdx = u16; // index dans AffixPool.affixes
 pub type GroupId = u16; // deux affixes du même groupe ne peuvent pas coexister
@@ -86,6 +109,9 @@ pub struct Mod {
     /// objet n'en porte qu'un à la fois (« items can only have 1 crafted modifier at a time » ; le jeu refuse
     /// une seconde Essence : « this item already has a crafted modifier »).
     pub crafted: bool,
+    /// Mod révélé d'une Désécration (os abyssal) : mod d'une liche ou mod ordinaire choisi parmi les
+    /// options du Well of Souls. Un objet n'en porte qu'un ; l'Omen of Light ne retire que lui.
+    pub desecrated: bool,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -154,9 +180,12 @@ pub enum CurrencyKind {
     /// pas un tirage pondéré. Retenu uniquement si l'affixe cible respecte la place de slot disponible
     /// et n'entre pas en conflit de groupe avec un mod déjà présent (sinon `NotApplicable`).
     Essence,
-    /// Désécration : ajoute un mod « Désécré » non révélé (retire un mod au hasard si l'objet est plein
-    /// à 6). Tiré UNIQUEMENT dans le sous-pool `desecrated` (jamais le pool normal). Un objet portant
-    /// déjà un mod Désécré ne peut pas l'être une deuxième fois.
+    /// Désécration (os abyssal) puis révélation au Well of Souls, en une action : un côté est choisi
+    /// (forcé par l'Omen of Sinistral / Dextral Necromancy, sinon au hasard parmi les côtés ouverts ;
+    /// objet plein : un mod retiré d'abord), puis le joueur choisit un mod parmi trois options : 1, 2
+    /// ou 3 mods de liche (80 / 15 / 5 %), le reste tiré dans le pool normal de ce côté (émulateur de
+    /// Craft of Exile, `getRevealPicks`). Un objet portant déjà un mod Désécré ne peut pas l'être une
+    /// deuxième fois.
     Desecrate,
 }
 
@@ -189,8 +218,8 @@ pub struct Currency {
     /// conflit de groupe avec l'objet (émulateur de Craft of Exile). Vide : seulement `target`.
     #[serde(default)]
     pub more_targets: Vec<AffixIdx>,
-    /// Omen « the Sovereign/Liege/Blackblooded » : restreint la Désécration à un sous-pool (Ulaman /
-    /// Amanamu / Kurgal). Ignoré pour tout autre `CurrencyKind`.
+    /// Omen « the Sovereign/Liege/Blackblooded » : une des options de la révélation est un mod de cette
+    /// liche (Ulaman / Amanamu / Kurgal). Ignoré pour tout autre `CurrencyKind`.
     #[serde(default)]
     pub require_tag: Option<u64>,
     /// Omen of Light : le retrait (Annulment) ne peut cibler qu'un affixe `desecrated`.
@@ -200,6 +229,9 @@ pub struct Currency {
     /// (déterministe), pas un tirage uniforme parmi les candidats.
     #[serde(default)]
     pub remove_lowest_level: bool,
+    /// Omen of Abyssal Echoes : la révélation tire un second jeu d'options (jusqu'à six au choix).
+    #[serde(default)]
+    pub reveal_twice: bool,
     /// `false` (Essence normale/Lesser/Greater) : Magique → Rare, ajoute l'affixe garanti.
     /// `true` (Essence Perfect / Corrupted, Alloy) : objet déjà Rare, retire un mod (du côté
     /// de l'affixe garanti si ce côté est plein, sinon au hasard) PUIS ajoute l'affixe garanti — jamais les deux comportements sur la même entrée, comme dans le vrai jeu.
@@ -351,7 +383,7 @@ impl AffixPool {
     pub fn has_desecrated(&self, item: &ItemState) -> bool {
         item.mods()
             .iter()
-            .any(|m| self.affixes[m.idx as usize].desecrated)
+            .any(|m| m.desecrated || self.affixes[m.idx as usize].desecrated)
     }
 
     pub fn count(&self, item: &ItemState, slot: Slot) -> u8 {
@@ -371,32 +403,13 @@ impl AffixPool {
         let (cap_p, cap_s) = self.cap_of(item);
         let open_p = self.count(item, Slot::Prefix) < cap_p;
         let open_s = self.count(item, Slot::Suffix) < cap_s;
-
-        // groupes pris (6 mods au plus, chacun dans quelques groupes) : tableau fixe, sans allocation
-        let mut held = [GroupId::MAX; 24];
-        for (i, g) in item
-            .mods()
-            .iter()
-            .flat_map(|m| self.affixes[m.idx as usize].groups())
-            .take(held.len())
-            .enumerate()
-        {
-            held[i] = g;
-        }
-        let sous_min = self.sous_niveau_min(item.ilvl, f.min_mod_level);
-
+        let base = self.eligibility_sans_plafond(item, f);
         move |i: usize, a: &Affix| -> bool {
-            a.weight > 0
-                && a.desecrated == f.require_desecrated
-                && a.req_ilvl <= item.ilvl
-                && !sous_min[i]
-                && f.require_tag.is_none_or(|t| a.tags & t != 0)
-                && match a.slot {
-                    Slot::Prefix => open_p,
-                    Slot::Suffix => open_s,
-                }
-                && f.force_slot.is_none_or(|s| s == a.slot)
-                && !a.groups().any(|g| held.contains(&g))
+            let open = match a.slot {
+                Slot::Prefix => open_p,
+                Slot::Suffix => open_s,
+            };
+            open && base(i, a)
         }
     }
 
@@ -456,6 +469,7 @@ impl AffixPool {
                 idx,
                 fractured: false,
                 crafted: false,
+                desecrated: false,
             });
         }
     }
@@ -476,7 +490,7 @@ impl AffixPool {
             .filter(|(_, m)| {
                 !m.fractured
                     && slot.is_none_or(|s| self.affixes[m.idx as usize].slot == s)
-                    && (!desecrated_only || self.affixes[m.idx as usize].desecrated)
+                    && (!desecrated_only || m.desecrated || self.affixes[m.idx as usize].desecrated)
             })
             .map(|(i, _)| i)
             .collect();
@@ -500,7 +514,113 @@ impl AffixPool {
         true
     }
 
+    /// Options proposées à la révélation d'un mod Désécré de ce côté (émulateur de Craft of Exile,
+    /// `getRevealPicks`) : 1, 2 ou 3 mods de liche (80 / 15 / 5 %), dont un de la liche de l'Omen s'il y en
+    /// a un, puis le pool normal de ce côté jusqu'à trois options, tirages pondérés sans remise (un
+    /// groupe tiré écarte ses autres paliers). Le niveau de mod minimum de l'os vaut pour les deux pools.
+    pub fn reveal_options(
+        &self,
+        item: &ItemState,
+        c: &Currency,
+        cote: Slot,
+        rng: &mut impl Rng,
+    ) -> Vec<AffixIdx> {
+        const OPTIONS: usize = 3;
+        let u: f64 = rng.random();
+        let liches = if u < 0.8 {
+            1
+        } else if u < 0.95 {
+            2
+        } else {
+            3
+        };
+        let filtre = |desecre: bool, tag: Option<u64>| DrawFilter {
+            min_mod_level: c.min_mod_level,
+            force_slot: Some(cote),
+            require_desecrated: desecre,
+            require_tag: tag,
+        };
+        let mut pris: Vec<AffixIdx> = Vec::new();
+        let tirer = |f: DrawFilter, n: usize, pris: &mut Vec<AffixIdx>, rng: &mut _| {
+            // l'objet est rendu « ouvert » de ce côté : la révélation ignore les plafonds
+            let mut ouvert = *item;
+            ouvert.rarity = Rarity::Rare;
+            let eligible = self.eligibility_sans_plafond(&ouvert, &f);
+            while pris.len() < n {
+                let cand: Vec<(usize, u64)> = self
+                    .affixes
+                    .iter()
+                    .enumerate()
+                    .filter(|&(i, a)| {
+                        eligible(i, a)
+                            && !pris.iter().any(|&p| self.affixes[p as usize].conflicts(a))
+                    })
+                    .map(|(i, a)| (i, a.weight as u64))
+                    .collect();
+                let total: u64 = cand.iter().map(|c| c.1).sum();
+                if total == 0 {
+                    return;
+                }
+                let mut roll = Rng::random_range(rng, 0..total);
+                for (i, w) in cand {
+                    if roll < w {
+                        pris.push(i as AffixIdx);
+                        break;
+                    }
+                    roll -= w;
+                }
+            }
+        };
+        if let Some(t) = c.require_tag {
+            tirer(filtre(true, Some(t)), 1, &mut pris, rng);
+        }
+        tirer(filtre(true, None), liches, &mut pris, rng);
+        tirer(filtre(false, None), OPTIONS, &mut pris, rng);
+        pris
+    }
+
+    /// Comme [`Self::eligibility`], sans la règle de place libre (côté déjà choisi par l'appelant).
+    fn eligibility_sans_plafond<'a>(
+        &'a self,
+        item: &'a ItemState,
+        f: &'a DrawFilter,
+    ) -> impl Fn(usize, &Affix) -> bool + 'a {
+        let mut held = [GroupId::MAX; 24];
+        for (i, g) in item
+            .mods()
+            .iter()
+            .flat_map(|m| self.affixes[m.idx as usize].groups())
+            .take(held.len())
+            .enumerate()
+        {
+            held[i] = g;
+        }
+        let sous_min = self.sous_niveau_min(item.ilvl, f.min_mod_level);
+        move |i: usize, a: &Affix| -> bool {
+            a.weight > 0
+                && a.desecrated == f.require_desecrated
+                && a.req_ilvl <= item.ilvl
+                && !sous_min[i]
+                && f.require_tag.is_none_or(|t| a.tags & t != 0)
+                && f.force_slot.is_none_or(|s| s == a.slot)
+                && !a.groups().any(|g| held.contains(&g))
+        }
+    }
+
     pub fn apply(&self, item: &mut ItemState, c: &Currency, rng: &mut impl Rng) -> Outcome {
+        self.apply_pour(item, c, rng, None)
+    }
+
+    /// Comme [`Self::apply`] ; `goal` guide le choix du joueur à la révélation d'une Désécration (un mod
+    /// voulu s'il y en a un parmi les options, sinon un mod inutile plutôt qu'un palier trop bas d'un
+    /// voulu). Sans objectif, l'option est prise au hasard.
+    pub fn apply_pour(
+        &self,
+        item: &mut ItemState,
+        c: &Currency,
+        rng: &mut impl Rng,
+        goal: Option<&Goal>,
+    ) -> Outcome {
         use CurrencyKind::*;
         let f = DrawFilter {
             min_mod_level: c.min_mod_level,
@@ -663,33 +783,61 @@ impl AffixPool {
                     idx: pick,
                     fractured: false,
                     crafted: true,
+                    desecrated: false,
                 });
             }
             Desecrate if item.rarity == Rarity::Rare && !self.has_desecrated(item) => {
                 let before = *item;
+                let (cap_p, cap_s) = self.cap_of(item);
+                let ouvert = |item: &ItemState, s: Slot| match s {
+                    Slot::Prefix => self.count(item, Slot::Prefix) < cap_p,
+                    Slot::Suffix => self.count(item, Slot::Suffix) < cap_s,
+                };
+                // Omen of Sinistral / Dextral Necromancy : ce côté, vidé d'un mod s'il est plein ; sinon objet
+                // plein : un mod retiré au hasard (émulateur de Craft of Exile, `poe2_desecrate`)
+                if let Some(cote) = c.add_slot
+                    && !ouvert(item, cote)
+                    && !self.remove_random(item, Some(cote), false, false, rng)
+                {
+                    return Outcome::NotApplicable;
+                }
                 if !self.has_room(item) && !self.remove_random(item, None, false, false, rng) {
                     return Outcome::NotApplicable;
                 }
-                // os Ancient : niveau de mod 40 minimum (poe2db « Minimum Modifier Level 40 »), comme le solveur
-                let f = DrawFilter {
-                    min_mod_level: c.min_mod_level,
-                    force_slot: c.add_slot,
-                    require_desecrated: true,
-                    require_tag: c.require_tag,
-                };
-                match self.draw(item, &f, rng) {
-                    Some(idx) => item.push(Mod {
-                        idx,
-                        fractured: false,
-                        crafted: false,
-                    }),
-                    // aucun mod Désécré possible dans la place libérée (ex. gants : suffixes seulement, mod
-                    // retiré = préfixe) : l'objet reste tel quel, jamais amputé du mod retiré
-                    None => {
+                let cote = match (
+                    c.add_slot,
+                    ouvert(item, Slot::Prefix),
+                    ouvert(item, Slot::Suffix),
+                ) {
+                    (Some(s), _, _) if ouvert(item, s) => s,
+                    (_, true, true) if rng.random_bool(0.5) => Slot::Prefix,
+                    (_, true, true) => Slot::Suffix,
+                    (_, true, false) => Slot::Prefix,
+                    (_, false, true) => Slot::Suffix,
+                    _ => {
                         *item = before;
                         return Outcome::NotApplicable;
                     }
+                };
+                let mut options = self.reveal_options(item, c, cote, rng);
+                if c.reveal_twice {
+                    for o in self.reveal_options(item, c, cote, rng) {
+                        if !options.contains(&o) {
+                            options.push(o);
+                        }
+                    }
                 }
+                let Some(idx) = choisir(self, goal, &options, rng) else {
+                    // aucun mod possible de ce côté : l'objet reste tel quel, jamais amputé du mod retiré
+                    *item = before;
+                    return Outcome::NotApplicable;
+                };
+                item.push(Mod {
+                    idx,
+                    fractured: false,
+                    crafted: false,
+                    desecrated: true,
+                });
             }
             _ => return Outcome::NotApplicable,
         }

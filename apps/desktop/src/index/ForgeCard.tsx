@@ -127,9 +127,15 @@ export function AffixColumn({
               ) : (
                 <span
                   className="font-mono text-[11px] text-text-subtle"
-                  title={a.essence ? essenceHint : "Chance d'être le prochain mod de ce côté"}
+                  title={
+                    a.desecre
+                      ? "Mod de liche : posé seulement par un os abyssal (Désécration). Poids non mesurés : coût approximatif."
+                      : a.essence
+                        ? essenceHint
+                        : "Chance d'être le prochain mod de ce côté"
+                  }
                 >
-                  {a.essence ? "Essence" : formatPercent(a.part)}
+                  {a.desecre ? "Os" : a.essence ? "Essence" : formatPercent(a.part)}
                 </span>
               )}
             </li>
@@ -830,7 +836,7 @@ export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onRegla
   }
 
   const monnaies = [
-    ...catalogue.filter((c) => c.genre === "monnaie" || c.genre === "omen"),
+    ...catalogue.filter((c) => c.genre === "monnaie" || c.genre === "omen" || c.genre === "os"),
     { id: ESSENCES, nom: "Essences et Alloys (avec un prix)", genre: "essence" as const },
   ];
   return (

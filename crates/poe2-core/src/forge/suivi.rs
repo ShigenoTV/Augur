@@ -271,6 +271,7 @@ pub fn lire_objet(
                     idx: i,
                     fractured: fracture,
                     crafted: false,
+                    desecrated: pool.affixes[i as usize].desecrated,
                 });
                 match goal.map(|goal| goal.classify(pool, i)) {
                     Some(Class::Wanted(k)) => lu.voulu = u8::try_from(k).ok(),
