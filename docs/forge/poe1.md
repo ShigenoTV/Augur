@@ -54,7 +54,13 @@ Tier d'un mod jamais tiré (Essence, établi) : celui du meilleur tier tirable d
 minimale ne dépasse pas la sienne (« vaut au moins ce tier »).
 
 Poids d'un mod sur une base : celui de la **première** étiquette de sa liste `spawn_weights` portée par l'objet
-(étiquettes de la base, plus celle de l'influence). Tiers : par famille (`type`), parmi les mods tirables sur la
+(étiquettes de la base, plus celle de l'influence, ou des deux influences d'un objet à double influence).
+
+**Double influence** (lot 3, 21/11) : le panneau propose une seconde influence ; la demande porte alors
+`influence: "Hunter+Shaper"` (deux influences jointes par `+`, rangées par ordre alphabétique). Les mods des deux
+influences sont tirables, l'objet collé à deux influences est reconnu et la recherche d'achat filtre les deux.
+L'objet à double influence est supposé déjà en main (acheté, ou fait avec un Awakener's Orb) : l'Awakener's Orb
+lui-même n'est pas modélisé (il faut deux objets influencés et le mod transféré dépend du second objet). Tiers : par famille (`type`), parmi les mods tirables sur la
 base, T1 = niveau requis le plus haut.
 
 ## Règles de tirage
@@ -117,8 +123,10 @@ la meilleure décision dans chaque situation et donne le coût moyen minimal pou
   21/11 : la meilleure combinaison par taille de Chaotic Resonator, celle des méthodes de spam, sur un objet
   Normal ou Rare sans metamod ; mods fracturés gardés), Exalted, Annulment,
   Scouring, metamods d'établi (« Prefixes / Suffixes Cannot Be Changed », « Cannot roll Attack / Caster
-  Modifiers »), retrait du craft (1 Orb of Scouring), craft d'établi final. Un seul mod d'établi à la fois (pas de
-  multimod). Depuis le 21/11 (lot 2) : Eldritch Chaos, Exalted et Annulment quand le joueur indique la dominance
+  Modifiers »), retrait du craft (1 Orb of Scouring), craft d'établi final. Un seul mod d'établi à la fois, sauf
+  pour finir (lot 3, 21/11) : « Can have up to 3 Crafted Modifiers » (2 Divine Orbs, un suffixe) puis les deux
+  voulus qui manquent, craftés à l'établi, s'il reste la place de chaque côté. Le multimod ne sert pas à garder
+  un verrou d'établi pendant qu'on relance. Depuis le 21/11 (lot 2) : Eldritch Chaos, Exalted et Annulment quand le joueur indique la dominance
   (Eldritch Chaos seulement sans verrou d'établi et sans metamod du côté refait ; les filtres « Cannot roll … »
   restent appliqués), Veiled Chaos et Veiled Exalted quand un mod voulu est un mod voilé (dévoilement aussitôt).
 - **Règles des metamods**, relevées dans l'émulateur Craft of Exile PoE 1 : Chaos et Scouring gardent le côté
@@ -161,7 +169,7 @@ monnaies qui refont tout l'objet.
 | P1-06 | Au dévoilement, les trois choix excluent les groupes de tous les mods de l'objet | 20 dévoilements sur un objet qui porte déjà un mod du groupe |
 ## Suite possible (sur décision de Max)
 
-Multimod, Harvest, double influence, mise à jour PoE 1 dans `mise_a_jour.py`.
+Harvest, Awakener's Orb, multimod avec verrou, mise à jour PoE 1 dans `mise_a_jour.py`.
 
 ## Dispersion du coût et budget (21/11, idée n°6 validée par Max)
 

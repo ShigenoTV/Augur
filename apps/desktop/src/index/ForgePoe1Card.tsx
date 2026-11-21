@@ -539,6 +539,17 @@ function Resultat({
   );
 }
 
+/** Double influence : « Hunter+Shaper » (une seule influence : « Shaper »). */
+function separerInfluences(influence: string | null): [string | null, string | null] {
+  const [a, b] = (influence ?? "").split("+").filter((x) => x.length > 0);
+  return [a ?? null, b ?? null];
+}
+
+function joindreInfluences(a: string | null, b: string | null): string | null {
+  const v = [a, b].filter((x): x is string => x != null);
+  return v.length > 0 ? v.join("+") : null;
+}
+
 /** Forge en mode PoE 1 : méthodes de spam classées par coût moyen. */
 export function ForgePoe1Card() {
   const [bases, setBases] = useState<ForgePoe1Base[]>([]);
@@ -547,6 +558,7 @@ export function ForgePoe1Card() {
   const [ilvl, setIlvl] = useState(84);
   const [influence, setInfluence] = useState<string | null>(null);
   const [eldritch, setEldritch] = useState<"exarch" | "eater" | null>(null);
+  const [influence1, influence2] = separerInfluences(influence);
   const [affixes, setAffixes] = useState<ForgePoe1Affixes | null>(null);
   const [voulus, setVoulus] = useState<ForgeWanted[]>([]);
   const [result, setResult] = useState<ForgePoe1Result | null>(null);
@@ -751,10 +763,11 @@ export function ForgePoe1Card() {
         <label className="flex flex-col gap-1 text-xs text-text-subtle">
           Influence
           <select
-            value={influence ?? ""}
+            value={influence1 ?? ""}
             disabled={!base || base.influences.length === 0}
             onChange={(e) => {
-              setInfluence(e.target.value || null);
+              const v = e.target.value || null;
+              setInfluence(joindreInfluences(v, v === influence2 ? null : influence2));
               setResult(null);
             }}
             className={input}
@@ -765,6 +778,30 @@ export function ForgePoe1Card() {
                 {i}
               </option>
             ))}
+          </select>
+        </label>
+        <label
+          className="flex flex-col gap-1 text-xs text-text-subtle"
+          title="Objet à double influence (par exemple après un Awakener's Orb) : les mods des deux influences peuvent sortir."
+        >
+          Seconde influence
+          <select
+            value={influence2 ?? ""}
+            disabled={!base || influence1 == null}
+            onChange={(e) => {
+              setInfluence(joindreInfluences(influence1, e.target.value || null));
+              setResult(null);
+            }}
+            className={input}
+          >
+            <option value="">Aucune</option>
+            {base?.influences
+              .filter((i) => i !== influence1)
+              .map((i) => (
+                <option key={i} value={i}>
+                  {i}
+                </option>
+              ))}
           </select>
         </label>
         <label

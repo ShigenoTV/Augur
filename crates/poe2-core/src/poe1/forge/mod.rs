@@ -131,6 +131,7 @@ pub fn affixes(
 pub struct DemandePoe1 {
     pub base_id: String,
     pub ilvl: u32,
+    /// Influence (« Shaper ») ou double influence jointe par `+` (« Hunter+Shaper »).
     #[serde(default)]
     pub influence: Option<String>,
     pub voulus: Vec<WantedAffix>,

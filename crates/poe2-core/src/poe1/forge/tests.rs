@@ -947,3 +947,26 @@ fn mods_voiles_proposes_et_eldritch_dans_la_demande() {
     // Exarch : préfixes seulement ; la vie se relance alors sans toucher à la résistance.
     assert!(cout(demande(Some("exarch"), None)) < sans);
 }
+
+#[test]
+fn double_influence() {
+    // Deux influences : les mods des deux pools sont tirables, l'ordre ne compte pas.
+    let simple = construire_pool(ANNEAU, 86, Some("Shaper")).unwrap();
+    let double = construire_pool(ANNEAU, 86, Some("Shaper+Hunter")).unwrap();
+    assert_eq!(double.influence.as_deref(), Some("Hunter+Shaper"));
+    let tirables = |pb: &donnees::PoolPoe1| pb.pool.affixes.iter().filter(|a| a.weight > 0).count();
+    assert!(tirables(&double) > tirables(&simple));
+    let hunter = construire_pool(ANNEAU, 86, Some("Hunter")).unwrap();
+    assert!(tirables(&double) > tirables(&hunter));
+    assert!(construire_pool(ANNEAU, 86, Some("Shaper+Shaper")).is_err());
+    assert!(construire_pool(ANNEAU, 86, Some("Shaper+Hunter+Elder")).is_err());
+    let a = affixes(ANNEAU, 86, Some("Hunter+Shaper")).unwrap();
+    assert!(a.affixes.len() > affixes(ANNEAU, 86, Some("Shaper")).unwrap().affixes.len());
+}
+
+#[test]
+fn objet_a_double_influence_lu() {
+    let texte = format!("{PLAQUE_COPIEE}--------\nShaper Item\nHunter Item\n");
+    let o = analyser_objet(&texte).unwrap();
+    assert_eq!(o.influence.as_deref(), Some("Hunter+Shaper"));
+}

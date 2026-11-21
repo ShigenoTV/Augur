@@ -21,7 +21,8 @@
 //! - **Cannot roll Attack / Caster Modifiers** : les ajouts (Exalted, Regal, Augmentation) ne tirent
 //!   plus les mods qui portent le tag `attack` / `caster`.
 //!
-//! On ne pose qu'un seul mod d'établi à la fois : pas de « Can have up to 3 Crafted Modifiers ».
+//! On ne pose qu'un seul mod d'établi à la fois, sauf pour finir : « Can have up to 3 Crafted
+//! Modifiers » puis les deux voulus qui manquent (multimod).
 //!
 //! Comme pour les spams Rare, chaque mod voulu est suivi exactement, et les autres mods sont résumés
 //! par leur nombre de chaque côté (poids restant moyen). Le problème est un plus court chemin
@@ -61,6 +62,9 @@ pub const VEILED_CHAOS: &str = "Veiled Chaos Orb";
 pub const VEILED_EXALTED: &str = "Veiled Exalted Orb";
 /// Mods proposés au dévoilement (Jun).
 const CHOIX_DEVOILEMENT: usize = 3;
+
+/// Metamod « Can have up to 3 Crafted Modifiers ».
+const MULTIMOD: &str = "StrIntMasterItemGenerationCanHaveMultipleCraftedMods";
 
 /// Metamods de l'établi, par id de mod RePoE.
 const METAMODS: [(&str, Meta); 4] = [
@@ -496,6 +500,8 @@ struct Modele<'a> {
     metamods: Vec<(Meta, String, CoutEtabli)>,
     /// Craft final le moins cher par voulu : (texte, coût).
     finitions: Vec<Option<(String, CoutEtabli)>>,
+    /// Metamod « Can have up to 3 Crafted Modifiers » de l'établi : (texte, coût).
+    multimod: Option<(String, CoutEtabli)>,
     /// Mods fracturés de l'objet de départ : jamais retirés ni relancés (rareté sans objet).
     fixe: Etat,
     /// Côté touché par les monnaies Eldritch (0 préfixes : Exarch dominant ; 1 suffixes : Eater).
@@ -1262,6 +1268,38 @@ impl<'a> Modele<'a> {
                         &monnaies,
                         Issue::Succes,
                     );
+                }
+            }
+            // Multimod : « Can have up to 3 Crafted Modifiers » (un suffixe), puis les deux voulus qui
+            // manquent, craftés à l'établi.
+            if manque.count_ones() == 2
+                && e.bloques & manque == 0
+                && e.rarete == Rarete::Rare
+                && let Some((texte_m, cout_m)) = self.multimod.clone()
+            {
+                let ks: Vec<usize> = (0..self.goal.len())
+                    .filter(|&k| manque & (1 << k) != 0)
+                    .collect();
+                let mut place = [0u8, 1];
+                for &k in &ks {
+                    place[self.cotes[k]] += 1;
+                }
+                let tient = (0..2).all(|c| self.n(&e, c) + place[c] <= self.cap_rare[c]);
+                let crafts: Option<Vec<(String, CoutEtabli)>> =
+                    ks.iter().map(|&k| self.finitions[k].clone()).collect();
+                if tient && let Some(crafts) = crafts {
+                    let mut monnaies: Vec<(&str, f64)> = cout_m
+                        .iter()
+                        .map(|(n, q)| (n.as_str(), f64::from(*q)))
+                        .collect();
+                    for (_, cout) in &crafts {
+                        monnaies.extend(cout.iter().map(|(n, q)| (n.as_str(), f64::from(*q))));
+                    }
+                    let libelle = format!(
+                        "Établi : {texte_m}, puis {} et {}",
+                        crafts[0].0, crafts[1].0
+                    );
+                    ajouter(self, Genre::Finition, &libelle, &monnaies, Issue::Succes);
                 }
             }
         }
@@ -2040,9 +2078,14 @@ fn resoudre_depuis<'a>(
             .sum()
     };
     let mut finitions: Vec<Option<(String, CoutEtabli, f64)>> = vec![None; n];
+    let mut multimod = None;
     let mut metamods = Vec::new();
     for c in &pb.etabli {
         let a = &pool.affixes[c.affixe as usize];
+        if a.id == MULTIMOD {
+            multimod = Some((a.text.clone(), c.cout.clone()));
+            continue;
+        }
         if let Some((_, meta)) = METAMODS.iter().find(|(id, _)| *id == a.id) {
             metamods.push((*meta, a.text.clone(), c.cout.clone()));
             continue;
@@ -2139,6 +2182,7 @@ fn resoudre_depuis<'a>(
         prix,
         essences,
         metamods,
+        multimod,
         finitions: finitions
             .into_iter()
             .map(|f| f.map(|(t, c, _)| (t, c)))
@@ -3024,6 +3068,50 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn multimod_finit_deux_voulus() {
+        // Deux résistances craftables à l'établi : avec un Divine bon marché, le plan finit par
+        // « Can have up to 3 Crafted Modifiers » puis les deux crafts.
+        let pb = construire_pool(ARMURE, 84, None).unwrap();
+        let voulus = [
+            voulu(&pb.pool, "IncreasedLife9"),
+            voulu(&pb.pool, "FireResist4"),
+            voulu(&pb.pool, "ColdResist4"),
+        ];
+        let goal = Goal::new(&pb.pool, &voulus).unwrap();
+        // Sans Exalted ni Essence : sans multimod, il faut tirer au Chaos au moins une résistance.
+        let sans_divine = prix(&[
+            (CHAOS, 1.0),
+            (ALCHEMY, 0.5),
+            (ALTERATION, 0.07),
+            (TRANSMUTATION, 0.03),
+            (SCOURING, 0.78),
+            (REGAL, 0.35),
+        ]);
+        let cher = resoudre(&pb, &goal, &sans_divine).unwrap();
+        assert!(cher.m.multimod.is_some());
+        let mut prix = sans_divine.clone();
+        prix.insert("Divine Orb".into(), 1.0);
+        let sol = resoudre(&pb, &goal, &prix).unwrap();
+        let plan = plan_depuis(&sol);
+        eprintln!(
+            "cher {} bon marché {} {:?}",
+            cher.cout_moyen, sol.cout_moyen, plan.actions
+        );
+        assert!(sol.cout_moyen < cher.cout_moyen);
+        assert!(
+            plan.actions
+                .iter()
+                .any(|u| u.action.contains("Can have up to 3 Crafted Modifiers"))
+        );
+        let sim = simuler(&sol, &pb, 6_000);
+        assert!(
+            (sol.cout_moyen - sim).abs() / sim < 0.05,
+            "solveur {} contre simulation {sim}",
+            sol.cout_moyen
+        );
     }
 
     #[test]
