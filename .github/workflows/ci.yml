@@ -158,26 +158,3 @@ jobs:
             ${{ env.APP_DIR }}/src-tauri/target/release/bundle/nsis/*.exe
           if-no-files-found: error
           retention-days: 14
-
-  # TEMPORAIRE (PR du test de démarrage) : prouve que le test refuse une
-  # version qui écrit une erreur au lancement. À retirer avant fusion.
-  preuve-erreur-demarrage:
-    name: Preuve temporaire (historique Ledger corrompu doit échouer)
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v5
-      - name: Le test de démarrage doit refuser un lancement en erreur
-        shell: pwsh
-        run: |
-          $setup = Join-Path $env:RUNNER_TEMP 'Augur_0.1.37_x64-setup.exe'
-          Invoke-WebRequest 'https://github.com/ShigenoTV/Augur/releases/download/v0.1.37/Augur_0.1.37_x64-setup.exe' -OutFile $setup
-          $data = Join-Path $env:APPDATA 'com.shigenotv.augur'
-          New-Item -ItemType Directory -Force $data | Out-Null
-          Set-Content -LiteralPath (Join-Path $data 'ledger.sqlite') -Value ('ceci n est pas une base sqlite ' * 200)
-          $out = pwsh -NoProfile -File ./scripts/release/smoke-test-windows.ps1 -Installer $setup -Version 0.1.37 2>&1 | Out-String
-          $code = $LASTEXITCODE
-          Write-Host ($out -replace '::error::', 'attendu: ')
-          if ($code -eq 0) { Write-Host '::error::Le lancement en erreur a passé le test.'; exit 1 }
-          if ($out -notmatch "Test de démarrage : erreur écrite") { Write-Host '::error::Échec pour une autre raison que l erreur attendue.'; exit 1 }
-          Write-Host 'OK : le test a bien refusé le lancement en erreur.'
-          exit 0
