@@ -60,6 +60,45 @@ pub const ELDRITCH_EXALTED: &str = "Eldritch Exalted Orb";
 pub const ELDRITCH_ANNULMENT: &str = "Eldritch Orb of Annulment";
 pub const VEILED_CHAOS: &str = "Veiled Chaos Orb";
 pub const VEILED_EXALTED: &str = "Veiled Exalted Orb";
+/// Crafts Harvest « Reforge a Rare item with new random modifiers, including a [étiquette] modifier » :
+/// (étiquette du mod garanti, Lifeforce, quantité). Coûts du jeu (3.30).
+const RECOLTES: [(&str, &str, f64); 16] = [
+    ("attack", WILD, 75.0),
+    ("attribute", VIVID, 200.0),
+    ("caster", PRIMAL, 75.0),
+    ("chaos", VIVID, 100.0),
+    ("cold", VIVID, 50.0),
+    ("critical", PRIMAL, 150.0),
+    ("defences", PRIMAL, 75.0),
+    ("drop", VIVID, 200.0),
+    ("elemental", WILD, 200.0),
+    ("fire", WILD, 50.0),
+    ("life", WILD, 75.0),
+    ("lightning", PRIMAL, 50.0),
+    ("mana", PRIMAL, 200.0),
+    ("minion", PRIMAL, 200.0),
+    ("physical", VIVID, 50.0),
+    ("speed", VIVID, 150.0),
+];
+/// Crafts Harvest « Augment » : un mod de l'étiquette est ajouté, puis un autre mod est retiré au
+/// hasard. (étiquette, Lifeforce, quantité).
+const AUGMENTS: [(&str, &str, f64); 11] = [
+    ("attack", WILD, 17_500.0),
+    ("caster", PRIMAL, 17_500.0),
+    ("chaos", VIVID, 17_500.0),
+    ("cold", VIVID, 15_000.0),
+    ("critical", PRIMAL, 20_000.0),
+    ("defences", PRIMAL, 17_500.0),
+    ("fire", WILD, 15_000.0),
+    ("life", WILD, 17_500.0),
+    ("lightning", PRIMAL, 15_000.0),
+    ("physical", VIVID, 15_000.0),
+    ("speed", VIVID, 20_000.0),
+];
+pub const WILD: &str = "Wild Crystallised Lifeforce";
+pub const VIVID: &str = "Vivid Crystallised Lifeforce";
+pub const PRIMAL: &str = "Primal Crystallised Lifeforce";
+
 /// Mods proposés au dévoilement (Jun).
 const CHOIX_DEVOILEMENT: usize = 3;
 
@@ -305,12 +344,21 @@ struct Tirage {
 }
 
 fn tirage(pool: &AffixPool, goal: &Goal, ilvl: u8, interdit: u64) -> Tirage {
+    tirage_requis(pool, goal, ilvl, interdit, 0)
+}
+
+/// Même chose, limité aux mods qui portent une des étiquettes `requis` (0 : tous).
+fn tirage_requis(pool: &AffixPool, goal: &Goal, ilvl: u8, interdit: u64, requis: u64) -> Tirage {
     let n = goal.len();
     let mut bon = vec![0.0; n];
     let mut mauvais = vec![0.0; n];
     let mut autres: [HashMap<GroupId, f64>; 2] = [HashMap::new(), HashMap::new()];
     for (i, a) in pool.affixes.iter().enumerate() {
-        if a.weight == 0 || a.req_ilvl > ilvl || a.tags & interdit != 0 {
+        if a.weight == 0
+            || a.req_ilvl > ilvl
+            || a.tags & interdit != 0
+            || (requis != 0 && a.tags & requis == 0)
+        {
             continue;
         }
         let w = f64::from(a.weight);
@@ -423,6 +471,9 @@ enum Genre {
     /// Monnaies voilées : un mod voilé, dévoilé aussitôt (le meilleur des trois choix).
     VeiledChaos,
     VeiledExalted,
+    /// Harvest : reforge avec un mod d'une étiquette, ou Augment (index dans `Modele::recoltes`).
+    Recolte(usize),
+    Augment(usize),
     Meta(Meta),
     RetirerMeta,
     Finition,
@@ -453,6 +504,21 @@ enum Cle {
     Eldritch(usize, Meta, u8, u8, u8),
     /// Veiled Chaos : objet refait avec un mod voilé.
     Voile,
+    /// Harvest : objet refait avec un mod de l'étiquette (index dans `Modele::recoltes`).
+    Recolte(usize),
+}
+
+/// Un craft Harvest proposé (étiquette portée par au moins un voulu).
+struct Recolte {
+    libelle: String,
+    lifeforce: &'static str,
+    quantite: f64,
+    /// Poids des mods de l'étiquette dans `Modele::tirages`.
+    variante: usize,
+    /// Augment (ajout puis retrait) plutôt que reforge.
+    augment: bool,
+    #[cfg_attr(not(test), allow(dead_code))]
+    requis: u64,
 }
 
 /// Mods voilés d'un groupe d'exclusion, d'un côté, pour le dévoilement.
@@ -510,6 +576,8 @@ struct Modele<'a> {
     voiles: [Vec<GroupeVoile>; 2],
     /// Voulus qu'un dévoilement peut donner : sans eux, pas de monnaies voilées.
     voulus_voiles: u8,
+    /// Crafts Harvest proposés.
+    recoltes: Vec<Recolte>,
     /// Dévoilements déjà calculés : (côté, voulus présents).
     cache_voiles: RefCell<HashMap<(usize, u8), Devoilement>>,
 
@@ -808,6 +876,25 @@ impl<'a> Modele<'a> {
                         p,
                         &mut sortie,
                     );
+                }
+            }
+            // Reforge Harvest : un mod de l'étiquette d'abord, puis les autres mods.
+            Cle::Recolte(j) => {
+                let r = &self.recoltes[j];
+                let mut premier = HashMap::new();
+                self.tirer(
+                    self.base(Rarete::Rare),
+                    1,
+                    r.variante,
+                    None,
+                    1.0,
+                    &mut premier,
+                );
+                let gardes = self.nb_fixes() + 1;
+                for (e, p) in premier {
+                    for (n, q) in MODS_RARE {
+                        self.tirer(e, n.saturating_sub(gardes), 0, None, p * q, &mut sortie);
+                    }
                 }
             }
             // Objet refait : le mod voilé d'un côté ouvert (au hasard), puis les autres mods.
@@ -1129,6 +1216,41 @@ impl<'a> Modele<'a> {
                         );
                     }
                 }
+                // Harvest Augment : un mod de l'étiquette, puis le retrait d'un des autres mods.
+                for j in 0..self.recoltes.len() {
+                    if !self.recoltes[j].augment {
+                        continue;
+                    }
+                    let ajouts = self.un_mod(&e, self.recoltes[j].variante);
+                    if ajouts.is_empty() {
+                        continue;
+                    }
+                    let rs = self.retraits(&e, None);
+                    let mut loi = Vec::new();
+                    for (w, a) in ajouts {
+                        if rs.is_empty() {
+                            loi.push((w, a));
+                            continue;
+                        }
+                        for r in &rs {
+                            // L'ajout s'applique à l'objet après le retrait.
+                            let mut t = *r;
+                            t.bons |= a.bons & !e.bons;
+                            t.bloques |= a.bloques & !e.bloques;
+                            for c in 0..2 {
+                                t.autres[c] += a.autres[c] - e.autres[c];
+                            }
+                            loi.push((w / rs.len() as f64, t));
+                        }
+                    }
+                    let (nom, q, libelle) = (
+                        self.recoltes[j].lifeforce,
+                        self.recoltes[j].quantite,
+                        self.recoltes[j].libelle.clone(),
+                    );
+                    let issue = vers(self, loi, a_visiter);
+                    ajouter(self, Genre::Augment(j), &libelle, &[(nom, q)], issue);
+                }
                 // Relance.
                 match e.meta.verrou() {
                     Some(c) => {
@@ -1162,6 +1284,24 @@ impl<'a> Modele<'a> {
                     None => {
                         let h = self.noeud(Cle::Rare, a_visiter);
                         ajouter(self, Genre::Chaos, CHAOS, &[(CHAOS, 1.0)], Issue::Noeud(h));
+                        for j in 0..self.recoltes.len() {
+                            if self.recoltes[j].augment {
+                                continue;
+                            }
+                            let (nom, q, libelle) = (
+                                self.recoltes[j].lifeforce,
+                                self.recoltes[j].quantite,
+                                self.recoltes[j].libelle.clone(),
+                            );
+                            let h = self.noeud(Cle::Recolte(j), a_visiter);
+                            ajouter(
+                                self,
+                                Genre::Recolte(j),
+                                &libelle,
+                                &[(nom, q)],
+                                Issue::Noeud(h),
+                            );
+                        }
                         if self.voulus_voiles != 0 {
                             let h = self.noeud(Cle::Voile, a_visiter);
                             ajouter(
@@ -2171,6 +2311,35 @@ fn resoudre_depuis<'a>(
         & !fixe.bons;
     let voiles = groupes_voiles.map(|m| m.into_values().collect());
 
+    // Harvest : seulement les étiquettes portées par un voulu (bon tier, bon côté).
+    let etiquettes_voulues = pool
+        .affixes
+        .iter()
+        .enumerate()
+        .filter(|(i, a)| {
+            matches!(goal.classify(pool, *i as AffixIdx), Class::Wanted(k) if cote(a.slot) == cotes[k])
+        })
+        .fold(0u64, |m, (_, a)| m | a.tags);
+    let mut recoltes = Vec::new();
+    for (augment, liste) in [(false, &RECOLTES[..]), (true, &AUGMENTS[..])] {
+        for &(tag, lifeforce, quantite) in liste {
+            let requis = super::donnees::bit_etiquette(tag);
+            if requis == 0 || etiquettes_voulues & requis == 0 {
+                continue;
+            }
+            tirages.push(tirage_requis(pool, goal, ilvl, 0, requis));
+            let genre = if augment { "Augment" } else { "Reforge" };
+            recoltes.push(Recolte {
+                libelle: format!("Harvest : {genre} {tag}"),
+                lifeforce,
+                quantite,
+                variante: tirages.len() - 1,
+                augment,
+                requis,
+            });
+        }
+    }
+
     let mut m = Modele {
         goal,
         complet: ((1u16 << n) - 1) as u8,
@@ -2191,6 +2360,7 @@ fn resoudre_depuis<'a>(
         eldritch: pb.eldritch.filter(|_| pb.influence.is_none()).map(cote),
         voiles,
         voulus_voiles,
+        recoltes,
         cache_voiles: RefCell::new(HashMap::new()),
         etats: Vec::new(),
         index: HashMap::new(),
@@ -2355,7 +2525,7 @@ mod tests {
         interdit: u64,
         rng: &mut SmallRng,
     ) {
-        ajouter_cote(pool, ilvl, o, cap, interdit, None, rng);
+        ajouter_cote(pool, ilvl, o, cap, interdit, None, 0, rng);
     }
 
     fn interdit(meta: Meta) -> u64 {
@@ -2365,7 +2535,8 @@ mod tests {
             _ => 0,
         }
     }
-
+    /// Même chose, limité à un côté (`seul`) et aux mods d'une étiquette `requis` (0 : tous).
+    #[allow(clippy::too_many_arguments)]
     /// Même chose, limité à un côté (`seul`).
     fn ajouter_cote(
         pool: &AffixPool,
@@ -2374,6 +2545,7 @@ mod tests {
         mut cap: [u8; 2],
         interdit: u64,
         seul: Option<usize>,
+        requis: u64,
         rng: &mut SmallRng,
     ) {
         if let Some(s) = seul {
@@ -2391,6 +2563,7 @@ mod tests {
             a.weight > 0
                 && a.req_ilvl <= ilvl
                 && a.tags & interdit == 0
+                && (requis == 0 || a.tags & requis != 0)
                 && n[cote(a.slot)] < cap[cote(a.slot)]
                 && !o
                     .mods
@@ -2485,6 +2658,38 @@ mod tests {
             .find(|&i| matches!(classe(i), Class::Other));
         if let Some(i) = voulu.or(autre).or(choix.first().copied()) {
             o.mods.push(i);
+        }
+    }
+
+    /// Harvest Augment exact : un mod de l'étiquette, puis le retrait d'un des mods d'avant (hors côté
+    /// verrouillé et mods fracturés, metamod compris).
+    fn augment_exact(
+        pool: &AffixPool,
+        ilvl: u8,
+        o: &mut Objet,
+        rare: [u8; 2],
+        requis: u64,
+        fixes: &[u16],
+        rng: &mut SmallRng,
+    ) {
+        let avant = o.mods.clone();
+        ajouter_cote(pool, ilvl, o, rare, 0, None, requis, rng);
+        let verrou = o.meta.verrou();
+        let libres: Vec<usize> = (0..avant.len())
+            .filter(|&i| {
+                Some(cote(pool.affixes[avant[i] as usize].slot)) != verrou
+                    && !fixes.contains(&avant[i])
+            })
+            .collect();
+        let meta_libre = o.meta.cote().is_some_and(|c| Some(c) != verrou);
+        let nb = libres.len() + usize::from(meta_libre);
+        if nb > 0 {
+            let x = rng.random_range(0..nb);
+            if x < libres.len() {
+                o.mods.remove(libres[x]);
+            } else {
+                o.meta = Meta::Aucun;
+            }
         }
     }
 
@@ -2649,7 +2854,7 @@ mod tests {
                     }
                     Genre::EldritchExalted => {
                         let (c, x) = (m.eldritch.unwrap(), interdit(o.meta));
-                        ajouter_cote(pool, ilvl, &mut o, rare, x, Some(c), &mut rng);
+                        ajouter_cote(pool, ilvl, &mut o, rare, x, Some(c), 0, &mut rng);
                     }
                     Genre::EldritchChaos => {
                         let c = m.eldritch.unwrap();
@@ -2660,7 +2865,7 @@ mod tests {
                         let nb = nombre_rare(&mut rng).saturating_sub(n[0] + n[1]);
                         let x = interdit(o.meta);
                         for _ in 0..nb {
-                            ajouter_cote(pool, ilvl, &mut o, rare, x, Some(c), &mut rng);
+                            ajouter_cote(pool, ilvl, &mut o, rare, x, Some(c), 0, &mut rng);
                         }
                     }
                     Genre::EldritchAnnulment => {
@@ -2717,6 +2922,28 @@ mod tests {
                             devoiler_exact(m, pb, &mut o, c, &mut rng);
                         }
                     }
+                    Genre::Recolte(j) => {
+                        let requis = m.recoltes[j].requis;
+                        o = Objet {
+                            rarete: Rarete::Rare,
+                            mods: fixes.to_vec(),
+                            meta: Meta::Aucun,
+                        };
+                        ajouter_cote(pool, ilvl, &mut o, rare, 0, None, requis, &mut rng);
+                        let nb = nombre_rare(&mut rng).saturating_sub(o.mods.len() as u8);
+                        for _ in 0..nb {
+                            ajouter(pool, ilvl, &mut o, rare, 0, &mut rng);
+                        }
+                    }
+                    Genre::Augment(j) => augment_exact(
+                        pool,
+                        ilvl,
+                        &mut o,
+                        rare,
+                        m.recoltes[j].requis,
+                        fixes,
+                        &mut rng,
+                    ),
                     Genre::Meta(mt) => o.meta = mt,
                     Genre::RetirerMeta => o.meta = Meta::Aucun,
                     Genre::Finition => break,
@@ -3112,6 +3339,308 @@ mod tests {
             "solveur {} contre simulation {sim}",
             sol.cout_moyen
         );
+    }
+
+    #[test]
+    fn harvest_dans_le_plan() {
+        // Reforge « including a Life modifier » : la vie est garantie, il reste les résistances.
+        let pb = construire_pool(ARMURE, 84, None).unwrap();
+        let voulus = [
+            voulu(&pb.pool, "IncreasedLife9"),
+            voulu(&pb.pool, "FireResist6"),
+        ];
+        let goal = Goal::new(&pb.pool, &voulus).unwrap();
+        let sans_lifeforce = prix(&[(CHAOS, 1.0), (ALCHEMY, 0.5)]);
+        let sans = resoudre(&pb, &goal, &sans_lifeforce).unwrap().cout_moyen;
+        let mut avec = sans_lifeforce.clone();
+        for (n, p) in [(WILD, 0.01), (VIVID, 0.05), (PRIMAL, 0.02)] {
+            avec.insert(n.into(), p);
+        }
+        let sol = resoudre(&pb, &goal, &avec).unwrap();
+        // Étiquettes des voulus seulement : vie, défenses éventuelles, feu, élémentaire…
+        assert!(
+            sol.m
+                .recoltes
+                .iter()
+                .any(|r| r.libelle == "Harvest : Reforge life")
+        );
+        assert!(
+            sol.m
+                .recoltes
+                .iter()
+                .all(|r| r.libelle != "Harvest : Reforge minion")
+        );
+        let plan = plan_depuis(&sol);
+        eprintln!("sans {sans} avec {} {:?}", sol.cout_moyen, plan.actions);
+        assert!(sol.cout_moyen < sans);
+        assert!(plan.actions.iter().any(|u| u.action.starts_with("Harvest")));
+        let sim = simuler(&sol, &pb, 6_000);
+        assert!(
+            (sol.cout_moyen - sim).abs() / sim < 0.05,
+            "solveur {} contre simulation {sim}",
+            sol.cout_moyen
+        );
+    }
+
+    #[test]
+    fn harvest_augment_meme_loi_que_le_moteur() {
+        // Loi de l'Augment fire du modèle contre l'Augment exact, sur un objet Rare à trois mods.
+        let pb = construire_pool(ARMURE, 84, None).unwrap();
+        let pool = &pb.pool;
+        let voulus = [voulu(pool, "IncreasedLife9"), voulu(pool, "FireResist6")];
+        let goal = Goal::new(pool, &voulus).unwrap();
+        let prix = prix(&[(CHAOS, 1.0), (ALCHEMY, 0.5), (WILD, 0.01)]);
+        let mut sol = resoudre(&pb, &goal, &prix).unwrap();
+        let idx = |id: &str| pool.affixes.iter().position(|a| a.id == id).unwrap() as u16;
+        let o = Objet {
+            rarete: Rarete::Rare,
+            mods: vec![idx("IncreasedLife9"), idx("Strength3"), idx("ColdResist3")],
+            meta: Meta::Aucun,
+        };
+        let m = &mut sol.m;
+        let e = abstrait(m, pool, &o);
+        let mut v = Vec::new();
+        let i = m.etat(e, &mut v);
+        let j = m
+            .recoltes
+            .iter()
+            .position(|r| r.augment && r.libelle == "Harvest : Augment fire")
+            .unwrap();
+        let actions = m.actions(i, &mut v);
+        let a = actions
+            .iter()
+            .find(|a| a.genre == Genre::Augment(j))
+            .unwrap();
+        let Issue::Etats(loi) = &a.issue else {
+            panic!("issue attendue : états")
+        };
+        let mut attendu: BTreeMap<Etat, f64> = BTreeMap::new();
+        for &(k, p) in loi {
+            *attendu.entry(m.etats[k]).or_default() += p;
+        }
+        let mut rng = SmallRng::seed_from_u64(5);
+        let n = 200_000;
+        let mut vu: BTreeMap<Etat, f64> = BTreeMap::new();
+        for _ in 0..n {
+            let mut x = o.clone();
+            augment_exact(
+                pool,
+                84,
+                &mut x,
+                m.cap_rare,
+                m.recoltes[j].requis,
+                &[],
+                &mut rng,
+            );
+            *vu.entry(abstrait(m, pool, &x)).or_default() += 1.0 / n as f64;
+        }
+        let ecart: f64 = attendu
+            .keys()
+            .chain(vu.keys())
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .map(|s| (attendu.get(s).unwrap_or(&0.0) - vu.get(s).unwrap_or(&0.0)).abs())
+            .sum();
+        assert!(ecart < 0.02, "écart {ecart} : {attendu:?} contre {vu:?}");
+    }
+
+    /// Cas recoupés avec l'émulateur Craft of Exile (`tools/theorycraft/coe_emulateur.js`) : chance de
+    /// réussir en une action, selon le modèle du solveur.
+    ///
+    ///     CAS=cas.json cargo test -p poe2-core --release --lib exporter_cas_emulateur -- --ignored
+    #[test]
+    #[ignore = "export manuel, voir la doc"]
+    fn exporter_cas_emulateur() {
+        let chemin = std::env::var("CAS").expect("variable CAS");
+        const ANNEAU: &str = "Metadata/Items/Rings/Ring12";
+        struct Cas {
+            nom: &'static str,
+            base: &'static str,
+            ilvl: u32,
+            influence: Option<&'static str>,
+            eldritch: Option<Slot>,
+            voulus: &'static [&'static str],
+            depart: &'static [&'static str],
+            action: &'static str,
+        }
+        let cas = [
+            Cas {
+                nom: "Chaos (référence)",
+                base: ARMURE,
+                ilvl: 84,
+                influence: None,
+                eldritch: None,
+                voulus: &["IncreasedLife9", "FireResist6"],
+                depart: &[],
+                action: "chaos",
+            },
+            Cas {
+                nom: "Eldritch Chaos, Eater dominant",
+                base: ARMURE,
+                ilvl: 84,
+                influence: None,
+                eldritch: Some(Slot::Suffix),
+                voulus: &["IncreasedLife9", "FireResist6", "ColdResist6"],
+                depart: &["IncreasedLife9"],
+                action: "eldritch_chaos",
+            },
+            Cas {
+                nom: "Eldritch Exalted, Exarch dominant",
+                base: ARMURE,
+                ilvl: 84,
+                influence: None,
+                eldritch: Some(Slot::Prefix),
+                voulus: &[
+                    "IncreasedLife9",
+                    "LocalIncreasedPhysicalDamageReductionRatingPercent7",
+                ],
+                depart: &["IncreasedLife9", "FireResist4"],
+                action: "eldritch_exalt",
+            },
+            Cas {
+                nom: "Veiled Chaos",
+                base: ARMURE,
+                ilvl: 84,
+                influence: None,
+                eldritch: None,
+                voulus: &["JunMasterVeiledPercentageLifeAndMana"],
+                depart: &[],
+                action: "veiled_chaos",
+            },
+            Cas {
+                nom: "Harvest Reforge Life",
+                base: ARMURE,
+                ilvl: 84,
+                influence: None,
+                eldritch: None,
+                voulus: &["IncreasedLife9", "FireResist6"],
+                depart: &[],
+                action: "harvest_reforge:life",
+            },
+            Cas {
+                nom: "Harvest Augment Fire",
+                base: ARMURE,
+                ilvl: 84,
+                influence: None,
+                eldritch: None,
+                voulus: &["IncreasedLife9", "FireResist6"],
+                depart: &["IncreasedLife9", "Strength3", "ColdResist3"],
+                action: "harvest_augment:fire",
+            },
+            Cas {
+                nom: "Chaos, double influence Hunter + Shaper",
+                base: ANNEAU,
+                ilvl: 86,
+                influence: Some("Hunter+Shaper"),
+                eldritch: None,
+                voulus: &[
+                    "CriticalStrikeChanceUber3_",
+                    "PoisonDamageAndDurationInfluence3__",
+                ],
+                depart: &[],
+                action: "chaos",
+            },
+        ];
+        let prix = cote_marche();
+        let mut sortie = Vec::new();
+        for c in &cas {
+            let mut pb = construire_pool(c.base, c.ilvl, c.influence).unwrap();
+            pb.eldritch = c.eldritch;
+            let pool = pb.pool.clone();
+            let voulus: Vec<WantedAffix> = c.voulus.iter().map(|id| voulu(&pool, id)).collect();
+            let goal = Goal::new(&pool, &voulus).unwrap();
+            let mut tous = prix.clone();
+            for n in [
+                ELDRITCH_CHAOS,
+                ELDRITCH_EXALTED,
+                ELDRITCH_ANNULMENT,
+                VEILED_CHAOS,
+                VEILED_EXALTED,
+            ] {
+                tous.insert(n.into(), 1.0);
+            }
+            for n in [WILD, VIVID, PRIMAL] {
+                tous.insert(n.into(), 0.01);
+            }
+            let mut sol = resoudre(&pb, &goal, &tous).unwrap();
+            let m = &mut sol.m;
+            let idx = |id: &str| pool.affixes.iter().position(|a| a.id == id).unwrap() as u16;
+            let o = Objet {
+                rarete: Rarete::Rare,
+                mods: c.depart.iter().map(|id| idx(id)).collect(),
+                meta: Meta::Aucun,
+            };
+            let e = abstrait(m, &pool, &o);
+            let reussite = |m: &Modele, loi: &[(f64, Etat)]| -> f64 {
+                let t: f64 = loi.iter().map(|x| x.0).sum();
+                loi.iter()
+                    .filter(|x| m.reussi(&x.1))
+                    .map(|x| x.0)
+                    .sum::<f64>()
+                    / t
+            };
+            let depuis_loi = |l: HashMap<Etat, f64>| -> Vec<(f64, Etat)> {
+                l.into_iter().map(|(e, p)| (p, e)).collect()
+            };
+            let (action, tag) = c.action.split_once(':').unwrap_or((c.action, ""));
+            let p = match action {
+                "chaos" => reussite(m, &depuis_loi(m.loi(&Cle::Rare))),
+                "eldritch_chaos" => {
+                    let k = m.eldritch.unwrap();
+                    let o2 = 1 - k;
+                    let mq = m.masque(o2);
+                    let cle = Cle::Eldritch(k, e.meta, e.bons & mq, e.bloques & mq, e.autres[o2]);
+                    reussite(m, &depuis_loi(m.loi(&cle)))
+                }
+                "eldritch_exalt" => {
+                    let k = m.eldritch.unwrap();
+                    reussite(m, &m.un_mod_cote(&e, 0, Some(k)))
+                }
+                "veiled_chaos" => reussite(m, &depuis_loi(m.loi(&Cle::Voile))),
+                "harvest_reforge" | "harvest_augment" => {
+                    let augment = action == "harvest_augment";
+                    let j = m
+                        .recoltes
+                        .iter()
+                        .position(|r| {
+                            r.augment == augment && r.libelle.ends_with(&format!(" {tag}"))
+                        })
+                        .unwrap();
+                    if augment {
+                        let mut v = Vec::new();
+                        let i = m.etat(e, &mut v);
+                        let acts = m.actions(i, &mut v);
+                        let a = acts.iter().find(|a| a.genre == Genre::Augment(j)).unwrap();
+                        let Issue::Etats(l) = &a.issue else { panic!() };
+                        l.iter()
+                            .filter(|(k, _)| m.reussi(&m.etats[*k]))
+                            .map(|x| x.1)
+                            .sum()
+                    } else {
+                        reussite(m, &depuis_loi(m.loi(&Cle::Recolte(j))))
+                    }
+                }
+                _ => unreachable!(),
+            };
+            let acceptes: Vec<Vec<String>> = (0..goal.len())
+                .map(|k| {
+                    pool.affixes
+                        .iter()
+                        .enumerate()
+                        .filter(|(i, a)| {
+                            matches!(goal.classify(&pool, *i as u16), Class::Wanted(j) if j == k && cote(a.slot) == m.cotes[k])
+                        })
+                        .map(|(_, a)| a.id.clone())
+                        .collect()
+                })
+                .collect();
+            sortie.push(serde_json::json!({
+                "nom": c.nom, "base": c.base, "ilvl": c.ilvl, "influence": c.influence,
+                "eldritch": c.eldritch.map(|s| if s == Slot::Prefix { "exarch" } else { "eater" }),
+                "depart": c.depart, "action": c.action, "acceptes": acceptes, "augur": p,
+            }));
+        }
+        std::fs::write(chemin, serde_json::to_string_pretty(&sortie).unwrap()).unwrap();
     }
 
     #[test]

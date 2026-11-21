@@ -92,6 +92,14 @@ Relevées dans le code de Craft of Exile pour PoE 1 (`packages/package.js`, 14/1
   mod voilé (côté au hasard parmi les côtés ouverts) puis les autres mods ; Veiled Exalted retire un mod au
   hasard puis pose un mod voilé. Au dévoilement, trois mods voilés de ce côté sont proposés (tirés au poids, sans
   remise, un par groupe, hors groupes déjà sur l'objet) ; le plan prend un mod voulu s'il y en a un.
+- **Harvest** (lot 4, 21/11 ; `harvestReforge`, `harvestAugment`, coûts en Lifeforce relevés dans les données
+  de l'émulateur PoE 1 3.30.0.1, `methods.harvest`) : **Reforge [étiquette]** refait un objet Rare avec d'abord un
+  mod de l'étiquette (tiré au poids parmi les mods qui la portent), puis 4, 5 ou 6 mods au total ;
+  **Augment [étiquette]** ajoute un mod de l'étiquette puis retire au hasard un des mods d'avant (hors côté
+  verrouillé et mods fracturés). Seules les étiquettes portées par un mod voulu sont proposées. Prix : Wild,
+  Vivid et Primal Crystallised Lifeforce (page Currency de poe.ninja). Écartés : « Reforge More/Less Likely »
+  (dépend des mods exacts de l'objet), changement de résistance (l'état du solveur ne sait pas quels autres mods
+  sont des résistances), changement d'influence et enchantements.
 
 ## Calcul
 
@@ -129,6 +137,7 @@ la meilleure décision dans chaque situation et donne le coût moyen minimal pou
   un verrou d'établi pendant qu'on relance. Depuis le 21/11 (lot 2) : Eldritch Chaos, Exalted et Annulment quand le joueur indique la dominance
   (Eldritch Chaos seulement sans verrou d'établi et sans metamod du côté refait ; les filtres « Cannot roll … »
   restent appliqués), Veiled Chaos et Veiled Exalted quand un mod voulu est un mod voilé (dévoilement aussitôt).
+  Lot 4 : Harvest Reforge et Augment par étiquette (objet Rare ; la reforge seulement sans verrou d'établi).
 - **Règles des metamods**, relevées dans l'émulateur Craft of Exile PoE 1 : Chaos et Scouring gardent le côté
   verrouillé, le metamod part ; le Chaos tire 4, 5 ou 6 mods au total, moins les mods gardés ; Annulment retire un
   mod au hasard hors du côté verrouillé, metamod compris ; « Cannot roll Attack / Caster » retire des ajouts les
@@ -169,7 +178,7 @@ monnaies qui refont tout l'objet.
 | P1-06 | Au dévoilement, les trois choix excluent les groupes de tous les mods de l'objet | 20 dévoilements sur un objet qui porte déjà un mod du groupe |
 ## Suite possible (sur décision de Max)
 
-Harvest, Awakener's Orb, multimod avec verrou, mise à jour PoE 1 dans `mise_a_jour.py`.
+Awakener's Orb, multimod avec verrou, Harvest More/Less Likely et changement de résistance, mise à jour PoE 1 dans `mise_a_jour.py`.
 
 ## Dispersion du coût et budget (21/11, idée n°6 validée par Max)
 
