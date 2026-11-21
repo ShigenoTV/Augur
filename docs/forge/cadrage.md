@@ -259,6 +259,11 @@ PoE 1, 24 classes × 4 crafts (`exporter_test_complet_poe1`, `tools/theorycraft/
   (PoE 1) : écart moyen ≤ 0,3 point, maximum ≈ 1 point.
 - Corrigé grâce au test (PoE 1) : multiplicateurs de génération (`generation_weights`, mods d'attaque à
   50 % sur dagues runiques, bâtons, sceptres, baguettes de sort) et mods de PoE Royale écartés.
-- Reste : Désécration PoE 2 (modèle 1 à 4 points trop prudent ; moteur décalé sur Gloves, Helmet, Quiver),
-  Pristine Fossil sur bouclier PoE 1 (−3,2 points), bases expérimentales de Heist (l'émulateur n'y tire
-  aucun mod, exclues du test).
+- Corrigé grâce au test (Désécration PoE 2) : à la révélation, un mod de liche n'écarte plus les mods
+  normaux de son groupe (le pool normal est tiré à part, seuls les paliers d'un même mod s'excluent) ;
+  le modèle du solveur tire les options d'un même pool sans remise (poids inutile décalé option après
+  option). Écart moyen : moteur +0,1 point, modèle −0,3 point (−1,3 avant).
+- Reste : Pristine Fossil sur bouclier PoE 1 (−3,2 points : approximation « champ moyen » du modèle quand
+  une famille non visée pèse 80 % de son côté, le tirage exact donne bien l'émulateur), bases
+  expérimentales de Heist (l'émulateur n'y tire aucun mod, exclues du test). L'émulateur donne un poids
+  double à la première entrée de son pool de liche (biais de son tirage, pas une règle du jeu).
