@@ -275,6 +275,11 @@ def mods(
                 "niveau": int(m.get("required_level") or 1),
                 "texte": (m.get("text") or "").replace("\r", ""),
                 "spawn": spawn,
+                # Multiplicateurs de génération (en %, première étiquette reconnue) : mods d'attaque
+                # à 50 % sur les dagues runiques, bâtons, sceptres et baguettes de sort…
+                "generation": [
+                    [g["tag"], int(g["weight"])] for g in m.get("generation_weights") or []
+                ],
                 "essence": bool(m.get("is_essence_only")),
                 "artisanal": artisanal,
                 "fossile": fossile,

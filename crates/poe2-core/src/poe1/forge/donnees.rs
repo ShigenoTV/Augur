@@ -2,7 +2,8 @@
 //! d'affixes d'une base.
 //!
 //! Les poids viennent des tables du jeu (RePoE PoE 1) : pour une base, le poids d'un mod est celui de
-//! la **première** étiquette de sa liste `spawn` que l'objet porte (règle du jeu), les étiquettes de
+//! la **première** étiquette de sa liste `spawn` que l'objet porte (règle du jeu), multiplié par
+//! celui de la première étiquette reconnue de sa liste `generation` (en %), les étiquettes de
 //! l'objet étant celles de la base plus celle de son influence (`ring_shaper`…).
 
 use std::collections::{BTreeMap, HashMap};
@@ -105,6 +106,10 @@ pub struct ModPoe1 {
     pub niveau: u32,
     pub texte: String,
     pub spawn: Vec<(String, u32)>,
+    /// Multiplicateurs de génération en % (`generation_weights` du jeu) : première étiquette
+    /// reconnue, 100 % sans étiquette reconnue (mods d'attaque à 50 % sur un bâton, un sceptre…).
+    #[serde(default)]
+    pub generation: Vec<(String, u32)>,
     /// Mod posé seulement par une Essence (jamais tiré au hasard).
     pub essence: bool,
     /// Mod artisanal, posé seulement par l'établi.
@@ -167,6 +172,19 @@ pub fn poids(spawn: &[(String, u32)], tags: &[&str]) -> u32 {
         .iter()
         .find(|(t, _)| tags.contains(&t.as_str()))
         .map_or(0, |(_, w)| *w)
+}
+
+/// Poids d'un mod tiré au hasard : poids d'apparition multiplié par son multiplicateur de génération.
+pub fn poids_mod(m: &ModPoe1, tags: &[&str]) -> u32 {
+    let w = poids(&m.spawn, tags);
+    match m
+        .generation
+        .iter()
+        .find(|(t, _)| tags.contains(&t.as_str()))
+    {
+        Some((_, g)) => w * g / 100,
+        None => w,
+    }
 }
 
 /// Une Essence utilisable sur la base, avec l'affixe qu'elle garantit.
@@ -263,12 +281,12 @@ pub fn construire_pool(
         .iter()
         .filter_map(|m| {
             if m.fossile || m.voile {
-                return (poids(&m.spawn, &tags) > 0).then_some((m, 0));
+                return (poids_mod(m, &tags) > 0).then_some((m, 0));
             }
             let w = if m.essence || m.artisanal {
                 0
             } else {
-                poids(&m.spawn, &tags)
+                poids_mod(m, &tags)
             };
             (w > 0 || garantis.contains_key(m.id.as_str()) || crafts.contains_key(m.id.as_str()))
                 .then_some((m, w))
@@ -381,13 +399,13 @@ pub fn construire_pool(
         .iter()
         .enumerate()
         .filter(|(_, (m, _))| m.fossile)
-        .map(|(i, (m, _))| (i as AffixIdx, poids(&m.spawn, &tags)))
+        .map(|(i, (m, _))| (i as AffixIdx, poids_mod(m, &tags)))
         .collect();
     let mods_voiles = retenus
         .iter()
         .enumerate()
         .filter(|(_, (m, _))| m.voile)
-        .map(|(i, (m, _))| (i as AffixIdx, poids(&m.spawn, &tags)))
+        .map(|(i, (m, _))| (i as AffixIdx, poids_mod(m, &tags)))
         .collect();
 
     Ok(PoolPoe1 {

@@ -970,3 +970,18 @@ fn objet_a_double_influence_lu() {
     let o = analyser_objet(&texte).unwrap();
     assert_eq!(o.influence.as_deref(), Some("Hunter+Shaper"));
 }
+
+#[test]
+fn multiplicateurs_de_generation() {
+    // Les mods d'attaque n'ont que 50 % de leur poids sur une dague runique (Demon Dagger), mais
+    // tout leur poids sur une dague d'attaque (Stiletto) ; un mod sans multiplicateur ne change pas.
+    let poids = |base: &str, id: &str| {
+        let pb = donnees::construire_pool(base, 84, None).unwrap();
+        pb.pool.affixes.iter().find(|a| a.id == id).unwrap().weight
+    };
+    const RUNIQUE: &str = "Metadata/Items/Weapons/OneHandWeapons/Daggers/Dagger22";
+    const ATTAQUE: &str = "Metadata/Items/Weapons/OneHandWeapons/Daggers/Dagger4";
+    assert_eq!(poids(RUNIQUE, "LocalIncreasedAttackSpeed1"), 500);
+    assert_eq!(poids(ATTAQUE, "LocalIncreasedAttackSpeed1"), 1000);
+    assert_eq!(poids(RUNIQUE, "IncreasedManaWeapon1"), 1000);
+}
