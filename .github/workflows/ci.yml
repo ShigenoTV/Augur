@@ -137,6 +137,12 @@ jobs:
         # Pas d'artefacts d'updater en CI : la clé privée n'est disponible
         # que dans le workflow de release.
         run: pnpm --dir "$APP_DIR" tauri build --ci --bundles nsis --config '{"bundle":{"createUpdaterArtifacts":false}}'
+      - name: Test de démarrage (installe, lance, reste vivant 20 s)
+        shell: pwsh
+        run: |
+          $setup = @(Get-ChildItem target/release/bundle/nsis, "$env:APP_DIR/src-tauri/target/release/bundle/nsis" -Filter *-setup.exe -ErrorAction SilentlyContinue)[0]
+          if (-not $setup) { Write-Host '::error::Installeur NSIS introuvable'; exit 1 }
+          ./scripts/release/smoke-test-windows.ps1 -Installer $setup.FullName
       - name: Clippy et tests de l'application (cible Windows)
         shell: bash
         run: |

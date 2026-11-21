@@ -214,6 +214,16 @@ jobs:
           cp "$bundle"/nsis/*.exe "$bundle"/nsis/*.exe.sig "$bundle"/msi/*.msi "$bundle"/msi/*.msi.sig dist-release/
           ls -la dist-release
 
+      # Bloquant : un crash au lancement (comme la v0.1.36) arrête la release
+      # avant toute création de release GitHub.
+      - name: Test de démarrage (installe, lance, reste vivant 20 s)
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          $setup = @(Get-ChildItem dist-release -Filter "*_${env:VERSION}_*-setup.exe")[0]
+          ./scripts/release/smoke-test-windows.ps1 -Installer $setup.FullName -Version $env:VERSION
+
       - name: Vérifier les signatures Authenticode
         if: env.AUGUR_SIGNING_MODE != 'none'
         shell: pwsh
