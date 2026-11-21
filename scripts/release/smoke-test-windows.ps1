@@ -51,7 +51,17 @@ function Fail([string] $message) {
 
 function Get-NewLogLines([long] $offset) {
   if (-not (Test-Path -LiteralPath $logFile)) { return @() }
-  $bytes = [System.IO.File]::ReadAllBytes($logFile)
+  # Augur garde augur.log ouvert en écriture : lecture en partage ReadWrite.
+  $stream = [System.IO.File]::Open($logFile, 'Open', 'Read', 'ReadWrite, Delete')
+  try {
+    $bytes = New-Object byte[] $stream.Length
+    $read = 0
+    while ($read -lt $bytes.Length) {
+      $n = $stream.Read($bytes, $read, $bytes.Length - $read)
+      if ($n -le 0) { break }
+      $read += $n
+    }
+  } finally { $stream.Dispose() }
   if ($bytes.Length -le $offset) { return @() }
   $text = [System.Text.Encoding]::UTF8.GetString($bytes, [int] $offset, $bytes.Length - [int] $offset)
   return @($text -split "`r?`n" | Where-Object { $_ })
