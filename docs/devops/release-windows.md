@@ -64,6 +64,15 @@ Le canal bêta s'obtient en remplaçant l'endpoint au runtime (option « Rejoind
 via le builder du plugin `tauri-plugin-updater`. La CI force `createUpdaterArtifacts` et
 injecte la commande de signature, l'application n'a donc rien d'autre à prévoir.
 
+## Test de démarrage (bloquant)
+
+Après le build, `scripts/release/smoke-test-windows.ps1` installe l'installeur NSIS en
+silencieux, lance Augur et vérifie pendant 20 s que le processus reste vivant, qu'aucune
+ligne `ERREUR` (dont les pannes) n'apparaît dans `augur.log` et que la ligne
+« démarrage d'Augur vX.Y.Z » y est écrite. En cas d'échec, la release s'arrête avant la
+création de la release GitHub : aucun installeur n'est publié. Le même test tourne dans la
+CI (job « Build Windows ») sur chaque PR. Né du crash au lancement de la v0.1.36.
+
 ## Hébergement des mises à jour (GitHub Releases)
 
 Les mises à jour sont servies par les releases GitHub du dépôt (public) :
