@@ -248,3 +248,17 @@ jeu, I-D1).
 Tests : `monte_carlo::tests::revelation_trois_options_et_omen_de_liche` (loi 80/15/5, Omen de liche, choix du
 joueur), `solveur::tests::desecration_meme_loi_que_le_moteur` (modèle contre moteur exact, cinq actions depuis
 quatre objets), `plan_avec_desecration` (plan complet simulé sur le moteur exact).
+
+## Test complet contre l'émulateur (21/11/2026)
+
+Une base par classe (la plus haute), plusieurs crafts par classe, comparés à l'émulateur de Craft of
+Exile : PoE 2, 27 classes × 6 crafts (`exporter_test_complet_poe2`, `tools/theorycraft/coe_test_complet_poe2.js`) ;
+PoE 1, 24 classes × 4 crafts (`exporter_test_complet_poe1`, `tools/theorycraft/coe_emulateur.js`).
+
+- Alchemy, Transmute, Exalt, Greater Exalt, Chaos (PoE 2), Alteration, Chaos, fossile, Harvest Reforge
+  (PoE 1) : écart moyen ≤ 0,3 point, maximum ≈ 1 point.
+- Corrigé grâce au test (PoE 1) : multiplicateurs de génération (`generation_weights`, mods d'attaque à
+  50 % sur dagues runiques, bâtons, sceptres, baguettes de sort) et mods de PoE Royale écartés.
+- Reste : Désécration PoE 2 (modèle 1 à 4 points trop prudent ; moteur décalé sur Gloves, Helmet, Quiver),
+  Pristine Fossil sur bouclier PoE 1 (−3,2 points), bases expérimentales de Heist (l'émulateur n'y tire
+  aucun mod, exclues du test).
