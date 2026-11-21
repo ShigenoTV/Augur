@@ -48,7 +48,7 @@ Conséquence : `poe2-core` se teste entièrement en CI Linux avec `cargo test`, 
 | Import de personnage | **Appli** (OAuth public, PKCE) ou code PoB | Les jetons du joueur ne quittent jamais son poste |
 | Ligues, échange de devises, échantillonnage du trade | **Backend** (OAuth confidentiel) | Scopes `service:*` interdits aux clients publics |
 | Modèles de prix, indices de devises | **Backend**, servis par API cacheable | Calcul sur l'historique agrégé |
-| Paquets de données de jeu | **CDN**, URL immuables par patch, manifeste signé | Hors ligne avec le dernier paquet, charge serveur nulle |
+| Données de jeu | **Embarquées dans l'appli** (`crates/poe2-core/data/`), livrées avec chaque version | Hors ligne, aucune infrastructure (le CDN prévu a été archivé le 19/11/2026) |
 | Kill switch | **Manifeste distant signé**, lu par l'appli | Couper une fonctionnalité sans republier |
 
 Règle par défaut : **ce qui peut se calculer en local se calcule en local.**

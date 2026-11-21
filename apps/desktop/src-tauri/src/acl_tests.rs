@@ -5,9 +5,10 @@ use std::collections::BTreeSet;
 
 const LIB: &str = include_str!("lib.rs");
 const BUILD: &str = include_str!("../build.rs");
-const CAPABILITIES: [&str; 2] = [
+const CAPABILITIES: [&str; 3] = [
     include_str!("../capabilities/main.json"),
     include_str!("../capabilities/overlay.json"),
+    include_str!("../capabilities/ledger-banner.json"),
 ];
 
 fn commandes_enregistrees() -> BTreeSet<String> {
@@ -76,4 +77,23 @@ fn toutes_les_commandes_sont_autorisees() {
         manquantes.is_empty(),
         "absentes des capabilities : {manquantes:?}"
     );
+}
+
+/// Tauri crée les fenêtres de la config AVANT le `setup`, où l'état (Ledger,
+/// réglages…) est géré : une page qui appelle une commande trop tôt faisait
+/// planter Augur au lancement (v0.1.36). Les fenêtres sont donc créées par
+/// `creer_fenetres`, dans le `setup`, après l'état.
+#[test]
+fn fenetres_creees_apres_l_etat() {
+    let conf: serde_json::Value = serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
+    let fenetres = conf["app"]["windows"].as_array().unwrap();
+    assert!(!fenetres.is_empty());
+    for f in fenetres {
+        assert_eq!(
+            f["create"],
+            serde_json::Value::Bool(false),
+            "fenêtre {} créée avant le setup",
+            f["label"]
+        );
+    }
 }

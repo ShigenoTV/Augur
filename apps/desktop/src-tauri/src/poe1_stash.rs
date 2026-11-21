@@ -49,6 +49,17 @@ struct Fichier {
 pub struct Poe1Stash {
     releves: Mutex<Fichier>,
     occupe: AtomicBool,
+    /// Relevé automatique arrêté par une erreur : session Ledger (son début)
+    /// et message. Un relevé réussi le relance.
+    auto_erreur: Mutex<Option<(String, String)>>,
+}
+
+/// Intervalle entre deux vérifications du relevé automatique.
+const AUTO_CHECK: Duration = Duration::from_secs(20);
+
+/// Vrai quand le relevé automatique est dû (`minutes` à 0 : jamais).
+pub fn auto_due(minutes: u32, since_last: Duration) -> bool {
+    minutes > 0 && since_last >= Duration::from_secs(u64::from(minutes) * 60)
 }
 
 /// État affiché par la carte « Coffres PoE 1 ».
@@ -66,6 +77,10 @@ pub struct StashStatus {
     pub gain: Option<f64>,
     /// Objets qui ont le plus bougé entre les deux relevés.
     pub changes: Vec<Ecart>,
+    /// Intervalle du relevé automatique pendant une session Ledger (0 : coupé).
+    pub auto_minutes: u32,
+    /// Relevé automatique arrêté pour la session en cours, et pourquoi.
+    pub auto_error: Option<String>,
 }
 
 fn fichier(app: &AppHandle) -> Option<PathBuf> {
@@ -84,6 +99,7 @@ impl Poe1Stash {
         Self {
             releves: Mutex::new(f),
             occupe: AtomicBool::new(false),
+            auto_erreur: Mutex::new(None),
         }
     }
 
@@ -131,7 +147,68 @@ pub fn status(app: &AppHandle) -> StashStatus {
         previous: f.precedent,
         gain,
         changes,
+        auto_minutes: settings.stash_auto_minutes(),
+        auto_error: state
+            .auto_erreur
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .as_ref()
+            .map(|(_, m)| m.clone()),
     }
+}
+
+/// Change l'intervalle du relevé automatique (0 : coupé).
+pub fn set_auto(app: &AppHandle, minutes: u32) -> Result<StashStatus, AppError> {
+    let minutes = crate::settings::clamp_stash_auto(minutes);
+    app.state::<SettingsStore>()
+        .update(app, |s| s.poe1.stash_auto_minutes = Some(minutes))
+        .map_err(|e| erreur(format!("Réglage non enregistré ({e}).")))?;
+    let s = status(app);
+    let _ = app.emit(EVENT_CHANGED, &s);
+    Ok(s)
+}
+
+/// Relevé automatique des coffres pendant une session Atlas Ledger (PoE 1),
+/// pour que le gain de la session se mette à jour seul. Même voie et mêmes
+/// limites qu'un relevé à la main ; au premier échec (refus du site, session
+/// expirée), il s'arrête jusqu'à la session suivante.
+pub fn spawn_auto(app: AppHandle) {
+    tauri::async_runtime::spawn(async move {
+        loop {
+            tokio::time::sleep(AUTO_CHECK).await;
+            if crate::game::active() != Game::Poe1 {
+                continue;
+            }
+            let settings = app.state::<SettingsStore>().get();
+            let minutes = settings.stash_auto_minutes();
+            let Some((session, age)) = app.state::<crate::ledger::LedgerState>().stash_age() else {
+                continue;
+            };
+            let state = app.state::<Poe1Stash>();
+            let arrete = {
+                let mut g = state.auto_erreur.lock().unwrap_or_else(|e| e.into_inner());
+                // Arrêt d'une session précédente : on repart.
+                if g.as_ref().is_some_and(|(s, _)| *s != session) {
+                    *g = None;
+                }
+                g.is_some()
+            };
+            if arrete
+                || !auto_due(minutes, age)
+                || state.occupe.load(Ordering::Relaxed)
+                || settings.poe1.stash_tabs.is_empty()
+                || identifiants(&app).is_err()
+            {
+                continue;
+            }
+            if let Err(e) = relever(&app).await {
+                log::warn!("relevé automatique des coffres arrêté : {}", e.message);
+                *state.auto_erreur.lock().unwrap_or_else(|e| e.into_inner()) =
+                    Some((session, e.message));
+                let _ = app.emit(EVENT_CHANGED, status(&app));
+            }
+        }
+    });
 }
 
 fn erreur(message: impl Into<String>) -> AppError {
@@ -365,6 +442,7 @@ pub async fn relever(app: &AppHandle) -> Result<StashStatus, AppError> {
         cours,
     );
 
+    let (releve_ligue, releve_chaos) = (releve.ligue.clone(), releve.chaos);
     let f = {
         let mut g = state.releves.lock().unwrap_or_else(|e| e.into_inner());
         g.precedent = g.dernier.take();
@@ -372,8 +450,24 @@ pub async fn relever(app: &AppHandle) -> Result<StashStatus, AppError> {
         g.clone()
     };
     state.enregistrer(app, &f);
+    // Un relevé réussi relance le relevé automatique arrêté.
+    *state.auto_erreur.lock().unwrap_or_else(|e| e.into_inner()) = None;
+    // Gain de la session Atlas Ledger en cours (bandeau, carte Ledger).
+    crate::ledger::on_stash_snapshot(app, &releve_ligue, releve_chaos);
     drop(_libere);
     let s = status(app);
     let _ = app.emit(EVENT_CHANGED, &s);
     Ok(s)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn releve_automatique_du_apres_l_intervalle() {
+        assert!(!auto_due(10, Duration::from_secs(599)));
+        assert!(auto_due(10, Duration::from_secs(600)));
+        assert!(!auto_due(0, Duration::from_secs(100_000)), "coupé");
+    }
 }

@@ -100,6 +100,12 @@ donc sur un prix d'achat que le joueur relève lui-même (point 8 ci-dessous).
    restant et les résultats possibles du prochain essai. Un mod introuvable (sans poids, désacralisé, artisanal)
    compte comme mauvais mod. Une copie simple (Ctrl+C) est refusée : elle ne dit pas quels mods sont des
    préfixes. Un objet d'une autre base passe à Upgrade Copilot.
+   **Essais enchaînés** (`forge::enchainement`, demande de Max du 19/11) : d'un Ctrl+Alt+C à l'autre, le panneau
+   reste le même et se met à jour ; un bandeau en tête dit « Ça a marché, reste X » (coût restant en baisse ou
+   objet fini) ou « Raté, reste X », avec le nombre d'essais de la série et la dépense estimée (coût unitaire de
+   chaque action conseillée puis tentée). Une copie identique ne compte pas d'essai. La série repart de zéro à
+   chaque nouveau plan suivi, à l'arrêt du suivi, après un objet fini ou une base neuve conseillée ; elle n'est
+   gardée qu'en mémoire.
 7. **Historique** (`forge::historique`, `forge-historique.json`, commandes `get_forge_history` /
    `delete_forge_history_entry`, demande de Max du 08/11) : chaque plan calculé y entre (50 au plus, la même
    demande recalculée remplace son entrée) ; onglet Historique du panneau pour le rouvrir (nouveau calcul) ou le

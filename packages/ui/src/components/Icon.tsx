@@ -13,6 +13,7 @@ const paths = {
   user: "M8 3a2.5 2.5 0 1 0 0 5a2.5 2.5 0 0 0 0-5zM3 13.5c.6-2.4 2.6-3.6 5-3.6s4.4 1.2 5 3.6",
   pause: "M5.5 3.5v9M10.5 3.5v9",
   search: "M7 2.8a4.2 4.2 0 1 0 0 8.4a4.2 4.2 0 0 0 0-8.4zM10.1 10.1l3.4 3.4",
+  pin: "M5.5 2.5h5M6.8 2.5v3.8L4.5 9h7L9.2 6.3V2.5M8 9v4.5",
 } as const;
 
 export type IconName = keyof typeof paths;

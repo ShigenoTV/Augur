@@ -80,6 +80,7 @@ def test_sortie_deterministe_et_canonique():
         "mods_tirables": 2,
         "groupes": 2,
         "bases": 2,
+        "mods_sans_texte": 0,
     }
     assert source["version_repoe"] == "4.5.5.2"
 
@@ -106,11 +107,6 @@ def test_cli_et_paquet(tmp_path):
     )  # fmt: skip
     assert rc == 0
     assert (out / "tables" / "mods.json").read_bytes() == _tables()["tables/mods.json"]
-    # La sortie est un dossier accepté tel quel par l'outil de paquets.
-    dp = pytest.importorskip("augur_datapack", reason="tools/datapack absent du chemin")
-    priv = dp.load_private_key("AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=")
-    res = dp.build_pack(out, tmp_path / "pack", "poe2", "0.4.1", priv)
-    assert res is not None
 
 
 def test_cli_erreur(tmp_path, capsys):

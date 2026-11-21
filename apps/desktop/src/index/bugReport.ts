@@ -31,3 +31,42 @@ export function champManquant(f: { titre: string; etapes: string; attendu: strin
   if (!f.attendu.trim()) return "Décris ce qui s'est passé.";
   return null;
 }
+
+/** Message affiché après l'ouverture du ticket dans le navigateur. */
+export function messageTicket(r: { truncated: boolean; copied: boolean }): string {
+  if (!r.copied) {
+    return r.truncated
+      ? "Ticket ouvert dans ton navigateur. Le texte était trop long et a été raccourci : complète-le avant de cliquer sur « Create »."
+      : "Ticket ouvert dans ton navigateur : relis-le, ajoute une capture si besoin, puis clique sur « Create ».";
+  }
+  const debut = r.truncated
+    ? "Ticket ouvert dans ton navigateur. Le texte était trop long et a été raccourci"
+    : "Ticket ouvert dans ton navigateur";
+  return `${debut}. Le rapport complet est aussi dans ton presse-papiers : si une case est vide ou raccourcie (ou si GitHub n'affiche qu'une description vide), colle-le avec Ctrl+V, puis clique sur « Create ».`;
+}
+
+/** Options du menu « Quelle partie d'Augur ? » : identiques à .github/ISSUE_TEMPLATE/idee.yml. */
+export const MODULES_IDEE = [
+  "Overlay (Ctrl+C sur un objet)",
+  "Personnage (import Path of Building)",
+  "Forge",
+  "Atlas Ledger",
+  "Prix et recherche sur le trade",
+  "Réglages",
+  "Nouvelle fonction",
+  "Autre",
+] as const;
+
+/** Message d'erreur si l'idée est incomplète, sinon null. */
+export function ideeManquante(f: { titre: string; idee: string }): string | null {
+  if (!f.titre.trim()) return "Donne un titre court à ton idée.";
+  if (!f.idee.trim()) return "Décris ton idée.";
+  return null;
+}
+
+/** Message affiché après l'ouverture du ticket d'idée. */
+export function messageIdee(r: { copied: boolean }): string {
+  return r.copied
+    ? "Ticket ouvert dans ton navigateur : relis-le, puis clique sur « Create ». Ton idée est aussi dans le presse-papiers si une case est vide (Ctrl+V)."
+    : "Ticket ouvert dans ton navigateur : relis-le, puis clique sur « Create ».";
+}

@@ -22,6 +22,8 @@ import {
 } from "../bridge";
 import {
   SLOT_LABEL,
+  agePrixAnciens,
+  chanceSousBudget,
   basesParClasse,
   cleAffixe,
   comparerAchat,
@@ -37,6 +39,7 @@ import {
   peutAjouter,
   versExalts,
 } from "./forge";
+import { BudgetChance, PrixAnciens } from "./BudgetChance";
 import { DecisionTree } from "./DecisionTree";
 import { AffichageContext, useCout } from "./devise";
 
@@ -545,8 +548,24 @@ function BuyOrCraft({ result, demande }: { result: ForgePlanResult; demande: For
 }
 
 /** Résultat d'un calcul : chiffres clés, puis arbre de décision, étapes ou liste de courses. */
-function PlanView({ result, demande }: { result: ForgePlanResult; demande: ForgePlanRequest | null }) {
+function PlanView({
+  result,
+  demande,
+  releveA,
+  busy,
+  onActualiser,
+}: {
+  result: ForgePlanResult;
+  demande: ForgePlanRequest | null;
+  /** Heure du relevé poe.ninja des prix (secondes unix) ; null : valeurs indicatives. */
+  releveA: number | null;
+  busy: boolean;
+  /** Actualise les prix depuis poe.ninja et relance le calcul. */
+  onActualiser: () => void;
+}) {
   const cout = useCout();
+  const { affichage } = useContext(AffichageContext);
+  const age = agePrixAnciens(releveA);
   const [vue, setVue] = useState<"arbre" | "etapes" | "courses">("arbre");
   const { plan } = result;
   const labels = plan.goal.map((g) => libelleCourt(g.label));
@@ -572,6 +591,23 @@ function PlanView({ result, demande }: { result: ForgePlanResult; demande: Forge
           hint={mc ? `${formatCount(mc.meanSteps)} étapes en moyenne` : undefined}
         />
       </div>
+      {age && (
+        <PrixAnciens age={age} busy={busy} onActualiser={onActualiser} apres="Actualiser relance le calcul aux prix du jour." />
+      )}
+      {mc && (
+        <BudgetChance
+          cle="augur.forge.budget"
+          devise={deviseSaisie(affichage)}
+          versBase={(v) => versExalts(v, affichage)}
+          // Les quantiles sont hors base neuve : le budget saisi la comprend.
+          chance={(b) => chanceSousBudget(mc, result.depart ? b : b - plan.baseCost)}
+          note={
+            result.depart
+              ? "Budget depuis ton objet, d'après les crafts simulés et les prix de l'onglet Prix."
+              : `Budget base neuve comprise (${cout(plan.baseCost)}), d'après les crafts simulés et les prix de l'onglet Prix.`
+          }
+        />
+      )}
 
       {demande && <BuyOrCraft key={JSON.stringify(demande)} result={result} demande={demande} />}
 
@@ -744,6 +780,21 @@ export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onRegla
     } finally {
       setBusy(false);
     }
+  }
+
+  /** Prix anciens : nouveau relevé poe.ninja, puis même calcul aux nouveaux prix. */
+  async function actualiserEtRecalculer() {
+    setBusy(true);
+    setError(null);
+    try {
+      setPrices(await commands.refreshForgePrices(ligue ?? DEFAULT_LEAGUE));
+    } catch (err) {
+      setError(message(err));
+      setBusy(false);
+      return;
+    }
+    setBusy(false);
+    if (demandeCalculee) await calculer(demandeCalculee);
   }
 
   function rouvrir(e: ForgeHistoryEntry) {
@@ -957,7 +1008,15 @@ export function ForgeCard({ ligue, onReglages }: { ligue: string | null; onRegla
               {error}
             </StatePanel>
           )}
-          {result && <PlanView result={result} demande={demandeCalculee} />}
+          {result && (
+            <PlanView
+              result={result}
+              demande={demandeCalculee}
+              releveA={prices?.marche?.releveA ?? null}
+              busy={busy}
+              onActualiser={() => void actualiserEtRecalculer()}
+            />
+          )}
         </>
       )}
     </div>

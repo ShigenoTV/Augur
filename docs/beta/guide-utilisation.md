@@ -55,6 +55,16 @@ Bon à savoir :
   meilleur des deux emplacements). Le calcul suit le panneau de compétence du jeu
   (cible sans résistance, mana plein). Le signe **≈** et l'encadré « Calcul approximatif »
   listent ce qui n'est pas encore compté (certains mods, passifs ou supports).
+- **Réglages > Affichage de l'overlay** :
+  - **Overlay compact** : verdict, gain principal, prix et alertes de résistance
+    seulement, dans un panneau plus étroit. Le bouton « détails » en bas déplie la vue
+    complète pour l'objet affiché.
+  - **Taille** : de 80 % à 150 %, par pas de 10 %.
+  - **Épingler l'overlay** (aussi depuis le bouton « épingler » en bas de l'overlay) :
+    il ne se ferme plus quand le curseur s'éloigne et les objets copiés suivants
+    s'affichent au même endroit. Glisse son bord du haut pour le déplacer ; Augur
+    retient la place. Échap (ou « fermer ») le ferme toujours. Tant qu'il est affiché,
+    Échap et Alt+U restent captés par Augur : ferme-le pour rendre Échap au jeu.
 - Si l'overlay affiche **« Objet non reconnu »**, c'est exactement ce qu'on cherche :
   signale-le (voir plus bas) avec le texte de l'objet.
 
@@ -117,6 +127,14 @@ sur « Create » : rien n'est envoyé avant. Il faut un compte GitHub (gratuit).
 
 Sans passer par Augur : <https://github.com/ShigenoTV/Augur/issues/new/choose>,
 modèle **« Signaler un bug »**.
+
+## Proposer une idée
+
+Une idée d'évolution ? Bouton **« Proposer une idée »** en bas de la barre
+latérale (ou Réglages → Proposer une idée) : un titre, la partie d'Augur
+concernée, ton idée et pourquoi elle serait utile. Augur ouvre un ticket GitHub
+prérempli (modèle **« Proposer une idée »**), que tu relis puis crées avec
+« Create ».
 
 Réglages → **Diagnostic** affiche le journal d'Augur (démarrage, journal du jeu,
 mises à jour, erreurs) et le bouton **« Copier le diagnostic »** pour le coller

@@ -50,6 +50,7 @@ RACINE = ICI.parents[1]
 THEORYCRAFT = RACINE / "tools" / "theorycraft"
 sys.path[:0] = [str(ICI), str(THEORYCRAFT)]
 
+import cas_mesures
 import extract_build_data
 import forge_data
 import import_repoe
@@ -64,6 +65,8 @@ EE2_STATS = (
 USER_AGENT = "Augur-donnees/0.1 (+https://github.com/ShigenoTV/Augur)"
 
 FICHIERS_REPOE = ("skills.json", "base_items.json", "mods.min.json", "base_items.min.json")
+# Traductions de stats du jeu : texte des mods quand RePoE ne le donne plus (0.5.5.10 et suivants).
+TRADUCTIONS = "stat_translations/stat_descriptions.min.json"
 
 # Fichiers régénérés : chemin dans le dépôt -> nom dans le dossier de travail.
 EMBARQUES = {
@@ -127,6 +130,7 @@ def telecharger(dossier: Path, arbre: str, coe: bool, lire=lire_url) -> dict:
     versions = {"repoe": version_repoe(lire(REPOE).decode("utf-8", "replace"))}
     for nom in FICHIERS_REPOE:
         (dossier / nom).write_bytes(lire(REPOE + nom))
+    (dossier / Path(TRADUCTIONS).name).write_bytes(lire(REPOE + TRADUCTIONS))
     if arbre == "auto":
         arbre = derniere_version_arbre(lire(POB + "GameVersions.lua").decode("utf-8"))
     versions["arbre"] = arbre
@@ -174,6 +178,7 @@ def regenerer(
     for depot, nom in POIDS.items():
         shutil.copyfile(racine / depot, travail / nom)
     tables = travail / "gamedata"
+    traductions = sources / Path(TRADUCTIONS).name
     journal.append(
         _lancer(
             "import RePoE",
@@ -183,6 +188,7 @@ def regenerer(
                 "--bases", str(sources / "base_items.min.json"),
                 "--out", str(tables),
                 "--repoe-version", versions["repoe"],
+                *(["--traductions", str(traductions)] if traductions.exists() else []),
             ],
         )
     )  # fmt: skip
@@ -195,6 +201,7 @@ def regenerer(
                 "--bases", str(sources / "base_items.json"),
                 "--tree", str(sources / "tree.json"),
                 "--tree-version", versions["arbre"],
+                "--repoe-version", versions["repoe"],
                 "--out", str(travail / "data"),
             ],
         )
@@ -296,10 +303,12 @@ def charger(lire_fichier) -> dict:
     trade = json_de("crates/poe2-core/data/trade-stats.json") or {}
     return {
         "repoe": forge.get("repoe_version") or "?",
+        "repoe_sorts": gemmes.get("repoe_version") or "non notée",
         "arbre_version": arbre.get("version") or "?",
         "poids_date": releve.get("date_releve") or "?",
         "complement_date": (releve.get("complement") or {}).get("date_releve") or "?",
         "actives": gemmes.get("actives") or {},
+        "sans_texte": {m["id"] for m in (forge.get("mods") or {}).get("mods", []) if not m.get("texte")},
         "supports": gemmes.get("supports") or {},
         "armes": gemmes.get("armes") or {},
         "passifs": arbre.get("passifs") or {},
@@ -452,7 +461,12 @@ def _nom_passif(i, lignes):
 
 
 def rapport(
-    avant: dict, apres: dict, date: str, journal: list[str] | None = None, fichiers: list[str] | None = None
+    avant: dict,
+    apres: dict,
+    date: str,
+    journal: list[str] | None = None,
+    fichiers: list[str] | None = None,
+    remesurer: list[dict] | None = None,
 ) -> tuple[str, dict]:
     """Rapport Markdown des différences et comptages par élément."""
     parties = {
@@ -478,6 +492,20 @@ def rapport(
         noms = ", ".join(avant["actives"][i].get("nom") or i for i in verifies)
         attention.append(
             f"Sort vérifié en jeu modifié ou retiré ({noms}) : rejouer les cas golden (`tests/golden/archetype/`) et re-mesurer en jeu."
+        )
+    if remesurer:
+        attention.append(
+            f"{len(remesurer)} cas golden mesurés en jeu sur une version plus ancienne que les données "
+            f"({apres['repoe']}) : à re-mesurer (`python tools/gamedata/cas_mesures.py`) : "
+            + ", ".join(f"`{c['id']}`" for c in remesurer[:20])
+            + (" …" if len(remesurer) > 20 else "")
+        )
+    sans_texte = sorted(apres["sans_texte"] - avant["sans_texte"])
+    if sans_texte:
+        attention.append(
+            f"{len(sans_texte)} mod(s) de Forge sans texte (le parseur ne les reconnaîtra pas sur un objet copié) : "
+            + ", ".join(f"`{m}`" for m in sans_texte[:20])
+            + (" …" if len(sans_texte) > 20 else "")
         )
     if avant["arbre_version"] != apres["arbre_version"]:
         attention.append(
@@ -516,7 +544,8 @@ def rapport(
         "",
         "| Source | Avant | Après |",
         "|---|---|---|",
-        f"| RePoE (sorts, mods, bases) | {avant['repoe']} | {apres['repoe']} |",
+        f"| RePoE (mods et bases de Forge) | {avant['repoe']} | {apres['repoe']} |",
+        f"| RePoE (sorts de Copilot) | {avant['repoe_sorts']} | {apres['repoe_sorts']} |",
         f"| Arbre passif (Path of Building) | {avant['arbre_version']} | {apres['arbre_version']} |",
         f"| Poids poe2db (relevé du) | {avant['poids_date']} | {apres['poids_date']} |",
         f"| Poids Craft of Exile (relevé du) | {avant['complement_date']} | {apres['complement_date']} |",
@@ -583,7 +612,8 @@ def executer(a: argparse.Namespace, lire=lire_url, racine: Path = RACINE) -> int
         avant = charger(lambda c: _lire(racine / c))
         apres = charger(lambda c: _lire(travail / sortie[c]))
         modifies = [c for c, n in sortie.items() if _lire(racine / c) != _lire(travail / n)]
-        texte, resume = rapport(avant, apres, date, journal, modifies)
+        remesurer = cas_mesures.a_remesurer(cas_mesures.lire_cas(racine), apres["repoe"])
+        texte, resume = rapport(avant, apres, date, journal, modifies, remesurer)
 
         a.rapport.parent.mkdir(parents=True, exist_ok=True)
         a.rapport.write_text(texte, encoding="utf-8")

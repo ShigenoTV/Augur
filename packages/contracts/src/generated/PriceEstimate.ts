@@ -14,4 +14,12 @@ observedAt: string,
  * Vrai si la donnée est plus vieille que la fraîcheur attendue :
  * l'UI affiche l'horodatage au lieu de masquer le prix.
  */
-stale: boolean, };
+stale: boolean, 
+/**
+ * Taille de la pile estimée (objets empilables) : `median` vaut la pile entière.
+ */
+quantity?: number, 
+/**
+ * Prix d'une unité de la pile, dans la même devise.
+ */
+unitPrice?: number, };

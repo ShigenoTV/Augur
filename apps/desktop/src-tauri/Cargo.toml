@@ -1,6 +1,6 @@
 [package]
 name = "augur-desktop"
-version = "0.1.29"
+version = "0.1.38"
 description = "Application Windows Augur : overlay en jeu (Upgrade Copilot) et planificateur"
 edition = "2024"
 rust-version = "1.90"
@@ -15,6 +15,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 augur-contracts = { path = "../../../crates/augur-contracts" }
+augur-ratelimit = { path = "../../../crates/augur-ratelimit" }
 poe2-core = { path = "../../../crates/poe2-core" }
 pob-poe1 = { path = "../../../crates/pob-poe1" }
 tauri = { version = "2", features = ["tray-icon"] }

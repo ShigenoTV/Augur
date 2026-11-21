@@ -2,11 +2,22 @@ import { Kbd, StatePanel } from "@augur/ui";
 import type { AppError } from "@augur/ui";
 import type { ForgeTip } from "../bridge";
 import { formatCout, useAffichage } from "../index/devise";
+import { cleBilan, EssaiBilan } from "./EssaiBilan";
 import { decrireEtat, formatCount, formatPercent, libelleCourt } from "../index/forge";
 
 export type ForgeView = { status: "tip"; tip: ForgeTip } | { status: "error"; error: AppError };
 
-function Shell({ children, onClose, fermer }: { children: React.ReactNode; onClose?: () => void; fermer: string }) {
+function Shell({
+  children,
+  onClose,
+  fermer,
+  pied,
+}: {
+  children: React.ReactNode;
+  onClose?: () => void;
+  fermer: string;
+  pied?: React.ReactNode;
+}) {
   return (
     <div
       className="augur-panel w-[360px] p-3.5 text-text-primary motion-safe:animate-[augur-enter_120ms_var(--ease-out-quick)]"
@@ -21,6 +32,7 @@ function Shell({ children, onClose, fermer }: { children: React.ReactNode; onClo
           <Kbd>{fermer}</Kbd> fermer
         </button>
         <span>Plan suivi depuis la fenêtre Augur</span>
+        {pied}
       </footer>
     </div>
   );
@@ -31,18 +43,21 @@ export function ForgeTipPanel({
   view,
   onClose,
   fermer = "Échap",
+  pied,
 }: {
   view: ForgeView;
   onClose?: () => void;
   /** Raccourci de fermeture choisi dans Réglages, déjà au format affiché. */
   fermer?: string;
+  /** Contrôle ajouté au pied (épinglage de l'overlay). */
+  pied?: React.ReactNode;
 }) {
   // Même monnaie d'affichage que la fenêtre principale (stockage local partagé).
   const { affichage } = useAffichage();
   const cout = (v: number | null | undefined) => formatCout(v, affichage);
   if (view.status === "error") {
     return (
-      <Shell onClose={onClose} fermer={fermer}>
+      <Shell onClose={onClose} fermer={fermer} pied={pied}>
         <StatePanel icon="alert" title="Objet non suivi" variant="warn">
           {view.error.message}
         </StatePanel>
@@ -54,7 +69,8 @@ export function ForgeTipPanel({
   const labels = tip.labels.map(libelleCourt);
   const action = conseil.action;
   return (
-    <Shell onClose={onClose} fermer={fermer}>
+    <Shell onClose={onClose} fermer={fermer} pied={pied}>
+      {tip.enchainement && <EssaiBilan key={cleBilan(tip.enchainement)} enchainement={tip.enchainement} cout={cout} />}
       <p className="text-sm font-semibold">{tip.baseNom}</p>
       <p className="text-2xs text-text-subtle">{decrireEtat(conseil.state, labels)}</p>
       <ul className="mt-2 space-y-0.5 text-2xs">

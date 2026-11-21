@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-ledger-banner"
+description = "Enables the set_ledger_banner command without any pre-configured scope."
+commands.allow = ["set_ledger_banner"]
+
+[[permission]]
+identifier = "deny-set-ledger-banner"
+description = "Denies the set_ledger_banner command without any pre-configured scope."
+commands.deny = ["set_ledger_banner"]

@@ -1,5 +1,5 @@
 name: Signaler un bug
-description: Quelque chose ne marche pas dans Augur (overlay, Forge, Atlas Ledger, installation, mises à jour). Le plus simple : bouton « Signaler un bug » dans Augur.
+description: "Quelque chose ne marche pas dans Augur (overlay, Forge, Atlas Ledger, installation, mises à jour). Le plus simple : bouton « Signaler un bug » dans Augur."
 title: "[Bug] "
 labels: ["bêta", "bug"]
 body:

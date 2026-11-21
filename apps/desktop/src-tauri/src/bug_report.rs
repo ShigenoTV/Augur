@@ -1,5 +1,6 @@
-//! « Signaler un bug » : ouvre dans le navigateur la page de création d'un
-//! ticket GitHub, préremplie avec le modèle `.github/ISSUE_TEMPLATE/bug-beta.yml`.
+//! « Signaler un bug » et « Proposer une idée » : ouvrent dans le navigateur la
+//! page de création d'un ticket GitHub, préremplie avec le modèle
+//! `.github/ISSUE_TEMPLATE/bug-beta.yml` ou `idee.yml`.
 //!
 //! Aucun jeton n'est embarqué et rien n'est envoyé par Augur : le joueur relit
 //! le ticket sur GitHub et le crée lui-même. L'adresse du dépôt est fixe ici,
@@ -14,9 +15,13 @@ use crate::contracts::{AppError, ErrorCode, app_error};
 /// Page « nouveau ticket » du dépôt, avec le modèle de bug (étiquettes `bug` et `bêta`).
 const NEW_ISSUE_URL: &str = "https://github.com/ShigenoTV/Augur/issues/new";
 const TEMPLATE: &str = "bug-beta.yml";
-/// GitHub refuse les adresses trop longues (≈ 8 Ko) : on garde de la marge.
-const MAX_URL_LEN: usize = 7000;
-const TRONQUE: &str = "\n… (tronqué : colle la suite ici)";
+/// Modèle des idées d'évolution (étiquette `enhancement`, jamais `bug`).
+const TEMPLATE_IDEE: &str = "idee.yml";
+/// Adresse gardée courte (Windows et certains navigateurs gèrent mal les
+/// adresses de plus de 2 048 caractères) ; le rapport complet part dans le
+/// presse-papiers.
+const MAX_URL_LEN: usize = 1900;
+const TRONQUE: &str = "\n… (tronqué : le rapport complet est dans le presse-papiers, colle-le ici)";
 
 /// Champs saisis dans la fenêtre « Signaler un bug ».
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -34,11 +39,25 @@ pub struct BugReport {
     pub diagnostic: String,
 }
 
+/// Champs saisis dans la carte « Proposer une idée ».
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IdeaReport {
+    pub titre: String,
+    /// Option du menu « Quelle partie d'Augur ? » du modèle.
+    pub module: String,
+    pub idee: String,
+    #[serde(default)]
+    pub pourquoi: String,
+}
+
 /// Adresse ouverte et indication de troncature (texte trop long pour l'adresse).
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BugReportOpened {
     pub truncated: bool,
+    /// Rapport complet copié dans le presse-papiers.
+    pub copied: bool,
 }
 
 /// Diagnostic technique joint au ticket, sans donnée personnelle.
@@ -79,22 +98,55 @@ pub fn diagnostic(app: &AppHandle) -> String {
     .join("\n")
 }
 
-/// Construit l'adresse du ticket prérempli. Les champs les plus longs sont
-/// raccourcis si l'adresse dépasse la limite de GitHub.
+/// Construit l'adresse du ticket de bug prérempli. Les champs les plus longs
+/// sont raccourcis si l'adresse dépasse la limite.
 pub fn issue_url(report: &BugReport) -> Result<(String, bool), AppError> {
     let titre = report.titre.trim();
     if titre.is_empty() {
         return Err(app_error(ErrorCode::Internal, "Donne un titre au bug."));
     }
-    let mut champs: Vec<(&str, String)> = vec![
-        ("etapes", report.etapes.trim().to_string()),
-        ("attendu", report.attendu.trim().to_string()),
-        ("objet", report.objet.trim().to_string()),
-        ("diagnostic", report.diagnostic.trim().to_string()),
-    ];
+    prefill(
+        TEMPLATE,
+        "[Bug]",
+        titre,
+        report.module.trim(),
+        vec![
+            ("etapes", report.etapes.trim().to_string()),
+            ("attendu", report.attendu.trim().to_string()),
+            ("objet", report.objet.trim().to_string()),
+            ("diagnostic", report.diagnostic.trim().to_string()),
+        ],
+    )
+}
+
+/// Construit l'adresse du ticket d'idée prérempli.
+pub fn idea_url(report: &IdeaReport) -> Result<(String, bool), AppError> {
+    let titre = report.titre.trim();
+    if titre.is_empty() {
+        return Err(app_error(ErrorCode::Internal, "Donne un titre à ton idée."));
+    }
+    prefill(
+        TEMPLATE_IDEE,
+        "[Idée]",
+        titre,
+        report.module.trim(),
+        vec![
+            ("idee", report.idee.trim().to_string()),
+            ("pourquoi", report.pourquoi.trim().to_string()),
+        ],
+    )
+}
+
+fn prefill(
+    template: &str,
+    prefixe: &str,
+    titre: &str,
+    module: &str,
+    mut champs: Vec<(&str, String)>,
+) -> Result<(String, bool), AppError> {
     let mut truncated = false;
     loop {
-        let url = build(titre, report.module.trim(), &champs)?;
+        let url = build(template, prefixe, titre, module, &champs)?;
         if url.len() <= MAX_URL_LEN {
             return Ok((url, truncated));
         }
@@ -104,7 +156,7 @@ pub fn issue_url(report: &BugReport) -> Result<(String, bool), AppError> {
             .max_by_key(|(_, v)| v.chars().count())
             .expect("champs non vides");
         let garde = plus_long.trim_end_matches(TRONQUE).chars().count() * 3 / 4;
-        if garde < 50 {
+        if garde < 20 {
             return Err(app_error(
                 ErrorCode::Internal,
                 "Texte trop long : raccourcis-le et colle le reste dans le ticket.",
@@ -115,9 +167,60 @@ pub fn issue_url(report: &BugReport) -> Result<(String, bool), AppError> {
     }
 }
 
-fn build(titre: &str, module: &str, champs: &[(&str, String)]) -> Result<String, AppError> {
-    let titre = format!("[Bug] {titre}");
-    let mut params: Vec<(&str, &str)> = vec![("template", TEMPLATE), ("title", &titre)];
+/// Ajoute une section au format d'un ticket créé avec un modèle.
+fn section(s: &mut String, label: &str, valeur: &str, code: bool) {
+    let v = valeur.trim();
+    if v.is_empty() {
+        return;
+    }
+    s.push_str(&format!("\n### {label}\n\n"));
+    if code {
+        s.push_str(&format!("```text\n{v}\n```\n"));
+    } else {
+        s.push_str(v);
+        s.push('\n');
+    }
+}
+
+/// Idée complète au format d'un ticket créé avec le modèle `idee.yml`.
+pub fn idee_complete(report: &IdeaReport) -> String {
+    let mut s = format!("[Idée] {}\n", report.titre.trim());
+    section(&mut s, "Quelle partie d'Augur ?", &report.module, false);
+    section(&mut s, "Ton idée", &report.idee, false);
+    section(&mut s, "Pourquoi ce serait utile", &report.pourquoi, false);
+    s
+}
+
+/// Rapport complet au format d'un ticket créé avec le modèle (mêmes intitulés
+/// de sections), à coller dans le ticket si un champ est vide ou raccourci.
+pub fn rapport_complet(report: &BugReport) -> String {
+    let mut s = format!("[Bug] {}\n", report.titre.trim());
+    let mut ajoute = |label: &str, valeur: &str, code: bool| section(&mut s, label, valeur, code);
+    ajoute("Où est le problème ?", &report.module, false);
+    ajoute("Ce que tu as fait", &report.etapes, false);
+    ajoute(
+        "Ce que tu attendais, et ce qui s'est passé",
+        &report.attendu,
+        false,
+    );
+    ajoute(
+        "Texte de l'objet (si un objet est en cause)",
+        &report.objet,
+        true,
+    );
+    ajoute("Diagnostic d'Augur", &report.diagnostic, true);
+    s
+}
+
+fn build(
+    template: &str,
+    prefixe: &str,
+    titre: &str,
+    module: &str,
+    champs: &[(&str, String)],
+) -> Result<String, AppError> {
+    let titre = format!("{prefixe} {titre}");
+    let mut params: Vec<(&str, &str)> = vec![("template", template), ("title", &titre)];
     if !module.is_empty() {
         params.push(("module", module));
     }
@@ -265,8 +368,91 @@ mod tests {
         let parsed = reqwest::Url::parse(&url).unwrap();
         let q: std::collections::HashMap<_, _> = parsed.query_pairs().into_owned().collect();
         assert!(q["objet"].ends_with(TRONQUE));
+        // Le modèle reste demandé même quand l'adresse est raccourcie.
+        assert_eq!(q["template"], "bug-beta.yml");
         // Les champs courts restent entiers.
         assert_eq!(q["etapes"], "1. Ctrl+C sur un anneau\n2. rien");
+    }
+
+    /// Cas de Max (v0.1.32) : diagnostic de 15 lignes de journal, accents
+    /// compris : l'adresse dépassait 2 048 caractères.
+    #[test]
+    fn diagnostic_complet_sous_la_limite_de_windows() {
+        let journal = (0..15)
+            .map(|i| format!("2026-11-19T08:13:{i:02}Z info suivi de d:\\steam\\steamapps\\common\\Path of Exile\\logs\\Client.txt (arbre 3.30, données ééé)"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let r = BugReport {
+            titre: "test2".into(),
+            module: "Forge".into(),
+            etapes: "test forge poe1".into(),
+            attendu: "juste un test".into(),
+            objet: "test3".into(),
+            diagnostic: format!(
+                "Augur : v0.1.32\nDonnées du jeu : 0.5.5.10\nPersonnage importé : Gemling Legionnaire niveau 95\n\nJournal (dernières lignes) :\n{journal}"
+            ),
+        };
+        let (url, truncated) = issue_url(&r).unwrap();
+        assert!(truncated);
+        assert!(url.len() < 2048, "{} caractères", url.len());
+        let q: std::collections::HashMap<_, _> = reqwest::Url::parse(&url)
+            .unwrap()
+            .query_pairs()
+            .into_owned()
+            .collect();
+        // Les champs saisis restent entiers, seul le diagnostic est raccourci.
+        assert_eq!(q["template"], "bug-beta.yml");
+        assert_eq!(q["etapes"], "test forge poe1");
+        assert_eq!(q["attendu"], "juste un test");
+        assert_eq!(q["objet"], "test3");
+        assert!(q["diagnostic"].starts_with("Augur : v0.1.32"));
+        assert!(q["diagnostic"].ends_with(TRONQUE));
+    }
+
+    #[test]
+    fn rapport_complet_avec_les_sections_du_modele() {
+        let r = BugReport {
+            objet: "Rarity: Rare".into(),
+            ..report()
+        };
+        let texte = rapport_complet(&r);
+        assert!(texte.starts_with("[Bug] Overlay vide\n"));
+        assert!(texte.contains("### Ce que tu as fait\n\n1. Ctrl+C sur un anneau\n2. rien\n"));
+        assert!(texte.contains("### Ce que tu attendais, et ce qui s'est passé\n"));
+        assert!(texte.contains(
+            "### Texte de l'objet (si un objet est en cause)\n\n```text\nRarity: Rare\n```"
+        ));
+        assert!(texte.contains("### Diagnostic d'Augur\n\n```text\nAugur : v0.1.16\n```"));
+        // Champ vide : pas de section.
+        let sans_objet = rapport_complet(&report());
+        assert!(!sans_objet.contains("Texte de l'objet"));
+    }
+
+    #[test]
+    fn idee_preremplie_avec_son_modele() {
+        let r = IdeaReport {
+            titre: "Thème clair".into(),
+            module: "Overlay (Ctrl+C sur un objet)".into(),
+            idee: "Un thème clair pour l'overlay".into(),
+            pourquoi: String::new(),
+        };
+        let (url, truncated) = idea_url(&r).unwrap();
+        assert!(!truncated);
+        let q: std::collections::HashMap<_, _> = reqwest::Url::parse(&url)
+            .unwrap()
+            .query_pairs()
+            .into_owned()
+            .collect();
+        assert_eq!(q["template"], "idee.yml");
+        assert_eq!(q["title"], "[Idée] Thème clair");
+        assert_eq!(q["module"], "Overlay (Ctrl+C sur un objet)");
+        assert_eq!(q["idee"], "Un thème clair pour l'overlay");
+        assert!(!q.contains_key("pourquoi"));
+        let texte = idee_complete(&r);
+        assert!(texte.starts_with("[Idée] Thème clair\n"));
+        assert!(texte.contains("### Ton idée\n\nUn thème clair pour l'overlay\n"));
+        assert!(!texte.contains("Pourquoi"));
+        assert!(idea_url(&IdeaReport::default()).is_err());
     }
 
     #[test]

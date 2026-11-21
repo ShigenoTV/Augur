@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-trade-price-check"
+description = "Enables the trade_price_check command without any pre-configured scope."
+commands.allow = ["trade_price_check"]
+
+[[permission]]
+identifier = "deny-trade-price-check"
+description = "Denies the trade_price_check command without any pre-configured scope."
+commands.deny = ["trade_price_check"]

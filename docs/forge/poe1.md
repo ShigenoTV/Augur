@@ -140,6 +140,23 @@ monnaies qui refont tout l'objet.
 
 Multimod, Harvest, Eldritch, Veiled, double influence, mise à jour PoE 1 dans `mise_a_jour.py`.
 
+## Dispersion du coût et budget (21/11, idée n°6 validée par Max)
+
+Le coût moyen ne dit pas combien prévoir. Avec le plan, le solveur suit sa politique craft après craft sur son
+propre graphe (`simuler_plan`, graine fixe : mêmes chiffres d'un calcul à l'autre) et renvoie `simulation` :
+médiane, 9 sur 10, 99 sur 100 et les quantiles tous les 0,5 %. Le nombre de crafts simulés s'adapte à la
+longueur moyenne d'un craft (2 000 à 20 000, environ 2·10⁷ actions au total), et un craft trop long est compté
+comme un échec. La moyenne simulée retrouve le coût moyen du solveur (test à 3 %).
+
+Le panneau en tire la même bande de chiffres qu'en PoE 2 (coût moyen, une fois sur deux, budget sûr 9 sur 10)
+et « Avec mon budget » : le joueur saisit un montant dans la monnaie d'affichage et voit sa chance de finir
+(même lecture prudente des quantiles qu'en PoE 2, `chanceQuantiles`). Montants hors prix de la base, comme le
+coût moyen.
+
+**Prix anciens** : la cote PoE 1 porte l'heure du relevé (`releveA`). Au-delà de 24 h (appli restée ouverte),
+un avertissement s'affiche au-dessus du résultat avec « Actualiser », qui relit poe.ninja et relance le même
+calcul. Aucune requête au site de trade. Même avertissement dans la Forge PoE 2 (relevé de l'onglet Prix).
+
 ## Pas à pas du plan conseillé
 
 Le solveur renvoie, avec le plan, l'action conseillée dans chaque situation où le plan passe au moins une
@@ -211,6 +228,8 @@ Comme en PoE 2 (demande de Max du 15/11/2026, « toutes les fonctionnalités du 
   sur un objet de la même base affiche les mods voulus présents et manquants, puis l'action conseillée,
   recalculée depuis l'objet tel qu'il est (`poe1::forge::suivi::conseiller`, qui s'appuie sur l'objet de
   départ). Un objet d'une autre base garde l'overlay habituel (cote et comparaison avec le build).
+  Comme en PoE 2, les essais s'enchaînent dans le même panneau : « Ça a marché » ou « Raté, reste X »,
+  nombre d'essais et dépense de la série (`forge::enchainement`, voir `cadrage.md`).
 - **Crafter ou acheter** : la recherche de l'objet visé s'ouvre sur le site de trade de PoE 1 (même base,
   influence, chaque mod voulu au tier visé ou mieux, du moins cher au plus cher). Le joueur reporte le prix
   vu ; Forge le compare au coût moyen du plan (hors prix de la base), avec la même marge « équivalent »

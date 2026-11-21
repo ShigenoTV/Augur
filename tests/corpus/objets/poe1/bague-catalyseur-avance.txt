@@ -1,0 +1,23 @@
+Item Class: Rings
+Rarity: Rare
+Gale Loop
+Vermillion Ring
+--------
+Quality (Life and Mana Modifiers): +20% (augmented)
+--------
+Requirements:
+Level: 64
+--------
+Item Level: 84
+--------
+{ Implicit Modifier — Life — 20% Increased }
++6(5-7)% to maximum Life (implicit)
+--------
+{ Prefix Modifier "Rotund" (Tier: 3) — Life — 20% Increased }
++78(70-79) to maximum Life (fractured)
+{ Suffix Modifier "of the Thunderhead" (Tier: 3) — Elemental, Lightning, Resistance }
++42(42-45)% to Lightning Resistance
+{ Suffix Modifier "of the Wind" (Tier: 4) — Attribute }
++38(38-42) to Dexterity
+--------
+Fractured Item

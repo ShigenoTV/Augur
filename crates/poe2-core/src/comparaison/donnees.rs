@@ -151,6 +151,9 @@ pub struct Gemmes {
     pub supports: BTreeMap<String, Vec<String>>,
     #[serde(default)]
     pub armes: BTreeMap<String, BaseArme>,
+    /// Version de l'export RePoE d'où viennent les sorts (absente avant le 18/11/2026).
+    #[serde(default)]
+    pub repoe_version: Option<String>,
 }
 
 impl Gemmes {

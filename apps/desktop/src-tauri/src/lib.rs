@@ -29,6 +29,7 @@ mod game_window;
 mod gap;
 pub mod item_text;
 mod ledger;
+mod ledger_banner;
 pub mod ledger_store;
 mod log_locator;
 pub mod measures;
@@ -37,10 +38,12 @@ pub mod placement;
 mod poe1_calc;
 mod poe1_items;
 mod poe1_stash;
+mod poe2_price;
 mod secret;
 mod settings;
 mod shortcuts;
 mod time;
+mod trade_price;
 mod tray;
 mod updates;
 mod upgrade_search;
@@ -74,6 +77,14 @@ pub fn show_main_window(app: &AppHandle) {
     }
 }
 
+/// Crée les fenêtres déclarées dans tauri.conf.json (toutes en `"create": false`).
+fn creer_fenetres(app: &AppHandle) -> tauri::Result<()> {
+    for config in &app.config().app.windows {
+        tauri::WebviewWindowBuilder::from_config(app, config)?.build()?;
+    }
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     diag_log::init();
@@ -86,16 +97,22 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppState::default())
         .manage(overlay::OverlayCtl::default())
+        .manage(ledger_banner::BannerCtl::default())
         .manage(updates::PendingUpdate::default())
         .manage(client_log::ClientLogState::default())
         .manage(measures::MeasureState::default())
         .manage(poe1_items::Poe1Ninja::default())
+        .manage(poe2_price::Poe2Ninja::default())
+        .manage(trade_price::TradeBudget::default())
         .manage(poe1_calc::Poe1Calc::default())
         .invoke_handler(tauri::generate_handler![
             commands::parse_clipboard_item,
             commands::get_overlay_state,
             commands::hide_overlay,
             commands::fit_overlay,
+            commands::set_overlay_display,
+            commands::set_overlay_pinned,
+            commands::set_ledger_banner,
             commands::open_main_window,
             commands::check_for_update,
             commands::install_update,
@@ -111,6 +128,7 @@ pub fn run() {
             commands::list_poe1_stash_tabs,
             commands::set_poe1_stash_tabs,
             commands::take_poe1_stash_snapshot,
+            commands::set_poe1_stash_auto,
             commands::get_leagues,
             commands::set_league,
             commands::set_upgrade_budget,
@@ -134,6 +152,8 @@ pub fn run() {
             commands::get_character,
             commands::evaluate_item,
             commands::estimate_price,
+            commands::trade_price_check,
+            commands::open_trade_listings,
             commands::import_pob_code,
             commands::clear_character,
             commands::get_target,
@@ -171,6 +191,7 @@ pub fn run() {
             commands::get_diagnostic,
             commands::copy_diagnostic,
             commands::open_bug_report,
+            commands::open_idea,
         ])
         .setup(|app| {
             let handle = app.handle();
@@ -191,6 +212,11 @@ pub fn run() {
             app.manage(forge_prices::ForgePrices::load(handle));
             app.manage(forge::ForgePlanner::load(handle));
             app.manage(forge_poe1::ForgePoe1State::load(handle));
+            // Fenêtres créées ici, une fois tout l'état géré : une page qui
+            // appelle une commande dès son chargement ne doit jamais tomber sur
+            // un état absent (`state() called before manage()`, crash de la
+            // v0.1.36). D'où `"create": false` dans tauri.conf.json.
+            creer_fenetres(handle)?;
             // plan suivi avant la fermeture : recalculé en arrière-plan, aux prix du moment
             let h = handle.clone();
             tauri::async_runtime::spawn(async move {
@@ -198,9 +224,11 @@ pub fn run() {
                 h.state::<forge::ForgePlanner>().restaurer(&h, prix).await;
             });
             overlay::prepare(handle)?;
+            ledger_banner::prepare(handle)?;
             tray::create(handle)?;
             clipboard::spawn_watcher(handle.clone());
             client_log::spawn(handle.clone());
+            poe1_stash::spawn_auto(handle.clone());
             updates::spawn_periodic_check(handle.clone());
             Ok(())
         })

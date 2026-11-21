@@ -46,6 +46,61 @@ pub fn fit_overlay(app: AppHandle, width: f64, height: f64) {
     overlay::fit(&app, width, height);
 }
 
+/// Version compacte et taille de l'overlay (Réglages).
+#[tauri::command]
+pub fn set_overlay_display(
+    app: AppHandle,
+    store: State<'_, crate::settings::SettingsStore>,
+    compact: bool,
+    scale: u16,
+) -> Result<crate::settings::Settings, AppError> {
+    let scale = scale.clamp(
+        crate::settings::OVERLAY_SCALE_MIN,
+        crate::settings::OVERLAY_SCALE_MAX,
+    );
+    let settings = store
+        .update(&app, |s| {
+            s.overlay.compact = compact;
+            s.overlay.scale = scale;
+        })
+        .map_err(|e| {
+            app_error(
+                crate::contracts::ErrorCode::Internal,
+                format!("Réglage non enregistré ({e})."),
+            )
+        })?;
+    overlay::emit_settings(&app, &settings);
+    Ok(settings)
+}
+
+/// Épingle ou libère l'overlay (Réglages ou bouton de l'overlay).
+#[tauri::command]
+pub fn set_overlay_pinned(
+    app: AppHandle,
+    pinned: bool,
+) -> Result<crate::settings::Settings, AppError> {
+    overlay::set_pinned(&app, pinned).map_err(|e| {
+        app_error(
+            crate::contracts::ErrorCode::Internal,
+            format!("Réglage non enregistré ({e})."),
+        )
+    })
+}
+
+/// Active ou coupe le bandeau Atlas Ledger en jeu (Réglages).
+#[tauri::command]
+pub fn set_ledger_banner(
+    app: AppHandle,
+    enabled: bool,
+) -> Result<crate::settings::Settings, AppError> {
+    crate::ledger_banner::set_enabled(&app, enabled).map_err(|e| {
+        app_error(
+            crate::contracts::ErrorCode::Internal,
+            format!("Réglage non enregistré ({e})."),
+        )
+    })
+}
+
 #[tauri::command]
 pub fn open_main_window(app: AppHandle) {
     crate::show_main_window(&app);
@@ -211,6 +266,15 @@ pub async fn take_poe1_stash_snapshot(
     crate::poe1_stash::relever(&app).await
 }
 
+/// PoE 1 : intervalle du relevé automatique pendant une session Ledger (0 : coupé).
+#[tauri::command]
+pub fn set_poe1_stash_auto(
+    app: AppHandle,
+    minutes: u32,
+) -> Result<crate::poe1_stash::StashStatus, AppError> {
+    crate::poe1_stash::set_auto(&app, minutes)
+}
+
 /// Ligue poe.ninja du jeu actif. `None` ou vide : ligue par défaut.
 #[tauri::command]
 pub fn set_league(
@@ -295,6 +359,7 @@ pub fn set_shortcuts(
     let shortcuts = crate::settings::ShortcutSettings {
         close_overlay: shortcuts.close_overlay.trim().to_string(),
         upgrade_search: shortcuts.upgrade_search.trim().to_string(),
+        price_check: shortcuts.price_check.trim().to_string(),
     };
     crate::shortcuts::validate(&shortcuts)
         .map_err(|m| app_error(crate::contracts::ErrorCode::Internal, m))?;
@@ -602,13 +667,28 @@ pub fn evaluate_item(
         .unwrap_or_else(|| crate::evaluation::evaluate(None, &item))
 }
 
-/// Prix estimé : pas encore disponible (recherche de trade au sprint 3).
+/// Prix estimé de l'objet copié (cote poe.ninja des objets empilables).
 #[tauri::command]
-pub fn estimate_price(_item: ParsedItem) -> Result<crate::contracts::PriceEstimate, AppError> {
-    Err(app_error(
-        crate::contracts::ErrorCode::FeatureDisabled,
-        "L'estimation de prix arrive dans une prochaine version.",
-    ))
+pub async fn estimate_price(
+    app: AppHandle,
+    item: ParsedItem,
+) -> Result<crate::contracts::PriceEstimate, AppError> {
+    crate::poe2_price::estimer(&app, &item).await
+}
+
+/// Cote trade d'un unique ou d'un rare, sur le raccourci du joueur.
+#[tauri::command]
+pub async fn trade_price_check(
+    app: AppHandle,
+    item: ParsedItem,
+) -> Result<crate::trade_price::TradePriceCheck, AppError> {
+    crate::trade_price::coter(&app, &item).await
+}
+
+/// Ouvre les annonces d'une cote trade dans le navigateur.
+#[tauri::command]
+pub fn open_trade_listings(url: String) -> Result<(), AppError> {
+    crate::trade_price::ouvrir(&url)
 }
 
 #[tauri::command]
@@ -886,7 +966,33 @@ pub fn open_bug_report(
     report: crate::bug_report::BugReport,
 ) -> Result<crate::bug_report::BugReportOpened, AppError> {
     let (url, truncated) = crate::bug_report::issue_url(&report)?;
+    // Copie d'abord le rapport complet : si le navigateur n'applique pas le
+    // modèle ou si un champ a été raccourci, le joueur n'a qu'à coller.
+    let rapport = crate::bug_report::rapport_complet(&report);
+    let copied = arboard::Clipboard::new()
+        .and_then(|mut c| c.set_text(rapport))
+        .map_err(|e| log::warn!("rapport de bug non copié : {e}"))
+        .is_ok();
     crate::bug_report::open_in_browser(&url)?;
-    log::info!("ticket de bug préparé dans le navigateur");
-    Ok(crate::bug_report::BugReportOpened { truncated })
+    log::info!(
+        "ticket de bug préparé dans le navigateur ({} caractères)",
+        url.len()
+    );
+    Ok(crate::bug_report::BugReportOpened { truncated, copied })
+}
+
+/// Ouvre dans le navigateur le ticket GitHub d'idée prérempli (le joueur le relit et l'envoie lui-même).
+#[tauri::command]
+pub fn open_idea(
+    report: crate::bug_report::IdeaReport,
+) -> Result<crate::bug_report::BugReportOpened, AppError> {
+    let (url, truncated) = crate::bug_report::idea_url(&report)?;
+    let texte = crate::bug_report::idee_complete(&report);
+    let copied = arboard::Clipboard::new()
+        .and_then(|mut c| c.set_text(texte))
+        .map_err(|e| log::warn!("idée non copiée : {e}"))
+        .is_ok();
+    crate::bug_report::open_in_browser(&url)?;
+    log::info!("ticket d'idée préparé dans le navigateur");
+    Ok(crate::bug_report::BugReportOpened { truncated, copied })
 }

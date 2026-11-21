@@ -21,6 +21,7 @@
 pub mod calc;
 pub mod cible;
 pub mod comparaison;
+pub mod cote;
 pub mod forge;
 pub mod ledger;
 pub mod parser;

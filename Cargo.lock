@@ -235,10 +235,11 @@ dependencies = [
 
 [[package]]
 name = "augur-desktop"
-version = "0.1.29"
+version = "0.1.38"
 dependencies = [
  "arboard",
  "augur-contracts",
+ "augur-ratelimit",
  "log",
  "pob-poe1",
  "poe2-core",

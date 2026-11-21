@@ -31,8 +31,6 @@ jobs:
     outputs:
       rust: ${{ steps.d.outputs.rust }}
       desktop: ${{ steps.d.outputs.desktop }}
-      python: ${{ steps.d.outputs.python }}
-      infra: ${{ steps.d.outputs.infra }}
     steps:
       - uses: actions/checkout@v5
       - id: d
@@ -42,11 +40,6 @@ jobs:
           {
             echo "rust=$(has Cargo.toml)"
             echo "desktop=$(has "$APP_DIR/src-tauri/tauri.conf.json")"
-            # Projets Python hors outillage interne (testé par le job « outillage »).
-            if find . -name pyproject.toml -not -path './tools/*' -not -path './node_modules/*' | grep -q .; then
-              echo "python=true"; else echo "python=false"; fi
-            if find infra -name '*.tf' 2>/dev/null | grep -q .; then
-              echo "infra=true"; else echo "infra=false"; fi
           } >> "$GITHUB_OUTPUT"
           cat "$GITHUB_OUTPUT"
 
@@ -63,12 +56,12 @@ jobs:
           node-version: 22
           # pnpm est activé ensuite par corepack : pas de cache automatique ici.
           package-manager-cache: false
-      - name: Tests des paquets de données
-        run: |
-          pip install -r tools/datapack/requirements.txt
-          python -m pytest -q tools/datapack/tests
+      - name: Installer pytest
+        run: pip install "pytest>=8"
       - name: Tests de l'import des données de jeu (RePoE)
         run: python -m pytest -q tools/gamedata/tests
+      - name: Cas golden mesurés en jeu à re-mesurer (avertissement seulement)
+        run: python tools/gamedata/cas_mesures.py --github
       - name: Tests du calculateur de craft et des poids poe2db
         run: python -m pytest -q tools/theorycraft/tests
       - name: Tests du manifeste de mise à jour
@@ -144,6 +137,12 @@ jobs:
         # Pas d'artefacts d'updater en CI : la clé privée n'est disponible
         # que dans le workflow de release.
         run: pnpm --dir "$APP_DIR" tauri build --ci --bundles nsis --config '{"bundle":{"createUpdaterArtifacts":false}}'
+      - name: Test de démarrage (installe, lance, reste vivant 20 s)
+        shell: pwsh
+        run: |
+          $setup = @(Get-ChildItem target/release/bundle/nsis, "$env:APP_DIR/src-tauri/target/release/bundle/nsis" -Filter *-setup.exe -ErrorAction SilentlyContinue)[0]
+          if (-not $setup) { Write-Host '::error::Installeur NSIS introuvable'; exit 1 }
+          ./scripts/release/smoke-test-windows.ps1 -Installer $setup.FullName
       - name: Clippy et tests de l'application (cible Windows)
         shell: bash
         run: |
@@ -159,46 +158,3 @@ jobs:
             ${{ env.APP_DIR }}/src-tauri/target/release/bundle/nsis/*.exe
           if-no-files-found: error
           retention-days: 14
-
-  python:
-    name: Python (ruff, pytest)
-    needs: detect
-    if: needs.detect.outputs.python == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v7
-      - name: Lint et tests de chaque projet Python
-        shell: bash
-        run: |
-          set -euo pipefail
-          status=0
-          while IFS= read -r proj; do
-            dir=$(dirname "$proj")
-            echo "::group::$dir"
-            (cd "$dir" && uv sync --all-extras --dev \
-              && uvx ruff check . \
-              && { uv run --with pytest pytest -q; rc=$?; [ $rc -eq 0 ] || [ $rc -eq 5 ]; }) || status=1
-            echo "::endgroup::"
-          done < <(find . -name pyproject.toml -not -path './tools/*' -not -path '*/node_modules/*' -not -path '*/.venv/*')
-          exit $status
-
-  infra:
-    name: OpenTofu (fmt, validate)
-    needs: detect
-    if: needs.detect.outputs.infra == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: opentofu/setup-opentofu@v2
-      - name: Format et validation de chaque module
-        shell: bash
-        run: |
-          set -euo pipefail
-          tofu fmt -check -recursive infra
-          for dir in $(find infra -name '*.tf' -exec dirname {} \; | sort -u); do
-            echo "::group::$dir"
-            tofu -chdir="$dir" init -backend=false -input=false
-            tofu -chdir="$dir" validate
-            echo "::endgroup::"
-          done

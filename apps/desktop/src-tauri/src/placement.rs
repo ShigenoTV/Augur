@@ -28,6 +28,20 @@ pub fn place_panel(cursor: (f64, f64), panel: (f64, f64), screen: Rect) -> (f64,
     (x, y)
 }
 
+/// Ramène un panneau placé à `pos` dans l'écran (overlay épinglé dont la
+/// place enregistrée déborde, par exemple après un changement de taille).
+pub fn keep_inside(pos: (f64, f64), panel: (f64, f64), screen: Rect) -> (f64, f64) {
+    let max_x = (screen.x + screen.width - panel.0).max(screen.x);
+    let max_y = (screen.y + screen.height - panel.1).max(screen.y);
+    (pos.0.clamp(screen.x, max_x), pos.1.clamp(screen.y, max_y))
+}
+
+/// Place d'un bandeau centré en haut de l'écran, à `margin` du bord.
+pub fn top_center(width: f64, screen: Rect, margin: f64) -> (f64, f64) {
+    let x = screen.x + ((screen.width - width) / 2.0).max(0.0);
+    (x, screen.y + margin)
+}
+
 /// Distance au-delà de laquelle l'overlay se ferme quand le curseur s'éloigne.
 pub const DISMISS_DISTANCE: f64 = 360.0;
 
@@ -92,6 +106,44 @@ mod tests {
             place_panel((4400.0, 700.0), (380.0, 600.0), second).0,
             3996.0
         );
+    }
+
+    #[test]
+    fn garde_le_panneau_epingle_dans_l_ecran() {
+        assert_eq!(
+            keep_inside((100.0, 200.0), (380.0, 600.0), SCREEN),
+            (100.0, 200.0)
+        );
+        assert_eq!(
+            keep_inside((1800.0, 900.0), (380.0, 600.0), SCREEN),
+            (1540.0, 480.0)
+        );
+        assert_eq!(
+            keep_inside((-50.0, -10.0), (380.0, 600.0), SCREEN),
+            (0.0, 0.0)
+        );
+        // Panneau plus haut que l'écran : collé en haut.
+        assert_eq!(keep_inside((0.0, 50.0), (380.0, 2000.0), SCREEN).1, 0.0);
+    }
+
+    #[test]
+    fn bandeau_centre_en_haut() {
+        assert_eq!(top_center(640.0, SCREEN, 6.0), (640.0, 6.0));
+        let second = Rect {
+            x: 1920.0,
+            y: -200.0,
+            width: 2560.0,
+            height: 1440.0,
+        };
+        assert_eq!(top_center(640.0, second, 9.0), (2880.0, -191.0));
+        // Écran plus étroit que le bandeau : collé à gauche.
+        let etroit = Rect {
+            x: 0.0,
+            y: 0.0,
+            width: 500.0,
+            height: 800.0,
+        };
+        assert_eq!(top_center(640.0, etroit, 0.0), (0.0, 0.0));
     }
 
     #[test]

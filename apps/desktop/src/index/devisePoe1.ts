@@ -105,3 +105,13 @@ export function useCoutPoe1(): (v: number | null | undefined) => string {
   const { affichage } = useContext(AffichagePoe1Context);
   return (v) => formatPoe1(v, affichage);
 }
+
+/** Montant saisi dans la monnaie d'affichage, ramené en Chaos (sans cours de la Divine : Chaos). */
+export function versChaos(v: number, a: AffichagePoe1): number {
+  return a.devise === "divine" && a.divine > 0 ? v * a.divine : v;
+}
+
+/** Nom court de la monnaie dans laquelle un montant PoE 1 se saisit. */
+export function deviseSaisiePoe1(a: AffichagePoe1): string {
+  return a.devise === "divine" && a.divine > 0 ? "div" : "c";
+}

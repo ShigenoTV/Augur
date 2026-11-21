@@ -24,6 +24,8 @@ export const EVENTS = {
   zoneChanged: "augur://zone-changed",
   overlayHidden: "augur://overlay-hidden",
   upgradeSearchRequested: "augur://upgrade-search-requested",
+  /** Raccourci de la cote trade (Alt+D par défaut) pendant l'affichage de l'overlay. */
+  priceCheckRequested: "augur://price-check-requested",
   rateLimitChanged: "augur://rate-limit-changed",
   featureFlagsChanged: "augur://feature-flags-changed",
   updateAvailable: "augur://update-available",
@@ -36,10 +38,23 @@ export const EVENTS = {
   characterChanged: "augur://character-changed",
   /** Personnage cible importé ou oublié (charge : CharacterInfo | null). */
   targetChanged: "augur://target-changed",
+  /** Affichage de l'overlay changé (charge : OverlaySettings). */
+  overlaySettings: "augur://overlay-settings",
 } as const;
 
 /** Raccourcis de l'overlay, au format « Alt+U », « Ctrl+Shift+F2 », « Escape » (src-tauri/src/shortcuts.rs). */
-export type ShortcutSettings = { closeOverlay: string; upgradeSearch: string };
+export type ShortcutSettings = { closeOverlay: string; upgradeSearch: string; priceCheck: string };
+
+/** Cote trade d'un unique ou d'un rare (src-tauri/src/trade_price.rs). */
+export type TradePriceCheck = {
+  /** Absent quand aucune annonce comparable n'est en ligne. */
+  price: PriceEstimate | null;
+  total: number;
+  /** Résultats sur le site de trade. */
+  url: string;
+  /** Mods que le site de trade ne sait pas chercher. */
+  ignored: string[];
+};
 
 /** Jeu actif du sélecteur « POE 1 / POE 2 » (src-tauri/src/game.rs). */
 export type Game = "poe1" | "poe2";
@@ -107,6 +122,10 @@ export type StashStatus = {
   previous: StashSnapshot | null;
   gain: number | null;
   changes: { nom: string; quantite: number; chaos: number }[];
+  /** Relevé automatique toutes les N minutes pendant une session Ledger (0 : coupé) ; absent des anciens cœurs. */
+  autoMinutes?: number;
+  /** Relevé automatique arrêté pour la session en cours (refus du site, session expirée…). */
+  autoError?: string | null;
 };
 
 /** Réglages propres à PoE 1 (ceux de PoE 2 sont à la racine de Settings). */
@@ -119,6 +138,30 @@ export type GameSettings = {
   upgradeBudget?: number | null;
   /** Devise du budget PoE 1 : « chaos » (défaut) ou « divine ». */
   upgradeBudgetCurrency?: string | null;
+};
+
+/** Affichage de l'overlay, commun aux deux jeux (src-tauri/src/settings.rs). */
+export type OverlaySettings = {
+  /** Version compacte : verdict, gain principal, prix et alertes seulement. */
+  compact: boolean;
+  /** Taille en pour cent, de 80 à 150. */
+  scale: number;
+  /** Épinglé : ne se ferme plus quand le curseur s'éloigne, garde sa place. */
+  pinned: boolean;
+  /** Dernière place de l'overlay épinglé (pixels physiques). */
+  pinnedPosition?: [number, number] | null;
+  /** Bandeau Atlas Ledger en haut de l'écran pendant une session ; absent des anciens cœurs : activé. */
+  ledgerBanner?: boolean;
+};
+
+export const OVERLAY_SCALE_MIN = 80;
+export const OVERLAY_SCALE_MAX = 150;
+export const OVERLAY_PAR_DEFAUT: OverlaySettings = {
+  compact: false,
+  scale: 100,
+  pinned: false,
+  pinnedPosition: null,
+  ledgerBanner: true,
 };
 
 export type Settings = {
@@ -134,6 +177,8 @@ export type Settings = {
   /** Jeu actif ; les champs ci-dessus sans préfixe sont ceux de PoE 2. */
   game: Game;
   poe1: GameSettings;
+  /** Absent des anciennes versions du cœur : OVERLAY_PAR_DEFAUT. */
+  overlay?: OverlaySettings;
 };
 
 /** Recherche d'upgrades ouverte dans le navigateur (Alt+U). */
@@ -214,6 +259,8 @@ export type LedgerStatus = {
   summary: LedgerSummary | null;
   lastSavedId: number | null;
   storageError: string | null;
+  /** Gain d'après les relevés de coffres faits pendant la session (PoE 1), en Chaos ; absent des anciens cœurs. */
+  gain?: { chaos: number; chaosPerHour: number | null } | null;
 };
 export type LedgerSessionRow = {
   id: number;
@@ -365,6 +412,19 @@ export type ForgePoe1Plan = {
   racine: number;
   /** Lois des relances (Alchemy, Chaos, Essence…) partagées par plusieurs situations. */
   relances: ForgePoe1Issues[];
+  /** Dispersion du coût : le plan suivi sur de nombreux crafts simulés (null : pas de simulation). */
+  simulation: ForgePoe1Simulation | null;
+};
+/** Crafts simulés en suivant le plan PoE 1 (coûts en Chaos, hors prix de la base). */
+export type ForgePoe1Simulation = {
+  essais: number;
+  interrompus: number;
+  moyenne: number;
+  mediane: number;
+  p90: number;
+  p99: number;
+  /** Coût aux quantiles 0 %, 0,5 %, …, 100 % des crafts aboutis. */
+  quantiles: number[];
 };
 /** Issue de l'action conseillée : situation d'arrivée (null : objet fini) et probabilité. */
 export type ForgePoe1Branche = { vers: number | null; probabilite: number };
@@ -402,7 +462,8 @@ export type ForgePoe1Result = {
 };
 /** Objet de départ PoE 1 lu par la Forge (poe1::forge::depart). */
 export type ForgePoe1StartItem = ForgeStartItem & { influence: string | null; metamod: string | null };
-export type ForgePoe1Prices = { league: string; prix: Record<string, number>; erreur: string | null };
+/** `releveA` : heure du relevé poe.ninja (secondes unix). */
+export type ForgePoe1Prices = { league: string; prix: Record<string, number>; erreur: string | null; releveA: number };
 
 /** Conseil de l'overlay pour l'objet en cours de craft, plan PoE 1 suivi (poe1::forge::suivi). */
 export type ForgePoe1Tip = {
@@ -415,6 +476,19 @@ export type ForgePoe1Tip = {
   /** En Chaos. */
   cout: number | null;
   reste: number | null;
+  /** Bilan de l'essai depuis la copie précédente (absent à la première copie). */
+  enchainement: ForgeChain | null;
+};
+
+/** Essais enchaînés sur l'objet suivi (crates/poe2-core/src/forge/enchainement.rs). */
+export type ForgeChain = {
+  verdict: "reussi" | "rate" | "atteint" | "memeObjet";
+  /** Essais de la série. */
+  essais: number;
+  /** Dépense estimée de la série (monnaie du plan : Exalted en PoE 2, Chaos en PoE 1). */
+  depense: number;
+  reste: number | null;
+  resteAvant: number | null;
 };
 
 /** Plan PoE 1 calculé (src-tauri/src/forge_poe1.rs). */
@@ -560,6 +634,8 @@ export type ForgeTip = {
   ilvlObjet: number | null;
   ilvlPlan: number;
   conseil: ForgeAdvice;
+  /** Bilan de l'essai depuis la copie précédente (absent à la première copie). */
+  enchainement: ForgeChain | null;
 };
 /** Objet de départ collé dans le panneau, lu par Forge (atelier::analyser_objet). */
 export type ForgeStartItem = {
@@ -603,11 +679,17 @@ export type BugReport = {
   diagnostic: string;
 };
 
+/** Ticket d'idée prérempli (apps/desktop/src-tauri/src/bug_report.rs). */
+export type IdeaReport = { titre: string; module: string; idee: string; pourquoi: string };
+
 export const commands = {
   parseClipboardItem: (text: string) => invoke<ParsedItem>("parse_clipboard_item", { text }),
   getOverlayState: () => invoke<OverlayState>("get_overlay_state"),
   hideOverlay: () => invoke<void>("hide_overlay"),
   fitOverlay: (width: number, height: number) => invoke<void>("fit_overlay", { width, height }),
+  setOverlayDisplay: (compact: boolean, scale: number) => invoke<Settings>("set_overlay_display", { compact, scale }),
+  setOverlayPinned: (pinned: boolean) => invoke<Settings>("set_overlay_pinned", { pinned }),
+  setLedgerBanner: (enabled: boolean) => invoke<Settings>("set_ledger_banner", { enabled }),
   openMainWindow: () => invoke<void>("open_main_window"),
   checkForUpdate: () => invoke<UpdateInfo | null>("check_for_update"),
   installUpdate: () => invoke<void>("install_update"),
@@ -623,6 +705,7 @@ export const commands = {
   listPoe1StashTabs: () => invoke<StashTab[]>("list_poe1_stash_tabs"),
   setPoe1StashTabs: (tabs: number[]) => invoke<StashStatus>("set_poe1_stash_tabs", { tabs }),
   takePoe1StashSnapshot: () => invoke<StashStatus>("take_poe1_stash_snapshot"),
+  setPoe1StashAuto: (minutes: number) => invoke<StashStatus>("set_poe1_stash_auto", { minutes }),
   setUpdateChannel: (beta: boolean) => invoke<Settings>("set_update_channel", { beta }),
   getClientLogStatus: () => invoke<ClientLogStatus>("get_client_log_status"),
   setClientLogPath: (path: string | null) => invoke<Settings>("set_client_log_path", { path }),
@@ -639,7 +722,8 @@ export const commands = {
   copyMeasureExport: () => invoke<void>("copy_measure_export"),
   getDiagnostic: () => invoke<Diagnostic>("get_diagnostic"),
   copyDiagnostic: () => invoke<void>("copy_diagnostic"),
-  openBugReport: (report: BugReport) => invoke<{ truncated: boolean }>("open_bug_report", { report }),
+  openBugReport: (report: BugReport) => invoke<{ truncated: boolean; copied: boolean }>("open_bug_report", { report }),
+  openIdea: (report: IdeaReport) => invoke<{ truncated: boolean; copied: boolean }>("open_idea", { report }),
   getLedgerStatus: () => invoke<LedgerStatus>("get_ledger_status"),
   startLedgerSession: () => invoke<LedgerStatus>("start_ledger_session"),
   stopLedgerSession: () => invoke<LedgerStatus>("stop_ledger_session"),
@@ -691,6 +775,9 @@ export const commands = {
   /** PoE 1, Alt+U : recherche pondérée par Path of Building pour l'objet copié. */
   openPoe1UpgradeSearch: () => invoke<UpgradeSearch>("open_poe1_upgrade_search"),
   estimatePrice: (item: ParsedItem) => invoke<PriceEstimate>("estimate_price", { item }),
+  /** Cote trade (uniques et rares), une fois par appui sur le raccourci du joueur. */
+  tradePriceCheck: (item: ParsedItem) => invoke<TradePriceCheck>("trade_price_check", { item }),
+  openTradeListings: (url: string) => invoke<void>("open_trade_listings", { url }),
 };
 
 export const on = {
@@ -702,6 +789,7 @@ export const on = {
     listen<AppError>(EVENTS.itemUnrecognized, (e) => cb(e.payload)),
   overlayHidden: (cb: () => void): Promise<UnlistenFn> => listen(EVENTS.overlayHidden, () => cb()),
   upgradeSearchRequested: (cb: () => void): Promise<UnlistenFn> => listen(EVENTS.upgradeSearchRequested, () => cb()),
+  priceCheckRequested: (cb: () => void): Promise<UnlistenFn> => listen(EVENTS.priceCheckRequested, () => cb()),
   updateAvailable: (cb: (p: UpdateInfo) => void): Promise<UnlistenFn> =>
     listen<UpdateInfo>(EVENTS.updateAvailable, (e) => cb(e.payload)),
   updateProgress: (cb: (p: UpdateProgress) => void): Promise<UnlistenFn> =>
@@ -709,6 +797,8 @@ export const on = {
   updateCheckRequested: (cb: () => void): Promise<UnlistenFn> => listen(EVENTS.updateCheckRequested, () => cb()),
   clientLogStatus: (cb: (p: ClientLogStatus) => void): Promise<UnlistenFn> =>
     listen<ClientLogStatus>(EVENTS.clientLogStatus, (e) => cb(e.payload)),
+  overlaySettings: (cb: (p: OverlaySettings) => void): Promise<UnlistenFn> =>
+    listen<OverlaySettings>(EVENTS.overlaySettings, (e) => cb(e.payload)),
   measureSession: (cb: (p: MeasureStatus) => void): Promise<UnlistenFn> =>
     listen<MeasureStatus>(EVENTS.measureSession, (e) => cb(e.payload)),
   ledgerSession: (cb: (p: LedgerStatus) => void): Promise<UnlistenFn> =>

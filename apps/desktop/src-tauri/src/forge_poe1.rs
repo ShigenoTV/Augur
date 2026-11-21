@@ -13,6 +13,7 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use poe2_core::forge::enchainement::Serie;
 use poe2_core::poe1::forge::suivi::{self, ConseilPoe1};
 use poe2_core::poe1::forge::{
     self, AffixesPoe1, BaseVue, DemandePoe1, ErreurForgePoe1, ResultatPoe1,
@@ -115,6 +116,8 @@ impl HistoriquePoe1 {
 #[derive(Default)]
 pub struct ForgePoe1State {
     historique: Mutex<HistoriquePoe1>,
+    /// Essais enchaînés sur l'objet du plan suivi (remis à zéro quand le plan suivi change).
+    serie: Mutex<Serie>,
 }
 
 fn fichier(app: &AppHandle) -> Option<PathBuf> {
@@ -139,6 +142,7 @@ impl ForgePoe1State {
             .unwrap_or_default();
         Self {
             historique: Mutex::new(h),
+            serie: Mutex::default(),
         }
     }
 
@@ -188,14 +192,23 @@ impl ForgePoe1State {
             cout_moyen,
             demande,
         };
+        self.vider_serie();
         self.changer(app, |h| h.ajouter(entree));
     }
 
+    fn vider_serie(&self) {
+        self.serie.lock().unwrap_or_else(|e| e.into_inner()).vider();
+    }
+
     pub fn supprimer(&self, app: &AppHandle, id: u64) -> HistoriquePoe1 {
+        if self.lock().suivi == Some(id) {
+            self.vider_serie();
+        }
         self.changer(app, |h| h.supprimer(id))
     }
 
     pub fn suivre(&self, app: &AppHandle, id: Option<u64>) -> HistoriquePoe1 {
+        self.vider_serie();
         self.changer(app, |h| {
             h.suivi = id.filter(|i| h.entrees.iter().any(|e| e.id == *i));
         })
@@ -206,8 +219,16 @@ impl ForgePoe1State {
         let Some(demande) = self.lock().suivie().map(|e| e.demande.clone()) else {
             return Ok(None);
         };
-        suivi::conseiller(&demande, texte)
-            .map_err(|e| app_error(ErrorCode::Unsupported, format!("Forge : {e}.")))
+        let mut c = suivi::conseiller(&demande, texte)
+            .map_err(|e| app_error(ErrorCode::Unsupported, format!("Forge : {e}.")))?;
+        if let Some(c) = c.as_mut() {
+            c.enchainement = self
+                .serie
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .suivre(c.repere(texte));
+        }
+        Ok(c)
     }
 }
 
@@ -259,6 +280,8 @@ pub struct PrixPoe1 {
     pub prix: BTreeMap<String, f64>,
     /// Page poe.ninja injoignable : les prix manquants restent à saisir.
     pub erreur: Option<String>,
+    /// Heure du relevé (secondes unix), à la durée du cache poe.ninja près (30 min).
+    pub releve_a: u64,
 }
 
 pub async fn prix(app: &AppHandle) -> Result<PrixPoe1, AppError> {
@@ -285,5 +308,6 @@ pub async fn prix(app: &AppHandle) -> Result<PrixPoe1, AppError> {
         league,
         prix,
         erreur,
+        releve_a: maintenant_ms() / 1000,
     })
 }

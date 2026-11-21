@@ -33,6 +33,8 @@
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 
+use rand::rngs::SmallRng;
+use rand::{Rng, SeedableRng};
 use serde::Serialize;
 
 use crate::forge::{AffixIdx, AffixPool, Class, Goal, GroupId, Rarity, Slot};
@@ -93,7 +95,35 @@ pub struct PlanPoe1 {
     pub racine: usize,
     /// Lois des relances (Alchemy, Chaos, Essence, Alteration…) partagées par plusieurs situations.
     pub relances: Vec<IssuesPlan>,
+    /// Dispersion du coût : le plan suivi sur de nombreux crafts simulés. `None` si la simulation
+    /// n'a rien donné.
+    pub simulation: Option<SimulationPoe1>,
 }
+
+/// Crafts simulés en suivant le plan : coût médian, 9 fois sur 10, 99 fois sur 100.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SimulationPoe1 {
+    /// Crafts simulés qui ont abouti.
+    pub essais: u64,
+    /// Crafts arrêtés avant la fin (plafond d'actions) : comptés comme des échecs.
+    pub interrompus: u64,
+    /// Coût moyen des crafts simulés : contrôle, il doit retrouver le coût moyen du plan.
+    pub moyenne: f64,
+    pub mediane: f64,
+    pub p90: f64,
+    pub p99: f64,
+    /// Coût aux quantiles 0 %, 0,5 %, …, 100 % des crafts aboutis (`QUANTILES` + 1 valeurs
+    /// croissantes), pour « avec mon budget, quelle chance de finir ? ».
+    pub quantiles: Vec<f64>,
+}
+
+/// Résolution de [`SimulationPoe1::quantiles`] : un point tous les 0,5 % (comme en PoE 2).
+pub const QUANTILES: usize = 200;
+/// Nombre d'actions simulées au total, réparti entre les crafts (quelques dixièmes de seconde).
+const ACTIONS_SIMULEES: f64 = 2e7;
+const CRAFTS_MIN: f64 = 2_000.0;
+const CRAFTS_MAX: f64 = 20_000.0;
 
 /// Une situation de l'objet et ce qu'il faut y faire.
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -1461,6 +1491,8 @@ fn plan_depuis(sol: &Solution) -> PlanPoe1 {
     let mut sans_prix = m.sans_prix.clone();
     sans_prix.sort();
     let (etapes, relances) = etapes(m, g, politique, restes, &visites);
+    let actions_moyennes: f64 = visites.iter().take(politique.len()).sum();
+    let simulation = simuler_plan(g, politique, depart, actions_moyennes, 0x5EED_A06E);
     PlanPoe1 {
         cout_moyen,
         depart: depart_libelle,
@@ -1470,7 +1502,96 @@ fn plan_depuis(sol: &Solution) -> PlanPoe1 {
         etapes,
         racine: depart,
         relances,
+        simulation,
     }
+}
+
+/// Tire une issue dans une loi `(cible, probabilité)` (probabilités ramenées à leur somme).
+fn tirer_issue(loi: &[(usize, f64)], rng: &mut SmallRng) -> Option<usize> {
+    let total: f64 = loi.iter().map(|(_, p)| p).sum();
+    if total.is_nan() || total <= 0.0 {
+        return None;
+    }
+    let mut x = rng.random::<f64>() * total;
+    for &(t, p) in loi {
+        if x < p {
+            return Some(t);
+        }
+        x -= p;
+    }
+    loi.last().map(|(t, _)| *t)
+}
+
+/// Suit la politique sur le graphe du solveur (le modèle dont sort le coût moyen), craft après
+/// craft, et relève la dispersion du coût. Le nombre de crafts s'adapte à la longueur moyenne d'un
+/// craft (`actions_moyennes`), pour un temps de calcul borné.
+fn simuler_plan(
+    g: &Graphe,
+    politique: &[usize],
+    depart: usize,
+    actions_moyennes: f64,
+    graine: u64,
+) -> Option<SimulationPoe1> {
+    if !actions_moyennes.is_finite() || actions_moyennes <= 0.0 {
+        return None;
+    }
+    let crafts = (ACTIONS_SIMULEES / actions_moyennes).clamp(CRAFTS_MIN, CRAFTS_MAX) as u64;
+    // Plafond par craft : bien au-delà de la longueur moyenne (queue de la loi géométrique).
+    let plafond = (actions_moyennes * 60.0).max(1_000.0) as u64;
+    let mut rng = SmallRng::seed_from_u64(graine);
+    let mut couts: Vec<f64> = Vec::with_capacity(crafts as usize);
+    let mut interrompus = 0u64;
+    'crafts: for _ in 0..crafts {
+        let (mut s, mut cout) = (depart, 0.0);
+        for _ in 0..plafond {
+            let acts = &g.actions[s];
+            // Un état sans action est l'objet fini.
+            if acts.is_empty() {
+                couts.push(cout);
+                continue 'crafts;
+            }
+            let Some(a) = acts.get(politique[s]) else {
+                interrompus += 1;
+                continue 'crafts;
+            };
+            cout += a.cout;
+            let suivant = match &a.issue {
+                Issue::Succes => {
+                    couts.push(cout);
+                    continue 'crafts;
+                }
+                Issue::Noeud(h) => tirer_issue(&g.noeuds[*h], &mut rng),
+                Issue::Etats(l) => tirer_issue(l, &mut rng),
+            };
+            match suivant {
+                Some(t) => s = t,
+                None => {
+                    interrompus += 1;
+                    continue 'crafts;
+                }
+            }
+        }
+        interrompus += 1;
+    }
+    if couts.is_empty() {
+        return None;
+    }
+    couts.sort_by(f64::total_cmp);
+    let n = couts.len();
+    let moyenne = couts.iter().sum::<f64>() / n as f64;
+    let rang = |q: f64| couts[((q * (n - 1) as f64).round() as usize).min(n - 1)];
+    let quantiles = (0..=QUANTILES)
+        .map(|i| rang(i as f64 / QUANTILES as f64))
+        .collect();
+    Some(SimulationPoe1 {
+        essais: n as u64,
+        interrompus,
+        moyenne,
+        mediane: rang(0.5),
+        p90: rang(0.9),
+        p99: rang(0.99),
+        quantiles,
+    })
 }
 
 /// Situations les plus fréquentes sous la politique, avec l'action conseillée.
@@ -2265,6 +2386,34 @@ mod tests {
             "solveur {} contre simulation {sim}",
             sol.cout_moyen
         );
+    }
+
+    #[test]
+    fn dispersion_du_cout_coherente() {
+        // La simulation du plan sur le graphe du solveur retrouve son coût moyen, et ses quantiles
+        // sont croissants : médiane ≤ 9 sur 10 ≤ 99 sur 100.
+        let pb = construire_pool(ARMURE, 84, None).unwrap();
+        let voulus = [
+            voulu(&pb.pool, "IncreasedLife8"),
+            voulu(&pb.pool, "FireResist4"),
+        ];
+        let goal = Goal::new(&pb.pool, &voulus).unwrap();
+        let prix = cote_marche();
+        let plan = plan(&pb, &goal, &prix).unwrap();
+        let sim = plan.simulation.as_ref().expect("simulation");
+        assert_eq!(sim.quantiles.len(), QUANTILES + 1);
+        assert!(sim.quantiles.windows(2).all(|w| w[0] <= w[1]));
+        assert!(sim.mediane <= sim.p90 && sim.p90 <= sim.p99);
+        assert!(sim.essais >= CRAFTS_MIN as u64);
+        let moyenne = sim.moyenne;
+        assert!(
+            (moyenne - plan.cout_moyen).abs() / plan.cout_moyen < 0.03,
+            "moyenne simulée {moyenne} contre {}",
+            plan.cout_moyen
+        );
+        // Même graine : même résultat (pas de chiffres qui bougent d'un calcul à l'autre).
+        let encore = super::plan(&pb, &goal, &prix).unwrap();
+        assert_eq!(encore.simulation, plan.simulation);
     }
 
     #[test]
