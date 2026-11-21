@@ -985,3 +985,23 @@ fn multiplicateurs_de_generation() {
     assert_eq!(poids(ATTAQUE, "LocalIncreasedAttackSpeed1"), 1000);
     assert_eq!(poids(RUNIQUE, "IncreasedManaWeapon1"), 1000);
 }
+
+#[test]
+fn groupe_dominant_non_voulu_suivi_a_part() {
+    // Pristine Fossil sur un bouclier : la Vie (non voulue) pèse 80 % des préfixes. Le résumé des
+    // autres mods par un poids moyen donnait 28,7 % au lieu de 31,8 % ; le groupe dominant est
+    // désormais suivi à part.
+    let pb = construire_pool("Metadata/Items/Armours/Shields/ShieldDexInt13", 84, None).unwrap();
+    // tous les paliers acceptés
+    let tous = |id: &str| {
+        let mut v = voulu(&pb.pool, id);
+        v.max_tier = u8::MAX;
+        v
+    };
+    let voulus = vec![tous("IncreasedMana1"), tous("LifeRegeneration1")];
+    let goal = Goal::new(&pb.pool, &voulus).unwrap();
+    let p = pool_fossiles(&pb.pool, &[fossile("Pristine Fossil")]);
+    let c = chance_rare(&p, &goal, 84, None, None);
+    let s = simuler_rare(&p, &goal, 84, None, None, 200_000);
+    proche(c, s, 0.02);
+}

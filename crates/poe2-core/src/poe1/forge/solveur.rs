@@ -25,7 +25,8 @@
 //! Modifiers » puis les deux voulus qui manquent (multimod).
 //!
 //! Comme pour les spams Rare, chaque mod voulu est suivi exactement, et les autres mods sont résumés
-//! par leur nombre de chaque côté (poids restant moyen). Le problème est un plus court chemin
+//! par leur nombre de chaque côté (poids restant moyen ; dans un tirage depuis un côté vide, le groupe
+//! non voulu le plus lourd est suivi à part). Le problème est un plus court chemin
 //! stochastique, où l'on minimise le coût moyen. Les relances (Chaos, Alteration, Essence…) mènent
 //! toujours à la même loi d'objets, quel que soit l'objet de départ. Chaque loi est donc un « nœud »
 //! dont la valeur est résolue exactement par itération de politique : une évaluation affine, puis un
@@ -341,6 +342,12 @@ struct Tirage {
     mauvais: Vec<f64>,
     /// Poids « autres » restant en moyenne de chaque côté, selon le nombre d'autres déjà tirés.
     autres: [Vec<f64>; 2],
+    /// Groupe « autre » le plus lourd de chaque côté, suivi à part dans un tirage depuis un côté vide
+    /// (`Modele::tirer`) : le champ moyen se trompe quand un seul groupe pèse l'essentiel du côté
+    /// (Pristine Fossil sur un bouclier : la Vie ×10, 80 % des préfixes).
+    dominant: [f64; 2],
+    /// Poids « autres » restant en moyenne sans ce groupe, selon le nombre d'autres déjà tirés.
+    sans_dominant: [Vec<f64>; 2],
 }
 
 fn tirage(pool: &AffixPool, goal: &Goal, ilvl: u8, interdit: u64) -> Tirage {
@@ -368,17 +375,30 @@ fn tirage_requis(pool: &AffixPool, goal: &Goal, ilvl: u8, interdit: u64, requis:
             Class::Other => *autres[cote(a.slot)].entry(a.group).or_default() += w,
         }
     }
-    let reste = |m: &HashMap<GroupId, f64>| -> Vec<f64> {
-        let w: Vec<f64> = m.values().copied().collect();
-        survie(&w, 3)
+    let reste = |w: &[f64]| -> Vec<f64> {
+        survie(w, 3)
             .iter()
-            .map(|row| row.iter().zip(&w).map(|(a, b)| a * b).sum())
+            .map(|row| row.iter().zip(w).map(|(a, b)| a * b).sum())
             .collect()
     };
+    // poids par groupe, du plus lourd au plus léger (ordre stable)
+    let poids = |m: &HashMap<GroupId, f64>| -> Vec<f64> {
+        let mut v: Vec<(GroupId, f64)> = m.iter().map(|(g, w)| (*g, *w)).collect();
+        v.sort_by(|a, b| b.1.total_cmp(&a.1).then(a.0.cmp(&b.0)));
+        v.into_iter().map(|x| x.1).collect()
+    };
+    let (wp, ws) = (poids(&autres[0]), poids(&autres[1]));
+    let dominant = [
+        wp.first().copied().unwrap_or(0.0),
+        ws.first().copied().unwrap_or(0.0),
+    ];
+    let sans = |w: &[f64]| reste(w.get(1..).unwrap_or(&[]));
     Tirage {
         bon,
         mauvais,
-        autres: [reste(&autres[0]), reste(&autres[1])],
+        autres: [reste(&wp), reste(&ws)],
+        dominant,
+        sans_dominant: [sans(&wp), sans(&ws)],
     }
 }
 
@@ -689,18 +709,63 @@ impl<'a> Modele<'a> {
         p: f64,
         sortie: &mut HashMap<Etat, f64>,
     ) {
+        // Un côté sans autre mod au départ suit à part son groupe « autre » le plus lourd.
+        let suivi = (e.autres[0] == 0) as u8 | ((e.autres[1] == 0) as u8) << 1;
+        self.tirer_suivi(e, n, variante, seul, p, suivi, 0, sortie);
+    }
+
+    /// `suivi` : côtés (bit par côté) dont le groupe « autre » dominant est suivi à part ; `pris` :
+    /// côtés où il est déjà sur l'objet (compté dans `autres`).
+    #[allow(clippy::too_many_arguments)]
+    fn tirer_suivi(
+        &self,
+        e: Etat,
+        n: u8,
+        variante: usize,
+        seul: Option<usize>,
+        p: f64,
+        suivi: u8,
+        pris: u8,
+        sortie: &mut HashMap<Etat, f64>,
+    ) {
         if n == 0 {
             *sortie.entry(e).or_default() += p;
             return;
         }
-        let issues = self.un_mod_cote(&e, variante, seul);
+        let mut issues: Vec<(f64, Etat, u8)> = Vec::new();
+        for (w, s) in self.un_mod_cote(&e, variante, seul) {
+            // un mod « autre » d'un côté suivi : remplacé ci-dessous par le dominant et le reste
+            let c = (0..2).find(|&c| s.autres[c] > e.autres[c]);
+            match c {
+                Some(c) if suivi >> c & 1 == 1 => {}
+                _ => issues.push((w, s, pris)),
+            }
+        }
+        let t = &self.tirages[variante];
+        let cap = self.cap(e.rarete);
+        for (c, &cap_c) in cap.iter().enumerate() {
+            if suivi >> c & 1 == 0 || self.n(&e, c) >= cap_c || seul.is_some_and(|x| x != c) {
+                continue;
+            }
+            let mut s = e;
+            s.autres[c] += 1;
+            let deja = pris >> c & 1;
+            if deja == 0 && t.dominant[c] > 0.0 {
+                issues.push((t.dominant[c], s, pris | 1 << c));
+            }
+            let k = (e.autres[c] - deja) as usize;
+            let w = t.sans_dominant[c].get(k).copied().unwrap_or(0.0).max(0.0);
+            if w > 0.0 {
+                issues.push((w, s, pris));
+            }
+        }
         let total: f64 = issues.iter().map(|x| x.0).sum();
         if total <= 0.0 {
             *sortie.entry(e).or_default() += p;
             return;
         }
-        for (w, s) in issues {
-            self.tirer(s, n - 1, variante, seul, p * w / total, sortie);
+        for (w, s, pr) in issues {
+            self.tirer_suivi(s, n - 1, variante, seul, p * w / total, suivi, pr, sortie);
         }
     }
 

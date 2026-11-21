@@ -188,35 +188,49 @@ fn survie(w: &[f64], kmax: usize) -> Vec<Vec<f64>> {
         .collect()
 }
 
-/// Poids « autres » restant en moyenne de chaque côté après k autres tirages de ce côté.
-fn reste_autres(p: &Poids, exclu: Option<(GroupId, usize)>, kmax: usize) -> [Vec<f64>; 2] {
+/// Poids « autres » de chaque côté : celui du groupe le plus lourd, suivi à part (le champ moyen se
+/// trompe quand un groupe pèse l'essentiel du côté, Pristine Fossil sur un bouclier), et le poids
+/// restant en moyenne des autres groupes après k tirages de ce côté.
+fn reste_autres(
+    p: &Poids,
+    exclu: Option<(GroupId, usize)>,
+    kmax: usize,
+) -> ([f64; 2], [Vec<f64>; 2]) {
+    let mut dominant = [0.0; 2];
     let mut r: [Vec<f64>; 2] = [Vec::new(), Vec::new()];
     for (c, rc) in r.iter_mut().enumerate() {
-        let w: Vec<f64> = p
+        let mut w: Vec<(GroupId, f64)> = p
             .autres
             .iter()
             .filter(|((g, cc), _)| *cc == c && exclu.is_none_or(|(eg, _)| eg != *g))
-            .map(|(_, w)| *w)
+            .map(|((g, _), w)| (*g, *w))
             .collect();
+        w.sort_by(|a, b| b.1.total_cmp(&a.1).then(a.0.cmp(&b.0)));
+        dominant[c] = w.first().map_or(0.0, |x| x.1);
+        let w: Vec<f64> = w.iter().skip(1).map(|x| x.1).collect();
         let s = survie(&w, kmax);
         *rc = s
             .iter()
             .map(|row| row.iter().zip(&w).map(|(a, b)| a * b).sum())
             .collect();
     }
-    r
+    (dominant, r)
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 struct Etat {
     bons: u8,
     n: [u8; 2],
+    /// Autres mods de chaque côté, hors groupe dominant.
     autres: [u8; 2],
+    /// Côtés (bit par côté) où le groupe « autre » dominant est sur l'objet.
+    dominant: u8,
     reste: u8,
 }
 
 struct Rare<'a> {
     p: &'a Poids,
+    dominant: [f64; 2],
     autres: [Vec<f64>; 2],
     cap: [u8; 2],
     complet: u8,
@@ -270,6 +284,15 @@ impl Rare<'_> {
             }
         }
         for (c, _) in ouvert.iter().enumerate().filter(|(_, o)| **o) {
+            let d = self.dominant[c];
+            if e.dominant >> c & 1 == 0 && d > 0.0 {
+                total += d;
+                let mut s = e;
+                s.n[c] += 1;
+                s.dominant |= 1 << c;
+                s.reste -= 1;
+                issues.push((d, Some(s)));
+            }
             let w = self.autres[c]
                 .get(e.autres[c] as usize)
                 .copied()
@@ -311,6 +334,7 @@ pub fn chance_rare(
         bons: 0,
         n: [0, 0],
         autres: [0, 0],
+        dominant: 0,
         reste: 0,
     };
     let mut exclu = None;
@@ -330,9 +354,11 @@ pub fn chance_rare(
         Some(_) => return 0.0,
     };
     let (cp, cs) = pool.cap(crate::forge::Rarity::Rare);
+    let (dominant, autres) = reste_autres(&p, exclu, 3);
     let mut r = Rare {
         p: &p,
-        autres: reste_autres(&p, exclu, 3),
+        dominant,
+        autres,
         cap: [cp, cs],
         complet: ((1u16 << goal.len()) - 1) as u8,
         etabli,
