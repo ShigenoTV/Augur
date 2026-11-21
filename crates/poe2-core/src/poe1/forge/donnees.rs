@@ -228,11 +228,17 @@ pub fn construire_pool(
     let d = donnees()?;
     let b = base(base_id)?;
     let mut tags: Vec<&str> = b.tags.iter().map(String::as_str).collect();
-    if let Some(inf) = influence {
+    let influences = influences(influence);
+    if influences.len() > 2 || (influences.len() == 2 && influences[0] == influences[1]) {
+        return Err(ErreurForgePoe1::Influence(
+            influence.unwrap_or_default().to_string(),
+        ));
+    }
+    for inf in &influences {
         let t = d
             .classes
             .get(&b.classe)
-            .and_then(|c| c.influences.get(inf))
+            .and_then(|c| c.influences.get(*inf))
             .ok_or_else(|| ErreurForgePoe1::Influence(inf.to_string()))?;
         tags.push(t.as_str());
     }
@@ -387,7 +393,7 @@ pub fn construire_pool(
     Ok(PoolPoe1 {
         base: b,
         ilvl: ilvl as u8,
-        influence: influence.map(str::to_string),
+        influence: (!influences.is_empty()).then(|| influences.join("+")),
         pool: AffixPool::new(affixes),
         essences,
         etabli,
@@ -395,6 +401,19 @@ pub fn construire_pool(
         mods_voiles,
         eldritch: None,
     })
+}
+
+/// Influences d'une demande : une seule (« Shaper ») ou deux jointes par `+` (« Hunter+Shaper »,
+/// objet à double influence, par exemple après un Awakener's Orb). Rangées par ordre alphabétique.
+pub fn influences(influence: Option<&str>) -> Vec<&str> {
+    let mut v: Vec<&str> = influence
+        .unwrap_or_default()
+        .split('+')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .collect();
+    v.sort_unstable();
+    v
 }
 
 /// Tier tirable d'une famille : (niveau requis, première valeur minimale).

@@ -22,7 +22,8 @@ pub struct ObjetDepartPoe1 {
     pub base_nom: String,
     pub classe: String,
     pub ilvl: Option<u32>,
-    /// Influence lue sur l'objet (Shaper, Elder…), si la classe la connaît.
+    /// Influence lue sur l'objet (Shaper, Elder…), si la classe la connaît ; deux influences jointes
+    /// par `+` (« Hunter+Shaper »).
     pub influence: Option<String>,
     pub rarete: Rarity,
     pub mods: Vec<ModLu>,
@@ -65,18 +66,24 @@ fn base_de(objet: &Objet) -> Result<super::BaseVue, ErreurForgePoe1> {
         .ok_or_else(|| erreur(format!("base « {nom} » inconnue de la Forge PoE 1")))
 }
 
-/// Influence de l'objet (« Shaper Item » → « Shaper »), si la classe la connaît.
+/// Influence de l'objet (« Shaper Item » → « Shaper »), si la classe la connaît ; deux influences sont
+/// jointes par `+` (« Hunter+Shaper »).
 fn influence_de(objet: &Objet, classe: &str) -> Result<Option<String>, ErreurForgePoe1> {
     let connues = donnees()?
         .classes
         .get(classe)
         .map(|c| c.influences.keys().cloned().collect::<Vec<_>>())
         .unwrap_or_default();
-    Ok(objet
+    let mut lues: Vec<String> = objet
         .influences
         .iter()
         .map(|i| i.trim_end_matches(" Item").to_string())
-        .find(|i| connues.contains(i)))
+        .filter(|i| connues.contains(i))
+        .collect();
+    lues.sort_unstable();
+    lues.dedup();
+    lues.truncate(2);
+    Ok((!lues.is_empty()).then(|| lues.join("+")))
 }
 
 /// Objet lu sur le pool : mods pour le panneau, objet pour le solveur.

@@ -50,10 +50,13 @@ pub fn recherche(d: &DemandePoe1) -> Result<RechercheAchat, ErreurForgePoe1> {
     let (filtres, ignorees) =
         filtres_voulus(table(), &a.affixes, &d.voulus).map_err(ErreurForgePoe1::Objectif)?;
     let mut req = requete(&base_nom, &filtres);
-    if let Some(f) = d.influence.as_deref().and_then(filtre_influence)
-        && let Some(misc) = req["query"]["filters"]["misc_filters"]["filters"].as_object_mut()
+    for f in super::donnees::influences(d.influence.as_deref())
+        .into_iter()
+        .filter_map(filtre_influence)
     {
-        misc.insert(f.into(), json!({ "option": "true" }));
+        if let Some(misc) = req["query"]["filters"]["misc_filters"]["filters"].as_object_mut() {
+            misc.insert(f.into(), json!({ "option": "true" }));
+        }
     }
     Ok(RechercheAchat {
         requete: req,
