@@ -17,6 +17,7 @@ Règles qui ne changent pas :
 | `python tools/gamedata/mise_a_jour.py --essai` | Télécharge RePoE et l'arbre PoB, régénère tout dans un dossier temporaire et écrit le rapport des différences, sans toucher au dépôt. |
 | `python tools/gamedata/mise_a_jour.py [--arbre 1_0] [--coe]` | Même chose, puis remplace les fichiers de données du dépôt. |
 | Workflow GitHub « Mise à jour des données » | La même commande sur GitHub : rapport dans le résumé du run, fichiers en artefact (ne pousse rien). |
+| `python tools/gamedata/controle_monnaies.py [--ligue "…"]` | Compare les monnaies, Omens, os, Essences et Alloys de Forge aux pages de poe.ninja pour une ligue (la ligue courante par défaut) : monnaies de Forge sans cote (identifiant renommé, objet disparu) et nouveaux objets cotés que Forge ne connaît pas. Les objets déjà relus et écartés sont dans `tools/gamedata/monnaies-hors-forge.json` (`--referencer` la régénère). Aussi lancé par le workflow « Mise à jour des données ». |
 | `python tools/gamedata/cas_mesures.py [--version 1.0.0.1]` | Liste les cas golden mesurés en jeu sur une version plus ancienne que les données : ce sont les mesures à refaire. La CI affiche les mêmes avertissements (sans échouer). |
 | `python tools/theorycraft/coe_controle.py` | Contrôle que nos pools de mods et ceux de Craft of Exile coïncident (après un nouveau relevé de poids). |
 
@@ -81,8 +82,10 @@ les versions notées changent). Elles sont embarquées.
    Les cas mesurés en 0.5 passent encore (ils testent les formules), mais `cas_mesures.py` les liste : ils
    attendent la fiche de mesures.
 3. PR de données avec le rapport en description, puis release sur le « go » de Max.
-4. Prix : choisir la nouvelle ligue dans Réglages, vérifier que poe.ninja la connaît et que les monnaies
-   du catalogue de Forge ont un prix.
+4. Prix : choisir la nouvelle ligue dans Réglages, puis `python tools/gamedata/controle_monnaies.py
+   --ligue "<nouvelle ligue>"` (pages vides les premières heures : relancer le lendemain). Chaque
+   nouvelle monnaie signalée est soit à modéliser dans Forge (proposé à Max), soit à écarter avec
+   `--referencer` une fois le rapport relu.
 5. Ledger : une vraie session de 2 ou 3 maps pour vérifier le classement des zones.
 6. Parseur : Max envoie quelques objets 1.0 copiés par Ctrl+C et Ctrl+Alt+C (via la session de mesures).
 
