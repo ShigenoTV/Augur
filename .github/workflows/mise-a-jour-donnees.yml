@@ -42,6 +42,12 @@ jobs:
         run: |
           python tools/gamedata/mise_a_jour.py --arbre "$ARBRE" $COE --rapport rapport.md
           cat rapport.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Contrôle des monnaies de Forge (poe.ninja)
+        # Signale les monnaies sans cote et les nouveaux objets inconnus de Forge, sans bloquer le run.
+        continue-on-error: true
+        run: |
+          python tools/gamedata/controle_monnaies.py --rapport rapport-monnaies.md || test $? -eq 1
+          cat rapport-monnaies.md >> "$GITHUB_STEP_SUMMARY"
       - name: Mise à jour des données PoE 1
         if: inputs.poe1
         env:
@@ -54,6 +60,7 @@ jobs:
           name: mise-a-jour-donnees
           path: |
             rapport.md
+            rapport-monnaies.md
             rapport-poe1.md
             crates/poe2-core/data/forge-poe1.json.gz
             crates/poe2-core/data/trade-stats-poe1.json
