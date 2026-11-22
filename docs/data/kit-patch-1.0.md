@@ -89,6 +89,22 @@ les versions notées changent). Elles sont embarquées.
 5. Ledger : une vraie session de 2 ou 3 maps pour vérifier le classement des zones.
 6. Parseur : Max envoie quelques objets 1.0 copiés par Ctrl+C et Ctrl+Alt+C (via la session de mesures).
 
+### Plan B : RePoE tarde à publier l'export 1.0
+
+`tools/gamedata/plan_b_repoe.sh` fait tourner RePoE nous-mêmes : il lit les fichiers du jeu sur le
+serveur de patch de GGG (pas besoin du jeu installé ni du PC de Max), puis prépare un dossier pour
+`mise_a_jour.py --depuis` et écrit le rapport. Environ 4 minutes.
+
+1. `tools/gamedata/plan_b_repoe.sh --version 1.0.0.1` (la version du serveur de patch s'affiche).
+2. Lire le rapport (`rapport-plan-b.md` dans le dossier de travail).
+3. Si le rapport est bon : `python tools/gamedata/mise_a_jour.py --depuis <travail>/sources --repoe-version 1.0.0.1`,
+   puis la suite habituelle (tests, PR de données, release sur le « go » de Max).
+
+Essai du 22 novembre 2026 sur le jeu 0.5.5.10 : fichiers identiques à l'octet près à l'export publié,
+rapport sans aucune différence. Limite : si la 1.0 change le format des tables, PyPoE doit d'abord
+être mis à jour par repoe-fork ; on ne gagne alors du temps que s'il l'est avant l'export publié.
+Quand l'export publié arrive, refaire la mise à jour normale pour repartir de la source officielle.
+
 ### 12-20 décembre : après stabilisation
 
 - [ ] Poids : nouveau relevé quand poe2db et Craft of Exile ont mis à jour
@@ -118,4 +134,3 @@ secondaires ; I-17 seulement si une source d'infusion apparaît.
 - Alerte dans l'appli quand le parseur ou Forge voit beaucoup de mods ou de sorts inconnus : « données
   d'avant la 1.0, mise à jour en cours » au lieu d'un chiffre faux.
 - Version des données affichée dans la barre latérale.
-- Plan B si RePoE tarde : extraire les tables du jeu sur le PC de Max.
